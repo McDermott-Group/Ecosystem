@@ -44,7 +44,7 @@ with labrad.connect(password=args.password) as cxn:
             self.parent.geometry("%dx%d+0+0" % (wScreen, hScreen))
             self.parent.resizable(width=False, height=False)
             scriptPath = os.getcwd()
-            self.parent.iconbitmap((scriptPath+r'\Qbucky.ico'))
+            self.parent.iconbitmap((scriptPath+r'\qbucky.ico'))
 
             busSettings_width = 640
             busSettings_height = 200
