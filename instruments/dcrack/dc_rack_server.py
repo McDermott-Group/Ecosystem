@@ -294,9 +294,9 @@ class DcRackWrapper(DeviceWrapper):
         cards = []
         for key in self.rackCards.keys():
             if self.rackCards[key] == 'fastbias':
-                cards.append((key, 'fastbias'))
+                cards.append([key, 'fastbias'])
             else:
-                cards.append((key, 'preamp'))
+                cards.append([key, 'preamp'])
         return cards
 
     def preampState(self, cardNumber, channel):
@@ -305,7 +305,7 @@ class DcRackWrapper(DeviceWrapper):
 
 
     def getMonitorState(self):
-        return self.rackMonitor.monitorStrState()
+        return self.rackMonitor.monitorState()
 
     @inlineCallbacks
     def commitToRegistry(self, reg):
@@ -394,7 +394,7 @@ class DcRackWrapper(DeviceWrapper):
             yield reg.cd(['', 'Servers', 'DC Racks', 'Preamps'], True)
             content = yield reg.dir()
             cardName = 'Preamp {}'.format(self.activeCard)
-            if cardName in content[1]:
+            if cardName in content[1]:  #make sure card key exists before trying to get it
                 p = reg.packet()
                 p.get(cardName, key=cardName)
                 result = yield p.send()
@@ -578,7 +578,7 @@ class DcRackServer(DeviceServer):
         ident = yield dev.identSelf()
         returnValue(ident)
 
-    @setting(565, 'list_cards', returns="*(ss)")
+    @setting(565, 'list_cards')
     def list_cards(self, c):
         """List cards configured in the registry (does not query cards directly)."""
         dev = self.selectedDevice(c)
@@ -696,7 +696,7 @@ class Channel:
 
     def strState(self):
         """Returns the channel state as a list of strings"""
-        s = list(self.state())
+        s = list(self.state()) # self.state is a method, not an attribute... 
         s[-1] = str(s[-1])
         return s
 
@@ -720,8 +720,6 @@ class Monitor:
     def monitorState(self):
         return [self.dBus0, self.dBus1, self.aBus0, self.aBus1]
 
-    def monitorStrState(self):
-        return list(((self.dBus0[0],self.dBus0[1]),(self.dBus1[0],self.dBus1[1]), (self.aBus0[0],self.aBus0[1]), (self.aBus1[0],self.aBus1[1])))
 
 
 TIMEOUT = 1 * labrad.units.s
