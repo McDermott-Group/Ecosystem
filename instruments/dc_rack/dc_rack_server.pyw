@@ -173,7 +173,6 @@ class DcRackWrapper(DeviceWrapper):
     def write(self, code):
         """Write a data value to the dc rack."""
         yield self.packet().write(code).send()
-        #print code
 
     @inlineCallbacks
     def initDACs(self):
@@ -250,12 +249,12 @@ class DcRackWrapper(DeviceWrapper):
 
         if command is None:
             returnValue(keys)
-            
-        if command not in settings:
-            raise Error('Allowed commands: {}.'.format(', '.join(keys)))     
-        self.rackMonitor.updateBus(channel, self.activeCard, command)        
-        change = yield self.sendMonitorPacket(command, settings)
 
+        if command not in settings:
+            raise Error('Allowed commands: {}.'.format(', '.join(keys)))
+
+        self.rackMonitor.updateBus(channel, self.activeCard, command)
+        change = yield self.sendMonitorPacket(command, settings)
         returnValue(change)
 
     @inlineCallbacks
@@ -271,7 +270,6 @@ class DcRackWrapper(DeviceWrapper):
             data = 4*data[0] + 2*data[1] + 1*data[2]
         else:
             data &= 0x7
-        #self.write([1L])
         yield self.write([OP_LEDS | data])
         returnValue(data)
 
@@ -286,13 +284,11 @@ class DcRackWrapper(DeviceWrapper):
         p.read(1, key='ID')
         p.timeout()
         p.read(key='ID')
-        res = yield p.send()
-        returnValue(''.join(res['ID']))
-        #try:
-        #    res = yield p.send()
-        #    returnValue(''.join(res['ID']))
-        #except:
-        #    raise Exception('Ident error')
+        try:
+            res = yield p.send()
+            returnValue(''.join(res['ID']))
+        except:
+            raise Exception('Ident error')
 
     def returnCardList(self):
         cards = []
@@ -309,8 +305,7 @@ class DcRackWrapper(DeviceWrapper):
 
 
     def getMonitorState(self):
-        state = self.rackMonitor.monitorStrState()
-        return state
+        return self.rackMonitor.monitorStrState()
 
     @inlineCallbacks
     def commitToRegistry(self, reg):
@@ -589,7 +584,6 @@ class DcRackServer(DeviceServer):
         dev = self.selectedDevice(c)
         cards = dev.returnCardList()
         return cards
-        #returnValue(cards) //no yield ==> no returnValue
 
     @setting(455, 'get_preamp_state')
     def getPreampState(self, c, cardNumber, channel):
@@ -702,9 +696,7 @@ class Channel:
 
     def strState(self):
         """Returns the channel state as a list of strings"""
-        #print self.state
-        #s = list(self.state)
-        s = list((self.highPass, self.lowPass, self.polarity, self.offset))
+        s = list(self.state())
         s[-1] = str(s[-1])
         return s
 
