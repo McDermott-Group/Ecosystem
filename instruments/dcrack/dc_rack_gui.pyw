@@ -39,8 +39,8 @@ with labrad.connect(password=args.password) as cxn:
         def initUI(self):
             self.parent.title("DC Rack Controller")
             self.pack(fill=BOTH, expand=1)
-            wScreen =720
-            hScreen =540 #self.parent.winfo_screenwidth(), self.parent.winfo_screenheight()
+            wScreen = 720
+            hScreen = 540 #self.parent.winfo_screenwidth(), self.parent.winfo_screenheight()
             self.parent.geometry("%dx%d+0+0" % (wScreen, hScreen))
             self.parent.resizable(width=False, height=False)
             scriptPath = os.getcwd()
@@ -61,7 +61,8 @@ with labrad.connect(password=args.password) as cxn:
 
             self.InitDacVrefsButton = Button(self, text="Init DAC Vrefs", command=self.initDacVrefs)
             self.InitDacVrefsButton.place(x=DCRackGui.w*(1+1), y=DCRackGui.h*(4.5+2))
-                
+            self.initDacVrefs()
+            
             self.SaveSettingsToRegistryButton = Button(self, text="Save To Registry", command=self.saveToRegistry)
             self.SaveSettingsToRegistryButton.place(x=DCRackGui.w*(1+3), y=DCRackGui.h*(4.5+2))
                 
@@ -323,12 +324,10 @@ with labrad.connect(password=args.password) as cxn:
             dc.change_dc_offset(channel, offsetSetting)
 
         def changePolaritySetting(self, cardID, channel, polaritySetting):
-           
             dc.select_card(cardID)
             dc.change_polarity(channel, polaritySetting)
 
         def setPreampOffsetReturn(self, channel, settingName, settingVal):
-           
             card = self.preampCard.get()
             offset = settingVal.get()
             if offset<0 or offset>2**16-1: # set to whatever it was before because user sucks
@@ -344,7 +343,6 @@ with labrad.connect(password=args.password) as cxn:
             dc.init_dacs()
         
         def saveToRegistry(self):
-           
             dc.commit_monitor_state_to_registry()
             for cards in self.availablePreampCards:
                cardID = int(cards.split(",")[0].strip("("))
@@ -353,7 +351,6 @@ with labrad.connect(password=args.password) as cxn:
                dc.commit_to_registry()
                
         def uploadFromRegistry(self):
-
             for cards in self.availablePreampCards:
                cardID = int(cards.split(",")[0].strip("("))
                dc.select_card(cardID)

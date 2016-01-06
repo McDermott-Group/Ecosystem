@@ -62,6 +62,10 @@ def parseIDNResponse(s, idn_cmd='*IDN?'):
             # "08340BREV07 APR 92".
             elif model == '08340B':
                 return 'HEWLETT-PACKARD 8340B'
+            # HP8673E response string is expected to be similar to 
+            # "8673".
+            elif model == '8673':
+                return 'HEWLETT-PACKARD 8673E'
             else:
                 return s.strip(string.whitespace).split('REV')[0]
     else:
@@ -145,27 +149,34 @@ class GPIBDeviceManager(LabradServer):
         
     @inlineCallbacks
     def lookupDeviceName(self, server, channel):
-        """Try to send a *IDN? or an alternative query to lookup info about a device.
+        """Try to send a *IDN? or an alternative query to lookup info
+        about a device.
 
         Returns the name of the device and the actual response string
         to the identification query.  If the response cannot be parsed
         or the query fails, the name will be listed as '<unknown>'.
         """
-        for cls_cmd, idn_cmd in [('*CLS', '*IDN?'), ('', 'ID?'), ('CS', 'OI')]:
+        for cls_cmd, idn_cmd in [('*CLS', '*IDN?'), ('', 'ID?'),
+                                 ('CS', 'OI')]:
             resp = None
             name = UNKNOWN
             p = self.client.servers[server].packet()
-            p.address(channel).timeout(Value(1,'s')).write(cls_cmd).query(idn_cmd)
-            print("Sending '" + idn_cmd + "' to " + str(server) + " " + str(channel))
+            p.address(channel).timeout(Value(1,'s'))
+            p.write(cls_cmd).query(idn_cmd)
+            srv_ch = ''.join([str(server), " ", str(channel)])
+            print("Sending '%s' to %s" %(idn_cmd, srv_ch))
             try:
                 resp = (yield p.send()).query
             except Exception:
-                print("No response to '" + idn_cmd + "' from " + str(server) + " " + str(channel))
+                print("No response to '%s' from %s" %(idn_cmd, srv_ch))
+                continue
+            # Workaround for old-style devices.
+            if idn_cmd in ('*IDN?', 'ID?') and resp.find(',') == -1:
                 continue
             name = parseIDNResponse(resp, idn_cmd)
             if name != UNKNOWN:
-                print(str(server) + " " + str(channel) + " '" + idn_cmd + "' response: '" + resp + "'")
-                print(str(server) + " " + str(channel) + " device name: '" + name + "'")
+                print("%s '%s' response: '%s'" %(srv_ch, idn_cmd, resp))
+                print("%s device name: '%s'" %(srv_ch, name))
                 break
         returnValue((name, resp))
 

@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = GPIB RF Generators
-version = 0.2.1
+version = 0.3.0
 description = Provides basic control for microwave generators.
 
 [startup]
@@ -29,6 +29,8 @@ message = 987654321
 timeout = 5
 ### END NODE INFO
 """
+
+import string
 
 from twisted.internet.defer import inlineCallbacks, returnValue
 
@@ -125,8 +127,8 @@ class HP8341BWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def getOutput(self):
         yield self.write('OM')
-        status = yield self.read_raw() 
-        self.output = bool(ord(status[6]) & 32);
+        status = yield self.read()
+        self.output = bool(ord(status[2]) & 32);
         returnValue(self.output)
 
     @inlineCallbacks
@@ -150,6 +152,37 @@ class HP8341BWrapper(GPIBDeviceWrapper):
             # Ensure that the output is set properly.
             self.output = yield self.getOutput()
 
+
+class HP8673EWrapper(HP8341BWrapper): 
+    @inlineCallbacks
+    def getFrequency(self):
+        freqString = yield self.query('OK')
+        self.frequency = float(freqString.strip(string.ascii_letters)) * Hz
+        returnValue(self.frequency)
+    
+    @inlineCallbacks
+    def getPower(self):
+        pwrString = yield self.query('LEOA')
+        self.power = float(pwrString.strip(string.ascii_letters)) * dBm
+        returnValue(self.power)
+        
+    @inlineCallbacks
+    def setPower(self, pwr):
+        if self.power != pwr:
+            yield self.write('LE' + str(pwr['dBm']) + 'DB')
+            # Ensure that the power is set properly.
+            self.power = yield self.getPower()
+    
+    @inlineCallbacks    
+    def reset(self):
+        HP8341BWrapper.reset(self)
+        yield self.write('RF0')
+        
+    @inlineCallbacks
+    def initialize(self):
+        HP8341BWrapper.initialize(self)
+        yield self.write('RF0')
+
             
 class RFGeneratorServer(GPIBManagedServer):
     """This server provides basic control for microwave generators."""
@@ -157,7 +190,8 @@ class RFGeneratorServer(GPIBManagedServer):
     deviceWrappers={'HEWLETT-PACKARD 83620A': HP83620AWrapper,
                     'HEWLETT-PACKARD 83712B': HP83712BWrapper,
                     'HEWLETT-PACKARD 8340B':  HP8341BWrapper,
-                    'HEWLETT-PACKARD 8341B':  HP8341BWrapper}
+                    'HEWLETT-PACKARD 8341B':  HP8341BWrapper,
+                    'HEWLETT-PACKARD 8673E':  HP8673EWrapper}
 
     @setting(9, 'Reset')
     def reset(self, c):
