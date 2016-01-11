@@ -18,8 +18,8 @@
 ### BEGIN NODE INFO
 [info]
 name = GPIB Bus
-version = 1.4.0
-description = Gives access to GPIB devices via pyvisa. This server does not self-refresh.
+version = 1.4.1
+description = Gives access to GPIB devices via pyvisa.
 instancename = %LABRADNODE% GPIB Bus
 
 [startup]
@@ -82,7 +82,9 @@ class GPIBBusServer(LabradServer):
         """
         try:
             self.rm = visa.ResourceManager()
-            addresses = [str(a) for a in self.rm.list_resources()] # str() because labrad.types can't deal with unicode strings
+            # Use str() because labrad.types can't deal with unicode
+            # strings.
+            addresses = [str(a) for a in self.rm.list_resources()]
             additions = set(addresses) - set(self.mydevices.keys())
             deletions = set(self.mydevices.keys()) - set(addresses)
             for addr in additions:
@@ -95,52 +97,56 @@ class GPIBBusServer(LabradServer):
                         instName = addr + '::INSTR'
                     else:
                         continue
-                    instr = self.rm.open_resource(instName, open_timeout=1.0)
+                    instr = self.rm.open_resource(instName,
+                            open_timeout=1.0)
                     # instr.write_termination = u'\r\n'
                     instr.clear()
                     self.mydevices[addr] = instr
                     self.sendDeviceMessage('GPIB Device Connect', addr)
                 except Exception, e:
-                    print('Failed to add ' + addr + ':' + str(e))
-            for addr in deletions: #Because pyvisa's list_resources() command doesn't list TCPIP addresses, we need to make sure we don't delete them everytime we refresh the address list
+                    print('Failed to add %s: %s' %(addr, str(e)))
+            # Because pyvisa's list_resources() command doesn't list
+            # TCPIP addresses, we need to make sure we don't delete them
+            # everytime we refresh the address list.
+            for addr in deletions:
                 if not(addr.startswith('TCPIP')):  
                     del self.mydevices[addr]
                 self.sendDeviceMessage('GPIB Device Disconnect', addr)
         except Exception, e:
-            print('Problem while refreshing devices: ' + str(e))
+            print('Problem while refreshing devices: %s' %str(e))
     
     @setting(27,tcpAddr='s')    
     def addTCPIPDevice(self,c,tcpAddr=None):
-        """refreshDevices fails to find TCPIP VISA objects, so you need to
-        add them manually.  This function allows you to do that. The address should look like this:
-        'TCPIP::10.128.226.234::INSTR'
-        ---Suttle
+        """refreshDevices fails to find TCPIP VISA objects, so you need
+        to add them manually.  This function allows you to do that. The
+        address should look like this: 'TCPIP::10.128.226.234::INSTR'.
         """
         try:
             self.rm = visa.ResourceManager()
             try:
-                instr = self.rm.open_resource(tcpAddr, open_timeout=10.0)
+                instr = self.rm.open_resource(tcpAddr,
+                        open_timeout=10.0)
                 # instr.write_termination = u'\r\n'
                 print(instr.query('*IDN?'))
                 instr.clear()
                 self.mydevices[tcpAddr] = instr
                 self.sendDeviceMessage('GPIB Device Connect', tcpAddr)
             except Exception, e:
-                print('Failed to add ' + tcpAddr + '    .... ' + str(e))
+                print('Failed to add %s: %s' %(tcpAddr, str(e)))
         except Exception, e:
-            print('Problem while adding TCPIP Address: ' + str(e))
+            print('Problem while adding TCPIP address: %s' %str(e))
 
     def getSocketsList(self):
         """Get a list of all connected devices.
 
-        Return value:
-        A list of strings with the names of all connected devices, ready for being
-        used to open each of them.
+        Return:
+        A list of strings with the names of all connected devices, ready
+        for being used to open each of them.
         """
         return self.rm.list_resources()
 
     def sendDeviceMessage(self, msg, addr):
-        print(msg + ': ' + addr)
+        print('%s: %s' %(msg, addr))
         self.client.manager.send_named_message(msg, (self.name, addr))
 
     def initContext(self, c):
@@ -150,7 +156,7 @@ class GPIBBusServer(LabradServer):
         if 'addr' not in c:
             raise DeviceNotSelectedError("No GPIB address selected")
         if c['addr'] not in self.mydevices:
-            raise Exception('Could not find device ' + c['addr'])
+            raise Exception('Could not find device %s' %c['addr'])
         instr = self.mydevices[c['addr']]
         instr.timeout = c['timeout']['ms']
         return instr
@@ -169,8 +175,8 @@ class GPIBBusServer(LabradServer):
     def address(self, c, addr=None):
         """Get or set the GPIB address for this context.
 
-        To get the addresses of available devices,
-        use the list_devices function.
+        To get the addresses of available devices, use the list_devices
+        setting.
         """
         if addr is not None:
             c['addr'] = addr
@@ -187,16 +193,17 @@ class GPIBBusServer(LabradServer):
     def write(self, c, data):
         """Write a string to the GPIB bus."""
         try:
-            self.getDevice(c).write(unicode(data))  # Note the explicit conversion from ASCII to Unicode.
+            # Note the explicit conversion from ASCII to Unicode.
+            self.getDevice(c).write(unicode(data))
         except VisaIOError:
-            print("Could not write '" + str(data) + "' to " + c['addr'])
+            print("Could not write '%s' to %s" %(str(data), c['addr']))
 
     @setting(24, bytes='w', returns='s')
     def read_raw(self, c, bytes=None):
         """Read a raw string from the GPIB bus.
 
-        If specified, reads only the given number of bytes.
-        Otherwise, reads until the device stops sending.
+        If specified, this method reads only the given number of bytes,
+        otherwise, it reads until the device stops sending.
         """
         instr = self.getDevice(c)
         try:
@@ -205,29 +212,35 @@ class GPIBBusServer(LabradServer):
             else:
                 return instr.read_raw(bytes)
         except VisaIOError:
-            print("No response from " + c['addr'])
+            print("No response from %s" %c['addr'])
             return ''
 
     @setting(25, returns='s')
     def read(self, c):
         """Read from the GPIB bus."""
         try:
-            return self.getDevice(c).read().strip(string.whitespace + '\x00').encode('ascii', 'ignore')  # Note the explicit conversion from Unicode to ASCII
+            # Note the explicit conversion from Unicode to ASCII.
+            resp = self.getDevice(c).read()
+            resp = resp.strip(string.whitespace + '\x00')
+            return resp.encode('ascii', 'ignore')
         except VisaIOError:
-            print("No response from " + c['addr'])
+            print("No response from %s" %c['addr'])
             return ''
 
     @setting(26, data='s', returns='s')
     def query(self, c, data):
         """Make a GPIB query.
 
-        This query is atomic. No other communication to the
-        device will occur while the query is in progress.
+        This query is atomic. No other communication to the device will
+        occur while the query is in progress.
         """
         try:
-            return self.getDevice(c).query(data).strip(string.whitespace + '\x00').encode('ascii', 'ignore')  # explicit conversion from Unicode to ASCII
+            # Note the explicit conversion from Unicode to ASCII.
+            resp = self.getDevice(c).query(data)
+            resp = resp.strip(string.whitespace + '\x00')
+            return resp.encode('ascii', 'ignore')
         except VisaIOError:
-            print("No response from " + c['addr'] + " to '" + str(data) + "'")
+            print("No response from %s to '%s'" %(c['addr'], str(data)))
             return ''
 
 __server__ = GPIBBusServer()
