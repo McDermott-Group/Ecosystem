@@ -955,7 +955,7 @@ class ADC_Build7(ADC_Branch2):
         @inlineCallbacks
         def func():
             # build registry packet
-            regs = self.regRun(self.RUN_MODE_REGISTER_READBACK, 0) # 0 reps?
+            regs = self.regRun(self.RUN_MODE_REGISTER_READBACK, {}, 0)
             
             p = self.makePacket("registerReadback")
             p.write(regs.tostring())
@@ -1052,7 +1052,8 @@ class ADC_Build7(ADC_Branch2):
         a = np.fromstring(resp, dtype='<u1')
         return {
             'build': a[0],
-            'noPllLatch': a[1]&1 == 1,
+            'noPllLatch': bool(a[1] & 1),
+            'dClkBits': a[1] >> 1 & 15,
             'executionCounter': int(a[2]) + int(a[3] << 8),
             'nPackets': a[4],
             'badPackets': a[5]
