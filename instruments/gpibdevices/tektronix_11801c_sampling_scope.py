@@ -43,7 +43,7 @@ class Tek11801C_Server(GPIBManagedServer):
     @setting(10, 'Get Instrument Name', returns='s')
     def getInstrumentName(self, c):
         """Return the instrument name."""
-        dev = yield self.selectedDevice(c)
+        dev = self.selectedDevice(c)
         instrumentName = yield dev.query('ID?')
         returnValue(instrumentName)
 
@@ -53,7 +53,7 @@ class Tek11801C_Server(GPIBManagedServer):
         Return the number of sampling heads recognized by
         the Tek11801C.
         """
-        dev = yield self.selectedDevice(c)
+        dev = self.selectedDevice(c)
         # Next line returns something like 'ACQNUM 2'.
         resp = yield dev.query('ACQNUM?')
         NumAcqSys= int(resp.split(" ")[1])
@@ -62,7 +62,7 @@ class Tek11801C_Server(GPIBManagedServer):
     @setting(12, 'Get Averaging State', returns='s')
     def getAveragingState(self, c):
         """Return the averaging state of the Tek11801C."""
-        dev = yield self.selectedDevice(c)
+        dev = self.selectedDevice(c)
         # Next line returns either 'AVG ON' or 'AVG OFF'.
         resp = yield dev.query('AVG?')
         # Parse to return either 'ON' or 'OFF'.
@@ -71,7 +71,7 @@ class Tek11801C_Server(GPIBManagedServer):
     @setting(13, 'Set Averaging State', avgState='s', returns='')
     def setAveragingState(self, c, avgState):
         """Set the averaging state of the Tek11801C."""
-        dev = yield self.selectedDevice(c)
+        dev = self.selectedDevice(c)
         possibilities = ('ON', 'OFF')
         if avgState.upper() in (pos.upper() for pos in possibilities):
             yield dev.write('AVG %s' %avgState.upper())
@@ -82,7 +82,7 @@ class Tek11801C_Server(GPIBManagedServer):
     @setting(14, 'Get Chan Volt Offset', chanNum='w', returns='v[V]')
     def getChanVoltOffset(self, c, chanNum):
         """Return the averaging state of the Tek11801C."""
-        dev = yield self.selectedDevice(c)
+        dev = self.selectedDevice(c)
         # Next line returns either 'AVG ON' or 'AVG OFF'.
         resp = yield dev.query('CHM%s? OFFSET' %str(chanNum))
         # Parse to return either on or off.
