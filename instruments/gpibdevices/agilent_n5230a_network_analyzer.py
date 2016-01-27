@@ -317,8 +317,10 @@ class AgilentN5230AServer(GPIBManagedServer):
         # Create window 1.
         yield dev.write('DISP:WIND1:STATE ON')
         for k in range(4):
-            yield dev.write('CALC:PAR:DEF:EXT "s2p_%s",%s' %(S[k], S[k]))
-            yield dev.write('DISP:WIND1:TRAC%d:FEED "s2p_%s"' %(k + 1, S[k]))
+            yield dev.write('CALC:PAR:DEF:EXT "s2p_%s",%s'
+                    %(S[k], S[k]))
+            yield dev.write('DISP:WIND1:TRAC%d:FEED "s2p_%s"'
+                    %(k + 1, S[k]))
             yield dev.write('CALC:PAR:SEL "s2p_%s"' %S[k])
             yield dev.write('SENS1:SWE:TIME:AUTO ON')
             yield dev.write('TRIG:SOUR IMM')
