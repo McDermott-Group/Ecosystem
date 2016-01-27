@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Tekronix 11801C Digital Sampling Oscilloscope
-version = 1.0
+version = 1.0.0
 description = Basic Functionality for TDR
   
 [startup]
@@ -100,12 +100,12 @@ class Tektronix11801CServer(GPIBManagedServer):
         """
         Return trace data. This setting returns a tuple of 2D arrays,
         one for each trace. The form of 2D arrays is
-        [[time_0, voltage(time_0)], ..., [time_n, voltage(time_m)]].
+        [[time_0, voltage(time_0)], ..., [time_n, voltage(time_n)]].
         """
         dev = self.selectedDevice(c)
         if traceNum is None:    # Assume user wants all traces.
             traceData = yield dev.query('OUTPUT ALLTRACE;WAV?')
-        if traceNum >= 1:       # User specified 
+        elif traceNum >= 1:     # User specified the number of traces.
             traceData = yield dev.query('OUTPUT TRACE%s;WAV?'
                     %str(traceNum))
         splitter = traceData.split(';')
@@ -131,10 +131,10 @@ class Tektronix11801CServer(GPIBManagedServer):
                 elif 'YZERO' in tracePreamble[jj]:
                     YZERO = float(tracePreamble[jj].split(':')[1])
                    
-            tdrData = np.empty((len(traceDataStr)-1, 2))
+            tdrData = np.empty((len(traceDataStr) - 1, 2))
             for kk in range (1, len(traceDataStr)):
                 tdrData[kk-1][0] = XINCR * (kk - 1) + XZERO
-                tdrData[kk-1][1] = YZERO + YMULT*float(traceDataStr[kk])
+                tdrData[kk-1][1] = YZERO + YMULT * float(traceDataStr[kk])
             data = data + (np.copy(tdrData),)
         returnValue(data)
     
