@@ -36,7 +36,7 @@ from twisted.internet.defer import returnValue
 import numpy as np
 
 
-class Tek11801C_Server(GPIBManagedServer):
+class Tektronix11801CServer(GPIBManagedServer):
     name = 'Tek11801C' # Server name.
     deviceName = ['ID TEK/11801C']
   
@@ -139,7 +139,7 @@ class Tek11801C_Server(GPIBManagedServer):
         returnValue(data)
     
   
-__server__ = Tek11801C_Server()
+__server__ = Tektronix11801CServer()
 
 
 if __name__ == '__main__':
