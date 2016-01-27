@@ -1,4 +1,4 @@
-# Created by Alexander Opremcak, 1/26/2016
+# Copyright (C) 2016 Alexander Opremcak
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -7,16 +7,16 @@
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
   
 """
 ### BEGIN NODE INFO
 [info]
-name = Tekronix 11801C Digital Sampling Scope
+name = Tekronix 11801C Digital Sampling Oscilloscope
 version = 1.0
 description = Basic Functionality for TDR
   
@@ -31,78 +31,87 @@ timeout = 5
 """
 
 from labrad.server import setting
-from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
-from twisted.internet.defer import inlineCallbacks, returnValue
-from labrad import units
+from labrad.gpib import GPIBManagedServer
+from twisted.internet.defer import returnValue
 import numpy as np
-        
+
+
 class Tek11801C_Server(GPIBManagedServer):
-    name = 'Tek11801C' # Server name
+    name = 'Tek11801C' # Server name.
     deviceName = ['ID TEK/11801C']
   
-    @setting(10, 'get instrument name', returns='s')
+    @setting(10, 'Get Instrument Name', returns='s')
     def getInstrumentName(self, c):
-        """Returns name."""
+        """Return the instrument name."""
         dev = yield self.selectedDevice(c)
         instrumentName = yield dev.query('ID?')
         returnValue(instrumentName)
 
-    @setting(11, 'get num sampling heads', returns='i')
+    @setting(11, 'Get Num Sampling Heads', returns='i')
     def getNumSamplingHeads(self, c):
-        """Returns the number of sampling heads recognized by the Tek11801C."""
+        """
+        Return the number of sampling heads recognized by
+        the Tek11801C.
+        """
         dev = yield self.selectedDevice(c)
-        resp = yield dev.query('ACQNUM?') # returns 'ACQNUM 2' for example
-        print resp
-        print resp.split(' ')
+        # Next line returns something like 'ACQNUM 2'.
+        resp = yield dev.query('ACQNUM?')
         NumAcqSys= int(resp.split(" ")[1])
         returnValue(NumAcqSys)
 
-    @setting(12, 'get averaging state', returns='s')
+    @setting(12, 'Get Averaging State', returns='s')
     def getAveragingState(self, c):
-        """Returns the averaging state of the Tek11801C."""
+        """Return the averaging state of the Tek11801C."""
         dev = yield self.selectedDevice(c)
-        resp = yield dev.query('AVG?') # returns 'AVG ON' or 'AVG OFF'
-        returnValue(resp.split(" ")[1]) #parsed to return either on or off
+        # Next line returns either 'AVG ON' or 'AVG OFF'.
+        resp = yield dev.query('AVG?')
+        # Parse to return either 'ON' or 'OFF'.
+        returnValue(resp.split(" ")[1])
 
-    @setting(13, 'set averaging state',avgState='s', returns='')
+    @setting(13, 'Set Averaging State', avgState='s', returns='')
     def setAveragingState(self, c, avgState):
-        """Sets the averaging state of the Tek11801C."""
+        """Set the averaging state of the Tek11801C."""
         dev = yield self.selectedDevice(c)
-        possibilities = ['ON', 'OFF']
+        possibilities = ('ON', 'OFF')
         if avgState.upper() in (pos.upper() for pos in possibilities):
-            dev.write('AVG'+' '+avgState.upper())
+            yield dev.write('AVG %s' %avgState.upper())
         else:
-            print 'Acceptable inputs for this function are \'ON\' or \'OFF\''
-        return
+            print("Acceptable inputs for this function are " + 
+                  "'ON' or 'OFF'")
 
-    @setting(14, 'get chan volt offset',chanNum='w', returns='v[Volts]')
+    @setting(14, 'Get Chan Volt Offset', chanNum='w', returns='v[V]')
     def getChanVoltOffset(self, c, chanNum):
-        """Returns the averaging state of the Tek11801C."""
+        """Return the averaging state of the Tek11801C."""
         dev = yield self.selectedDevice(c)
-        resp = yield dev.query('CHM'+str(chanNum)+'?'+' OFFSET') # returns 'AVG ON' or 'AVG OFF'
-        print resp.split(':')[1]
-        returnValue(float(resp.split(':')[1])) #parsed to return either on or off
+        # Next line returns either 'AVG ON' or 'AVG OFF'.
+        resp = yield dev.query('CHM%s? OFFSET' %str(chanNum))
+        # Parse to return either on or off.
+        returnValue(float(resp.split(':')[1]))
 
-    @setting(27, 'get num points', returns='s')
+    @setting(27, 'Get Num Points', returns='s')
     def getNumTracePoints(self, c):
-        """Returns number of points."""
+        """Return number of points."""
         dev = self.selectedDevice(c)
         length = yield dev.query('TBM? LEN')
         returnValue(length)
 
-    @setting(28, 'get trace data', traceNum='w', returns='?')
+    @setting(28, 'Get Trace Data', traceNum='w', returns='?')
     def getTraceData(self, c, traceNum=None):
-        """Returns trace data"""
-        #returns a tuple of 2-d arrays, one for each trace. Form of 2-d arrays is [[t_0, Voltage(t_0)]
-        # , ... , [t_n, Voltage(t_m)]
+        """
+        Return trace data. This setting returns a tuple of 2D arrays,
+        one for each trace. The form of 2D arrays is
+        [[time_0, voltage(time_0)], ..., [time_n, voltage(time_m)]].
+        """
         dev = self.selectedDevice(c)
-        if traceNum is None: # assume user wants all traces
-            traceData = yield dev.query('OUTPUT ALLTRACE;WAVfrm?')
-        if traceNum >=1: # user specifies 
-            traceData = yield dev.query('OUTPUT TRACE'+str(traceNum)+';WAVfrm?')
+        if traceNum is None:    # Assume user wants all traces.
+            traceData = yield dev.query('OUTPUT ALLTRACE;WAV?')
+        if traceNum >= 1:       # User specified 
+            traceData = yield dev.query('OUTPUT TRACE%s;WAV?'
+                    %str(traceNum))
         splitter = traceData.split(';')
         data = ()
-        for ii in range(0,len(splitter),2): # increment by 2's 1 preamble & 1 data string per trace
+        # Increment by 2's, 1 preamble and 1 data string per trace.
+        for ii in range(0, len(splitter), 2):
             tracePreamble = splitter[ii].split(',')
             traceDataStr = splitter[ii+1].split(',')
             
@@ -124,14 +133,15 @@ class Tek11801C_Server(GPIBManagedServer):
                    
             tdrData = np.empty((len(traceDataStr)-1, 2))
             for kk in range (1, len(traceDataStr)):
-                tdrData[kk-1][0] = (XINCR*(kk-1)+XZERO)
-                tdrData[kk-1][1] = (YZERO+YMULT*float(traceDataStr[kk]))
-            data = data+(np.copy(tdrData),)
+                tdrData[kk-1][0] = XINCR * (kk - 1) + XZERO
+                tdrData[kk-1][1] = YZERO + YMULT*float(traceDataStr[kk])
+            data = data + (np.copy(tdrData),)
         returnValue(data)
     
   
 __server__ = Tek11801C_Server()
-  
+
+
 if __name__ == '__main__':
     from labrad import util
     util.runServer(__server__)
