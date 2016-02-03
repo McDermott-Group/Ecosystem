@@ -143,12 +143,11 @@ class AgilentN5230AServer(GPIBManagedServer):
     	if stype is None:
             stype = yield dev.query('SENS1:SWE:TYPE?')
         else:
-    		if (stype.upper() != 'CW') and (stype.upper() != 'LIN'):
+    		if stype.upper() != 'CW' and stype.upper() != 'LIN':
     			raise ValueError('Unknown sweep type: %s. ' +
                         'Please use "LIN" or "CW".' %stype)
     		else:
     			yield dev.write('SENS1:SWE:TYPE %s' %stype)
-               
     	returnValue(stype)
     
     @setting(607, 'IF Bandwidth', bw='v[Hz]', returns='v[Hz]')
@@ -160,7 +159,7 @@ class AgilentN5230AServer(GPIBManagedServer):
     		bw = float(resp) * units.Hz
     	else:
     		yield dev.write('SENS1:BAND %i' %bw['Hz'])
-    	returnValue(type)
+    	returnValue(bw)
     
     @setting(608, 'Average Mode', avg='b', returns='b')
     def average_mode(self, c, avg=None):
@@ -237,12 +236,17 @@ class AgilentN5230AServer(GPIBManagedServer):
     		raise ValueError('Illegal measurment definition: %s.'
                     %str(meas))
 
-        dev = self.selectedDevice(c)            
+        dev = self.selectedDevice(c)
+        # Delete all measurements on the PNA.
     	yield dev.write('CALC:PAR:DEL:ALL')
-    	yield dev.write('DISP:WIND1:STATE ON')
-    	yield dev.write('CALC:PAR:DEF:EXT "Meas",%s' %meas)
-    	yield dev.write('DISP:WIND1:TRAC1:FEED "Meas"')
-    	yield dev.write('CALC:PAR:SEL "Meas"')
+        # Close window 1 if it already exists.
+        if (yield dev.query('DISP:WIND1:STATE?')) == '1':
+            dev.write('DISP:WIND1:STATE OFF')
+        # Create window 1.
+        yield dev.write('DISP:WIND1:STATE ON')
+    	yield dev.write('CALC:PAR:DEF:EXT "%s",%s' %(meas, meas))
+    	yield dev.write('DISP:WIND1:TRAC1:FEED "%s"' %meas)
+    	yield dev.write('CALC:PAR:SEL "%s"' %meas)
         yield dev.write('SENS1:SWE:TIME:AUTO ON')
         yield dev.write('TRIG:SOUR IMM')
     
@@ -260,18 +264,18 @@ class AgilentN5230AServer(GPIBManagedServer):
             avgCount = yield self.average_points(c)
             yield self.restart_averaging(c)
             yield dev.write('SENS:SWE:GRO:COUN %i' %avgCount)
-            yield dev.write('SENS:SWE:MODE GRO')
+            yield dev.write('ABORT;SENS:SWE:MODE GRO')
         else:
-            yield dev.write('ABORT;:INITIATE:IMMEDIATE')
+            # Stop the current sweep and immediately send a trigger. 
+            yield dev.write('ABORT;SENS:SWE:MODE SING')
 
         # Wait for the measurement to finish.
-        while (yield dev.query('*OPC?')) == '':
-            pass
+        yield dev.query('*OPC?', timeout=24*units.h)
         ascii_data = yield dev.query('CALC1:DATA? FDATA')
 
     	data = numpy.array([x for x in ascii_data.split(',')],
-                dtype=float)
-    	returnValue(data.astype(float))
+                dtype=float) * units.dB
+    	returnValue(data)
 
     @setting(616, 'Get S2P', ports='(w, w)', returns=('*(v[Hz], ' +
             'v[dB], v[deg], v[dB], v[deg], v[dB], v[deg], v[dB], ' +
@@ -301,8 +305,26 @@ class AgilentN5230AServer(GPIBManagedServer):
         
     	dev = self.selectedDevice(c)    	
         
-    	meas = yield dev.query('SYST:ACT:MEAS?')
-    	yield dev.write('CALC:PAR:SEL %s' %meas)   
+        S = (''.join(['S', str(ports[0]), str(ports[0])]),
+             ''.join(['S', str(ports[0]), str(ports[1])]),
+             ''.join(['S', str(ports[1]), str(ports[0])]),
+             ''.join(['S', str(ports[1]), str(ports[1])]))
+        # Delete all measurements on the PNA.
+        yield dev.write('CALC:PAR:DEL:ALL')
+        # Close window 1 if it already exists.
+        if (yield dev.query('DISP:WIND1:STATE?')) == '1':
+            dev.write('DISP:WIND1:STATE OFF')
+        # Create window 1.
+        yield dev.write('DISP:WIND1:STATE ON')
+        for k in range(4):
+            yield dev.write('CALC:PAR:DEF:EXT "s2p_%s",%s'
+                    %(S[k], S[k]))
+            yield dev.write('DISP:WIND1:TRAC%d:FEED "s2p_%s"'
+                    %(k + 1, S[k]))
+            yield dev.write('CALC:PAR:SEL "s2p_%s"' %S[k])
+            yield dev.write('SENS1:SWE:TIME:AUTO ON')
+            yield dev.write('TRIG:SOUR IMM')
+  
     	yield dev.write('FORM ASC,0')
         
         avgMode = yield self.average_mode(c)
@@ -310,16 +332,16 @@ class AgilentN5230AServer(GPIBManagedServer):
             avgCount = yield self.average_points(c)
             yield self.restart_averaging(c)
             yield dev.write('SENS:SWE:GRO:COUN %i' %avgCount)
-            yield dev.write('SENS:SWE:MODE GRO')
+            yield dev.write('ABORT;SENS:SWE:MODE GRO')
         else:
-            yield dev.write('ABORT;:INITIATE:IMMEDIATE')
+            # Stop the current sweep and immediately send a trigger. 
+            yield dev.write('ABORT;SENS:SWE:MODE SING')
 
         # Wait for the measurement to finish.
-        while (yield dev.query('*OPC?')) == '':
-            pass
+        yield dev.query('*OPC?', timeout=24*units.h)
         ascii_data = yield dev.query("CALC:DATA:SNP:PORT? '%i,%i'"
                 %ports)
-    	data = numpy.array([float(x) for x in ascii_data.split(',')],
+    	data = numpy.array([x for x in ascii_data.split(',')],
             dtype=float)
         length = numpy.size(data) / 9
         data = data.reshape(9, length)
