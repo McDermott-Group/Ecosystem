@@ -16,7 +16,7 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Omega Temp Monitor Server
+name = Omega Ratemeter Server
 version = 1.00013
 description = 
 [startup]
@@ -37,7 +37,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad import util
 
     
-class OmegaTempMonitorWrapper(DeviceWrapper):
+class OmegaRatemeterWrapper(DeviceWrapper):
     
     @inlineCallbacks
     def connect(self, server, port):
@@ -51,10 +51,10 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
         p.baudrate(9600L)
         p.stopbits(1L)
         p.bytesize(7L)
-        p.parity('O')
-        #p.rts(True)
-        #p.read() # clear out the read buffer
+        p.parity('E')
+        p.rts(False)
         p.timeout(TIMEOUT)
+        p.read_line() # clear out the read buffer
         yield p.send()
         print 'done.'
         
@@ -74,26 +74,28 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
         yield p.send()
 
     @inlineCallbacks
-    def read_line(self):
+    def read_line(self, code=None):
         """Read a data value to the cold switch."""
         p = self.packet()
-        p.read_line()
+        if code is not None:
+            p.read_line(code)
+        else:
+            p.read_line(code)
         ans = yield p.send()
-        print "Ans=", ans
         returnValue(ans.read_line)
              
-class OmegaTempMonitorServer(DeviceServer):
-    deviceName = 'Omega Temp Monitor Server'
-    name = 'Omega Temp Monitor Server'
-    deviceWrapper = OmegaTempMonitorWrapper
+class OmegaRatemeterServer(DeviceServer):
+    deviceName = 'Omega Ratemeter Server'
+    name = 'Omega Ratemeter Server'
+    deviceWrapper = OmegaRatemeterWrapper
 
-    @setting(10, 'get temperature' , returns = 'v')
-    def getTemperature(self,c):
+    @setting(10, 'get rate' , returns = 's')
+    def getRate(self,c):
         print("Sending request")
-        dev = self.selectedDevice(c)    
-        yield dev.write_line("*X01")
+        dev = self.selectedDevice(c)
+        #yield dev.read_line()
+        yield dev.write_line("@U?V\r")
         reading = yield dev.read_line()
-        reading = float(reading.lstrip("X01"))
         returnValue(reading)
 
     @inlineCallbacks
@@ -108,7 +110,7 @@ class OmegaTempMonitorServer(DeviceServer):
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'Omega Temp Monitor', 'Links'], True)
+        yield reg.cd(['', 'Servers', 'Omega Ratemeter', 'Links'], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -133,7 +135,7 @@ class OmegaTempMonitorServer(DeviceServer):
          
 TIMEOUT = 1*units.s
 
-__server__ = OmegaTempMonitorServer()
+__server__ = OmegaRatemeterServer()
 
 if __name__ == '__main__':
     from labrad import util
