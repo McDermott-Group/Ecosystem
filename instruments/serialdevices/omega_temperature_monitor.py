@@ -1,4 +1,4 @@
-# Copyright (C) 2016  Noah Meltzer && Alexander Opremcak
+# Copyright (C) 2016 Noah Meltzer, Alexander Opremcak
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -7,42 +7,41 @@
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
 ### BEGIN NODE INFO
 [info]
-name = Omega Temp Monitor Server
-version = 1.00013
-description = 
+name = Omega Temperature Monitor Server
+version = 1.0.14
+description = Monitors temperature
+
 [startup]
 cmdline = %PYTHON% %FILE%
 timeout = 20
+
 [shutdown]
 message = 987654321
 timeout = 20
 ### END NODE INFO
 """
 
-from labrad.types import Value
 from labrad.devices import DeviceServer, DeviceWrapper
-from labrad.server import LabradServer, setting
-from labrad.errors import Error
+from labrad.server import setting
 import labrad.units as units
 from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad import util
 
     
 class OmegaTempMonitorWrapper(DeviceWrapper):
-    
     @inlineCallbacks
     def connect(self, server, port):
-        """Connect to a cold switch board."""
-        print 'connecting to "%s" on port "%s"...' % (server.name, port),
+        """Connect to an Omega temperature monitor."""
+        print('Connecting to "%s" on port "%s"...' %(server.name, port))
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -52,11 +51,8 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
         p.stopbits(1L)
         p.bytesize(7L)
         p.parity('O')
-        #p.rts(True)
-        #p.read() # clear out the read buffer
-        p.timeout(TIMEOUT)
+        p.timeout(1 * units.s)
         yield p.send()
-        print 'done.'
         
     def packet(self):
         """Create a packet in our private context."""
@@ -68,47 +64,45 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
     
     @inlineCallbacks
     def write_line(self, code):
-        """Write a data value to the cold switch."""
+        """Write a data value to the temperature monitor."""
         p = self.packet()
         p.write_line(code)
         yield p.send()
 
     @inlineCallbacks
     def read_line(self):
-        """Read a data value to the cold switch."""
+        """Read a data value to the temperature monitor."""
         p = self.packet()
         p.read_line()
         ans = yield p.send()
-        print "Ans=", ans
         returnValue(ans.read_line)
-             
+
+
 class OmegaTempMonitorServer(DeviceServer):
     deviceName = 'Omega Temp Monitor Server'
     name = 'Omega Temp Monitor Server'
     deviceWrapper = OmegaTempMonitorWrapper
 
-    @setting(10, 'get temperature' , returns = 'v')
-    def getTemperature(self,c):
-        print("Sending request")
+    @setting(10, 'Get Temperature', returns='v[degF]')
+    def getTemperature(self, c):
         dev = self.selectedDevice(c)    
         yield dev.write_line("*X01")
         reading = yield dev.read_line()
         reading = float(reading.lstrip("X01"))
-        returnValue(reading)
+        returnValue(reading * units.degF)
 
     @inlineCallbacks
     def initServer(self):
-        print 'loading config info...',
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
-        print 'done.'
         yield DeviceServer.initServer(self)
     
     @inlineCallbacks
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'Omega Temp Monitor', 'Links'], True)
+        yield reg.cd(['', 'Servers', 'Omega Temperature Monitor',
+                'Links'], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -130,11 +124,10 @@ class OmegaTempMonitorServer(DeviceServer):
             devName = '{} - {}'.format(server, port)
             devs += [(name, (server, port))]
         returnValue(devs)
-         
-TIMEOUT = 1*units.s
+
 
 __server__ = OmegaTempMonitorServer()
 
+
 if __name__ == '__main__':
-    from labrad import util
     util.runServer(__server__)
