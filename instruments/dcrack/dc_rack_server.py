@@ -336,7 +336,6 @@ class DcRackWrapper(DeviceWrapper):
             yield p.send()
         else:
             print 'card is not a preamp'        
-        
 
     @inlineCallbacks
     def commitMonitorStateToRegistry(self, reg):
@@ -348,7 +347,6 @@ class DcRackWrapper(DeviceWrapper):
                 return ((mon.dBus0[0],mon.dBus0[1]), (mon.dBus1[0],mon.dBus1[1]), (mon.aBus0[0],mon.aBus0[1]), (mon.aBus1[0],mon.aBus1[1]))
         p.set(monitorKeyName, monState(self.rackMonitor))
         yield p.send()
-
 
     @inlineCallbacks
     def loadMonitorStateFromRegistry(self, reg):
@@ -510,7 +508,6 @@ class DcRackServer(DeviceServer):
             devName = '{} - {}'.format(server, port)
             devs += [(name, (server, port, cards))]
         returnValue(devs)
-
 
     @setting(20, 'Select Card', data='w', returns='w')
     def select_card(self, c, data):
