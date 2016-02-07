@@ -18,7 +18,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Agilent N5230A Network Analyzer
-version = 1.0.0
+version = 1.1.0
 description = Four channel 5230A PNA-L network analyzer server
 
 [startup]
@@ -31,32 +31,29 @@ timeout = 5
 ### END NODE INFO
 """
 
-import os
-if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
-    # This is executed when the script is loaded by the labradnode.
-    SCRIPT_PATH = os.path.dirname(os.getcwd())
-else:
-    # This is executed if the script is started by clicking or
-    # from a command line.
-    SCRIPT_PATH = os.path.dirname(__file__)
-LABRAD_PATH = os.path.join(SCRIPT_PATH.rsplit('LabRAD', 1)[0])
-import sys
-if LABRAD_PATH not in sys.path:
-    sys.path.append(LABRAD_PATH)
-
 import numpy
+from twisted.internet.defer import inlineCallbacks, returnValue
 
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
-from labrad.server import setting, returnValue
+from labrad.server import setting
 import labrad.units as units
 
 from utilities import sleep
 
 
+class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
+    @inlineCallbacks
+    def initialize(self):
+        p = self._packet()
+        p.write('SYST:PRES')
+        yield p.send()
+        yield sleep(0.1)
+
+
 class AgilentN5230AServer(GPIBManagedServer):
     name = 'Agilent N5230A Network Analyzer'
     deviceName = 'AGILENT TECHNOLOGIES N5230A'
-    deviceWrapper = GPIBDeviceWrapper
+    deviceWrapper = AgilentN5230ADeviceWrapper
     
     @setting(598, 'Clear Status')
     def clear_status(self, c):
@@ -68,12 +65,11 @@ class AgilentN5230AServer(GPIBManagedServer):
     	dev = self.selectedDevice(c)
     	yield dev.write('*CLS')
         
-    @setting(599, 'Initialize')
-    def initialize(self, c):
-    	"""Perform preset on a network analyzer."""
+    @setting(599, 'Preset')
+    def preset(self, c):
+    	"""Preset the network analyzer."""
     	dev = self.selectedDevice(c)
-    	yield dev.write('SYST:PRES')
-    	yield sleep(0.1)
+    	yield dev.initialize()
     
     @setting(601, 'Power Output', pow='b', returns='b')
     def power_output(self, c, pow=None):
