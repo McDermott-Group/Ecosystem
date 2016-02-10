@@ -102,7 +102,7 @@ class OmegaRatemeterServer(DeviceServer):
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
-    
+        
     @inlineCallbacks
     def loadConfigInfo(self):
         """Load configuration information from the registry."""

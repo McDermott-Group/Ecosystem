@@ -30,6 +30,14 @@ timeout = 20
 ### END NODE INFO
 """
 
+
+# The LoopingCall function allows a function to be called periodically on a time interval
+from twisted.internet.task import LoopingCall
+# The reactor drives event loops (useful for a number of applications as well as implementing LoopingCall)
+from twisted.internet import reactor
+
+from datetime import datetime
+
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting
 import labrad.units as units
@@ -77,12 +85,36 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
         ans = yield p.send()
         returnValue(ans.read_line)
 
-
+   
+            
 class OmegaTempMonitorServer(DeviceServer):
     deviceName = 'Omega Temp Monitor Server'
     name = 'Omega Temp Monitor Server'
     deviceWrapper = OmegaTempMonitorWrapper
+    alertInterval = 7200 #Default email alert interval is 7200s (2 hours)
+    checkInterval = 2 #Default measurement test interval is 2s 
+    thresholdLow = 50
+    thresholdHigh = 60
+            
+    @inlineCallbacks
+    def initServer(self):
+        print "Server Initializing"
+        
+        self.reg = self.client.registry()
+        yield self.loadConfigInfo()
+        yield DeviceServer.initServer(self)
 
+        #Initialize the loopingCall
+        self.refresher = LoopingCall(self.checkMeasurements)
+        self.refresherDone = \
+                self.refresher.start(self.checkInterval,
+                now=True)
+        
+        self.alertRefresher = LoopingCall(self.sendAlert)
+        self.alertRefresherDone = \
+                self.alertRefresher.start(self.alertInterval,
+                now=False)
+        
     @setting(10, 'Get Temperature', returns='v[degF]')
     def getTemperature(self, c):
         dev = self.selectedDevice(c)    
@@ -91,13 +123,21 @@ class OmegaTempMonitorServer(DeviceServer):
         reading = float(reading.lstrip("X01"))
         print reading
         returnValue(reading * units.degF)
-
-    @inlineCallbacks
-    def initServer(self):
-        self.reg = self.client.registry()
-        yield self.loadConfigInfo()
-        yield DeviceServer.initServer(self)
-    
+        
+    def checkMeasurements(self):
+        print "Temperature: ", getTemperature(), "\n\tMeasured at" datetime.now()
+        if thresholdLow<getTemperature<thresholdHigh:
+             self.alertRefresherDone = \
+                self.alertRefresher.start(self.alertInterval,
+                now=True)
+        else:
+             self.alertRefresherDone = \
+                self.alertRefresher.start(self.sendAlert,
+                now=False)
+        
+    def sendAlert(self):
+        print "~~~~~PROBLEM WITH TEMPERATURE; ALERT SENT~~~~~"
+        
     @inlineCallbacks
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
