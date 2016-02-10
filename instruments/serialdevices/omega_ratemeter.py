@@ -94,7 +94,8 @@ class OmegaRatemeterServer(DeviceServer):
         dev = self.selectedDevice(c)
         yield dev.write_line("@U?V\r")
         reading = yield dev.read_line()
-        returnValue(float(reading) * units.galUS / units.min)
+        reading = float(reading.lstrip("L"))
+        returnValue(reading * units.galUS / units.min)
 
     @inlineCallbacks
     def initServer(self):

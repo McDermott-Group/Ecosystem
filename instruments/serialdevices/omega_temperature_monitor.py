@@ -89,6 +89,7 @@ class OmegaTempMonitorServer(DeviceServer):
         yield dev.write_line("*X01")
         reading = yield dev.read_line()
         reading = float(reading.lstrip("X01"))
+        print reading
         returnValue(reading * units.degF)
 
     @inlineCallbacks
