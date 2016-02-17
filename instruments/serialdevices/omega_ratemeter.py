@@ -30,13 +30,21 @@ timeout = 20
 ### END NODE INFO
 """
 
+# The LoopingCall function allows a function to be called periodically on a time interval
+from twisted.internet.task import LoopingCall
+from twisted.internet.reactor import callLater
+# The reactor drives event loops (useful for a number of applications as well as implementing LoopingCall)
+from twisted.internet import reactor
+
+from datetime import datetime
+import time
+
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting
 import labrad.units as units
 from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad import util
 
-    
 class OmegaRatemeterWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
@@ -71,37 +79,89 @@ class OmegaRatemeterWrapper(DeviceWrapper):
         p.write_line(code)
         yield p.send()
 
+##    @inlineCallbacks
+##    def read_line(self, code=None):
+##        """Read a data value to the rate monitor."""
+##        p = self.packet()
+##        if code is not None:
+##            p.read_line(code)
+##        else:
+##            p.read_line(code)
+##        ans = yield p.send()
+##        returnValue(ans.read_line)
+
     @inlineCallbacks
-    def read_line(self, code=None):
-        """Read a data value to the rate monitor."""
+    def read_line(self):
+        """Read a data value to the temperature monitor."""
         p = self.packet()
-        if code is not None:
-            p.read_line(code)
-        else:
-            p.read_line(code)
+        p.read_line()
         ans = yield p.send()
         returnValue(ans.read_line)
-
 
 class OmegaRatemeterServer(DeviceServer):
     deviceName = 'Omega Ratemeter Server'
     name = 'Omega Ratemeter Server'
     deviceWrapper = OmegaRatemeterWrapper
-
-    @setting(10, 'Get Rate', returns='v[ml/min]')
-    def getRate(self, c):
-        """Get flow rate."""
-        dev = self.selectedDevice(c)
-        yield dev.write_line("@U?V\r")
-        reading = yield dev.read_line()
-        reading = float(reading.lstrip("L"))
-        returnValue(reading * units.galUS / units.min)
-
+    alertInterval = 7200 #Default email alert interval is 7200s (2 hours)
+    checkInterval = 2 #Default measurement test interval is 2s 
+    thresholdLow = 50
+    thresholdHigh = 60
+    
     @inlineCallbacks
     def initServer(self):
+        """Initializes the server"""
+        print "Server Initializing"        
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
+
+    def startRefreshing(self):
+        """Start periodically refreshing the list of devices.
+        The start call returns a deferred which we save for later.
+        When the refresh loop is shutdown, we will wait for this
+        deferred to fire to indicate that it has terminated.
+        """
+        dev = self.dev
+        self.refresher = LoopingCall(self.refreshMe)
+        self.refresherDone = \
+                self.refresher.start(5.0,
+                now=True)
+
+    def refreshMe(self):
+        """Gets refreshed. Method calls to be called repeatedly are called from here"""
+        self.checkMeasurements(self.dev)
+
+    @inlineCallbacks
+    def stopServer(self):
+        """Kill the device refresh loop and wait for it to terminate."""
+        if hasattr(self, 'refresher'):
+            self.refresher.stop()
+            yield self.refresherDone
+      
+    @setting(9, 'Start Server', returns='b')
+    def start_server(self, c):
+        """starts server. Initializes the repeated flow rate measurement"""
+        dev = self.selectedDevice(c)
+        self.dev = dev
+        callLater(0.1, self.startRefreshing)
+        return True
+    
+    @inlineCallbacks
+    def getRate(self, dev):
+        """Get flow rate."""
+        yield dev.write_line("@U?V\r")
+        reading = yield dev.read_line()
+        reading.rsplit(None, 1)[-1] #get last number in string
+        reading = float(reading.lstrip("L"))#strip the 'L' off
+        output = reading * units.galUS / units.min #convert it to correct units
+        returnValue(output)
+
+    @inlineCallbacks
+    def checkMeasurements(self, dev):
+        """Make sure the flow rate is within range"""
+        print ("Flow Rate: ")
+        rate = yield self.getRate(dev)
+        print rate
         
     @inlineCallbacks
     def loadConfigInfo(self):
@@ -114,7 +174,10 @@ class OmegaRatemeterServer(DeviceServer):
             p.get(k, key=k)
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys)
-    
+
+    def sendAlert(self):
+        print "~~~~~PROBLEM WITH TEMPERATURE; ALERT SENT~~~~~"
+        
     @inlineCallbacks    
     def findDevices(self):
         """Find available devices from a list stored in the registry."""

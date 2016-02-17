@@ -30,9 +30,11 @@ timeout = 20
 ### END NODE INFO
 """
 
+import time
 
 # The LoopingCall function allows a function to be called periodically on a time interval
 from twisted.internet.task import LoopingCall
+from twisted.internet.reactor import callLater
 # The reactor drives event loops (useful for a number of applications as well as implementing LoopingCall)
 from twisted.internet import reactor
 
@@ -60,6 +62,7 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
         p.bytesize(7L)
         p.parity('O')
         p.timeout(1 * units.s)
+        p.read_line() # Clear out the read buffer.
         yield p.send()
         
     def packet(self):
@@ -98,42 +101,69 @@ class OmegaTempMonitorServer(DeviceServer):
             
     @inlineCallbacks
     def initServer(self):
+        """Initialize the Temperature Monitor Server"""
         print "Server Initializing"
-        
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
-
-        #Initialize the loopingCall
-        self.refresher = LoopingCall(self.checkMeasurements)
+        
+    def startRefreshing(self):
+        """Start periodically refreshing the list of devices.
+        The start call returns a deferred which we save for later.
+        When the refresh loop is shutdown, we will wait for this
+        deferred to fire to indicate that it has terminated.
+        """
+        dev = self.dev
+        self.refresher = LoopingCall(self.refreshMe)
         self.refresherDone = \
-                self.refresher.start(self.checkInterval,
+                self.refresher.start(5.0,
                 now=True)
+
+    def refreshMe(self):
+        """Periodically called automatically, used to call
+        functions that must be called repeatedly"""
+        #print "refreshing"
+        self.checkMeasurements(self.dev)
         
-        self.alertRefresher = LoopingCall(self.sendAlert)
-        self.alertRefresherDone = \
-                self.alertRefresher.start(self.alertInterval,
-                now=False)
+    @inlineCallbacks
+    def stopServer(self):
+        """Kill the device refresh loop and wait for it to terminate."""
+        if hasattr(self, 'refresher'):
+            self.refresher.stop()
+            yield self.refresherDone
+            
+    @setting(9, 'Start Server', returns='b')
+    def start_server(self, c):
+        """starts server ***insert meaningful text here"""
+        dev = self.selectedDevice(c)
+        self.dev = dev
+        callLater(0.1, self.startRefreshing)
+        return True
         
-    @setting(10, 'Get Temperature', returns='v[degF]')
-    def getTemperature(self, c):
-        dev = self.selectedDevice(c)    
+    @inlineCallbacks
+    def getTemperature(self, dev):
+        """Query the device for the temperature via serial communication"""
         yield dev.write_line("*X01")
         reading = yield dev.read_line()
+        reading.rsplit(None, 1)[-1] #get last number in string
         reading = float(reading.lstrip("X01"))
-        print reading
         returnValue(reading * units.degF)
-        
-    def checkMeasurements(self):
-        print "Temperature: ", getTemperature(), "\n\tMeasured at" datetime.now()
-        if thresholdLow<getTemperature<thresholdHigh:
-             self.alertRefresherDone = \
-                self.alertRefresher.start(self.alertInterval,
-                now=True)
-        else:
-             self.alertRefresherDone = \
-                self.alertRefresher.start(self.sendAlert,
-                now=False)
+
+    @inlineCallbacks
+    def checkMeasurements(self, dev):
+        """Make sure measured values are within acceptable range"""
+        #print "Checking Measurements"
+        print "Temperature: "
+        temperature = yield self.getTemperature(dev)
+        print temperature
+##        if thresholdLow<getTemperature<thresholdHigh:
+##             self.alertRefresherDone = \
+##                self.alertRefresher.start(self.alertInterval,
+##                now=True)
+##        else:
+##             self.alertRefresherDone = \
+##                self.alertRefresher.start(self.sendAlert,
+##                now=False)
         
     def sendAlert(self):
         print "~~~~~PROBLEM WITH TEMPERATURE; ALERT SENT~~~~~"
