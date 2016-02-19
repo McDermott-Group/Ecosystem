@@ -30,8 +30,6 @@ timeout = 20
 ### END NODE INFO
 """
 
-import time
-
 # The LoopingCall function allows a function to be called periodically on a time interval
 from twisted.internet.task import LoopingCall
 from twisted.internet.reactor import callLater
