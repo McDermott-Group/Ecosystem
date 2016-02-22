@@ -41,7 +41,6 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
-
 class OmegaRatemeterWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
@@ -52,14 +51,16 @@ class OmegaRatemeterWrapper(DeviceWrapper):
         self.port = port
         p = self.packet()
         p.open(port)
-        # Where are these parameters coming from?
+        # The following parameters match the default configuration of the
+        # serial device.
         p.baudrate(9600L)
         p.stopbits(1L)
         p.bytesize(7L)
         p.parity('E')
         p.rts(False)
-        p.timeout(1 * units.s)
-        p.read_line() # Clear out the read buffer.
+        p.timeout(5 * units.s)
+        # Clear out the read buffer. This is necessary for some devices.
+        p.read_line()
         yield p.send()
         
     def packet(self):
@@ -72,18 +73,14 @@ class OmegaRatemeterWrapper(DeviceWrapper):
     
     @inlineCallbacks
     def write_line(self, code):
-        """Write a command to the rate monitor."""
-        p = self.packet()
-        p.write_line(code)
-        yield p.send()
+        """Write a data value to the rate monitor."""
+        yield self.server.write_line(code, context = self.ctx)
 
     @inlineCallbacks
     def read_line(self):
-        """Read a line from the rate monitor."""
-        p = self.packet()
-        p.read_line()
-        returnValue(yield p.send())
-
+        """Read a data value to the temperature monitor."""
+        ans = yield self.server.read(context = self.ctx)
+        returnValue(ans)
 
 class OmegaRatemeterServer(DeviceServer):
     deviceName = 'Omega Ratemeter Server'
@@ -92,8 +89,8 @@ class OmegaRatemeterServer(DeviceServer):
     
     @inlineCallbacks
     def initServer(self):
-        """Initialize the server."""
-        print("Server initializing...")  
+        """Initializes the server"""
+        print("Server Initializing...")        
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
@@ -105,8 +102,15 @@ class OmegaRatemeterServer(DeviceServer):
         When the refresh loop is shutdown, we will wait for this
         deferred to fire to indicate that it has terminated.
         """
-        self.refresher = LoopingCall(self.checkMeasurements)
+        self.refresher = LoopingCall(self.refreshedMethod)
         self.refresherDone = self.refresher.start(5.0, now=True)
+
+    def refreshedMethod(self):
+        """
+        Gets refreshed. Method calls to be called repeatedly are
+        called from here.
+        """
+        self.checkMeasurements(self.dev)
 
     @inlineCallbacks
     def stopServer(self):
@@ -115,33 +119,43 @@ class OmegaRatemeterServer(DeviceServer):
             self.refresher.stop()
             yield self.refresherDone
       
-    @setting(9, 'Start Server', returns='')
+    @setting(9, 'Start Server', returns='b')
     def start_server(self, c):
         """
-        Start server and initialize the repeated flow rate measurement.
+        starts server. Initializes the repeated flow rate measurement.
         """
         self.dev = self.selectedDevice(c)
         callLater(0.1, self.startRefreshing)
+        return True;
     
     @inlineCallbacks
     def getRate(self, dev):
         """Get flow rate."""
-        # The crazy in the next line is because...
+        # The string '@U?V' asks the device for the current reading
+        # The '\r' at the end is the carriage return letting the device
+        # know that it was the end of the command.
+
+        #Instrument randomly decides not to return, heres a hack.
         yield dev.write_line("@U?V\r")
         reading = yield dev.read_line()
-        # Get last number in string.
-        reading.rsplit(None, 1)[-1]
-        # Strip the 'L' off.
-        reading = float(reading.lstrip("L"))
-        # Convert it to correct units, the reading are in gpm.
-        output = reading * units.galUS / units.min
-        returnValue(output)
+            
+        if len(reading)==0:
+            returnValue(None)
+        else:
+            # Get the last number in the string.
+            reading.rsplit(None, 1)[-1]
+            # Strip the 'L' off the string.
+            reading = float(reading.lstrip("L"))
+            # Convert the reading to the correct units.
+            output = reading * units.galUS / units.min
+            returnValue(output)
 
     @inlineCallbacks
     def checkMeasurements(self, dev):
-        """Make sure the flow rate is within the range."""
-        raise NotImpementedError('')
+        """Make sure the flow rate is within range."""
+        print ("Flow Rate: ")
         rate = yield self.getRate(dev)
+        print (rate)
         
     @inlineCallbacks
     def loadConfigInfo(self):
@@ -153,16 +167,16 @@ class OmegaRatemeterServer(DeviceServer):
         for k in keys:
             p.get(k, key=k)
         ans = yield p.send()
-        self.serialLinks = {k: ans[k] for k in keys}
+        self.serialLinks = dict((k, ans[k]) for k in keys)
 
     def sendAlert(self):
         raise NotImpementedError('An email alert will be sent in future.')
-        
+    
     @inlineCallbacks    
     def findDevices(self):
         """Find available devices from a list stored in the registry."""
         devs = []
-        for name, (server, port) in self.serialLinks:
+        for name, (server, port) in self.serialLinks.items():
             if server not in self.client.servers:
                 continue
             server = self.client[server]
