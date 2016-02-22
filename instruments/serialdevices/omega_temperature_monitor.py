@@ -33,18 +33,14 @@ timeout = 20
 # The LoopingCall function allows a function to be called periodically on a time interval
 from twisted.internet.task import LoopingCall
 from twisted.internet.reactor import callLater
-# The reactor drives event loops (useful for a number of applications as well as implementing LoopingCall)
-#from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
-
-#from datetime import datetime
 
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
-    
+
 class OmegaTempMonitorWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
@@ -90,10 +86,6 @@ class OmegaTempMonitorServer(DeviceServer):
     deviceName = 'Omega Temp Monitor Server'
     name = 'Omega Temp Monitor Server'
     deviceWrapper = OmegaTempMonitorWrapper
-##    alertInterval = 7200 #Default email alert interval is 7200s (2 hours)
-##    checkInterval = 2 #Default measurement test interval is 2s 
-##    thresholdLow = 50
-##    thresholdHigh = 60
             
     @inlineCallbacks
     def initServer(self):
