@@ -34,14 +34,14 @@ timeout = 20
 from twisted.internet.task import LoopingCall
 from twisted.internet.reactor import callLater
 # The reactor drives event loops (useful for a number of applications as well as implementing LoopingCall)
-from twisted.internet import reactor
+#from twisted.internet import reactor
+from twisted.internet.defer import inlineCallbacks, returnValue
 
-from datetime import datetime
+#from datetime import datetime
 
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting
 import labrad.units as units
-from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad import util
 
     
@@ -55,12 +55,15 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
         self.port = port
         p = self.packet()
         p.open(port)
+        # The following parameters match the default configuration of the
+        # serial device
         p.baudrate(9600L)
         p.stopbits(1L)
         p.bytesize(7L)
         p.parity('O')
         p.timeout(1 * units.s)
-        p.read_line() # Clear out the read buffer.
+        # Clear out the read buffer. This is necessary for some devices.
+        p.read_line()
         yield p.send()
         
     def packet(self):
@@ -74,28 +77,23 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
     @inlineCallbacks
     def write_line(self, code):
         """Write a data value to the temperature monitor."""
-        p = self.packet()
-        p.write_line(code)
-        yield p.send()
+        yield self.server.write_line(code, context = self.ctx)
 
     @inlineCallbacks
     def read_line(self):
         """Read a data value to the temperature monitor."""
-        p = self.packet()
-        p.read_line()
-        ans = yield p.send()
-        returnValue(ans.read_line)
-
+        ans = yield self.server.read(context = self.ctx)
+        returnValue(ans)
    
             
 class OmegaTempMonitorServer(DeviceServer):
     deviceName = 'Omega Temp Monitor Server'
     name = 'Omega Temp Monitor Server'
     deviceWrapper = OmegaTempMonitorWrapper
-    alertInterval = 7200 #Default email alert interval is 7200s (2 hours)
-    checkInterval = 2 #Default measurement test interval is 2s 
-    thresholdLow = 50
-    thresholdHigh = 60
+##    alertInterval = 7200 #Default email alert interval is 7200s (2 hours)
+##    checkInterval = 2 #Default measurement test interval is 2s 
+##    thresholdLow = 50
+##    thresholdHigh = 60
             
     @inlineCallbacks
     def initServer(self):
@@ -112,15 +110,14 @@ class OmegaTempMonitorServer(DeviceServer):
         deferred to fire to indicate that it has terminated.
         """
         dev = self.dev
-        self.refresher = LoopingCall(self.refreshMe)
-        self.refresherDone = \
-                self.refresher.start(5.0,
-                now=True)
+        self.refresher = LoopingCall(self.refreshedMethod)
+        self.refresherDone = self.refresher.start(5.0, now=True)
 
-    def refreshMe(self):
-        """Periodically called automatically, used to call
-        functions that must be called repeatedly"""
-        #print "refreshing"
+    def refreshedMethod(self):
+        """
+        Gets refreshed. Method calls to be called repeatedly are
+        called from here.
+        """
         self.checkMeasurements(self.dev)
         
     @inlineCallbacks
@@ -132,39 +129,41 @@ class OmegaTempMonitorServer(DeviceServer):
             
     @setting(9, 'Start Server', returns='b')
     def start_server(self, c):
-        """starts server ***insert meaningful text here"""
-        dev = self.selectedDevice(c)
-        self.dev = dev
+        """
+        starts server. Initializes the repeated flow rate measurement.
+        """
+        self.dev = self.selectedDevice(c)
         callLater(0.1, self.startRefreshing)
         return True
         
     @inlineCallbacks
     def getTemperature(self, dev):
         """Query the device for the temperature via serial communication"""
+        # The string '*X01' asks the device for the current reading.
         yield dev.write_line("*X01")
         reading = yield dev.read_line()
-        reading.rsplit(None, 1)[-1] #get last number in string
-        reading = float(reading.lstrip("X01"))
-        returnValue(reading * units.degF)
+        #Instrument randomly decides not to return, heres a hack.
+        if len(reading)==0:
+            returnValue(None)
+        else:
+            # Get last number in string.
+            reading.rsplit(None, 1)[-1]
+            # Strip the 'X01' off the returned string.
+            reading = float(reading.lstrip("X01"))
+            # Add correct units.
+            output = reading * units.degF
+            returnValue(output)
 
     @inlineCallbacks
     def checkMeasurements(self, dev):
         """Make sure measured values are within acceptable range"""
         #print "Checking Measurements"
-        print "Temperature: "
+        print ("Temperature: ")
         temperature = yield self.getTemperature(dev)
-        print temperature
-##        if thresholdLow<getTemperature<thresholdHigh:
-##             self.alertRefresherDone = \
-##                self.alertRefresher.start(self.alertInterval,
-##                now=True)
-##        else:
-##             self.alertRefresherDone = \
-##                self.alertRefresher.start(self.sendAlert,
-##                now=False)
-        
+        print (temperature)
+
     def sendAlert(self):
-        print "~~~~~PROBLEM WITH TEMPERATURE; ALERT SENT~~~~~"
+        raise NotImpementedError('An email alert will be sent in future.')
         
     @inlineCallbacks
     def loadConfigInfo(self):

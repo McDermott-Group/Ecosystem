@@ -82,6 +82,7 @@ class OmegaRatemeterWrapper(DeviceWrapper):
         ans = yield self.server.read(context = self.ctx)
         returnValue(ans)
 
+
 class OmegaRatemeterServer(DeviceServer):
     deviceName = 'Omega Ratemeter Server'
     name = 'Omega Ratemeter Server'
@@ -134,11 +135,9 @@ class OmegaRatemeterServer(DeviceServer):
         # The string '@U?V' asks the device for the current reading
         # The '\r' at the end is the carriage return letting the device
         # know that it was the end of the command.
-
-        #Instrument randomly decides not to return, heres a hack.
         yield dev.write_line("@U?V\r")
         reading = yield dev.read_line()
-            
+        #Instrument randomly decides not to return, heres a hack.
         if len(reading)==0:
             returnValue(None)
         else:
