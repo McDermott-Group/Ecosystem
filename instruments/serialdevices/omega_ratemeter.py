@@ -104,15 +104,8 @@ class OmegaRatemeterServer(DeviceServer):
         When the refresh loop is shutdown, we will wait for this
         deferred to fire to indicate that it has terminated.
         """
-        self.refresher = LoopingCall(self.refreshedMethod)
+        self.refresher = LoopingCall(self.checkMeasurements)
         self.refresherDone = self.refresher.start(5.0, now=True)
-
-    def refreshedMethod(self):
-        """
-        Gets refreshed. Method calls to be called repeatedly are
-        called from here.
-        """
-        self.checkMeasurements(self.dev)
 
     @inlineCallbacks
     def stopServer(self):
@@ -151,10 +144,10 @@ class OmegaRatemeterServer(DeviceServer):
             returnValue(output)
 
     @inlineCallbacks
-    def checkMeasurements(self, dev):
+    def checkMeasurements(self):
         """Make sure the flow rate is within range."""
         print ("Flow Rate: ")
-        rate = yield self.getRate(dev)
+        rate = yield self.getRate(self.dev)
         print (rate)
         
     @inlineCallbacks
