@@ -41,6 +41,7 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
+
 class OmegaRatemeterWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
@@ -78,7 +79,7 @@ class OmegaRatemeterWrapper(DeviceWrapper):
 
     @inlineCallbacks
     def read_line(self):
-        """Read a data value to the temperature monitor."""
+        """Read a data value to the rate monitor."""
         ans = yield self.server.read(context = self.ctx)
         returnValue(ans)
 
