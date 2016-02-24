@@ -32,6 +32,7 @@ timeout = 5
 """
 
 import numpy
+import re
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
@@ -349,6 +350,83 @@ class AgilentN5230AServer(GPIBManagedServer):
                  for k in range(length)]               
     	returnValue(data)
 
+    @setting(617, 'Get S Parameters', S='*s', returns='?')
+    def get_s_parameters(self, c, S=['S43']):
+    	"""
+        Get a set of scattering parameters from the network analyzer. 
+		The input parameter should be  a list of strings in the format 
+		['S21','S43','S34',...] where Smn is the s-parameter connecting 
+		port n to port m. Available ports are 1, 2, 3, and 4. The data
+		is returned as a list of *[*Re Sxy, *Im Sxy].
+        """
+		
+        S = [x.capitalize() for x in S]
+        #match to strings of format "Sxy" only
+        s_pattern = re.compile('^S\d\d$')
+        for Sp in S:
+            if s_pattern.match(Sp) is None:
+                raise Exception('S-paramter should be given in the ' +
+                'format Sxy where x and y are integers.')
+            else:
+                if (int(Sp[1]) > 4 or int(Sp[2]>4) or int(Sp[1] < 1) 
+				   or int(Sp[2] < 1)):
+            	    raise Exception('Only ports 1-4 are available.')
+	    #remove duplicates
+	    S = list(set(S))
+      
+        dev = self.selectedDevice(c)    	
+        
+        # Delete all measurements on the PNA.
+        yield dev.write('CALC:PAR:DEL:ALL')
+        # Close window 1 if it already exists.
+        if (yield dev.query('DISP:WIND1:STATE?')) == '1':
+            dev.write('DISP:WIND1:STATE OFF')
+        # Create window 1.
+        yield dev.write('DISP:WIND1:STATE ON')
+        for k, Sp in enumerate(S):
+            yield dev.write('CALC:PAR:DEF:EXT "Rxy_%s",%s'
+                    %(Sp, Sp))
+            yield dev.write('DISP:WIND1:TRAC%d:FEED "sxy_%s"'
+                    %(2 * k + 1, Sp))
+            yield dev.write('CALC:PAR:DEF:EXT "Ixy_%s",%s'
+                    %(Sp, Sp))
+            yield dev.write('DISP:WIND1:TRAC%d:FEED "sxy_%s"'
+                    %(2 * k + 2, Sp))
+            yield dev.write('CALC:PAR:SEL "Rxy_%s"' %Sp)
+            yield dev.write('CALC:FORM REAL')
+            yield dev.write('CALC:PAR:SEL "Ixy_%s"' %Sp)
+            yield dev.write('CALC:FORM IMAG')
+            yield dev.write('SENS1:SWE:TIME:AUTO ON')
+            yield dev.write('TRIG:SOUR IMM')
+  
+        yield dev.write('FORM ASC,0')
+        
+        avgMode = yield self.average_mode(c)
+        if avgMode:
+            avgCount = yield self.average_points(c)
+            yield self.restart_averaging(c)
+            yield dev.write('SENS:SWE:GRO:COUN %i' %avgCount)
+            yield dev.write('ABORT;SENS:SWE:MODE GRO')
+        else:
+            # Stop the current sweep and immediately send a trigger. 
+            yield dev.write('ABORT;SENS:SWE:MODE SING')
+
+        # Wait for the measurement to finish.
+        yield dev.query('*OPC?', timeout=24*units.h)
+
+        data = []
+        for Sp in S:
+            yield dev.write('CALC:PAR:SEL "Rxy_%s"' %Sp)
+            ascii_data = yield dev.query('CALC:DATA? FDATA')
+            real = numpy.array([x for x in ascii_data.split(',')],
+                dtype=float)
+            yield dev.write('CALC:PAR:SEL "Ixy_%s"' %Sp)
+            ascii_data = yield dev.query('CALC:DATA? FDATA')
+            imag = numpy.array([x for x in ascii_data.split(',')],
+            dtype=float)
+            data.append([real, imag])
+                  
+        returnValue(data)		
 
 __server__ = AgilentN5230AServer()
 
