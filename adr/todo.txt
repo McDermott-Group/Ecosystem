@@ -1,0 +1,34 @@
+﻿TODO LIST
+- &&& means todo in code
+- figure out fridge settings
+- do we want to have a recording checkbox with a time interval?
+- try running some of this from dif computers
++ ADR is selected from  beginning in client.  what if none are started first?
+- what happens when close server when client is open?  especially with the menu, buttons, status
+- had to comment out a bunch of NotFoundErrors in instrument initialization.  figure this out
+
+BUGS
+- mag up buttons when adr server is not active don’t change back properly
+- since current lags voltage, often will mag all the way down.  have to press regulate again to go back up
+- uses lots of memory
+- error when start adr client halfway through adr server initialization:
+	Unhandled error in message listener: MessageContext(source=1, ID=(0L,0L), target=102,) ($L, ('message',False)) ((function <lambda> at 0x0482345>, (), {})
+- client throws error when tries to load temps for first time and file does not exist (if first time starting it)
+- if ADRserver is ended, reg/mag up buttons dont reset
+
+TODO IN GENERAL
+Data - either write a new datavault server or (hopefully) just use the existing one and change Ivan's code to use it
+Grapher - make an universal plotting tool that is detangled from the experiment (sweep) code or use existing Grapher whatever is best (the decision on project "Data" should me made with this in mind).
+Units - improve labrad.units module.
+
+
+QUESTIONS
+- why does the refreshing on a gpib added message not work?
+- is it possible to overwrite an existing @setting? ==> yes, but method name and id need to be same
+
+
+INSTRUCTIONS TO OPEN ADR PROGRAM
+open labrad, click run
+open node server in 'start' folder
+open adr server
+open adr client
