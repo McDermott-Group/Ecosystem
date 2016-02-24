@@ -18,7 +18,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Agilent N5230A Network Analyzer
-version = 1.1.0
+version = 1.2.0
 description = Four channel 5230A PNA-L network analyzer server
 
 [startup]
@@ -32,7 +32,6 @@ timeout = 5
 """
 
 import numpy
-import re
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
@@ -361,19 +360,16 @@ class AgilentN5230AServer(GPIBManagedServer):
         """
 		
         S = [x.capitalize() for x in S]
+        S = list(set(S))
         #match to strings of format "Sxy" only
-        s_pattern = re.compile('^S\d\d$')
+        
         for Sp in S:
-            if s_pattern.match(Sp) is None:
-                raise Exception('S-paramter should be given in the ' +
-                'format Sxy where x and y are integers.')
-            else:
-                if (int(Sp[1]) > 4 or int(Sp[2]>4) or int(Sp[1] < 1) 
-				   or int(Sp[2] < 1)):
-            	    raise Exception('Only ports 1-4 are available.')
-	    #remove duplicates
-	    S = list(set(S))
-      
+            if Sp not in ('S11', 'S12', 'S13', 'S14', 'S21', 'S22', 
+                'S23', 'S24', 'S31', 'S32', 'S33', 'S34', 'S41', 'S42', 
+                'S43', 'S44'):
+                raise ValueError('Illegal measurment definition: %s.'
+                    %str(Sp))
+	    #remove duplicates      
         dev = self.selectedDevice(c)    	
         
         # Delete all measurements on the PNA.
