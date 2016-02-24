@@ -74,12 +74,12 @@ class OmegaRatemeterWrapper(DeviceWrapper):
     
     @inlineCallbacks
     def write_line(self, code):
-        """Write a data value to the rate monitor."""
+        """Write data value to the rate monitor."""
         yield self.server.write_line(code, context = self.ctx)
 
     @inlineCallbacks
     def read_line(self):
-        """Read a data value to the rate monitor."""
+        """Read data value from the rate monitor."""
         ans = yield self.server.read(context = self.ctx)
         returnValue(ans)
 
@@ -115,7 +115,7 @@ class OmegaRatemeterServer(DeviceServer):
             yield self.refresherDone
       
     @setting(9, 'Start Server', returns='b')
-    def start_server(self, c):
+    def startServer(self, c):
         """
         starts server. Initializes the repeated flow rate measurement.
         """
