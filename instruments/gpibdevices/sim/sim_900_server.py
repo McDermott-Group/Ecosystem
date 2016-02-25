@@ -77,7 +77,11 @@ class SIM900(GPIBManagedServer):
         addresses = []
         IDs, names = self.deviceLists()
         for SIM900addr in names:
-            p = self.client[self.name].packet()
+            try:
+                p = self.client[self.name].packet()
+            except KeyError as e:
+                callLater(0.1, self.refreshDevices)
+                return
             res = yield p.select_device(SIM900addr).gpib_write('*RST').gpib_write('*CLS').gpib_query('CTCR?').send()
             statusStr = res['gpib_query']
             # Ask the SIM900 which slots have an active module, and only deal with those.
