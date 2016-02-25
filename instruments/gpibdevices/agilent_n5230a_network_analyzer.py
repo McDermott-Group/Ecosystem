@@ -356,7 +356,7 @@ class AgilentN5230AServer(GPIBManagedServer):
 		The input parameter should be  a list of strings in the format 
 		['S21','S43','S34',...] where Smn is the s-parameter connecting 
 		port n to port m. Available ports are 1, 2, 3, and 4. The data
-		is returned as a list of *[*Re Sxy, *Im Sxy].
+		is returned as a list *[*Re Sxy, *Im Sxy].
         """
 		
         S = [x.capitalize() for x in S]
@@ -382,11 +382,11 @@ class AgilentN5230AServer(GPIBManagedServer):
         for k, Sp in enumerate(S):
             yield dev.write('CALC:PAR:DEF:EXT "Rxy_%s",%s'
                     %(Sp, Sp))
-            yield dev.write('DISP:WIND1:TRAC%d:FEED "sxy_%s"'
+            yield dev.write('DISP:WIND1:TRAC%d:FEED "Rxy_%s"'
                     %(2 * k + 1, Sp))
             yield dev.write('CALC:PAR:DEF:EXT "Ixy_%s",%s'
                     %(Sp, Sp))
-            yield dev.write('DISP:WIND1:TRAC%d:FEED "sxy_%s"'
+            yield dev.write('DISP:WIND1:TRAC%d:FEED "Ixy_%s"'
                     %(2 * k + 2, Sp))
             yield dev.write('CALC:PAR:SEL "Rxy_%s"' %Sp)
             yield dev.write('CALC:FORM REAL')
