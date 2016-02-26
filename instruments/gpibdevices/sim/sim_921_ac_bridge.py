@@ -41,7 +41,7 @@ class SIM921Server(GPIBManagedServer):
     deviceName = 'STANFORD RESEARCH SYSTEMS SIM921' # *IDN? = "Stanford_Research_Systems,SIM921,s/n105794,ver3.6"
     deviceWrapper = GPIBDeviceWrapper
 
-    @setting(101, 'Get Time Constant', returns=['v[mS]'])
+    @setting(101, 'Get Time Constant', returns=['v[ms]'])
     def getTimeConstant(self, c):
         """Get the time constant (in ms) currently set for the AC Res Bridge."""
         dev = self.selectedDevice(c)
