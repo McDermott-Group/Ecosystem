@@ -45,23 +45,6 @@ class NRuoxServer(LabradServer):
     RuOx temps with the same AC bridge.
     """
     name = 'AC Bridge with Multiplexer'
-    
-    # @inlineCallbacks
-    # def startTakingTemps(self, c):
-        # while True:
-            # chans = c['chans'].keys()
-            # if len(chans) < 1: 
-                # # To not take up too many resources if no channels are
-                # # selected.
-                # yield util.wakeupCall(MIN_REFRESH_RATE['s'])
-            # # Switch channel -> wait time const -> measure temp.
-            # for chan in chans:
-                # yield c['MP'].channel(chan)
-                # yield c['ACB'].set_curve(chan)
-                # t = yield c['ACB'].get_time_constant()
-                # timeout = max(MIN_REFRESH_RATE['s'], 2 * t['s']) * units.s
-                # yield util.wakeupCall(timeout['s'])
-                # c['chans'][chan] = yield c['ACB'].get_ruox_temperature()
                 
     @inlineCallbacks
     def startTakingTemps(self, c):
@@ -100,7 +83,6 @@ class NRuoxServer(LabradServer):
         yield c['ACB'].select_device(addrs[0][1])
         if 'chans' not in c:
             c['chans'] = {}
-        # d = twistedThreads.deferToThread(self.startTakingTemps, c)
         callLater(0.1,self.startTakingTemps,c)
 
     @setting(102, 'Add Channel', chan='i')
