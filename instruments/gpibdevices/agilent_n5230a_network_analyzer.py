@@ -18,7 +18,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Agilent N5230A Network Analyzer
-version = 1.1.0
+version = 1.2.1
 description = Four channel 5230A PNA-L network analyzer server
 
 [startup]
@@ -32,7 +32,6 @@ timeout = 5
 """
 
 import numpy
-import re
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
@@ -274,8 +273,8 @@ class AgilentN5230AServer(GPIBManagedServer):
                 dtype=float) * units.dB
     	returnValue(data)
 
-    @setting(616, 'Get S2P', ports='(w, w)', returns=('*(v[Hz], ' +
-            'v[dB], v[deg], v[dB], v[deg], v[dB], v[deg], v[dB], ' +
+    @setting(616, 'Get S2P', ports='(w, w)', returns=('*(v[Hz], '
+            'v[dB], v[deg], v[dB], v[deg], v[dB], v[deg], v[dB], '
             'v[deg])'))
     def get_s2p(self, c, ports=(1, 2)):
     	"""
@@ -291,11 +290,11 @@ class AgilentN5230AServer(GPIBManagedServer):
             S[ports[1], ports[1]], Phase[ports[0], ports[1]]).
         """
         if len(ports) != 2:
-            raise Exception("Two and only two ports should be " +
+            raise Exception("Two and only two ports should be "
                     "specified.")
         for port in ports:
             if port < 1 or port > 4:
-                raise Exception("Port number could be only '1', '2', " +
+                raise Exception("Port number could be only '1', '2', "
                         "'3', or '4'.")
         if ports[0] == ports[1]:
             raise Exception("Port numbers should not be equal.")
@@ -357,25 +356,21 @@ class AgilentN5230AServer(GPIBManagedServer):
 		The input parameter should be  a list of strings in the format 
 		['S21','S43','S34',...] where Smn is the s-parameter connecting 
 		port n to port m. Available ports are 1, 2, 3, and 4. The data
-		is returned as a list of *[*Re Sxy, *Im Sxy].
+		is returned as a list *[*Re Sxy, *Im Sxy].
         """
-		
         S = [x.capitalize() for x in S]
-        #match to strings of format "Sxy" only
-        s_pattern = re.compile('^S\d\d$')
+        # Remove duplicates.
+        S = list(set(S))
+
+        # Match to strings of format "Sxy" only.
         for Sp in S:
-            if s_pattern.match(Sp) is None:
-                raise Exception('S-paramter should be given in the ' +
-                'format Sxy where x and y are integers.')
-            else:
-                if (int(Sp[1]) > 4 or int(Sp[2]>4) or int(Sp[1] < 1) 
-				   or int(Sp[2] < 1)):
-            	    raise Exception('Only ports 1-4 are available.')
-	    #remove duplicates
-	    S = list(set(S))
-      
-        dev = self.selectedDevice(c)    	
-        
+            if Sp not in ('S11', 'S12', 'S13', 'S14', 'S21', 'S22', 
+                    'S23', 'S24', 'S31', 'S32', 'S33', 'S34', 'S41',
+                    'S42', 'S43', 'S44'):
+                raise ValueError('Illegal measurment definition: %s.'
+                        %str(Sp))
+                        
+        dev = self.selectedDevice(c)
         # Delete all measurements on the PNA.
         yield dev.write('CALC:PAR:DEL:ALL')
         # Close window 1 if it already exists.
@@ -386,11 +381,11 @@ class AgilentN5230AServer(GPIBManagedServer):
         for k, Sp in enumerate(S):
             yield dev.write('CALC:PAR:DEF:EXT "Rxy_%s",%s'
                     %(Sp, Sp))
-            yield dev.write('DISP:WIND1:TRAC%d:FEED "sxy_%s"'
+            yield dev.write('DISP:WIND1:TRAC%d:FEED "Rxy_%s"'
                     %(2 * k + 1, Sp))
             yield dev.write('CALC:PAR:DEF:EXT "Ixy_%s",%s'
                     %(Sp, Sp))
-            yield dev.write('DISP:WIND1:TRAC%d:FEED "sxy_%s"'
+            yield dev.write('DISP:WIND1:TRAC%d:FEED "Ixy_%s"'
                     %(2 * k + 2, Sp))
             yield dev.write('CALC:PAR:SEL "Rxy_%s"' %Sp)
             yield dev.write('CALC:FORM REAL')
@@ -427,6 +422,7 @@ class AgilentN5230AServer(GPIBManagedServer):
             data.append([real, imag])
                   
         returnValue(data)		
+
 
 __server__ = AgilentN5230AServer()
 
