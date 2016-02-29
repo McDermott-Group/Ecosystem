@@ -1,4 +1,3 @@
-
 # Copyright (C) 2016 Noah Meltzer, Alexander Opremcak
 #
 # This program is free software: you can redistribute it and/or modify
@@ -30,6 +29,7 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
+
 # The LoopingCall function allows a function to be called periodically
 # on a time interval.
 from twisted.internet.task import LoopingCall
@@ -40,6 +40,7 @@ from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting
 import labrad.units as units
 from labrad import util
+
 import time
 
 class PfeifferVacuumControlWrapper(DeviceWrapper):
@@ -74,28 +75,28 @@ class PfeifferVacuumControlWrapper(DeviceWrapper):
     
     @inlineCallbacks
     def write_line(self, code):
-        """Write data value to the rate monitor."""
+        """Write data value to the vacuum control unit."""
         yield self.server.write_line(code, context = self.ctx)
 
     @inlineCallbacks
     def write(self, code):
-        """Write data value to the rate monitor."""
+        """Write data value to the vacuum control unit."""
         yield self.server.write(code, context = self.ctx)
         
     @inlineCallbacks
     def read_line(self):
-        """Read data value from the rate monitor."""
+        """Read data value from the vacuum control unit."""
         ans = yield self.server.read(context = self.ctx)
         print "ans=", ans
         returnValue(ans)
 
     @inlineCallbacks
     def read(self):
-        """Write data value to the rate monitor."""
+        """Read data value from the unit"""
         ans =  yield self.server.read(context = self.ctx)
         returnValue(ans)
 
-class OmegaRatemeterServer(DeviceServer):
+class PfeifferVacuumControlServer(DeviceServer):
     deviceName = 'Pfeiffer Vacuum Control Unit'
     name = 'Pfeiffer Vacuum Control Unit'
     deviceWrapper = PfeifferVacuumControlWrapper
@@ -128,7 +129,7 @@ class OmegaRatemeterServer(DeviceServer):
     @setting(9, 'Start Server', returns='b')
     def startServer(self, c):
         """
-        starts server. Initializes the repeated flow rate measurement.
+        starts server. Initializes the repeated pressure measurement.
         """
         self.dev = self.selectedDevice(c)
         i =1
@@ -148,13 +149,13 @@ class OmegaRatemeterServer(DeviceServer):
             yield self.dev.read()
             time.sleep(0.05)
             # Write the 'enquire' code to the serial bus. This tells the
-            # device that we want a reading
+            # device that we want a reading.
             yield self.dev.write("\x05\r\n")
             time.sleep(0.05)
             response = yield self.dev.read()
             # The reading is formatted in the following way:
             # 'status,measurement.'
-            # Separate the status code from the reading
+            # Separate the status code from the measurement.
             response = response.rsplit(',')
             pressure = response[1]
             status = response[0]
@@ -165,15 +166,11 @@ class OmegaRatemeterServer(DeviceServer):
                 # Using rstrip(), strip whitespace and escape characters
                 # off the end of the reading
                 print("sensor "+str(i)+": "+pressure.rstrip())
-        
-           
-                
-            
         returnValue(None)
         
     @inlineCallbacks
     def checkMeasurements(self):
-        """Make sure the flow rate is within range."""
+        """Make sure the pressure is within range."""
         output = yield self.getPressures(self.dev)
 
     @inlineCallbacks
@@ -206,7 +203,7 @@ class OmegaRatemeterServer(DeviceServer):
             devs += [(name, (server, port))]
         returnValue(devs)
 
-__server__ = OmegaRatemeterServer()
+__server__ = PfeifferVacuumControlServer()
 
 
 if __name__ == '__main__':
