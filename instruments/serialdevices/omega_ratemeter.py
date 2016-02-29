@@ -41,6 +41,7 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
+import time
 
 class OmegaRatemeterWrapper(DeviceWrapper):
     @inlineCallbacks
@@ -96,6 +97,13 @@ class OmegaRatemeterServer(DeviceServer):
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
+        #Set the maximum acceptible flow rate
+        self.thresholdMax = 5000 * units.galUS / units.min
+        #Set the minimum acceptible flow rate
+        self.thresholdMin = 3000 * units.galUS / units.min
+        self.alertInterval = 10 #seconds
+        self.t1 = 0
+        self.t2 = 0
 
     def startRefreshing(self):
         """
@@ -130,6 +138,7 @@ class OmegaRatemeterServer(DeviceServer):
         # The '\r' at the end is the carriage return letting the device
         # know that it was the end of the command.
         yield dev.write_line("@U?V\r")
+        time.sleep(0.5)
         reading = yield dev.read_line()
         #Instrument randomly decides not to return, heres a hack.
         if len(reading)==0:
@@ -150,6 +159,12 @@ class OmegaRatemeterServer(DeviceServer):
         rate = yield self.getRate(self.dev)
         print (rate)
         
+        if(rate > self.thresholdMax):
+           self.sendAlert(rate, "Flow rate above maximum threshold")
+        elif(rate < self.thresholdMin):
+            self.sendAlert(rate, "Flow rate below minimum threshold")
+
+        
     @inlineCallbacks
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
@@ -162,8 +177,29 @@ class OmegaRatemeterServer(DeviceServer):
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys)
 
-    def sendAlert(self):
-        raise NotImpementedError('An email alert will be sent in future.')
+    def sendAlert(self, measurement, message):
+        """
+        Deal with an out-of-bounds measurement by calling this method,
+        it accepts the meausurement, and an error message. It sends an
+        email containing the measurements and the error message.
+        """
+
+        # If the amount of time specified by the alertInterval has elapsed,
+        # then send another alert.
+        self.t1 = time.time()
+        if((self.t1-self.t2)>self.alertInterval):
+            # Store the last time an alert was sent in the form of seconds since
+            # the epoch (1/1/1970).
+            self.t2 = self.t1
+            print("\r\n"+message)
+            print("\t"+time.ctime(self.t1))
+            # No newline character
+            print("\t"+str(measurement)+"\r\n")
+            # The labrad units do not like when you try to append values with
+            # units to another string...hence the many print statements.
+            
+        return
+
     
     @inlineCallbacks    
     def findDevices(self):
