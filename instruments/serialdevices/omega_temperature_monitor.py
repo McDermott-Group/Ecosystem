@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Omega Temperature Monitor Server
-version = 1.0.14
+version = 1.0.15
 description = Monitors temperature
 
 [startup]
@@ -40,6 +40,7 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
+# TO-DO: replace sleep.
 import time
 
 
@@ -53,6 +54,7 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
         self.port = port
         p = self.packet()
         p.open(port)
+        # TO-DO...
         # The following parameters match the default configuration of the
         # serial device
         p.baudrate(9600L)
@@ -96,20 +98,26 @@ class OmegaTempMonitorServer(DeviceServer):
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
-        #Set the maximum acceptible flow rate
+        # TO-DO...
+        # Set the maximum acceptible flow rate
         self.thresholdMax = 50 * units.degF
-        #Set the minimum acceptible flow rate
+        # TO-DO...
+        ## delay = 20 * ms
+        ## time.sleep(delay['s'])
+        # Set the minimum acceptible flow rate
         self.thresholdMin = 30 * units.degF
-        self.alertInterval = 10 #seconds
+        self.alertInterval = 10 *units.s # seconds
         self.t1 = 0
         self.t2 = 0
-        
+
     def startRefreshing(self):
-        """Start periodically refreshing the list of devices.
+        """
+        Start periodically refreshing the list of devices.
         The start call returns a deferred which we save for later.
         When the refresh loop is shutdown, we will wait for this
         deferred to fire to indicate that it has terminated.
         """
+        # TO-DO...
         dev = self.dev
         self.refresher = LoopingCall(self.checkMeasurements)
         self.refresherDone = self.refresher.start(5.0, now=True)
@@ -122,7 +130,7 @@ class OmegaTempMonitorServer(DeviceServer):
             yield self.refresherDone
             
     @setting(9, 'Start Server', returns='b')
-    def start_server(self, c):
+    def start_server(self, c): # TO-DO...
         """
         starts server. Initializes the repeated flow rate measurement.
         """
@@ -131,19 +139,21 @@ class OmegaTempMonitorServer(DeviceServer):
         return True
 
     @setting(10, 'Set Thresholds', low = 'w', high = 'w')
-    def setThresholds(self, ctx, low, high):
+    def setThresholds(self, ctx, low, high): # TO-DO...
         """This setting configures the trigger thresholds.
         If a threshold is exceeded, then an alert is sent"""
+        # TO-DO...
         if(low>=high):
             print("The minimum threshold cannot be greater than the maximum\
                     threshold")
             return False
         self.thresholdMax = units.WithUnit(high,'degF')
         self.thresholdMin = units.WithUnit(low,'degF')
+        # TO-DO...
         return True;
 
-    @setting(11, 'Set Alert Interval', interval = 'w')
-    def setAlertInterval(self, ctx, interval):
+    @setting(11, 'Set Alert Interval', interval='w')
+    def setAlertInterval(self, ctx, interval): # TO-DO...
         """Configure the alert interval"""
         self.alertInterval = interval
         
@@ -155,6 +165,8 @@ class OmegaTempMonitorServer(DeviceServer):
         time.sleep(0.5)
         reading = yield dev.read_line()
         #Instrument randomly decides not to return, heres a hack.
+        # TO-DO...
+        ### if reading:
         if len(reading)==0:
             returnValue(None)
         else:
@@ -170,10 +182,12 @@ class OmegaTempMonitorServer(DeviceServer):
     def checkMeasurements(self):
         """Make sure measured values are within acceptable range"""
         #print "Checking Measurements"
+        # TO-DO: Remove print statements.
         print ("Temperature: ")
         temperature = yield self.getTemperature(self.dev)
         print (temperature)
 
+        # TO-DO...
         if(temperature > self.thresholdMax):
            self.sendAlert(temperature, "Temperature is above "+str(self.thresholdMax))
         elif(temperature < self.thresholdMin):
