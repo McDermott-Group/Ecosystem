@@ -1234,8 +1234,9 @@ class FPGAServer(DeviceServer):
         you can specify a stretch which will repeat a value in the middle of
         the filter for the specified length (in 4ns intervals).
         """
-        raise Exception('Deprecated for ADC V7')
         dev = self.selectedADC(c)
+        if not isinstance(dev, adc.ADC_Build1):
+            raise Exception('Deprecated for ADC Build 7')
         assert len(bytes) <= dev.FILTER_LEN, ('Filter function max length is {}'
                                               .format(dev.FILTER_LEN))
         bytes = np.fromstring(bytes, dtype='<u1')
@@ -1272,8 +1273,9 @@ class FPGAServer(DeviceServer):
         """
         # Get the ADC selected in this context. Raise an exception if selected
         # device is not an ADC
-        raise Exception('Deprecated for ADC V7')
         dev = self.selectedADC(c)
+        if not isinstance(dev, adc.ADC_Build1):
+            raise Exception('Deprecated for ADC Build 7')
         assert 0 <= channel < dev.DEMOD_CHANNELS, ('channel out of range: {}'
                                                    .format(channel))
         assert 0 <= sineAmp <= dev.TRIG_AMP, ('sine amplitude out of range: {}'
@@ -1325,11 +1327,12 @@ class FPGAServer(DeviceServer):
         starting phase is determined as phi0 = phase0*(2^16) where phase0 is
         the starting phase in CYCLES!
         """
+        dev = self.selectedADC(c)
+        if not isinstance(dev, adc.ADC_Build1):
+            raise Exception('Deprecated for ADC Build 7')
         # 16 bit 2's compliment number for demod trig function
-        raise Exception('Deprecated for ADC V7')
         assert -2**15 <= dPhi < 2**15, 'delta phi out of range'
         assert -2**15 <= phi0 < 2**15, 'phi0 out of range'
-        dev = self.selectedADC(c)
         d = c.setdefault(dev, {})
         ch = d.setdefault(channel, {})
         ch['dPhi'] = dPhi
@@ -1366,8 +1369,9 @@ class FPGAServer(DeviceServer):
         Get the demodulation ranges for the last sequence run in this context.
         (ADC only)
         """
-        raise Exception('Deprecated for ADC V7')
         dev = self.selectedADC(c)
+        if not isinstance(dev, adc.ADC_Build1):
+            raise Exception('Deprecated for ADC Build 7')
         return c[dev]['ranges']
 
     # ADC configuration (v7)
