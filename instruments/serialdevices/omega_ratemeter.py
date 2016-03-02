@@ -43,6 +43,7 @@ from labrad import util
 
 import time
 
+
 class OmegaRatemeterWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
@@ -112,6 +113,7 @@ class OmegaRatemeterServer(DeviceServer):
         When the refresh loop is shutdown, we will wait for this
         deferred to fire to indicate that it has terminated.
         """
+        dev = self.dev
         self.refresher = LoopingCall(self.checkMeasurements)
         self.refresherDone = self.refresher.start(5.0, now=True)
 
@@ -130,6 +132,20 @@ class OmegaRatemeterServer(DeviceServer):
         self.dev = self.selectedDevice(c)
         callLater(0.1, self.startRefreshing)
         return True;
+    
+    @setting(10, 'Set Thresholds', low = 'w', high = 'w')
+    def setThresholds(self, ctx, low, high):
+        if(low>=high):
+            print("The minimum threshold cannot be greater than the maximum\
+                    threshold")
+            return False
+        self.thresholdMax = units.WithUnit(high,' ml / min')
+        self.thresholdMin = units.WithUnit(low,' ml / min')
+        return True;
+
+    @setting(11, 'Set Alert Interval', interval = 'w')
+    def setAlertInterval(self, ctx, interval):
+        self.alertInterval = interval
     
     @inlineCallbacks
     def getRate(self, dev):
@@ -160,9 +176,11 @@ class OmegaRatemeterServer(DeviceServer):
         print (rate)
         
         if(rate > self.thresholdMax):
-           self.sendAlert(rate, "Flow rate above maximum threshold")
+           self.sendAlert(rate, "Flow rate above maximum threshold of "\
+                           +str(self.thresholdMax))
         elif(rate < self.thresholdMin):
-            self.sendAlert(rate, "Flow rate below minimum threshold")
+            self.sendAlert(rate, "Flow rate below minimum threshold of "\
+                           +str(self.thresholdMin))
 
         
     @inlineCallbacks
