@@ -3,12 +3,13 @@
 import argparse
 
 import labrad
+import os
 
 NUM_TRIES = 3
 
  
 def _parse_arguments():
-    parser = argparse.ArgumentParser(description='Automatically ' +
+    parser = argparse.ArgumentParser(description='Automatically '
             'bring-up the FPGA GHz boards.')
     parser.add_argument('--password',
             default=None,
@@ -92,8 +93,20 @@ def auto_bringup(fpga):
     return successes, failures, tries
 
 def main():
-    args = _parse_arguments()
-    with labrad.connect(password=args.password) as cxn:
+    if 'LabRADPassword' in os.environ:
+        password = os.environ['LabRADPassword']
+    elif self.args.password is not None:
+        try:
+            args = _parse_arguments()
+        except:
+            print('Could not parse the bring-up script arguments.')
+            raise
+        password = self.args.password
+    else:
+        raise Exception("Neither enviroment variable "
+                "'LabRADPassword' exists nor the command line "
+                "argument '--password' is specified.")
+    with labrad.connect(password=password) as cxn:
         fpga = cxn['ghz_fpgas']
         no_success = True
         while no_success:

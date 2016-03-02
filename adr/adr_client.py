@@ -14,23 +14,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-"""
-### BEGIN NODE INFO
-[info]
-name = ADR Controller GUI
-version = 1.3.2
-description = This is a simple labrad client that gives a GUI interface to ADR Server, which controls our ADRs
-
-[startup]
-cmdline = %PYTHON% %FILE%
-timeout = 20
-
-[shutdown]
-message = 987654321
-timeout = 20
-### END NODE INFO
-"""
-
 import matplotlib as mpl
 mpl.use('TkAgg')
 import pylab, numpy
