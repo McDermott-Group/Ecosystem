@@ -40,6 +40,8 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
+import time
+
 
 class OmegaTempMonitorWrapper(DeviceWrapper):
     @inlineCallbacks
@@ -94,6 +96,13 @@ class OmegaTempMonitorServer(DeviceServer):
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
+        #Set the maximum acceptible flow rate
+        self.thresholdMax = 50 * units.degF
+        #Set the minimum acceptible flow rate
+        self.thresholdMin = 30 * units.degF
+        self.alertInterval = 10 #seconds
+        self.t1 = 0
+        self.t2 = 0
         
     def startRefreshing(self):
         """Start periodically refreshing the list of devices.
@@ -102,16 +111,16 @@ class OmegaTempMonitorServer(DeviceServer):
         deferred to fire to indicate that it has terminated.
         """
         dev = self.dev
-        self.refresher = LoopingCall(self.refreshedMethod)
+        self.refresher = LoopingCall(self.checkMeasurements)
         self.refresherDone = self.refresher.start(5.0, now=True)
 
-    def refreshedMethod(self):
-        """
-        Gets refreshed. Method calls to be called repeatedly are
-        called from here.
-        """
-        self.checkMeasurements(self.dev)
-        
+##    def refreshedMethod(self):
+##        """
+##        Gets refreshed. Method calls to be called repeatedly are
+##        called from here.
+##        """
+##        self.checkMeasurements(self.dev)
+##        
     @inlineCallbacks
     def stopServer(self):
         """Kill the device refresh loop and wait for it to terminate."""
@@ -127,12 +136,27 @@ class OmegaTempMonitorServer(DeviceServer):
         self.dev = self.selectedDevice(c)
         callLater(0.1, self.startRefreshing)
         return True
+
+    @setting(10, 'Set Thresholds', low = 'w', high = 'w')
+    def setThresholds(self, ctx, low, high):
+        if(low>=high):
+            print("The minimum threshold cannot be greater than the maximum\
+                    threshold")
+            return False
+        self.thresholdMax = units.WithUnit(high,'degF')
+        self.thresholdMin = units.WithUnit(low,'degF')
+        return True;
+
+    @setting(11, 'Set Alert Interval', interval = 'w')
+    def setAlertInterval(self, ctx, interval):
+        self.alertInterval = interval
         
     @inlineCallbacks
     def getTemperature(self, dev):
         """Query the device for the temperature via serial communication"""
         # The string '*X01' asks the device for the current reading.
         yield dev.write_line("*X01")
+        time.sleep(0.5)
         reading = yield dev.read_line()
         #Instrument randomly decides not to return, heres a hack.
         if len(reading)==0:
@@ -147,16 +171,40 @@ class OmegaTempMonitorServer(DeviceServer):
             returnValue(output)
 
     @inlineCallbacks
-    def checkMeasurements(self, dev):
+    def checkMeasurements(self):
         """Make sure measured values are within acceptable range"""
         #print "Checking Measurements"
         print ("Temperature: ")
-        temperature = yield self.getTemperature(dev)
+        temperature = yield self.getTemperature(self.dev)
         print (temperature)
 
-    def sendAlert(self):
-        raise NotImpementedError('An email alert will be sent in future.')
-        
+        if(temperature > self.thresholdMax):
+           self.sendAlert(temperature, "Temperature is above "+str(self.thresholdMax))
+        elif(temperature < self.thresholdMin):
+            self.sendAlert(temperature, "Temperature is below "+str(self.thresholdMin))
+            
+    def sendAlert(self, measurement, message):
+        """
+        Deal with an out-of-bounds measurement by calling this method,
+        it accepts the meausurement, and an error message. It sends an
+        email containing the measurements and the error message.
+        """
+        # If the amount of time specified by the alertInterval has elapsed,
+        # then send another alert.
+        self.t1 = time.time()
+        if((self.t1-self.t2)>self.alertInterval):
+            # Store the last time an alert was sent in the form of seconds since
+            # the epoch (1/1/1970).
+            self.t2 = self.t1
+            print("\r\n"+message)
+            print("\t"+time.ctime(self.t1))
+            # No newline character
+            print("\t"+str(measurement)+"\r\n")
+            # The labrad do not like when you try to append values with
+            # units to another string...hence the many print statements.
+            
+        return
+    
     @inlineCallbacks
     def loadConfigInfo(self):
         """Load configuration information from the registry."""

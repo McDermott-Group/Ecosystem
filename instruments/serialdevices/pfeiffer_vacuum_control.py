@@ -108,6 +108,16 @@ class PfeifferVacuumControlServer(DeviceServer):
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
+        # Set the maximum acceptible flow rate. This is a list
+        # of 6 values corresponding to the 6 sensors
+        self.thresholdMax = [0,0,0,5E-4,5E-4,5E-4]
+        #Set the minimum acceptible flow rate
+        self.thresholdMin = [0,0,0,5E-5,5E-5,5E-5]
+        self.alertInterval = 10 #seconds
+        self.measurements = [0, 0, 0, 0, 0, 0]
+        self.statusCodes = [0, 0, 0, 0, 0, 0]
+        self.t1 = 0
+        self.t2 = 0
     
     def startRefreshing(self):
         """
@@ -116,6 +126,7 @@ class PfeifferVacuumControlServer(DeviceServer):
         When the refresh loop is shutdown, we will wait for this
         deferred to fire to indicate that it has terminated.
         """
+        dev = self.dev
         self.refresher = LoopingCall(self.checkMeasurements)
         self.refresherDone = self.refresher.start(5, now=True)
 
@@ -132,9 +143,26 @@ class PfeifferVacuumControlServer(DeviceServer):
         starts server. Initializes the repeated pressure measurement.
         """
         self.dev = self.selectedDevice(c)
-        i =1
         callLater(0.1, self.startRefreshing)
+##        # Populate measurements
+##        self.getPressures(self.dev)
         return(True)
+
+    @setting(10, 'Set Thresholds', low = '*v', high = '*v')
+    def setThresholds(self, ctx, low, high):
+        for i in range(0,6):
+            if(low[i]>high[i]):
+                print("The minimum threshold cannot be greater than the maximum\
+                        threshold for sensor "+str(i+1))
+                return False
+            self.thresholdMax[i] = high[i]
+            self.thresholdMin[i] = low[i]
+        return True;
+
+    @setting(11, 'Set Alert Interval', interval = 'w')
+    def setAlertInterval(self, ctx, interval):
+        self.alertInterval = interval
+        
     
     @inlineCallbacks
     def getPressures(self, dev):
@@ -159,6 +187,8 @@ class PfeifferVacuumControlServer(DeviceServer):
             response = response.rsplit(',')
             pressure = response[1]
             status = response[0]
+            self.measurements[i-1] = response[1]
+            self.statusCodes[i-1] = response[0]
             # A status code of 5 means that no sensor is connected
             if(status == '5'):
                 print("sensor "+str(i)+": Not Connected")
@@ -171,8 +201,39 @@ class PfeifferVacuumControlServer(DeviceServer):
     @inlineCallbacks
     def checkMeasurements(self):
         """Make sure the pressure is within range."""
-        output = yield self.getPressures(self.dev)
+        # Update the measuremets list.
+        yield self.getPressures(self.dev)
+        
+        for i in range(0,6):
+            if(not(self.statusCodes[i] == '5')):
+                if((float(self.measurements[i]) > float(self.thresholdMax[i]))):
+                    self.sendAlert(self.measurements[i], "Sensor "+str(i+1)+\
+                                  " pressure is above "+str(self.thresholdMax[i]))
+                elif(float(self.measurements[i]) < float(self.thresholdMin[i])):
+                    self.sendAlert(self.measurements[i], "Sensor "+str(i+1)+\
+                                   " pressure is below "+str(self.thresholdMin[i]))
 
+    def sendAlert(self, measurement, message):
+        """
+        Deal with an out-of-bounds measurement by calling this method,
+        it accepts the meausurement, and an error message. It sends an
+        email containing the measurements and the error message.
+        """
+        # If the amount of time specified by the alertInterval has elapsed,
+        # then send another alert.
+        self.t1 = time.time()
+        if((self.t1-self.t2)>self.alertInterval):
+            # Store the last time an alert was sent in the form of seconds since
+            # the epoch (1/1/1970).
+            self.t2 = self.t1
+            print("\r\n"+message)
+            print("\t"+time.ctime(self.t1))
+            # No newline character
+            print("\t"+str(measurement)+"\r\n")
+            # The labrad do not like when you try to append values with
+            # units to another string...hence the many print statements.
+        return
+    
     @inlineCallbacks
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
@@ -184,9 +245,6 @@ class PfeifferVacuumControlServer(DeviceServer):
             p.get(k, key=k)
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys)
-
-    def sendAlert(self):
-        raise NotImpementedError('An email alert will be sent in future.')
 
     @inlineCallbacks    
     def findDevices(self):
