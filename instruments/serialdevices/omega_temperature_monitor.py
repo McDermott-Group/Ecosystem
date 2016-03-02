@@ -113,14 +113,7 @@ class OmegaTempMonitorServer(DeviceServer):
         dev = self.dev
         self.refresher = LoopingCall(self.checkMeasurements)
         self.refresherDone = self.refresher.start(5.0, now=True)
-
-##    def refreshedMethod(self):
-##        """
-##        Gets refreshed. Method calls to be called repeatedly are
-##        called from here.
-##        """
-##        self.checkMeasurements(self.dev)
-##        
+       
     @inlineCallbacks
     def stopServer(self):
         """Kill the device refresh loop and wait for it to terminate."""
@@ -139,6 +132,8 @@ class OmegaTempMonitorServer(DeviceServer):
 
     @setting(10, 'Set Thresholds', low = 'w', high = 'w')
     def setThresholds(self, ctx, low, high):
+        """This setting configures the trigger thresholds.
+        If a threshold is exceeded, then an alert is sent"""
         if(low>=high):
             print("The minimum threshold cannot be greater than the maximum\
                     threshold")
@@ -149,6 +144,7 @@ class OmegaTempMonitorServer(DeviceServer):
 
     @setting(11, 'Set Alert Interval', interval = 'w')
     def setAlertInterval(self, ctx, interval):
+        """Configure the alert interval"""
         self.alertInterval = interval
         
     @inlineCallbacks

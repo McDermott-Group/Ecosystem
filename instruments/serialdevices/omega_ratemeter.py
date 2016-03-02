@@ -135,6 +135,8 @@ class OmegaRatemeterServer(DeviceServer):
     
     @setting(10, 'Set Thresholds', low = 'w', high = 'w')
     def setThresholds(self, ctx, low, high):
+        """This setting configures the trigger thresholds.
+        If a threshold is exceeded, then an alert is sent"""
         if(low>=high):
             print("The minimum threshold cannot be greater than the maximum\
                     threshold")
@@ -145,6 +147,7 @@ class OmegaRatemeterServer(DeviceServer):
 
     @setting(11, 'Set Alert Interval', interval = 'w')
     def setAlertInterval(self, ctx, interval):
+        """Configure the alert interval"""
         self.alertInterval = interval
     
     @inlineCallbacks

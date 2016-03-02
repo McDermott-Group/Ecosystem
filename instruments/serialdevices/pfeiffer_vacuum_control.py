@@ -144,12 +144,12 @@ class PfeifferVacuumControlServer(DeviceServer):
         """
         self.dev = self.selectedDevice(c)
         callLater(0.1, self.startRefreshing)
-##        # Populate measurements
-##        self.getPressures(self.dev)
         return(True)
 
     @setting(10, 'Set Thresholds', low = '*v', high = '*v')
     def setThresholds(self, ctx, low, high):
+        """This setting configures the trigger thresholds.
+        If a threshold is exceeded, then an alert is sent"""
         for i in range(0,6):
             if(low[i]>high[i]):
                 print("The minimum threshold cannot be greater than the maximum\
@@ -161,11 +161,12 @@ class PfeifferVacuumControlServer(DeviceServer):
 
     @setting(11, 'Set Alert Interval', interval = 'w')
     def setAlertInterval(self, ctx, interval):
+        """Configure the alert interval"""
         self.alertInterval = interval
         
-    
     @inlineCallbacks
     def getPressures(self, dev):
+        """Read sensor data"""
         # Iterate through sensors 1 to 6
         for i in range(1, 7):
             # The serial command 'PRx' tells the device that we are
@@ -201,7 +202,7 @@ class PfeifferVacuumControlServer(DeviceServer):
     @inlineCallbacks
     def checkMeasurements(self):
         """Make sure the pressure is within range."""
-        # Update the measuremets list.
+        # Update the measuremets list by calling the getPressures method.
         yield self.getPressures(self.dev)
         
         for i in range(0,6):
