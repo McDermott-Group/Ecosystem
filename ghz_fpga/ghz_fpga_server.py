@@ -759,7 +759,7 @@ class BoardGroup(object):
 
             # List the DACs that support the data readback.
             timingDataDACs = [runner.dev.devName for runner in runners
-                    if isinstance(runner, dac.DacRunner_Build8)]
+                    if type(runner) == dac.DacRunner_Build8]
             
             if getTimingData:
                 answers = []
@@ -803,14 +803,14 @@ class BoardGroup(object):
                         extracted = runner.extract(result)
                         # Wrap the DAC timing results in a tuple for
                         # the data format consistency.
-                        if isinstance(runner, dac.DacRunner_Build8):
+                        if type(runner) == dac.DacRunner_Build8:
                             extracted = (extracted,)
                         extractedData[boardName] = extracted
                     # Add extracted data to list of data to be returned
                     if channel != None:
                         # If this is an ADC demod channel, grab that
                         # channel's data only
-                        if isinstance(runner, adc.AdcRunner_Build1):
+                        if type(runner) == adc.AdcRunner_Build1:
                             extractedChannel = extracted[0]    
                             extractedChannel = [extractedChannel[0][::11],
                                                 extractedChannel[1][::11]]
