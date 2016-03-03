@@ -516,7 +516,6 @@ class ADC_Build1(ADC_Branch1):
         #Parse the IQ data into the following format
         #[(Is ch0, Qs ch0), (Is ch1, Qs ch1),...,(Is chnDemod, Qs chnDemod)]
         data = (Is, Qs)
-        print(data)
         #data = [(Is[i::nDemod], Qs[i::nDemod]) for i in xrange(nDemod)]
         #data_saved = data
         # compute overall max and min for I and Q
