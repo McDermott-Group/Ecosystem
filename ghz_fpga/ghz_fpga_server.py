@@ -595,7 +595,6 @@ class BoardGroup(object):
     def run(self, runners, reps, setupPkts, setupState, sync, getTimingData,
             timingOrder):
         """Run a sequence on this board group."""
-
         # Check whether this sequence will fit in just one page.
         if all(runner.pageable() for runner in runners):
             # Lock just one page.
@@ -780,7 +779,7 @@ class BoardGroup(object):
                             boardName = dataChannelName
                             channel = None
                         else:
-                            raise RuntimeError('DAC data readback ' +
+                            raise RuntimeError('DAC data readback '
                                 ' supported only for DAC build 8')
                     elif 'ADC' in dataChannelName:
                         # ADC average mode
@@ -811,7 +810,12 @@ class BoardGroup(object):
                     if channel != None:
                         # If this is an ADC demod channel, grab that
                         # channel's data only
-                        extractedChannel = extracted[0][channel]
+                        if isinstance(runner, adc.AdcRunner_Build1):
+                            extractedChannel = extracted[0]    
+                            extractedChannel = [extractedChannel[0][::11],
+                                                extractedChannel[1][::11]]
+                        else:
+                            extractedChannel = extracted[0][channel]
                     else:
                         extractedChannel = extracted
                     answers.append(extractedChannel)
@@ -1409,7 +1413,7 @@ class FPGAServer(DeviceServer):
              getTimingData='b',
              setupPkts='?{(((ww), s, ((s?)(s?)(s?)...))...)}',
              setupState='*s',
-             returns=['*4i', '*3i', '*i', ''])
+             returns=['*4i', '*3i', '*2i', ''])
     def run_sequence(self, c, reps=30, getTimingData=True, setupPkts=[],
                      setupState=[]):
         """Executes a sequence on one or more boards.
