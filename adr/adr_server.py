@@ -18,7 +18,16 @@
 [info]
 name = ADR Server
 version = 1.3.2
-description = This Labrad server controls the ADRs we have.  It can be connected to by ADRClient.py or other labrad clients to control the ADR with a GUI, etc.
+description = This Labrad server controls the ADRs we have.  It can be \
+connected to by ADRClient.py or other labrad clients to control the ADR \
+with a GUI, etc. Important note: the registry setting in ADRSettings for 
+"Ruox Temperature Monitor" specifies the servers that should be run in
+order to record the temperatures. To turn GGG monitoring on/off, change \
+the registry setting in ADRSettings between the ACBridgeWithMultiplexer 
+or just the ACBridge - where is this??? (basically, just swap the names
+of the registry settings the "Ruox Temperature Monitor" and 
+"Ruox Temperature Monitor without GGG" or, alternatively, swap the values
+of these keys.
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -234,7 +243,7 @@ class ADRServer(DeviceServer):
         # if ruox therms are being read through multiplexer, set the channels
         try:
             self.instruments['Ruox Temperature Monitor'].add_channel(self.ADRSettings['FAA MP Chan'])
-            #self.instruments['Ruox Temperature Monitor'].add_channel(self.ADRSettings['GGG MP Chan'])
+            self.instruments['Ruox Temperature Monitor'].add_channel(self.ADRSettings['GGG MP Chan'])
         except AttributeError: pass # may not have add_channel methods
         
     @inlineCallbacks
@@ -366,7 +375,7 @@ class ADRServer(DeviceServer):
                    self.state['T_FAA']['K'] < self.ADRSettings['magnet_max_temp']:
                     newVoltage = self.state['PSVoltage'] + self.ADRSettings['magup_dV']*units.V
                     if newVoltage['V'] < self.ADRSettings['voltage_limit']:
-                        self.instruments['Power Supply'].voltage(newVoltage) #set new voltage
+                        self.instruments['Power Supply'].voltage(newVoltage*units.V) #set new voltage
                     else: self.instruments['Power Supply'].voltage(self.ADRSettings['voltage_limit'])
                     #newCurrent = self.instruments['Power Supply'].current() + 0.005
                     #self.instruments['Power Supply'].current(newCurrent)
@@ -445,11 +454,15 @@ class ADRServer(DeviceServer):
             if abs(dI/dT) > self.ADRSettings['dIdt_regulate_limit']*units.A:
                 dV = 0*units.V
             # will voltage go negative?
-            runCycleAgain = True
             if self.state['PSVoltage']+dV <= 0*units.V:
                 self.instruments['Power Supply'].voltage(0*units.V)
                 dV = 0*units.V
+            # is current 0?  if so, end regulation
+            # if dV > 0, don't end regulation because we are increasing current
+            if self.state['PSCurrent']['A'] < 0.02 and dV['V'] <= 0:
                 runCycleAgain = False
+            else:
+                runCycleAgain = True
             # print str(dV)
             self.instruments['Power Supply'].voltage(self.state['PSVoltage'] + dV)
             cycleTime = deltaT(datetime.datetime.now() - startTime)
