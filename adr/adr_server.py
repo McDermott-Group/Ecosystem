@@ -396,12 +396,11 @@ class ADRServer(DeviceServer):
         """ This function starts a PID loop to control the temperature.  The basics of it is that a new voltage V+dV is
         proposed.  dV is then limited as necessary, and the new voltage is set. As with magging up, regulate runs a cycle
         at approximately once per second. """
+        print 'REG TEMP',temp
+        self.state['regulationTemp'] = temp
+        self.logMessage('Setting regulation temperature to %f K.'%temp)
         if self.state['maggingUp'] == True:
             self.logMessage('Currently magging up. Please wait until finished.')
-            return
-        if self.state['regulating'] == True:
-            self.state['regulationTemp'] = temp
-            self.logMessage('Setting regulation temperature to %f K.'%temp)
             return
         deviceNames = ['Power Supply','Diode Temperature Monitor','Ruox Temperature Monitor','Magnet Voltage Monitor']
         deviceStatus = [self.instruments[name].connected for name in deviceNames]
@@ -459,7 +458,7 @@ class ADRServer(DeviceServer):
                 dV = 0*units.V
             # is current 0?  if so, end regulation
             # if dV > 0, don't end regulation because we are increasing current
-            if self.state['PSCurrent']['A'] < 0.02 and dV['V'] <= 0:
+            if self.state['PSCurrent']['A'] < 0.03 and dV['V'] <= 0:
                 runCycleAgain = False
             else:
                 runCycleAgain = True
