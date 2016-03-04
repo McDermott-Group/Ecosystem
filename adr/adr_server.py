@@ -24,7 +24,7 @@ with a GUI, etc. Important note: the registry setting in ADRSettings for \
 "Ruox Temperature Monitor" specifies the servers that should be run in \
 order to record the temperatures. To turn GGG monitoring on/off, change \
 the registry setting in ADRSettings between the ACBridgeWithMultiplexer \
-or just the ACBridge - where is this??? (basically, just swap the names \
+or just the ACBridge (SIM921) (basically, just swap the names \
 of the registry settings the "Ruox Temperature Monitor" and \
 "Ruox Temperature Monitor without GGG" or, alternatively, swap the values \
 of these keys.
@@ -458,6 +458,8 @@ class ADRServer(DeviceServer):
                 dV = 0*units.V
             # is current 0?  if so, end regulation
             # if dV > 0, don't end regulation because we are increasing current
+            # 0.02 amps is pretty arebitrary, but the PS seemed to stay at 0.018A
+            # at 0.02V (the lowest it went)
             if self.state['PSCurrent']['A'] < 0.03 and dV['V'] <= 0:
                 runCycleAgain = False
             else:
