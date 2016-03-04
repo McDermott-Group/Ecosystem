@@ -44,16 +44,26 @@ from labrad.types import Error as LRError
 import sys
  
 def deltaT(dT):
-    """.total_seconds() is only supported by >py27 :(, so we use this to subtract two datetime objects."""
-    try: return dT.total_seconds()
-    except: return dT.days*86400 + dT.seconds + dT.microseconds*pow(10,-6)
+    """
+    .total_seconds() is only supported by >py27 :(, so we use this 
+    to subtract two datetime objects.
+    """
+    try: 
+        return dT.total_seconds()
+    except: 
+        return dT.days * 86400 + dT.seconds + dT.microseconds * pow(10,-6)
 
 
 class ADRServer(DeviceServer):
-    """Provides a way to control all the instruments that control our ADRs."""
+    """
+    Provide a way to control all the instruments that control 
+    our ADRs.
+    """
     name = 'ADR Server'
     deviceName = 'ADR'
-    # We no longer use signals.  That way if this server is turned on and off, named_messages still get to clients.  This is an example of a signal, however:
+    # We no longer use signals.  That way if this server is turned on 
+    # and off, named_messages still get to clients.  
+    # This is an example of a signal, however:
     # stateChanged = Signal(1001, 'signal:state_changed', 's')
     
     def __init__(self, args):
@@ -63,7 +73,9 @@ class ADRServer(DeviceServer):
         if '-a' in args:    # Use -a to specify ADR
             index = args.index('-a')
             args.pop(index)
-            selection = str( args.pop(index) )   # if we do not pop these off, twisted will complain because this is not an allowed argument
+            # if we do not pop these off, twisted will complain because 
+            # this is not an allowed argument
+            selection = str( args.pop(index) )   
             if selection in AVAILABLE_ADRS:
                 selectedADR = selection
             else: 
@@ -73,32 +85,32 @@ class ADRServer(DeviceServer):
         self.deviceName = selectedADR
         print '%s selected.' %selectedADR
         self.alive = True
-        self.state = {  'T_FAA': numpy.NaN*units.K,
-                        'T_GGG': numpy.NaN*units.K,
-                        'T_3K' : numpy.NaN*units.K,
-                        'T_60K': numpy.NaN*units.K,
+        self.state = {  'T_FAA': numpy.NaN * units.K,
+                        'T_GGG': numpy.NaN * units.K,
+                        'T_3K' : numpy.NaN * units.K,
+                        'T_60K': numpy.NaN * units.K,
                         'datetime' : datetime.datetime.now(),
                         'cycle': 0,
-                        'magnetV': numpy.NaN*units.V,
+                        'magnetV': numpy.NaN * units.V,
                         'RuOxChan':'FAA',
                         'RuOxChanSetTime':datetime.datetime.now(),
-                        'PSCurrent':numpy.NaN*units.A,
-                        'PSVoltage':numpy.NaN*units.V,
+                        'PSCurrent':numpy.NaN * units.A,
+                        'PSVoltage':numpy.NaN * units.V,
                         'maggingUp':False,
                         'regulating':False,
                         'regulationTemp':0.1,
                         'PID_cumulativeError':0}
         self.lastState = self.state.copy()
-        self.ADRSettings ={ 'PID_KP':0.75,
-                            'PID_KI':0,
-                            'PID_KD':15,
-                            'PID_MaxI':1,
-                            'magup_dV': 0.003,               #[V/step] How much do we increase the voltage by every second when maggin up? HPD Manual uses 10mV=0.01V, 2.5V/30min=1.4mV/s ==> Let's use a middle rate of 3mV/step. (1 step is about 1s)
+        self.ADRSettings ={ 'PID_KP': 0.75,
+                            'PID_KI': 0,
+                            'PID_KD': 15,
+                            'PID_MaxI': 1,
+                            'magup_dV': 0.003,                #[V/step] How much do we increase the voltage by every second when maggin up? HPD Manual uses 10mV=0.01V, 2.5V/30min=1.4mV/s ==> Let's use a middle rate of 3mV/step. (1 step is about 1s)
                             'magnet_voltage_limit': 0.1,      #Back EMF limit in Volts
                             'current_limit': 9,               #Max Current in Amps
                             'voltage_limit': 2,               #Max Voltage in Volts.  At 9A, we usually get about 2.5-2.7V or 1.69V (with or without the external diode protection box), so this shouldn't need to be more than 3 or 2
                             'dVdT_limit': 0.008,              #Keep dV/dt to under this value [V/s]
-                            'dIdt_magup_limit': 9./(30*60),   #limit on the rate at which we allow current to increase in amps/s (we want 9A over 30 min)
+                            'dIdt_magup_limit': 9. / (30*60),   #limit on the rate at which we allow current to increase in amps/s (we want 9A over 30 min)
                             'dIdt_regulate_limit': 9./(40*60),#limit on the rate at which we allow current to change in amps/s (we want 9A over 40 min)
                             'step_length': 1.0,               #How long is each regulation/mag up cycle in seconds.  **Never set this less than 1.0sec.**  The SRS SIM922 only measures once a second and this would cause runaway voltages/currents.
                             'magnet_max_temp': 5,
@@ -119,17 +131,21 @@ class ADRServer(DeviceServer):
         dt = datetime.datetime.now()
         self.dateAppend = dt.strftime("_%y%m%d_%H%M")
         self.logMessages = []
+        
     @inlineCallbacks
     def initServer(self):
-        """This method loads default settings from the registry,
-           sets up instruments, and sets up listeners for GPIB device 
-           connect/disconnect messages."""
+        """
+        This method loads default settings from the registry,
+        sets up instruments, and sets up listeners for GPIB device 
+        connect/disconnect messages.
+        """
         DeviceServer.initServer(self)
         try:
             yield self.client.registry.cd(self.ADRSettingsPath)
             self.file_path = yield self.client.registry.get('Log Path')
         except Exception as e:
-            self.logMessage( '{Saving log failed.  Check that AFS is working.} ' )
+            self.logMessage('{Saving log failed. ' 
+                            ' Check that AFS is working.} ')
         yield self.loadDefaults()
         yield util.wakeupCall( 3 ) # on the round ADR, the HP DMM takes forever to initialize.  This prevents it from going on before it is ready.
         yield self.initializeInstruments()
@@ -158,9 +174,13 @@ class ADRServer(DeviceServer):
             self.ADRSettings[setting] = yield reg.get(setting)
     @inlineCallbacks
     def initializeInstruments(self):
-        """This method creates the instances of all the instruments and saves them in self.instruments.
-            It then sends set_adr_settings_path and select_device.  If these both go through (or are not
-            valid methods, instr.connect is set to True.  The power supply is also initialized."""
+        """
+        This method creates the instances of all the instruments and 
+        saves them in self.instruments. It then sends 
+        set_adr_settings_path and select_device.  If these both go 
+        through (or are not valid methods, instr.connect is set to True.
+        The power supply is also initialized.
+        """
         for instrName in self.instruments:
             settings = self.ADRSettings[instrName]
             # save server to instruments dict, leave as None if cannot connect
@@ -214,7 +234,7 @@ class ADRServer(DeviceServer):
         # if ruox therms are being read through multiplexer, set the channels
         try:
             self.instruments['Ruox Temperature Monitor'].add_channel(self.ADRSettings['FAA MP Chan'])
-            self.instruments['Ruox Temperature Monitor'].add_channel(self.ADRSettings['GGG MP Chan'])
+            #self.instruments['Ruox Temperature Monitor'].add_channel(self.ADRSettings['GGG MP Chan'])
         except AttributeError: pass # may not have add_channel methods
         
     @inlineCallbacks
