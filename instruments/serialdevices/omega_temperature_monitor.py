@@ -30,7 +30,9 @@ timeout = 20
 ### END NODE INFO
 """
 
-# The LoopingCall function allows a function to be called periodically on a time interval
+import time
+# The LoopingCall function allows a function to be called periodically
+# on a time interval
 from twisted.internet.task import LoopingCall
 from twisted.internet.reactor import callLater
 from twisted.internet.defer import inlineCallbacks, returnValue
@@ -40,8 +42,7 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
-# TO-DO: replace sleep.
-import time
+from utilities import sleep
 
 
 class OmegaTempMonitorWrapper(DeviceWrapper):
@@ -54,9 +55,8 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
         self.port = port
         p = self.packet()
         p.open(port)
-        # TO-DO...
         # The following parameters match the default configuration of the
-        # serial device
+        # temperature monitor.
         p.baudrate(9600L)
         p.stopbits(1L)
         p.bytesize(7L)
@@ -98,15 +98,13 @@ class OmegaTempMonitorServer(DeviceServer):
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
-        # TO-DO...
-        # Set the maximum acceptible flow rate
+        # Set the maximum acceptible temperature.
         self.thresholdMax = 50 * units.degF
-        # TO-DO...
         ## delay = 20 * ms
         ## time.sleep(delay['s'])
-        # Set the minimum acceptible flow rate
+        # Set the minimum acceptible temperature.
         self.thresholdMin = 30 * units.degF
-        self.alertInterval = 10 *units.s # seconds
+        self.alertInterval = 10 # seconds
         self.t1 = 0
         self.t2 = 0
 
@@ -117,8 +115,6 @@ class OmegaTempMonitorServer(DeviceServer):
         When the refresh loop is shutdown, we will wait for this
         deferred to fire to indicate that it has terminated.
         """
-        # TO-DO...
-        dev = self.dev
         self.refresher = LoopingCall(self.checkMeasurements)
         self.refresherDone = self.refresher.start(5.0, now=True)
        
@@ -130,44 +126,40 @@ class OmegaTempMonitorServer(DeviceServer):
             yield self.refresherDone
             
     @setting(9, 'Start Server', returns='b')
-    def start_server(self, c): # TO-DO...
+    def start_server(self, c):
         """
-        starts server. Initializes the repeated flow rate measurement.
+        Initialize the repeated temperature measurement.
         """
         self.dev = self.selectedDevice(c)
         callLater(0.1, self.startRefreshing)
         return True
 
     @setting(10, 'Set Thresholds', low = 'w', high = 'w')
-    def setThresholds(self, ctx, low, high): # TO-DO...
+    def setThresholds(self, ctx, low, high):
         """This setting configures the trigger thresholds.
         If a threshold is exceeded, then an alert is sent"""
-        # TO-DO...
-        if(low>=high):
-            print("The minimum threshold cannot be greater than the maximum\
-                    threshold")
-            return False
+        if low >= high:
+            return "The minimum threshold cannot be greater than the maximum\
+                    threshold"
         self.thresholdMax = units.WithUnit(high,'degF')
         self.thresholdMin = units.WithUnit(low,'degF')
-        # TO-DO...
         return True;
 
     @setting(11, 'Set Alert Interval', interval='w')
-    def setAlertInterval(self, ctx, interval): # TO-DO...
+    def setAlertInterval(self, ctx, interval): # TO-DO... # Ivan, I do not rember what I was supposed to do here
         """Configure the alert interval"""
         self.alertInterval = interval
         
     @inlineCallbacks
     def getTemperature(self, dev):
-        """Query the device for the temperature via serial communication"""
+        """Query the thermometer for the temperature via serial communication"""
         # The string '*X01' asks the device for the current reading.
         yield dev.write_line("*X01")
-        time.sleep(0.5)
+        yield time.sleep(0.5)
         reading = yield dev.read_line()
         #Instrument randomly decides not to return, heres a hack.
-        # TO-DO...
-        ### if reading:
-        if len(reading)==0:
+        if not reading:
+        ###if len(reading)==0:
             returnValue(None)
         else:
             # Get last number in string.
@@ -181,18 +173,13 @@ class OmegaTempMonitorServer(DeviceServer):
     @inlineCallbacks
     def checkMeasurements(self):
         """Make sure measured values are within acceptable range"""
-        #print "Checking Measurements"
-        # TO-DO: Remove print statements.
-        print ("Temperature: ")
         temperature = yield self.getTemperature(self.dev)
-        print (temperature)
-
-        # TO-DO...
-        if(temperature > self.thresholdMax):
-           self.sendAlert(temperature, "Temperature is above "+str(self.thresholdMax))
-        elif(temperature < self.thresholdMin):
-            self.sendAlert(temperature, "Temperature is below "+str(self.thresholdMin))
-            
+        if(temperature):
+            if(temperature > self.thresholdMax):
+               self.sendAlert(temperature, "Temperature is above {0}".format(str(self.thresholdMax)))
+            elif(temperature < self.thresholdMin):
+                self.sendAlert(temperature, "Temperature is below {0}".format(str(self.thresholdMin)))
+                
     def sendAlert(self, measurement, message):
         """
         Deal with an out-of-bounds measurement by calling this method,
@@ -203,15 +190,12 @@ class OmegaTempMonitorServer(DeviceServer):
         # then send another alert.
         self.t1 = time.time()
         if((self.t1-self.t2)>self.alertInterval):
-            # Store the last time an alert was sent in the form of seconds since
-            # the epoch (1/1/1970).
+            # Store the last time an alert was sent in the form
+            # seconds since the epoch (1/1/1970).
             self.t2 = self.t1
-            print("\r\n"+message)
-            print("\t"+time.ctime(self.t1))
-            # No newline character
-            print("\t"+str(measurement)+"\r\n")
-            # The labrad do not like when you try to append values with
-            # units to another string...hence the many print statements.
+            print("{0}\n\t{1}\n\t{2}".format(message,
+                                           time.ctime(self.t1),
+                                           str(measurement)))
             
         return
     

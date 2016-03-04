@@ -30,6 +30,7 @@ timeout = 20
 ### END NODE INFO
 """
 
+import time
 # The LoopingCall function allows a function to be called periodically
 # on a time interval.
 from twisted.internet.task import LoopingCall
@@ -41,7 +42,7 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
-import time
+from utilities import sleep
 
 
 class OmegaRatemeterWrapper(DeviceWrapper):
@@ -113,7 +114,6 @@ class OmegaRatemeterServer(DeviceServer):
         When the refresh loop is shutdown, we will wait for this
         deferred to fire to indicate that it has terminated.
         """
-        dev = self.dev
         self.refresher = LoopingCall(self.checkMeasurements)
         self.refresherDone = self.refresher.start(5.0, now=True)
 
@@ -127,7 +127,7 @@ class OmegaRatemeterServer(DeviceServer):
     @setting(9, 'Start Server', returns='b')
     def startServer(self, c):
         """
-        starts server. Initializes the repeated flow rate measurement.
+        Initializes the repeated flow rate measurement.
         """
         self.dev = self.selectedDevice(c)
         callLater(0.1, self.startRefreshing)
@@ -138,9 +138,8 @@ class OmegaRatemeterServer(DeviceServer):
         """This setting configures the trigger thresholds.
         If a threshold is exceeded, then an alert is sent"""
         if(low>=high):
-            print("The minimum threshold cannot be greater than the maximum\
-                    threshold")
-            return False
+            return "The minimum threshold cannot be greater than the maximum\
+                    threshold"
         self.thresholdMax = units.WithUnit(high,' ml / min')
         self.thresholdMin = units.WithUnit(low,' ml / min')
         return True;
@@ -157,10 +156,10 @@ class OmegaRatemeterServer(DeviceServer):
         # The '\r' at the end is the carriage return letting the device
         # know that it was the end of the command.
         yield dev.write_line("@U?V\r")
-        time.sleep(0.5)
+        yield time.sleep(0.5)
         reading = yield dev.read_line()
         #Instrument randomly decides not to return, heres a hack.
-        if len(reading)==0:
+        if not reading:
             returnValue(None)
         else:
             # Get the last number in the string.
@@ -174,17 +173,14 @@ class OmegaRatemeterServer(DeviceServer):
     @inlineCallbacks
     def checkMeasurements(self):
         """Make sure the flow rate is within range."""
-        print ("Flow Rate: ")
         rate = yield self.getRate(self.dev)
-        print (rate)
-        
-        if(rate > self.thresholdMax):
-           self.sendAlert(rate, "Flow rate above maximum threshold of "\
-                           +str(self.thresholdMax))
-        elif(rate < self.thresholdMin):
-            self.sendAlert(rate, "Flow rate below minimum threshold of "\
-                           +str(self.thresholdMin))
-
+        if(rate):
+            if(rate > self.thresholdMax):
+                self.sendAlert(rate, "Flow rate above maximum threshold of {0}".format(
+                    str(self.thresholdMax)))
+            elif(rate < self.thresholdMin):
+                self.sendAlert(rate, "Flow rate below minimum threshold of {0}".format(
+                    str(self.thresholdMin)))
         
     @inlineCallbacks
     def loadConfigInfo(self):
@@ -212,16 +208,11 @@ class OmegaRatemeterServer(DeviceServer):
             # Store the last time an alert was sent in the form of seconds since
             # the epoch (1/1/1970).
             self.t2 = self.t1
-            print("\r\n"+message)
-            print("\t"+time.ctime(self.t1))
-            # No newline character
-            print("\t"+str(measurement)+"\r\n")
-            # The labrad units do not like when you try to append values with
-            # units to another string...hence the many print statements.
-            
+            print("{0}\n\t{1}\n\t{2}".format(message,
+                                           time.ctime(self.t1),
+                                           str(measurement)))
         return
 
-    
     @inlineCallbacks    
     def findDevices(self):
         """Find available devices from a list stored in the registry."""
