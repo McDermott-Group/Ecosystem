@@ -99,11 +99,15 @@ class Tektronix11801CServer(GPIBManagedServer):
     @setting(28, 'Get Trace Data', traceNum='w', returns='?')
     def getTraceData(self, c, traceNum=None):
         """
-        Return trace data. This setting returns a tuple of 2D arrays,
-        one for each trace. The form of 2D arrays is
+        Return trace data. This setting returns a tuple of two 1D
+        arrays, one tuple for each trace. The form of the returned,
+        effectively 3D, array is
         [(xdata[0], ydata[0]), ..., (xdata[n], ydata[n])],
         where xdata is typically time or length and ydata is typically
-        reflection coefficient (rho) or voltage.
+        reflection coefficient (rho) or voltage. The first index
+        in the returned data corresponds to the trace, the second
+        defines the x or y dimension, and the third refers to the point
+        position in the trace.
         """
         dev = self.selectedDevice(c)
         if traceNum is None:    # Assume user wants all traces.
