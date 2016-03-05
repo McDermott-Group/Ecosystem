@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Tekronix 11801C Digital Sampling Oscilloscope
-version = 1.0.0
+version = 1.1.0
 description = Basic Functionality for TDR
   
 [startup]
@@ -32,6 +32,7 @@ timeout = 5
 
 from labrad.server import setting
 from labrad.gpib import GPIBManagedServer
+from labrad import units
 from twisted.internet.defer import returnValue
 import numpy as np
 
@@ -100,7 +101,9 @@ class Tektronix11801CServer(GPIBManagedServer):
         """
         Return trace data. This setting returns a tuple of 2D arrays,
         one for each trace. The form of 2D arrays is
-        [[time_0, voltage(time_0)], ..., [time_n, voltage(time_n)]].
+        [(xdata[0], ydata[0]), ..., (xdata[n], ydata[n])],
+        where xdata is typically time or length and ydata is typically
+        reflection coefficient (rho) or voltage.
         """
         dev = self.selectedDevice(c)
         if traceNum is None:    # Assume user wants all traces.
@@ -109,7 +112,7 @@ class Tektronix11801CServer(GPIBManagedServer):
             traceData = yield dev.query('OUTPUT TRACE%s;WAV?'
                     %str(traceNum))
         splitter = traceData.split(';')
-        data = ()
+        data = []
         # Increment by 2's, 1 preamble and 1 data string per trace.
         for ii in range(0, len(splitter), 2):
             tracePreamble = splitter[ii].split(',')
@@ -130,12 +133,33 @@ class Tektronix11801CServer(GPIBManagedServer):
                     YUNIT = tracePreamble[jj].split(':')[1]
                 elif 'YZERO' in tracePreamble[jj]:
                     YZERO = float(tracePreamble[jj].split(':')[1])
-                   
-            tdrData = np.empty((len(traceDataStr) - 1, 2))
-            for kk in range (1, len(traceDataStr)):
-                tdrData[kk-1][0] = XINCR * (kk - 1) + XZERO
-                tdrData[kk-1][1] = YZERO + YMULT * float(traceDataStr[kk])
-            data = data + (np.copy(tdrData),)
+
+            if XUNIT == 'SECONDS':
+                xunit = units.s
+            elif XUNIT == 'METERS':
+                xunit = units.m
+            elif XUNIT == 'INCHES':
+                xunit = units.inch
+            elif XUNIT == 'FEET':
+                xunit = units.ft
+            elif XUNIT == 'VOLTS':
+                xunit = units.V
+            # According to manual 'DIVS' is returned "when the units of
+            # the trace are indeterminate or undefined".
+            elif XUNIT == 'DIVS':
+                xunit == 1
+                
+            if YUNIT in ('RHO', 'DIVS'):
+                yunit = 1
+            elif YUNIT == 'VOLTS':
+                yunit = units.V
+    
+            xdata = [XINCR * (k - 1) + XZERO
+                    for k in range(1, len(traceDataStr))] * xunit
+            ydata = [YZERO + YMULT * float(traceDataStr[k])
+                    for k in range(1, len(traceDataStr))] * yunit
+            data.append((xdata, ydata),)
+
         returnValue(data)
     
   
