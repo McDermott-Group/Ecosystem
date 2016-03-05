@@ -78,12 +78,12 @@ class OmegaRatemeterWrapper(DeviceWrapper):
     @inlineCallbacks
     def write_line(self, code):
         """Write data value to the rate monitor."""
-        yield self.server.write_line(code, context = self.ctx)
+        yield self.server.write_line(code, context=self.ctx)
 
     @inlineCallbacks
     def read_line(self):
         """Read data value from the rate monitor."""
-        ans = yield self.server.read(context = self.ctx)
+        ans = yield self.server.read(context=self.ctx)
         returnValue(ans)
 
 
@@ -99,11 +99,11 @@ class OmegaRatemeterServer(DeviceServer):
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
-        #Set the maximum acceptible flow rate
-        self.thresholdMax = 5000 * units.galUS / units.min
-        #Set the minimum acceptible flow rate
-        self.thresholdMin = 3000 * units.galUS / units.min
-        self.alertInterval = 10 #seconds
+        # Set the maximum acceptible flow rate.
+        self.thresholdMax = 5 * units.galUS / units.min
+        # Set the minimum acceptible flow rate.
+        self.thresholdMin = 1.5* units.galUS / units.min
+        self.alertInterval = 10 # seconds
         self.t1 = 0
         self.t2 = 0
 
@@ -126,28 +126,28 @@ class OmegaRatemeterServer(DeviceServer):
       
     @setting(9, 'Start Server', returns='b')
     def startServer(self, c):
-        """
-        Initializes the repeated flow rate measurement.
-        """
+        """Initialize the repeated flow rate measurement."""
         self.dev = self.selectedDevice(c)
         callLater(0.1, self.startRefreshing)
-        return True;
+        return True
     
-    @setting(10, 'Set Thresholds', low = 'w', high = 'w')
+    @setting(10, 'Set Thresholds', low='v[ml/min]', high='v[ml/min]')
     def setThresholds(self, ctx, low, high):
-        """This setting configures the trigger thresholds.
-        If a threshold is exceeded, then an alert is sent"""
-        if(low>=high):
+        """
+        This setting configures the trigger thresholds.
+        If a threshold is exceeded, then an alert is sent.
+        """
+        if low >= high:
             return "The minimum threshold cannot be greater than the maximum\
                     threshold"
         self.thresholdMax = units.WithUnit(high,' ml / min')
         self.thresholdMin = units.WithUnit(low,' ml / min')
-        return True;
+        return True
 
-    @setting(11, 'Set Alert Interval', interval = 'w')
+    @setting(11, 'Set Alert Interval', interval='v[s]')
     def setAlertInterval(self, ctx, interval):
-        """Configure the alert interval"""
-        self.alertInterval = interval
+        """Configure the alert interval."""
+        self.alertInterval = interval['s']
     
     @inlineCallbacks
     def getRate(self, dev):
@@ -158,7 +158,7 @@ class OmegaRatemeterServer(DeviceServer):
         yield dev.write_line("@U?V\r")
         yield time.sleep(0.5)
         reading = yield dev.read_line()
-        #Instrument randomly decides not to return, heres a hack.
+        # Instrument randomly decides not to return, here's a hack.
         if not reading:
             returnValue(None)
         else:
@@ -174,13 +174,15 @@ class OmegaRatemeterServer(DeviceServer):
     def checkMeasurements(self):
         """Make sure the flow rate is within range."""
         rate = yield self.getRate(self.dev)
-        if(rate):
-            if(rate > self.thresholdMax):
-                self.sendAlert(rate, "Flow rate above maximum threshold of {0}".format(
-                    str(self.thresholdMax)))
-            elif(rate < self.thresholdMin):
-                self.sendAlert(rate, "Flow rate below minimum threshold of {0}".format(
-                    str(self.thresholdMin)))
+        if rate:
+            if rate > self.thresholdMax:
+                self.sendAlert(rate,
+                        "Flow rate above maximum threshold of {0}.".format(
+                        str(self.thresholdMax)))
+            elif rate < self.thresholdMin:
+                self.sendAlert(rate,
+                        "Flow rate below minimum threshold of {0}.".format(
+                        str(self.thresholdMin)))
         
     @inlineCallbacks
     def loadConfigInfo(self):
@@ -200,18 +202,16 @@ class OmegaRatemeterServer(DeviceServer):
         it accepts the meausurement, and an error message. It sends an
         email containing the measurements and the error message.
         """
-
         # If the amount of time specified by the alertInterval has elapsed,
         # then send another alert.
         self.t1 = time.time()
-        if((self.t1-self.t2)>self.alertInterval):
-            # Store the last time an alert was sent in the form of seconds since
-            # the epoch (1/1/1970).
+        if (self.t1 - self.t2) > self.alertInterval:
+            # Store the last time an alert was sent in the form of
+            # seconds since the epoch (1/1/1970).
             self.t2 = self.t1
             print("{0}\n\t{1}\n\t{2}".format(message,
-                                           time.ctime(self.t1),
-                                           str(measurement)))
-        return
+                                             time.ctime(self.t1),
+                                             str(measurement)))
 
     @inlineCallbacks    
     def findDevices(self):

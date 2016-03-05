@@ -18,7 +18,7 @@
 [info]
 name = Pfeiffer Vacuum MaxiGauge
 version = 1.0.15
-description = Monitors and controls vacuum system
+description = Monitors vacuum system
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -77,23 +77,23 @@ class PfeifferVacuumControlWrapper(DeviceWrapper):
     @inlineCallbacks
     def write_line(self, code):
         """Write data value to the vacuum control unit."""
-        yield self.server.write_line(code, context = self.ctx)
+        yield self.server.write_line(code, context=self.ctx)
 
     @inlineCallbacks
     def write(self, code):
         """Write data value to the vacuum control unit."""
-        yield self.server.write(code, context = self.ctx)
+        yield self.server.write(code, context=self.ctx)
         
     @inlineCallbacks
     def read_line(self):
         """Read data value from the vacuum control unit."""
-        ans = yield self.server.read(context = self.ctx)
+        ans = yield self.server.read(context=self.ctx)
         returnValue(ans)
 
     @inlineCallbacks
     def read(self):
         """Read data value from the vacuum control unit."""
-        ans = yield self.server.read(context = self.ctx)
+        ans = yield self.server.read(context=self.ctx)
         returnValue(ans)
 
 
@@ -111,7 +111,7 @@ class PfeifferVacuumControlServer(DeviceServer):
         yield DeviceServer.initServer(self)
         # Set the maximum acceptible pressures. This is a list
         # of 6 values corresponding to the 6 sensors.
-        # index 0 of thresholdMax corresponds to the maximum acceptible
+        # Index 0 of thresholdMax corresponds to the maximum acceptible
         # value of sensor 1 and index 5, sensor 6. Likewise, index 0 of
         # thresholdMin corresponds to sensor 1.
         # These values can be left as is (default) or they can be changed
@@ -119,16 +119,17 @@ class PfeifferVacuumControlServer(DeviceServer):
         # In order to use the setting, type:
         #   [instance name].set_thresholds([low], [high])
         # As an example:
-        #   vacuum.set_thresholds([0, 0, 0, 5E-5, 5E-5, 5E-5],[0, 0, 0, 5E-4, 5E-4, 5E-4])
+        #   vacuum.set_thresholds([0, 0, 0, 5E-5, 5E-5, 5E-5],
+        #                         [0, 0, 0, 5E-4, 5E-4, 5E-4])
         # It is a good idea to allow for a wide range of values if you
         # know that a sensor is not connected because the unit sometimes
-        # misreports status codes. This makes it seem as though a sensor is
-        # connected, and a 'don't-care' value is treated as an error.
-        self.thresholdMax = [10, 10, 10, 5E-4, 5E-4, 5E-4]*units.bar # mbar
+        # misreports status codes. This makes it seem as though a sensor
+        # is connected, and a 'don't-care' value is treated as an error.
+        self.thresholdMax = [1e-2, 1e-2, 1e-2, 5e-7, 5e-7, 1e-4] * units.bar
         # Set the minimum acceptible pressures.
-        self.thresholdMin = [0, 0, 0, 5E-5, 5E-5, 5E-5] *units.bar# mbar
+        self.thresholdMin = [0, 0, 0, 5E-8, 5E-8, 5E-8] * units.bar
         self.alertInterval = 10 # seconds
-        self.measurements = [0, 0, 0, 0, 0, 0]*units.bar
+        self.measurements = [0, 0, 0, 0, 0, 0] * units.bar
         self.statusCodes = [0, 0, 0, 0, 0, 0]
         self.t1 = [0,0,0,0,0,0]
         self.t2 = [0,0,0,0,0,0]
@@ -157,29 +158,28 @@ class PfeifferVacuumControlServer(DeviceServer):
         callLater(0.1, self.startRefreshing)
         return True
 
-    # The [bar] was not added to the parameters of the setting
-    # because the units are added in the method.
-    @setting(10, 'Set Thresholds', low='*v', high='*v')
+    @setting(10, 'Set Thresholds', low='*v[bar]', high='*v[bar]')
     def setThresholds(self, ctx, low, high):
         """
         This setting configures the trigger thresholds.
         If a threshold is exceeded, then an alert is sent.
         """
-        if(not (len(low) == 6) or not (len(high) == 6)):
-            return("Error: The 'low' and 'high' parameters must be lists of"
-                    "exactly 6 elements")
+        if not (len(low) == 6) or not (len(high) == 6):
+            raise Exception("The 'low' and 'high' parameters must be "
+                    "lists of exactly 6 elements.")
         for i in range(0, 6):
             if low[i] > high[i]:
-                return("Error: The minimum threshold cannot be greater than the"
-                        " maximum threshold for sensor %s" %str(i+1))
-            self.thresholdMax[i] = high[i]*units.bar
-            self.thresholdMin[i] = low[i]*units.bar
+                raise Exception("The minimum threshold cannot be "
+                        "greater than the maximum threshold for "
+                        "sensor %d." %(i + 1))
+            self.thresholdMax[i] = high[i] * units.bar
+            self.thresholdMin[i] = low[i] * units.bar
         return True
 
-    @setting(11, 'Set Alert Interval', interval = 'w')
+    @setting(11, 'Set Alert Interval', interval='v[s]')
     def setAlertInterval(self, ctx, interval):
-        """Configure the alert interval"""
-        self.alertInterval = interval
+        """Configure the alert interval."""
+        self.alertInterval = interval['s']
         
     @inlineCallbacks
     def getPressures(self, dev):
@@ -188,10 +188,8 @@ class PfeifferVacuumControlServer(DeviceServer):
         for i in range(1, 7):
             # The serial command 'PRx' tells the device that we are
             # talking about sensor x.
-            # The .format is used because, according to python documentation,
-            # it is the best way of formatting a string.
             yield self.dev.write("PR{0}\r\n".format(i))
-            # Give the device time to receive and process the request
+            # Give the device time to receive and process the request.
             time.sleep(0.05)
             # The device responds with an acknowledge, discard it.
             yield self.dev.read()
@@ -207,7 +205,7 @@ class PfeifferVacuumControlServer(DeviceServer):
             response = response.rsplit(',')
             pressure = response[1]
             status = response[0]
-            self.measurements[i-1] = 1e-3 * float(response[1]) * units.bar ##
+            self.measurements[i-1] = 1e-3 * float(response[1]) * units.bar
             self.statusCodes[i-1] = response[0]
         
     @inlineCallbacks
@@ -215,15 +213,16 @@ class PfeifferVacuumControlServer(DeviceServer):
         """Make sure the pressure is within range."""
         # Update the measuremets list by calling the getPressures method.
         yield self.getPressures(self.dev)
-        
         for i in range(0, 6):
             if not self.statusCodes[i] == '5':
                 if self.measurements[i] > self.thresholdMax[i]:                    
-                    self.sendAlert(str(self.measurements[i]), "Sensor {0} pressure is above {1}"
-                                   .format(i+1,str(self.thresholdMax[i])),i)
+                    self.sendAlert(str(self.measurements[i]),
+                            "Sensor {0} pressure is above {1}."
+                            .format(i+1, str(self.thresholdMax[i])), i)
                 elif self.measurements[i] < self.thresholdMin[i]:
-                    self.sendAlert(str(self.measurements[i]), "Sensor {0} pressure is below {1}"
-                                   .format(i+1,str(self.thresholdMin[i])),i)
+                    self.sendAlert(str(self.measurements[i]),
+                            "Sensor {0} pressure is below {1}."
+                            .format(i+1, str(self.thresholdMin[i])), i)
 
     def sendAlert(self, measurement, message, sensor):
         """
@@ -234,14 +233,14 @@ class PfeifferVacuumControlServer(DeviceServer):
         # If the amount of time specified by the alertInterval has elapsed,
         # then send another alert.
         self.t1[sensor] = time.time()
-        if self.t1[sensor]-self.t2[sensor] > self.alertInterval:
+        if self.t1[sensor] - self.t2[sensor] > self.alertInterval:
             # Store the last time an alert was sent in the form of 
             # seconds since the epoch (1/1/1970).
-            # NOTE: the sensor variable is 0 indexed
+            # NOTE: the sensor variable is 0 indexed.
             self.t2[sensor] = self.t1[sensor]
             print("{0}\n\t{1}\n\t{2}".format(message,
-                                           time.ctime(self.t1[sensor]),
-                                           str(measurement)))
+                                             time.ctime(self.t1[sensor]),
+                                             str(measurement)))
         return
     
     @inlineCallbacks

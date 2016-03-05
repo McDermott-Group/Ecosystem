@@ -77,12 +77,12 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
     @inlineCallbacks
     def write_line(self, code):
         """Write a data value to the temperature monitor."""
-        yield self.server.write_line(code, context = self.ctx)
+        yield self.server.write_line(code, context=self.ctx)
 
     @inlineCallbacks
     def read_line(self):
         """Read a data value to the temperature monitor."""
-        ans = yield self.server.read(context = self.ctx)
+        ans = yield self.server.read(context=self.ctx)
         returnValue(ans)
    
             
@@ -100,8 +100,6 @@ class OmegaTempMonitorServer(DeviceServer):
         yield DeviceServer.initServer(self)
         # Set the maximum acceptible temperature.
         self.thresholdMax = 50 * units.degF
-        ## delay = 20 * ms
-        ## time.sleep(delay['s'])
         # Set the minimum acceptible temperature.
         self.thresholdMin = 30 * units.degF
         self.alertInterval = 10 # seconds
@@ -127,39 +125,41 @@ class OmegaTempMonitorServer(DeviceServer):
             
     @setting(9, 'Start Server', returns='b')
     def start_server(self, c):
-        """
-        Initialize the repeated temperature measurement.
-        """
+        """Initialize the repeated temperature measurement."""
         self.dev = self.selectedDevice(c)
         callLater(0.1, self.startRefreshing)
         return True
 
-    @setting(10, 'Set Thresholds', low = 'w', high = 'w')
+    @setting(10, 'Set Thresholds', low='v[degF]', high='v[degF]')
     def setThresholds(self, ctx, low, high):
-        """This setting configures the trigger thresholds.
-        If a threshold is exceeded, then an alert is sent"""
+        """
+        This setting configures the trigger thresholds.
+        If a threshold is exceeded, then an alert is sent.
+        """
         if low >= high:
             return "The minimum threshold cannot be greater than the maximum\
                     threshold"
-        self.thresholdMax = units.WithUnit(high,'degF')
-        self.thresholdMin = units.WithUnit(low,'degF')
-        return True;
+        self.thresholdMax = units.WithUnit(high, 'degF')
+        self.thresholdMin = units.WithUnit(low, 'degF')
+        return True
 
-    @setting(11, 'Set Alert Interval', interval='w')
-    def setAlertInterval(self, ctx, interval): # TO-DO... # Ivan, I do not rember what I was supposed to do here
-        """Configure the alert interval"""
-        self.alertInterval = interval
+    @setting(11, 'Set Alert Interval', interval='v[s]')
+    def setAlertInterval(self, ctx, interval):
+        """Configure the alert interval."""
+        self.alertInterval = interval['s']
         
     @inlineCallbacks
     def getTemperature(self, dev):
-        """Query the thermometer for the temperature via serial communication"""
+        """
+        Query the thermometer for the temperature via serial
+        communication.
+        """
         # The string '*X01' asks the device for the current reading.
         yield dev.write_line("*X01")
         yield time.sleep(0.5)
         reading = yield dev.read_line()
-        #Instrument randomly decides not to return, heres a hack.
+        # Instrument randomly decides not to return, here's a hack.
         if not reading:
-        ###if len(reading)==0:
             returnValue(None)
         else:
             # Get last number in string.
@@ -172,13 +172,15 @@ class OmegaTempMonitorServer(DeviceServer):
 
     @inlineCallbacks
     def checkMeasurements(self):
-        """Make sure measured values are within acceptable range"""
+        """Make sure measured values are within acceptable range."""
         temperature = yield self.getTemperature(self.dev)
-        if(temperature):
-            if(temperature > self.thresholdMax):
-               self.sendAlert(temperature, "Temperature is above {0}".format(str(self.thresholdMax)))
-            elif(temperature < self.thresholdMin):
-                self.sendAlert(temperature, "Temperature is below {0}".format(str(self.thresholdMin)))
+        if temperature:
+            if temperature > self.thresholdMax:
+                    self.sendAlert(temperature,
+                    "Temperature is above {0}.".format(str(self.thresholdMax)))
+            elif temperature < self.thresholdMin:
+                    self.sendAlert(temperature,
+                    "Temperature is below {0}.".format(str(self.thresholdMin)))
                 
     def sendAlert(self, measurement, message):
         """
@@ -189,14 +191,13 @@ class OmegaTempMonitorServer(DeviceServer):
         # If the amount of time specified by the alertInterval has elapsed,
         # then send another alert.
         self.t1 = time.time()
-        if((self.t1-self.t2)>self.alertInterval):
+        if (self.t1 - self.t2) > self.alertInterval:
             # Store the last time an alert was sent in the form
             # seconds since the epoch (1/1/1970).
             self.t2 = self.t1
             print("{0}\n\t{1}\n\t{2}".format(message,
-                                           time.ctime(self.t1),
-                                           str(measurement)))
-            
+                                             time.ctime(self.t1),
+                                             str(measurement)))
         return
     
     @inlineCallbacks
