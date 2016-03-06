@@ -99,15 +99,15 @@ class Tektronix11801CServer(GPIBManagedServer):
     @setting(28, 'Get Trace Data', traceNum='w', returns='?')
     def getTraceData(self, c, traceNum=None):
         """
-        Return trace data. This setting returns a tuple of two 1D
-        arrays, one tuple for each trace. The form of the returned,
-        effectively 3D, array is
-        [(xdata[0], ydata[0]), ..., (xdata[n], ydata[n])],
+        Return trace data. This setting returns a tuple of 1D
+        array duplets, one duplet tuple for each trace. The form of
+        the returned data, effectively a 3D array, is
+        ((xdata[0], ydata[0]), ..., (xdata[n], ydata[n])),
         where xdata is typically time or length and ydata is typically
         reflection coefficient (rho) or voltage. The first index
         in the returned data corresponds to the trace, the second
-        defines the x or y dimension, and the third refers to the point
-        position in the trace.
+        defines the x or y dimension, 0 and 1 correspondingly, and
+        the third refers to the point position in the trace.
         """
         dev = self.selectedDevice(c)
         if traceNum is None:    # Assume user wants all traces.
@@ -116,7 +116,7 @@ class Tektronix11801CServer(GPIBManagedServer):
             traceData = yield dev.query('OUTPUT TRACE%s;WAV?'
                     %str(traceNum))
         splitter = traceData.split(';')
-        data = []
+        data = ()
         # Increment by 2's, 1 preamble and 1 data string per trace.
         for ii in range(0, len(splitter), 2):
             tracePreamble = splitter[ii].split(',')
@@ -162,7 +162,7 @@ class Tektronix11801CServer(GPIBManagedServer):
                     for k in range(1, len(traceDataStr))] * xunit
             ydata = [YZERO + YMULT * float(traceDataStr[k])
                     for k in range(1, len(traceDataStr))] * yunit
-            data.append((xdata, ydata),)
+            data += (xdata, ydata),
 
         returnValue(data)
     
