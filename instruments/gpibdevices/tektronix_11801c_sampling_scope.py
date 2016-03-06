@@ -16,8 +16,8 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Tekronix 11801C Digital Sampling Oscilloscope
-version = 1.1.0
+name = Tektronix 11801C
+version = 1.1.1
 description = Basic Functionality for TDR
   
 [startup]
@@ -38,7 +38,7 @@ import numpy as np
 
 
 class Tektronix11801CServer(GPIBManagedServer):
-    name = 'Tek11801C' # Server name.
+    name = 'Tektronix 11801C' # Server name.
     deviceName = ['ID TEK/11801C']
   
     @setting(10, 'Get Instrument Name', returns='s')

@@ -18,17 +18,7 @@
 [info]
 name = ADR Server
 version = 1.3.2
-description = This Labrad server controls the ADRs we have.  It can be \
-connected to by ADRClient.py or other labrad clients to control the ADR \
-with a GUI, etc. Important note: the registry setting in ADRSettings for \
-"Ruox Temperature Monitor" specifies the servers that should be run in \
-order to record the temperatures. To turn GGG monitoring on/off, change \
-the registry setting in ADRSettings between the ACBridgeWithMultiplexer \
-or just the ACBridge (SIM921) (basically, just swap the names \
-of the registry settings the "Ruox Temperature Monitor" and \
-"Ruox Temperature Monitor without GGG" or, alternatively, swap the values \
-of these keys.
-
+description = Controls the ADRs
 [startup]
 cmdline = %PYTHON% %FILE%
 timeout = 20
@@ -38,6 +28,15 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
+
+# This server can be connected to by adr_client.py or other LabRAD
+# clients to control the ADR with a GUI, etc.
+# Important note: the registry setting in ADRSettings for "Ruox
+# Temperature Monitor" specifies the servers that should be run in
+# order to record the temperatures. To turn the GGG monitoring on/off,
+# swap the values of the "Ruox Temperature Monitor" and "Ruox
+# Temperature Monitor without GGG" keys.
+
 ADR_SETTINGS_BASE_PATH = ['','ADR Settings'] # path in registry
 DEFAULT_ADR = 'ADR3' # name of ADR in registry
 AVAILABLE_ADRS = ['ADR1','ADR2','ADR3']
