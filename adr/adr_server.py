@@ -374,7 +374,7 @@ class ADRServer(DeviceServer):
                    self.state['T_FAA']['K'] < self.ADRSettings['magnet_max_temp']:
                     newVoltage = self.state['PSVoltage'] + self.ADRSettings['magup_dV']*units.V
                     if newVoltage['V'] < self.ADRSettings['voltage_limit']:
-                        self.instruments['Power Supply'].voltage(newVoltage*units.V) #set new voltage
+                        self.instruments['Power Supply'].voltage(newVoltage) #set new voltage
                     else: self.instruments['Power Supply'].voltage(self.ADRSettings['voltage_limit'])
                     #newCurrent = self.instruments['Power Supply'].current() + 0.005
                     #self.instruments['Power Supply'].current(newCurrent)
