@@ -391,6 +391,8 @@ class AgilentN5230AServer(GPIBManagedServer):
             yield dev.write('CALC:FORM REAL')
             yield dev.write('CALC:PAR:SEL "Ixy_%s"' %Sp)
             yield dev.write('CALC:FORM IMAG')
+            yield dev.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 1))
+            yield dev.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 2))
             yield dev.write('SENS1:SWE:TIME:AUTO ON')
             yield dev.write('TRIG:SOUR IMM')
   
