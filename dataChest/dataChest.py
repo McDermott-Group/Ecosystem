@@ -1,4 +1,4 @@
-# Copyright (C) 2016  Alexander Opremcak
+# Copyright (C) 2016  Alexander "Daddy" Opremcak
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32',
 class dataChest(dateStamp):
 
   def __init__(self):
-    self.cwdPath = "/Users/alexanderopremcak/Desktop/dataChest"
+    self.cwdPath = "Z:/mcdermott-group/DataChest"
     os.chdir(self.cwdPath)
     self.dateStamp = dateStamp()
     self.currentHDF5Filename = None
