@@ -73,9 +73,6 @@ class Main(QtGui.QWidget):
 
     def convertWindowsPathToDvPathArray(self, windowsPath):
         
-        #print "convertWindowsPathToDvPathArray"
-        #print "windowsPath=", windowsPath
-        #Z:/mcdermott-group/DataChest
         if 'Z:/mcdermott-group/DataChest/' in windowsPath:
             windowsPath = windowsPath.replace('Z:/mcdermott-group/DataChest/', '')
         elif 'Z:/mcdermott-group/DataChest' in windowsPath:
@@ -84,22 +81,15 @@ class Main(QtGui.QWidget):
         return windowsPath.split('/')
         
     def changePlotType(self, item):
-        #print "changePlotType called"
+        
         plotType = str(item.text())
-        print "plotType=", plotType
-        print "self.fileName=", self.fileName
-##        if self.fileName != fileName: #**log plot type now
+##      if self.fileName != fileName: #**log plot type now
         self.removeCurrentFig()
         self.currentFig = self.figFromFileInfo(self.dvPath, self.fileName, plotType)
         self.addFigureToCanvas(self.currentFig)
-##        self.fileName = fileName
-            
-    #def addfig(self, name, fig):
-        #self.fig_dict[name] = fig
-        #self.plotTypesList.addItem(name)
 
     def addFigureToCanvas(self, fig):
-        #print "addFigureToCanvas called"
+
         self.canvas = FigureCanvas(fig)
         self.mplvl.addWidget(self.canvas)
         self.canvas.draw()
@@ -108,7 +98,7 @@ class Main(QtGui.QWidget):
         self.mplvl.addWidget(self.toolbar)
 
     def removeCurrentFig(self):
-        #print "removeCurrentFig called"
+
         self.mplvl.removeWidget(self.canvas)
         self.canvas.close()
         self.mplvl.removeWidget(self.toolbar)
@@ -117,12 +107,10 @@ class Main(QtGui.QWidget):
         
     @QtCore.pyqtSlot(QtCore.QModelIndex)
     def directoryTreeClicked(self, index):
-        #print "directoryTreeClicked called"
+
         indexItem = self.model.index(index.row(), 0, index.parent())
         fileName = str(self.model.fileName(indexItem))
-        #print "fileName=", fileName
         filePath = str(self.model.filePath(indexItem))
-        #print "filePath=", filePath
         
         if ".hdf5" in filePath: #removes fileName from path if file is chosen
             filePath = filePath[:-(len(fileName)+1)]
@@ -140,7 +128,6 @@ class Main(QtGui.QWidget):
     def updatePlotTypesList(self, plotTypes):
         self.plotTypesList.clear()
         for element in plotTypes:
-            #print "element=", element
             if ".dir" not in str(element) and ".ini" not in str(element):
                 item = QtGui.QListWidgetItem(str(element),self.plotTypesList)    
 
@@ -163,13 +150,21 @@ class Main(QtGui.QWidget):
             plotTypes = []
         return plotTypes
 
-    def plot1D(self, dataset, variables, plotType):
+    #some shape checking needs to go into this function to ensure 1D array inputs
+    def plot1D(self, dataset, variables, plotType, dataClass): #shorten this monstrosity
         if plotType == None:
             plotType = self.supportedPlotTypes("1D")[0] #defaults
         elif plotType not in self.supportedPlotTypes("1D"):
             print "Unrecognized plot type was provided"
-            #return bum fig
-            
+            #return bum fig with something cool, maybe a gif
+
+        if plotType =="1D":
+            fig = self.basic1DPlot(dataset, variables)
+        elif plotType == "Histogram": #adjust bin size
+            fig = self.basic1DHistogram(dataset, variables)
+        return fig
+
+    def basic1DPlot(self, dataset, variables):
         fig = Figure(dpi=100)
         ax = fig.add_subplot(111)
         indepVars = variables[0]
@@ -177,40 +172,51 @@ class Main(QtGui.QWidget):
         xlabel = self.dataChest.getParameter("xlabel")
         if xlabel is None:
             xlabel = indepVars[0][0]
-        ylabel = self.dataChest.getParameter("ylabel") #for data with more than one dep, recommend ylabel
-        if ylabel is None:
-            ylabel = self.dataChest.getDatasetName()
-        ax.set_xlabel(xlabel+" "+"("+indepVars[0][3]+")")
-        ax.set_ylabel(ylabel+" "+"("+depVars[0][3]+")") #for multiple deps with different units this is ambiguous
+        ylabel = self.dataChest.getParameter("ylabel") 
+        if ylabel is None: #for data with more than one dep, recommend ylabel
+            ylabel = depVars[0][0]
         plotTitle = self.dataChest.getParameter("PlotTitle")
         if plotTitle is None:
             plotTitle = self.dataChest.getDatasetName()
         ax.set_title(plotTitle)
-        if plotType =="1D":
-            for ii in range(0, len(depVars)):
-                for rowIndex in range(0,len(dataset)):
-                    if rowIndex == 0:
-                        x = []
-                        x = x + dataset[rowIndex][0]
-                        y = []
-                        y = y + dataset[rowIndex][1+ii]
-                ax.plot(x, y, label = depVars[ii][0])                
-            ax.legend()
-        elif plotType == "Histogram": #adjust bin size
-            for ii in range(0, len(depVars)):
-                for rowIndex in range(0,len(dataset)):
-                    if rowIndex == 0:
-                        x = []
-                        x = x + dataset[rowIndex][0]
-                        y = []
-                        y = y + dataset[rowIndex][1+ii]
-                ax.hist(y, 100, normed=1, alpha=0.5, label = depVars[ii][0]) 
-            ax.legend()
+        dataset = np.asarray(dataset)
+        ax.set_xlabel(ylabel+" "+"("+indepVars[0][3]+")")
+        ax.set_ylabel("Normalized Frequency") #for multiple deps with different units this is ambiguous
+        for ii in range(0, len(depVars)):
+            x = dataset[::,0].flatten()
+            y = dataset[::,1+ii].flatten()
+            ax.plot(x, y, label = depVars[ii][0])                
+        ax.legend()
         return fig
+
+    def basic1DHistogram(self, dataset, variables):
+        fig = Figure(dpi=100)
+        ax = fig.add_subplot(111)
+        indepVars = variables[0]
+        depVars = variables[1]
+        xlabel = self.dataChest.getParameter("xlabel")
+        if xlabel is None:
+            xlabel = indepVars[0][0]
+        ylabel = self.dataChest.getParameter("ylabel") 
+        if ylabel is None: #for data with more than one dep, recommend ylabel
+            ylabel = depVars[0][0]
+        plotTitle = self.dataChest.getParameter("PlotTitle")
+        if plotTitle is None:
+            plotTitle = self.dataChest.getDatasetName()
+        ax.set_title(plotTitle)
+        dataset = np.asarray(dataset)
+        ax.set_xlabel(xlabel+" "+"("+indepVars[0][3]+")")
+        ax.set_ylabel(ylabel+" "+"("+depVars[0][3]+")") #for multiple deps with different units this is ambiguous
+        for ii in range(0, len(depVars)):
+            x = dataset[::,0].flatten()
+            y = dataset[::,1+ii].flatten()
+            ax.hist(y, 100, normed=1, alpha=0.5, label = depVars[ii][0])             
+        ax.legend()
+        return fig
+
+    #def plot2D(self, dataset, variables, plotType, dataClass):
             
     def figFromFileInfo(self, dvPath, fileName, selectedPlotType = None):
-        #print "figFromFileInfo called"
-        #print "dvPath=", dvPath
         self.dataChest.cd(dvPath) 
         self.dataChest.openDataset(fileName) 
         variables = self.dataChest.getVariables()
@@ -219,7 +225,7 @@ class Main(QtGui.QWidget):
         dataset = self.dataChest.getData()
         if dataCategory == "1D":
             self.updatePlotTypesList(self.supportedPlotTypes(dataCategory))
-            fig = self.plot1D(dataset, variables, selectedPlotType)
+            fig = self.plot1D(dataset, variables, selectedPlotType, None)
         elif dataCategory =="2D": #was "2D Sweep"
             fig = Figure(dpi=100)
             self.updatePlotTypesList(self.supportedPlotTypes(dataCategory)) #Trajectory

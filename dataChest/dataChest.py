@@ -193,10 +193,12 @@ class dataChest(dateStamp):
               varName = self.varDict[varGrp]["names"][colIndex-numIndeps]
               varData = np.asarray(data[rowIndex][colIndex])
               flattenedVarShape = self._flattenedShape(self.varDict[varGrp]["shapes"][colIndex-numIndeps])[0]
+              print "add start"
               self._addToDataset(self.currentFile[varGrp][varName],
                                  varData,
                                  flattenedVarShape,
                                  self.numDepWrites)
+              print "add stop"
           self.numIndepWrites = self.numIndepWrites+ 1 #after the entire column is written to 
           self.numDepWrites = self.numDepWrites+ 1
         self.currentFile.flush()
@@ -613,21 +615,10 @@ class dataChest(dateStamp):
     errMessage = ("\t***ERROR*** "+fxnName+"():\r\n\t"+errorMessage)
     print errMessage
 
-    
-## from dataChest import *
-## d = dataChest()
-## d.createDataset("Larger", [("indepName1", [100], "float64", "units_ind1")], [("depName1", [100], "float64", "units_dep")])
-## data = []
-## for ii in range(0, 100):
-##    data.append(float(ii))
-## d.addData([[data,data]]) #single row
-## d.addData([[data,data], [data,data]]) #single row    
-## d.getData()
-
 #automatically close file when new one is created or object is killed
 #make sure that files are always closed and we dont run into file already open conflicts
 ##TODO:
     ##cut lines to <=72 characters
-    ##add dictionary parameter capabilities
+    ##add dictionary parameter capabilities ***
     ##test for speed, 1D case in particular shape = [1]
-    ##over night writes both locally and on afs
+    ##over night writes both locally and on afs data corruption tests
