@@ -71,21 +71,32 @@ class dataChest(dateStamp):
     folders = sorted(folders)
     return [files, folders]
 
-  def cd(self, directoryToMove):
-    """Changes the current working directory."""
-    cwdContents = self.ls()
-    if (directoryToMove in cwdContents[1]):
-      self.cwdPath = self.cwdPath+"/"+directoryToMove
-      os.chdir(self.cwdPath)
-      return self.cwdPath
-    elif directoryToMove=="..":#should never takes us out of root
-      os.chdir("..")
-      self.cwdPath = os.getcwd()
-      return self.cwdPath
-    else:
-      self._dataChestError("Directory does not exist.\r\n\t"+
-                           "Directory name provided: "+directoryToMove)
-      return "Error"
+  def cd(self, directoryToMove): #needs to be debugged now that we accept below types
+    """Changes the current working directory.""" #accepts single string, path, list
+    if isinstance(directoryToMove, str):
+      if "/" in directoryToMove:
+        path = directoryToMove.split("/")
+        print "path=", path
+      else:
+        path = [directoryToMove]
+    elif isinstance(directoryToMove, list):
+      path = directoryToMove
+    for ii in range(0, len(path)):
+      cwdContents = self.ls()
+      if (path[ii] in cwdContents[1]):
+        self.cwdPath = self.cwdPath+"/"+path[ii]
+        os.chdir(self.cwdPath)
+        return self.cwdPath
+      elif path[ii]=="..":#should never takes us out of root
+        os.chdir("..")
+        self.cwdPath = os.getcwd().replace("\\", "/") #unix style paths
+        return self.cwdPath
+      elif path[ii]=="":
+        return self.cwdPath
+      else:
+        self._dataChestError("Directory does not exist.\r\n\t"+
+                             "Directory name provided: "+str(directoryToMove))
+        return "Error"
 
   def mkdir(self, directoryToMake): #doesn't cd automatically
     """Makes a new directory within the current working directory."""
@@ -143,6 +154,7 @@ class dataChest(dateStamp):
           varGrp = self.currentFile[varTypes]
           varGrp.attrs[varAttrs] = self.varDict[varTypes][varAttrs] #sets attributes 
         self._initDatasetGroup(varGrp, self.varDict[varTypes]) #init params group within
+      self.currentFile.flush()
     else:
       self._dataChestError("Unable to create a unique filename.")
       return "Error"
@@ -175,7 +187,7 @@ class dataChest(dateStamp):
               self._addToDataset(self.currentFile[varGrp][varName],
                                  varData,
                                  flattenedVarShape,
-                                 varGrp)
+                                 self.numIndepWrites)
             else:
               varGrp = "dependents"
               varName = self.varDict[varGrp]["names"][colIndex-numIndeps]
@@ -184,7 +196,9 @@ class dataChest(dateStamp):
               self._addToDataset(self.currentFile[varGrp][varName],
                                  varData,
                                  flattenedVarShape,
-                                 varGrp)
+                                 self.numDepWrites)
+          self.numIndepWrites = self.numIndepWrites+ 1 #after the entire column is written to 
+          self.numDepWrites = self.numDepWrites+ 1
         self.currentFile.flush()
       else:
         #Invalid data provided and error message will be provided with details
@@ -200,7 +214,8 @@ class dataChest(dateStamp):
     """Opens a dataset within the current working directory if it exists"""
     if '.hdf5' not in name: #adds file extension if emitted.
       name = name+".hdf5"
-
+    #print "Name=", name
+    #print "self.cwdPath=", self.cwdPath
     files = self.ls()[0]
     if name in files:
       if hasattr(self, 'currentFile'):
@@ -288,6 +303,7 @@ class dataChest(dateStamp):
     elif self.currentHDF5Filename is not None:
       if self._isParameterValid(parameterName, parameterValue):
         self.currentFile["parameters"].attrs[parameterName] = parameterValue
+        self.currentFile.flush()
       else:
         return False
     else:
@@ -305,7 +321,7 @@ class dataChest(dateStamp):
              "using either the openDataset method to open an existing\r\n\t"+
              "set or with the createDataset method."))
 
-  def getParametersList(self):
+  def getParameterList(self):
     if self.currentHDF5Filename is not None:
       return self.currentFile["parameters"].attrs.keys()
     else:
@@ -431,27 +447,14 @@ class dataChest(dateStamp):
         else:
           self._dataChestError("Unrecognized type was receieved. Please report this message on github.")
 
-  def _addToDataset(self, dset, data, chunkSize, varType):
-    if varType == "independents":
-      if self.numIndepWrites == 0:
-        data = np.reshape(data, (chunkSize,))
-        dset[:chunkSize] = data
-        self.numIndepWrites = self.numIndepWrites+ 1
-      else:
-        data = np.reshape(data, (chunkSize,))
-        dset.resize((dset.shape[0]+chunkSize,))
-        dset[-chunkSize:] = data
-        self.numIndepWrites = self.numIndepWrites + 1
-    if varType == "dependents":
-      if self.numDepWrites == 0:
-        data = np.reshape(data, (chunkSize,))
-        dset[:chunkSize] = data
-        self.numDepWrites = self.numDepWrites+ 1
-      else:
-        data = np.reshape(data, (chunkSize,))
-        dset.resize((dset.shape[0]+chunkSize,))
-        dset[-chunkSize:] = data
-        self.numDepWrites = self.numDepWrites + 1
+  def _addToDataset(self, dset, data, chunkSize, numWrites):
+    if numWrites == 0:
+      data = np.reshape(data, (chunkSize,))
+      dset[:chunkSize] = data
+    else:
+      data = np.reshape(data, (chunkSize,))
+      dset.resize((dset.shape[0]+chunkSize,))
+      dset[-chunkSize:] = data
 
   def _isDataValid(self, data):
     if isinstance(data, list): # checks that its a list
