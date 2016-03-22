@@ -1,28 +1,22 @@
-import os
-import numpy as np
+import sys
 from PyQt4 import QtCore, QtGui
 from matplotlib.figure import Figure
-import matplotlib.cm as cm
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
 from dataChest import *
-
+from functools import partial
 
 class Main(QtGui.QWidget):
     
-    def __init__(self, parent=None):
-        #print "__init__ called"
+    def __init__(self, parent = None):
         super(Main, self).__init__(parent)
-
-    
         self.pathRoot=QtCore.QString('Z:\mcdermott-group\DataChest')
 
         self.filters =QtCore.QStringList()
         self.filters.append("*.hdf5")
-        
+
         self.dataChest = dataChest()
-        #self.fig_dict = {}
 
         self.setWindowTitle('Data Chest Image Browser')
         self.setWindowIcon(QtGui.QIcon('rabi.jpg')) #add in rabi plot
@@ -44,35 +38,83 @@ class Main(QtGui.QWidget):
         self.directoryTree.setRootIndex(self.indexRoot)
         self.directoryTree.clicked.connect(self.directoryTreeClicked)
 
+        self.plotTypesComboBoxLabel = QtGui.QLabel(self)
+        self.plotTypesComboBoxLabel.setText("Available Plot Types:")
 
-        self.plotTypesListLabel = QtGui.QLabel(self)
-        self.plotTypesListLabel.setText("Available Plot Types:")
+        self.plotTypesComboBox = QtGui.QComboBox(self)
+        self.plotTypesComboBox.activated[str].connect(self.onActivated)
 
-        self.plotTypesList =QtGui.QListWidget(self)
+        vbox = QtGui.QVBoxLayout()
+
+        self.scrollWidget = QtGui.QWidget(self)
+        ##self.scrollLayout = QtGui.QVBoxLayout(self)
+        self.scrollLayout = QtGui.QHBoxLayout(self) ##**********
+        self.scrollWidget.setLayout(self.scrollLayout)
+        self.scrollArea = QtGui.QScrollArea(self)
+        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn) #QtCore.Qt.ScrollBarAsNeeded
+        self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scrollArea.setWidget(self.scrollWidget)
+        self.scrollArea.setWidgetResizable(True)
+        #self.scrollArea.setEnabled(True)
+        
+        vbox.addWidget(self.directoryBrowserLabel)
+        vbox.addWidget(self.directoryTree)
+        vbox.addWidget(self.plotTypesComboBoxLabel)
+        vbox.addWidget(self.plotTypesComboBox)
+        vbox.addWidget(self.scrollArea)
+
+        #self.setLayout(vbox)
+
         self.mplwindow =QtGui.QWidget(self)
-
-
         self.mplvl = QtGui.QVBoxLayout(self.mplwindow)
 
-        self.plotTypesList.itemClicked.connect(self.changePlotType)
-
-        self.gridLayout = QtGui.QGridLayout(self)
-        self.gridLayout.addWidget(self.directoryBrowserLabel, 0,0)
-        self.gridLayout.addWidget(self.directoryTree, 1,0)
-
-        self.gridLayout.addWidget(self.plotTypesListLabel, 2,0)
-        self.gridLayout.addWidget(self.plotTypesList, 3,0)
-        
-        self.gridLayout.addWidget(self.mplwindow, 0,1,5,1) 
+        hbox = QtGui.QHBoxLayout()
+        hbox.addLayout(vbox)
+        hbox.addWidget(self.mplwindow)
+        self.setLayout(hbox)
 
         self.currentFig = Figure()
         self.addFigureToCanvas(self.currentFig)
-
+        
         self.filePath =""
         self.fileName =""
 
+    def onActivated(self, plotType):
+##      if self.fileName != fileName: #**log plot type now
+        self.removeCurrentFig()
+        self.currentFig = self.figFromFileInfo(self.dvPath, self.fileName, plotType)
+        self.addFigureToCanvas(self.currentFig)
+        if plotType == "1D":
+            headerList = ["Dependent Variable:", "Status:"]
+            widgetTypeList = ["QLabel", "QCheckBox"]
+            depVarList = [row[0] for row in self.dataChest.getVariables()[1]]
+            for ii in range(0,len(headerList)):
+                optionsSlice = QtGui.QVBoxLayout()
+                label = QtGui.QLabel(self)
+                label.setText(headerList[ii])
+                optionsSlice.addWidget(label)
+                for depVar in depVarList:
+                    if widgetTypeList[ii] =="QLabel":
+                        label = QtGui.QLabel(self)
+                        label.setText(depVar)
+                        optionsSlice.addWidget(label)
+                    elif widgetTypeList[ii] =="QCheckBox":
+                        checkBox = QtGui.QCheckBox('', self)
+                        checkBox.stateChanged.connect(partial(self.changeTitle, depVar))
+                        optionsSlice.addWidget(checkBox)
+                optionsSlice.addStretch(1)
+                self.scrollLayout.addLayout(optionsSlice)
+            self.scrollLayout.addStretch(1)
+            
+    def changeTitle(self, name, state):
+        print "name=", name
+        if state == QtCore.Qt.Checked: 
+            print "On"
+        else:
+            print "Off"
+            
+
     def convertWindowsPathToDvPathArray(self, windowsPath):
-        
         if 'Z:/mcdermott-group/DataChest/' in windowsPath:
             windowsPath = windowsPath.replace('Z:/mcdermott-group/DataChest/', '')
         elif 'Z:/mcdermott-group/DataChest' in windowsPath:
@@ -80,14 +122,6 @@ class Main(QtGui.QWidget):
         windowsPath = windowsPath.replace('.dir', '')
         return windowsPath.split('/')
         
-    def changePlotType(self, item):
-        
-        plotType = str(item.text())
-##      if self.fileName != fileName: #**log plot type now
-        self.removeCurrentFig()
-        self.currentFig = self.figFromFileInfo(self.dvPath, self.fileName, plotType)
-        self.addFigureToCanvas(self.currentFig)
-
     def addFigureToCanvas(self, fig):
 
         self.canvas = FigureCanvas(fig)
@@ -126,10 +160,12 @@ class Main(QtGui.QWidget):
                 self.addFigureToCanvas(self.currentFig)
                     
     def updatePlotTypesList(self, plotTypes):
-        self.plotTypesList.clear()
+##        self.plotTypesList.clear()
+        self.plotTypesComboBox.clear()
         for element in plotTypes:
             if ".dir" not in str(element) and ".ini" not in str(element):
-                item = QtGui.QListWidgetItem(str(element),self.plotTypesList)    
+                self.plotTypesComboBox.addItem(str(element))
+##                item = QtGui.QListWidgetItem(str(element),self.plotTypesList)    
 
     def categorizeDataset(self, variables):
         indepVarsList = variables[0]
@@ -315,9 +351,9 @@ class Main(QtGui.QWidget):
 ##            npy = npy.reshape(xGridRes, yGridRes)
 ##            npz = npz.reshape(xGridRes, yGridRes)
 ##                
-##        return (npx,npy,npz)
+##        return (npx,npy,npz)        
 
-
+        
 if __name__ == "__main__":
     import sys
 
