@@ -22,6 +22,7 @@ class Main(QtGui.QWidget):
         self.setWindowIcon(QtGui.QIcon('rabi.jpg')) #add in rabi plot
 
 
+        #directory browser configuration
         self.model = QtGui.QFileSystemModel(self)
         self.model.setRootPath(self.pathRoot)
         self.model.setNameFilterDisables(False)
@@ -36,27 +37,28 @@ class Main(QtGui.QWidget):
         self.directoryTree = QtGui.QTreeView(self)
         self.directoryTree.setModel(self.model)
         self.directoryTree.setRootIndex(self.indexRoot)
-        self.directoryTree.clicked.connect(self.directoryTreeClicked)
-
+        self.directoryTree.clicked.connect(self.dirTreeSelectionMade)
+        
+        #plot types drop down list configuration
         self.plotTypesComboBoxLabel = QtGui.QLabel(self)
         self.plotTypesComboBoxLabel.setText("Available Plot Types:")
 
         self.plotTypesComboBox = QtGui.QComboBox(self)
-        self.plotTypesComboBox.activated[str].connect(self.onActivated)
+        self.plotTypesComboBox.activated[str].connect(self.plotTypeSelected)
 
-        vbox = QtGui.QVBoxLayout()
-
+        #configures scrolling widget
         self.scrollWidget = QtGui.QWidget(self)
-        ##self.scrollLayout = QtGui.QVBoxLayout(self)
-        self.scrollLayout = QtGui.QHBoxLayout(self) ##**********
+        self.scrollLayout = QtGui.QHBoxLayout(self)
         self.scrollWidget.setLayout(self.scrollLayout)
         self.scrollArea = QtGui.QScrollArea(self)
         self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn) #QtCore.Qt.ScrollBarAsNeeded
         self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.scrollArea.setWidget(self.scrollWidget)
-        self.scrollArea.setWidgetResizable(True)
-        #self.scrollArea.setEnabled(True)
+        self.scrollArea.setWidgetResizable(True) #what happens without???
+        #self.scrollArea.setEnabled(True) #what happens without???
+
         
+        vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.directoryBrowserLabel)
         vbox.addWidget(self.directoryTree)
         vbox.addWidget(self.plotTypesComboBoxLabel)
@@ -79,10 +81,10 @@ class Main(QtGui.QWidget):
         self.filePath =""
         self.fileName =""
 
-    def onActivated(self, plotType):
-##      if self.fileName != fileName: #**log plot type now
-        self.removeCurrentFig()
-        self.currentFig = self.figFromFileInfo(self.dvPath, self.fileName, plotType)
+    def plotTypeSelected(self, plotType):
+##      if self.fileName != fileName: #**log plot type now so that when same is selected we dont recreate ***
+        self.removeFigFromCanvas()
+        self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, plotType)
         self.addFigureToCanvas(self.currentFig)
         if plotType == "1D":
             headerList = ["Dependent Variable:", "Status:"]
@@ -100,21 +102,20 @@ class Main(QtGui.QWidget):
                         optionsSlice.addWidget(label)
                     elif widgetTypeList[ii] =="QCheckBox":
                         checkBox = QtGui.QCheckBox('', self)
-                        checkBox.stateChanged.connect(partial(self.changeTitle, depVar))
+                        checkBox.stateChanged.connect(partial(self.varStateChanged, depVar))
                         optionsSlice.addWidget(checkBox)
                 optionsSlice.addStretch(1)
                 self.scrollLayout.addLayout(optionsSlice)
             self.scrollLayout.addStretch(1)
             
-    def changeTitle(self, name, state):
+    def varStateChanged(self, name, state): #when status check box is selected this is called
         print "name=", name
         if state == QtCore.Qt.Checked: 
             print "On"
         else:
             print "Off"
-            
 
-    def convertWindowsPathToDvPathArray(self, windowsPath):
+    def convertWindowsPathToDvPathArray(self, windowsPath): #lets see what happens on a mac ???
         if 'Z:/mcdermott-group/DataChest/' in windowsPath:
             windowsPath = windowsPath.replace('Z:/mcdermott-group/DataChest/', '')
         elif 'Z:/mcdermott-group/DataChest' in windowsPath:
@@ -131,7 +132,7 @@ class Main(QtGui.QWidget):
                 self.mplwindow, coordinates=True)
         self.mplvl.addWidget(self.toolbar)
 
-    def removeCurrentFig(self):
+    def removeFigFromCanvas(self):
 
         self.mplvl.removeWidget(self.canvas)
         self.canvas.close()
@@ -140,7 +141,7 @@ class Main(QtGui.QWidget):
         self.currentFig.clf()
         
     @QtCore.pyqtSlot(QtCore.QModelIndex)
-    def directoryTreeClicked(self, index):
+    def dirTreeSelectionMade(self, index):
 
         indexItem = self.model.index(index.row(), 0, index.parent())
         fileName = str(self.model.fileName(indexItem))
@@ -150,23 +151,21 @@ class Main(QtGui.QWidget):
             filePath = filePath[:-(len(fileName)+1)]
             
         if self.fileName != fileName or self.filePath != filePath: #if an actual change occurs update
-            self.dvPath = self.convertWindowsPathToDvPathArray(filePath)
+            self.filePath = self.convertWindowsPathToDvPathArray(filePath)
             self.filePath = filePath
             self.fileName = fileName
 
             if ".hdf5" in fileName: #i.e. not a directory else leave as is til a file is selected
-                self.removeCurrentFig() #removes old figure, needs garbage collection too 
-                self.currentFig = self.figFromFileInfo(self.dvPath, self.fileName) #figFromFileInfo
+                self.removeFigFromCanvas() #removes old figure, needs garbage collection too 
+                self.currentFig = self.figFromFileInfo(self.filePath, self.fileName)
                 self.addFigureToCanvas(self.currentFig)
                     
     def updatePlotTypesList(self, plotTypes):
-##        self.plotTypesList.clear()
         self.plotTypesComboBox.clear()
         for element in plotTypes:
             if ".dir" not in str(element) and ".ini" not in str(element):
                 self.plotTypesComboBox.addItem(str(element))
-##                item = QtGui.QListWidgetItem(str(element),self.plotTypesList)    
-
+   
     def categorizeDataset(self, variables):
         indepVarsList = variables[0]
         numIndepVars = len(indepVarsList)
@@ -193,10 +192,11 @@ class Main(QtGui.QWidget):
         elif plotType not in self.supportedPlotTypes("1D"):
             print "Unrecognized plot type was provided"
             #return bum fig with something cool, maybe a gif
-
         if plotType =="1D":
+            self.plotTypeSelected(plotType)
             fig = self.basic1DPlot(dataset, variables)
         elif plotType == "Histogram": #adjust bin size
+            self.plotTypeSelected(plotType)
             fig = self.basic1DHistogram(dataset, variables)
         return fig
 
@@ -252,8 +252,8 @@ class Main(QtGui.QWidget):
 
     #def plot2D(self, dataset, variables, plotType, dataClass):
             
-    def figFromFileInfo(self, dvPath, fileName, selectedPlotType = None):
-        self.dataChest.cd(dvPath) 
+    def figFromFileInfo(self, filePath, fileName, selectedPlotType = None):
+        self.dataChest.cd(filePath) 
         self.dataChest.openDataset(fileName) 
         variables = self.dataChest.getVariables()
         dataCategory = self.categorizeDataset(variables)
