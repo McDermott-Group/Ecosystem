@@ -141,13 +141,13 @@ class Main(QtGui.QWidget):
         if state == QtCore.Qt.Checked:
             self.varsToIgnore.remove(name)
             self.removeFigFromCanvas() #removes old figure, needs garbage collection too
-            self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, varsToIgnore =self.varsToIgnore)
+            self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, selectedPlotType=self.plotType, varsToIgnore =self.varsToIgnore) #figFromFileInfo(self, filePath, fileName, selectedPlotType = None, varsToIgnore =[]):
             self.addFigureToCanvas(self.currentFig)
         else: #unchecked
             if name not in self.varsToIgnore:
                 self.varsToIgnore.append(name)
             self.removeFigFromCanvas() #removes old figure, needs garbage collection too
-            self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, varsToIgnore =self.varsToIgnore)
+            self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, selectedPlotType=self.plotType, varsToIgnore =self.varsToIgnore)
             self.addFigureToCanvas(self.currentFig)
 
     def convertWindowsPathToDvPathArray(self, windowsPath): #lets see what happens on a mac ???
@@ -276,21 +276,25 @@ class Main(QtGui.QWidget):
         xlabel = self.dataChest.getParameter("X Label")
         if xlabel is None:
             xlabel = indepVars[0][0]
-        ylabel = self.dataChest.getParameter("X Label") 
-        if ylabel is None: #for data with more than one dep, recommend ylabel
-            ylabel = depVars[0][0]
+##        ylabel = self.dataChest.getParameter("Y Label") 
+##        if ylabel is None:
+##            ylabel = depVars[0][0] #for data with more than one dep, recommend ylabel
+        ylabel = "Statistical Frequency"
         plotTitle = self.dataChest.getParameter("Plot Title")
         if plotTitle is None:
             plotTitle = self.dataChest.getDatasetName()
         ax.set_title(plotTitle)
         dataset = np.asarray(dataset)
         ax.set_xlabel(xlabel+" "+"("+indepVars[0][3]+")")
-        ax.set_ylabel(ylabel+" "+"("+depVars[0][3]+")") #for multiple deps with different units this is ambiguous
+        #ax.set_ylabel(ylabel+" "+"("+depVars[0][3]+")") #for multiple deps with different units this is ambiguous
+        ax.set_ylabel(ylabel)
         for ii in range(0, len(depVars)):
             if depVars[ii][0] not in varsToIgnore:
                 x = dataset[::,0].flatten()
                 y = dataset[::,1+ii].flatten()
-                ax.hist(y, 100, normed=1, alpha=0.5, label = depVars[ii][0])
+                weights = np.ones_like(y)/float(len(y))
+                ax.hist(y, 100, weights =weights, alpha=0.5, label = depVars[ii][0])
+                #ax.hist(y, 50, normed=1,weights =weights, alpha=0.5, label = depVars[ii][0])
         ax.legend()
         return fig
 
@@ -305,40 +309,50 @@ class Main(QtGui.QWidget):
         #otherwise refer to dataset name needs to be implemented
         dataset = self.dataChest.getData()
         if dataCategory == "1D":
-            #self.updatePlotTypesList(self.supportedPlotTypes(dataCategory))
             fig = self.plot1D(dataset, variables, selectedPlotType, None, varsToIgnore = varsToIgnore) #plot1D(self, dataset, variables, plotType, dataClass, varsToIgnore = [])
-        elif dataCategory =="2D": #was "2D Sweep"
-            fig = Figure(dpi=100)
-            #self.updatePlotTypesList(self.supportedPlotTypes(dataCategory)) #Trajectory
-##            ax = fig.add_subplot(111)
-##            ax.set_xlabel(indepVars[0][0]+" "+"("+indepVars[0][1]+")")
-##            ax.set_ylabel(indepVars[1][0]+" "+"("+indepVars[1][1]+")")
-##            ax.set_title(plotTitle)
-##            xGridRes = yield self.cxn.data_vault.get_parameter('X Grid Resolution')
-##            dX = yield self.cxn.data_vault.get_parameter('dX')
-##            yGridRes = yield self.cxn.data_vault.get_parameter('Y Grid Resolution')
-##            dY = yield self.cxn.data_vault.get_parameter('dY')
-##            sweepType =yield self.cxn.data_vault.get_parameter('Sweep Type')
-##            x = np.asarray(dataset[:,0])
-##            y = np.asarray(dataset[:,1])
-##            z = np.asarray(dataset[:,2])
-##            new = self.makeGrid(x, xGridRes, dX, y, yGridRes, dY, sweepType, z)
-##            X = new[0]
-##            Y = new[1]
-##            Z = new[2]
-##            im = ax.imshow(Z, extent=(X.min(), X.max(), Y.min(), Y.max()), interpolation='nearest', cmap=cm.gist_rainbow, origin='lower')
-##            fig.colorbar(im, fraction = 0.15)
+        #elif dataCategory =="2D": #was "2D Sweep"
+        #    fig = Figure(dpi=100)
         else:
-            print ("1D and 2D data are the only types currently \r\n"+
+            print ("1D data is the only type currently \r\n"+
                    "supported by this grapher.")
             print ("Attempted to plot "+dataCategory+" data.")
-            self.updatePlotTypesList(self.supportedPlotTypes(dataCategory))
             fig = Figure(dpi=100)
         self.dataChest.cd("")
         #yield self.cxn.data_vault.dump_existing_sessions()
         return fig
+    
+def extractFrames(inGif):
+    inGif = Image.open(inGif)
+    nframes = 0
+    frames = []
+    while inGif:
+        #frame.save( '%s/%s-%s.gif' % (outFolder, os.path.basename(inGif), nframes ) , 'GIF')
+        
+        nframes += 1
+        try:
+            frame.seek( nframes )
+        except EOFError:
+            break;
+    return True
 
-
+##    ax = fig.add_subplot(111)
+##    ax.set_xlabel(indepVars[0][0]+" "+"("+indepVars[0][1]+")")
+##    ax.set_ylabel(indepVars[1][0]+" "+"("+indepVars[1][1]+")")
+##    ax.set_title(plotTitle)
+##    xGridRes = yield self.cxn.data_vault.get_parameter('X Grid Resolution')
+##    dX = yield self.cxn.data_vault.get_parameter('dX')
+##    yGridRes = yield self.cxn.data_vault.get_parameter('Y Grid Resolution')
+##    dY = yield self.cxn.data_vault.get_parameter('dY')
+##    sweepType =yield self.cxn.data_vault.get_parameter('Sweep Type')
+##    x = np.asarray(dataset[:,0])
+##    y = np.asarray(dataset[:,1])
+##    z = np.asarray(dataset[:,2])
+##    new = self.makeGrid(x, xGridRes, dX, y, yGridRes, dY, sweepType, z)
+##    X = new[0]
+##    Y = new[1]
+##    Z = new[2]
+##    im = ax.imshow(Z, extent=(X.min(), X.max(), Y.min(), Y.max()), interpolation='nearest', cmap=cm.gist_rainbow, origin='lower')
+##    fig.colorbar(im, fraction = 0.15)
 
 ##    def makeGrid(self, x, xGridRes, dX, y, yGridRes, dY, sweepType, z):
 ##        
