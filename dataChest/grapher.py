@@ -11,6 +11,7 @@ class Main(QtGui.QWidget):
     
     def __init__(self, parent = None):
         super(Main, self).__init__(parent)
+        self.root = 'Z:\mcdermott-group\DataChest'
         self.pathRoot=QtCore.QString('Z:\mcdermott-group\DataChest')
 
         self.filters =QtCore.QStringList()
@@ -83,30 +84,52 @@ class Main(QtGui.QWidget):
 
     def plotTypeSelected(self, plotType):
 ##      if self.fileName != fileName: #**log plot type now so that when same is selected we dont recreate ***
+        print "plotType=", plotType
+        #self.plotTypesComboBox.setText(text)
+        #self.plotTypesComboBox.adjustSize() 
         self.removeFigFromCanvas()
         self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, plotType)
         self.addFigureToCanvas(self.currentFig)
-        if plotType == "1D":
-            headerList = ["Dependent Variable:", "Status:"]
+
+    def updatePlotTypeOptions(self, plotType):
+        
+        self.clearLayout(self.scrollLayout)
+        if plotType == "1D" or "Histogram":
+            headerList = ["Dep Var:", "Status:"]
             widgetTypeList = ["QLabel", "QCheckBox"]
             depVarList = [row[0] for row in self.dataChest.getVariables()[1]]
             for ii in range(0,len(headerList)):
                 optionsSlice = QtGui.QVBoxLayout()
-                label = QtGui.QLabel(self)
+                label = QtGui.QLabel(self) #widget to log
                 label.setText(headerList[ii])
                 optionsSlice.addWidget(label)
                 for depVar in depVarList:
                     if widgetTypeList[ii] =="QLabel":
-                        label = QtGui.QLabel(self)
+                        label = QtGui.QLabel(self) #widget to log
                         label.setText(depVar)
                         optionsSlice.addWidget(label)
                     elif widgetTypeList[ii] =="QCheckBox":
-                        checkBox = QtGui.QCheckBox('', self)
+                        checkBox = QtGui.QCheckBox('', self)  #widget to log
                         checkBox.stateChanged.connect(partial(self.varStateChanged, depVar))
                         optionsSlice.addWidget(checkBox)
                 optionsSlice.addStretch(1)
                 self.scrollLayout.addLayout(optionsSlice)
             self.scrollLayout.addStretch(1)
+            #print "clearing"
+            #self.clearLayout(self.scrollLayout)
+            
+    #def removeOldPlotTypeWidgets(
+    def clearLayout(self, layout):
+        for i in reversed(range(layout.count())):
+            item = layout.itemAt(i)
+            
+            if isinstance(item, QtGui.QWidgetItem):
+                item.widget().close()
+            elif not isinstance(item, QtGui.QSpacerItem):
+                self.clearLayout(item.layout())
+
+            # remove the item from layout
+            layout.removeItem(item) 
             
     def varStateChanged(self, name, state): #when status check box is selected this is called
         print "name=", name
@@ -114,6 +137,16 @@ class Main(QtGui.QWidget):
             print "On"
         else:
             print "Off"
+
+    def pathMinusRoot(self, path):
+        root = self.convertWindowsPathToDvPathArray(self.root)
+        path = self.convertWindowsPathToDvPathArray(path)
+        intersection = list(set(root) & set(path))
+        ordered =[]
+        for ii in range(0, len(path)):
+            if path[ii] in intersection:
+                ordered.append(path[ii])
+        return list(set(root) & set(path))
 
     def convertWindowsPathToDvPathArray(self, windowsPath): #lets see what happens on a mac ???
         if 'Z:/mcdermott-group/DataChest/' in windowsPath:
@@ -193,11 +226,13 @@ class Main(QtGui.QWidget):
             print "Unrecognized plot type was provided"
             #return bum fig with something cool, maybe a gif
         if plotType =="1D":
-            self.plotTypeSelected(plotType)
             fig = self.basic1DPlot(dataset, variables)
+            self.updatePlotTypeOptions(plotType)
+            #self.plotTypeSelected(plotType)
         elif plotType == "Histogram": #adjust bin size
-            self.plotTypeSelected(plotType)
             fig = self.basic1DHistogram(dataset, variables)
+            self.updatePlotTypeOptions(plotType)
+            #self.plotTypeSelected(plotType)
         return fig
 
     def basic1DPlot(self, dataset, variables):
@@ -205,19 +240,19 @@ class Main(QtGui.QWidget):
         ax = fig.add_subplot(111)
         indepVars = variables[0]
         depVars = variables[1]
-        xlabel = self.dataChest.getParameter("xlabel")
+        xlabel = self.dataChest.getParameter("X Label")
         if xlabel is None:
             xlabel = indepVars[0][0]
-        ylabel = self.dataChest.getParameter("ylabel") 
+        ylabel = self.dataChest.getParameter("Y Label") 
         if ylabel is None: #for data with more than one dep, recommend ylabel
             ylabel = depVars[0][0]
-        plotTitle = self.dataChest.getParameter("PlotTitle")
+        plotTitle = self.dataChest.getParameter("Plot Title")
         if plotTitle is None:
             plotTitle = self.dataChest.getDatasetName()
         ax.set_title(plotTitle)
         dataset = np.asarray(dataset)
-        ax.set_xlabel(ylabel+" "+"("+indepVars[0][3]+")")
-        ax.set_ylabel("Normalized Frequency") #for multiple deps with different units this is ambiguous
+        ax.set_xlabel(xlabel+" "+"("+indepVars[0][3]+")")
+        ax.set_ylabel(ylabel+" "+"("+depVars[0][3]+")") #for multiple deps with different units this is ambiguous
         for ii in range(0, len(depVars)):
             x = dataset[::,0].flatten()
             y = dataset[::,1+ii].flatten()
@@ -230,13 +265,13 @@ class Main(QtGui.QWidget):
         ax = fig.add_subplot(111)
         indepVars = variables[0]
         depVars = variables[1]
-        xlabel = self.dataChest.getParameter("xlabel")
+        xlabel = self.dataChest.getParameter("X Label")
         if xlabel is None:
             xlabel = indepVars[0][0]
-        ylabel = self.dataChest.getParameter("ylabel") 
+        ylabel = self.dataChest.getParameter("X Label") 
         if ylabel is None: #for data with more than one dep, recommend ylabel
             ylabel = depVars[0][0]
-        plotTitle = self.dataChest.getParameter("PlotTitle")
+        plotTitle = self.dataChest.getParameter("Plot Title")
         if plotTitle is None:
             plotTitle = self.dataChest.getDatasetName()
         ax.set_title(plotTitle)
@@ -253,7 +288,8 @@ class Main(QtGui.QWidget):
     #def plot2D(self, dataset, variables, plotType, dataClass):
             
     def figFromFileInfo(self, filePath, fileName, selectedPlotType = None):
-        self.dataChest.cd(filePath) 
+        relPath = self.pathMinusRoot(filePath)
+        self.dataChest.cd(relPath)
         self.dataChest.openDataset(fileName) 
         variables = self.dataChest.getVariables()
         dataCategory = self.categorizeDataset(variables)

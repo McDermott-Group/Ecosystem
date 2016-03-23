@@ -81,22 +81,25 @@ class dataChest(dateStamp):
         path = [directoryToMove]
     elif isinstance(directoryToMove, list):
       path = directoryToMove
-    for ii in range(0, len(path)):
-      cwdContents = self.ls()
-      if (path[ii] in cwdContents[1]):
-        self.cwdPath = self.cwdPath+"/"+path[ii]
-        os.chdir(self.cwdPath)
-        return self.cwdPath
-      elif path[ii]=="..":#should never takes us out of root
-        os.chdir("..")
-        self.cwdPath = os.getcwd().replace("\\", "/") #unix style paths
-        return self.cwdPath
-      elif path[ii]=="":
-        return self.cwdPath
+    if len(path)>0:
+      for ii in range(0, len(path)):
+        cwdContents = self.ls()
+        if (path[ii] in cwdContents[1]):
+          self.cwdPath = self.cwdPath+"/"+path[ii]
+          os.chdir(self.cwdPath)
+          return self.cwdPath
+        elif path[ii]=="..":#should never takes us out of root
+          os.chdir("..")
+          self.cwdPath = os.getcwd().replace("\\", "/") #unix style paths
+          return self.cwdPath
+        elif path[ii]=="":
+          return self.cwdPath
+        else:
+          self._dataChestError("Directory does not exist.\r\n\t"+
+                               "Directory name provided: "+str(directoryToMove))
+          return "Error"
       else:
-        self._dataChestError("Directory does not exist.\r\n\t"+
-                             "Directory name provided: "+str(directoryToMove))
-        return "Error"
+        return directoryToMove
 
   def mkdir(self, directoryToMake): #doesn't cd automatically
     """Makes a new directory within the current working directory."""
@@ -193,12 +196,10 @@ class dataChest(dateStamp):
               varName = self.varDict[varGrp]["names"][colIndex-numIndeps]
               varData = np.asarray(data[rowIndex][colIndex])
               flattenedVarShape = self._flattenedShape(self.varDict[varGrp]["shapes"][colIndex-numIndeps])[0]
-              print "add start"
               self._addToDataset(self.currentFile[varGrp][varName],
                                  varData,
                                  flattenedVarShape,
                                  self.numDepWrites)
-              print "add stop"
           self.numIndepWrites = self.numIndepWrites+ 1 #after the entire column is written to 
           self.numDepWrites = self.numDepWrites+ 1
         self.currentFile.flush()
@@ -368,11 +369,15 @@ class dataChest(dateStamp):
       varList.append((names[ii], shapes[ii].tolist(),types[ii],units[ii]))
     return varList
     
-  def _formatFilename(self, fileName): #private method
+  def _formatFilename(self, fileName, additionalChars=None): #private method
       """Take a string and return a valid filename constructed from the string."""
-      valid_chars = "_ %s%s" % (string.ascii_letters, string.digits) #maybe remove dot, dash, and () ??
-      filename = ''.join(c for c in fileName if c in valid_chars)
-      filename = filename.replace(' ','_') # I don't like spaces in filenames.
+      if additionalChars is None:
+        valid_chars = "_%s%s" % (string.ascii_letters, string.digits) #maybe remove dot, dash, and () ??
+        filename = ''.join(c for c in fileName if c in valid_chars)
+      else:
+        valid_chars = "_"+additionalChars
+        valid_chars = valid_chars+"%s%s" % (string.ascii_letters, string.digits)
+        filename = ''.join(c for c in fileName if c in valid_chars)
       return filename
 
   def _areTypesValid(self, dataTypes):
@@ -567,7 +572,7 @@ class dataChest(dateStamp):
     validTypes = (int, long, float, complex, bool,
                   list, np.ndarray, str, unicode)
     if isinstance(parameterName, str):
-      if self._formatFilename(parameterName) != parameterName:
+      if self._formatFilename(parameterName, " ") != parameterName:
         self._dataChestError("Invalid parameter name provided.")
         return False
       elif not isinstance(parameterValue, validTypes): 
