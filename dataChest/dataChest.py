@@ -45,6 +45,7 @@ VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32',
 class dataChest(dateStamp):
 
   def __init__(self):
+    self.root = "Z:/mcdermott-group/DataChest"
     self.cwdPath = "Z:/mcdermott-group/DataChest"
     os.chdir(self.cwdPath)
     self.dateStamp = dateStamp()
@@ -76,7 +77,10 @@ class dataChest(dateStamp):
     if isinstance(directoryToMove, str):
       if "/" in directoryToMove:
         path = directoryToMove.split("/")
-        print "path=", path
+      elif directoryToMove == "":
+        os.chdir(self.root)
+        self.cwdPath = os.getcwd().replace("\\", "/")
+        return self.cwdPath
       else:
         path = [directoryToMove]
     elif isinstance(directoryToMove, list):
@@ -92,7 +96,9 @@ class dataChest(dateStamp):
           os.chdir("..")
           self.cwdPath = os.getcwd().replace("\\", "/") #unix style paths
           return self.cwdPath
-        elif path[ii]=="":
+        elif path[ii]=="": #when would this occur??
+          if len(path)>1:
+            print "Received and empty string in the middle of an array path."
           return self.cwdPath
         else:
           self._dataChestError("Directory does not exist.\r\n\t"+

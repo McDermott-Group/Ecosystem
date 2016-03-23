@@ -11,7 +11,7 @@ class Main(QtGui.QWidget):
     
     def __init__(self, parent = None):
         super(Main, self).__init__(parent)
-        self.root = 'Z:\mcdermott-group\DataChest'
+        self.root = 'Z:/mcdermott-group/DataChest'
         self.pathRoot=QtCore.QString('Z:\mcdermott-group\DataChest')
 
         self.filters =QtCore.QStringList()
@@ -79,17 +79,22 @@ class Main(QtGui.QWidget):
         self.currentFig = Figure()
         self.addFigureToCanvas(self.currentFig)
         
-        self.filePath =""
-        self.fileName =""
+        self.filePath = None
+        self.fileName = None
+        self.plotType = None
+        self.varsToIgnore = []
 
     def plotTypeSelected(self, plotType):
-##      if self.fileName != fileName: #**log plot type now so that when same is selected we dont recreate ***
-        print "plotType=", plotType
-        #self.plotTypesComboBox.setText(text)
-        #self.plotTypesComboBox.adjustSize() 
-        self.removeFigFromCanvas()
-        self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, plotType)
-        self.addFigureToCanvas(self.currentFig)
+        #self.plotTypesComboBox.adjustSize()
+        if plotType != self.plotType:
+            self.removeFigFromCanvas()
+            self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, selectedPlotType = plotType)
+            self.addFigureToCanvas(self.currentFig)
+            self.updatePlotTypeOptions(plotType)
+            self.plotType = plotType
+            self.varsToIgnore = [] ##when is best time to do this??
+        else:
+            print "Nothing new"
 
     def updatePlotTypeOptions(self, plotType):
         
@@ -110,6 +115,7 @@ class Main(QtGui.QWidget):
                         optionsSlice.addWidget(label)
                     elif widgetTypeList[ii] =="QCheckBox":
                         checkBox = QtGui.QCheckBox('', self)  #widget to log
+                        checkBox.setCheckState(QtCore.Qt.Checked)
                         checkBox.stateChanged.connect(partial(self.varStateChanged, depVar))
                         optionsSlice.addWidget(checkBox)
                 optionsSlice.addStretch(1)
@@ -132,21 +138,17 @@ class Main(QtGui.QWidget):
             layout.removeItem(item) 
             
     def varStateChanged(self, name, state): #when status check box is selected this is called
-        print "name=", name
-        if state == QtCore.Qt.Checked: 
-            print "On"
-        else:
-            print "Off"
-
-    def pathMinusRoot(self, path):
-        root = self.convertWindowsPathToDvPathArray(self.root)
-        path = self.convertWindowsPathToDvPathArray(path)
-        intersection = list(set(root) & set(path))
-        ordered =[]
-        for ii in range(0, len(path)):
-            if path[ii] in intersection:
-                ordered.append(path[ii])
-        return list(set(root) & set(path))
+        if state == QtCore.Qt.Checked:
+            self.varsToIgnore.remove(name)
+            self.removeFigFromCanvas() #removes old figure, needs garbage collection too
+            self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, varsToIgnore =self.varsToIgnore)
+            self.addFigureToCanvas(self.currentFig)
+        else: #unchecked
+            if name not in self.varsToIgnore:
+                self.varsToIgnore.append(name)
+            self.removeFigFromCanvas() #removes old figure, needs garbage collection too
+            self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, varsToIgnore =self.varsToIgnore)
+            self.addFigureToCanvas(self.currentFig)
 
     def convertWindowsPathToDvPathArray(self, windowsPath): #lets see what happens on a mac ???
         if 'Z:/mcdermott-group/DataChest/' in windowsPath:
@@ -174,25 +176,32 @@ class Main(QtGui.QWidget):
         self.currentFig.clf()
         
     @QtCore.pyqtSlot(QtCore.QModelIndex)
-    def dirTreeSelectionMade(self, index):
+    def dirTreeSelectionMade(self, index): #logical flow could be improved
 
         indexItem = self.model.index(index.row(), 0, index.parent())
         fileName = str(self.model.fileName(indexItem))
         filePath = str(self.model.filePath(indexItem))
-        
+
         if ".hdf5" in filePath: #removes fileName from path if file is chosen
             filePath = filePath[:-(len(fileName)+1)]
-            
-        if self.fileName != fileName or self.filePath != filePath: #if an actual change occurs update
-            self.filePath = self.convertWindowsPathToDvPathArray(filePath)
-            self.filePath = filePath
-            self.fileName = fileName
 
+        if self.fileName != fileName or self.filePath != filePath: #if an actual change occurs update check what happens for just a folder
+            self.filePath = filePath # is there a point in storing this?
+            self.fileName = fileName
+            
             if ".hdf5" in fileName: #i.e. not a directory else leave as is til a file is selected
                 self.removeFigFromCanvas() #removes old figure, needs garbage collection too 
                 self.currentFig = self.figFromFileInfo(self.filePath, self.fileName)
                 self.addFigureToCanvas(self.currentFig)
-                    
+                variables = self.dataChest.getVariables() #fine
+                dataCategory = self.categorizeDataset(variables) #fine
+                self.updatePlotTypesList(self.supportedPlotTypes(dataCategory)) #fine: updates list
+                self.updatePlotTypeOptions(self.supportedPlotTypes(dataCategory)[0])
+                self.plotType = self.supportedPlotTypes(dataCategory)[0]
+                self.varsToIgnore = [] ##when is best time to do this??
+            else:
+                self.fileName = None
+                           
     def updatePlotTypesList(self, plotTypes):
         self.plotTypesComboBox.clear()
         for element in plotTypes:
@@ -219,23 +228,21 @@ class Main(QtGui.QWidget):
         return plotTypes
 
     #some shape checking needs to go into this function to ensure 1D array inputs
-    def plot1D(self, dataset, variables, plotType, dataClass): #shorten this monstrosity
+    def plot1D(self, dataset, variables, plotType, dataClass, varsToIgnore = []): #shorten this monstrosity
+        #print "varsToIgnore=", varsToIgnore
         if plotType == None:
             plotType = self.supportedPlotTypes("1D")[0] #defaults
         elif plotType not in self.supportedPlotTypes("1D"):
             print "Unrecognized plot type was provided"
             #return bum fig with something cool, maybe a gif
         if plotType =="1D":
-            fig = self.basic1DPlot(dataset, variables)
-            self.updatePlotTypeOptions(plotType)
-            #self.plotTypeSelected(plotType)
+            fig = self.basic1DPlot(dataset, variables, varsToIgnore)
         elif plotType == "Histogram": #adjust bin size
-            fig = self.basic1DHistogram(dataset, variables)
-            self.updatePlotTypeOptions(plotType)
-            #self.plotTypeSelected(plotType)
+            fig = self.basic1DHistogram(dataset, variables, varsToIgnore)
         return fig
 
-    def basic1DPlot(self, dataset, variables):
+    def basic1DPlot(self, dataset, variables, varsToIgnore):
+        #print " basic1DPlot varsToIgnore=", varsToIgnore
         fig = Figure(dpi=100)
         ax = fig.add_subplot(111)
         indepVars = variables[0]
@@ -254,13 +261,14 @@ class Main(QtGui.QWidget):
         ax.set_xlabel(xlabel+" "+"("+indepVars[0][3]+")")
         ax.set_ylabel(ylabel+" "+"("+depVars[0][3]+")") #for multiple deps with different units this is ambiguous
         for ii in range(0, len(depVars)):
-            x = dataset[::,0].flatten()
-            y = dataset[::,1+ii].flatten()
-            ax.plot(x, y, label = depVars[ii][0])                
+            if depVars[ii][0] not in varsToIgnore:
+                x = dataset[::,0].flatten()
+                y = dataset[::,1+ii].flatten()
+                ax.plot(x, y, label = depVars[ii][0])
         ax.legend()
         return fig
 
-    def basic1DHistogram(self, dataset, variables):
+    def basic1DHistogram(self, dataset, variables, varsToIgnore):
         fig = Figure(dpi=100)
         ax = fig.add_subplot(111)
         indepVars = variables[0]
@@ -279,16 +287,17 @@ class Main(QtGui.QWidget):
         ax.set_xlabel(xlabel+" "+"("+indepVars[0][3]+")")
         ax.set_ylabel(ylabel+" "+"("+depVars[0][3]+")") #for multiple deps with different units this is ambiguous
         for ii in range(0, len(depVars)):
-            x = dataset[::,0].flatten()
-            y = dataset[::,1+ii].flatten()
-            ax.hist(y, 100, normed=1, alpha=0.5, label = depVars[ii][0])             
+            if depVars[ii][0] not in varsToIgnore:
+                x = dataset[::,0].flatten()
+                y = dataset[::,1+ii].flatten()
+                ax.hist(y, 100, normed=1, alpha=0.5, label = depVars[ii][0])
         ax.legend()
         return fig
 
     #def plot2D(self, dataset, variables, plotType, dataClass):
             
-    def figFromFileInfo(self, filePath, fileName, selectedPlotType = None):
-        relPath = self.pathMinusRoot(filePath)
+    def figFromFileInfo(self, filePath, fileName, selectedPlotType = None, varsToIgnore =[]):
+        relPath = self.convertWindowsPathToDvPathArray(filePath)
         self.dataChest.cd(relPath)
         self.dataChest.openDataset(fileName) 
         variables = self.dataChest.getVariables()
@@ -296,11 +305,11 @@ class Main(QtGui.QWidget):
         #otherwise refer to dataset name needs to be implemented
         dataset = self.dataChest.getData()
         if dataCategory == "1D":
-            self.updatePlotTypesList(self.supportedPlotTypes(dataCategory))
-            fig = self.plot1D(dataset, variables, selectedPlotType, None)
+            #self.updatePlotTypesList(self.supportedPlotTypes(dataCategory))
+            fig = self.plot1D(dataset, variables, selectedPlotType, None, varsToIgnore = varsToIgnore) #plot1D(self, dataset, variables, plotType, dataClass, varsToIgnore = [])
         elif dataCategory =="2D": #was "2D Sweep"
             fig = Figure(dpi=100)
-            self.updatePlotTypesList(self.supportedPlotTypes(dataCategory)) #Trajectory
+            #self.updatePlotTypesList(self.supportedPlotTypes(dataCategory)) #Trajectory
 ##            ax = fig.add_subplot(111)
 ##            ax.set_xlabel(indepVars[0][0]+" "+"("+indepVars[0][1]+")")
 ##            ax.set_ylabel(indepVars[1][0]+" "+"("+indepVars[1][1]+")")
@@ -325,7 +334,7 @@ class Main(QtGui.QWidget):
             print ("Attempted to plot "+dataCategory+" data.")
             self.updatePlotTypesList(self.supportedPlotTypes(dataCategory))
             fig = Figure(dpi=100)
-        #yield self.cxn.data_vault.cd("") #does this bump us to home?? ********************* why is this here
+        self.dataChest.cd("")
         #yield self.cxn.data_vault.dump_existing_sessions()
         return fig
 
