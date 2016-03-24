@@ -4,6 +4,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
+import matplotlib.cm as cm
 from dataChest import *
 from functools import partial
 
@@ -121,10 +122,7 @@ class Main(QtGui.QWidget):
                 optionsSlice.addStretch(1)
                 self.scrollLayout.addLayout(optionsSlice)
             self.scrollLayout.addStretch(1)
-            #print "clearing"
-            #self.clearLayout(self.scrollLayout)
             
-    #def removeOldPlotTypeWidgets(
     def clearLayout(self, layout):
         for i in reversed(range(layout.count())):
             item = layout.itemAt(i)
@@ -133,7 +131,6 @@ class Main(QtGui.QWidget):
                 item.widget().close()
             elif not isinstance(item, QtGui.QSpacerItem):
                 self.clearLayout(item.layout())
-
             # remove the item from layout
             layout.removeItem(item) 
             
@@ -241,12 +238,81 @@ class Main(QtGui.QWidget):
             fig = self.basic1DHistogram(dataset, variables, varsToIgnore)
         return fig
 
-    def basic1DPlot(self, dataset, variables, varsToIgnore):
-        #print " basic1DPlot varsToIgnore=", varsToIgnore
+    #some shape checking needs to go into this function to ensure 1D array inputs
+    def plot2D(self, dataset, variables, plotType, dataClass, varsToIgnore = []): #shorten this monstrosity
+        #print "varsToIgnore=", varsToIgnore
+        if plotType == None:
+            plotType = self.supportedPlotTypes("2D")[0] #defaults
+        elif plotType not in self.supportedPlotTypes("2D"):
+            print "Unrecognized plot type was provided"
+            #return bum fig with something cool, maybe a gif
+        if plotType =="2D":
+            fig = self.basic2DImage(dataset, variables, varsToIgnore)
+        #elif plotType == "Histogram": #adjust bin size
+        #    fig = self.basic1DHistogram(dataset, variables, varsToIgnore)
+        return fig
+
+    def basic2DImage(self, dataset, variables, varsToIgnore):
         fig = Figure(dpi=100)
         ax = fig.add_subplot(111)
         indepVars = variables[0]
         depVars = variables[1]
+        dataset = np.asarray(dataset)
+        xlabel = self.dataChest.getParameter("X Label")
+        if xlabel is None:
+            xlabel = indepVars[0][0]
+        ylabel = self.dataChest.getParameter("Y Label") 
+        if ylabel is None: #for data with more than one dep, recommend ylabel
+            ylabel = depVars[0][0]
+        plotTitle = self.dataChest.getParameter("Plot Title")
+        if plotTitle is None:
+            plotTitle = self.dataChest.getDatasetName()
+        ax.set_title(plotTitle)
+        ax.set_xlabel(xlabel+" "+"("+indepVars[0][3]+")")
+        ax.set_ylabel(ylabel+" "+"("+depVars[0][3]+")") #for multiple deps with different units this is ambiguous
+        imageType = self.dataChest.getParameter("Image Type")
+        if imageType is None: #add or "scatter"
+            imageType ="Scatter"
+            print "Scatter"
+            for ii in range(0, len(depVars)):
+                x = dataset[::,0][0]
+                y = dataset[::,1][0]
+                z = dataset[::,2][0]
+                im = ax.tricontourf(x,y,z, 100, cmap=cm.gist_rainbow, antialiased=True)
+                fig.colorbar(im, fraction = 0.15)
+        elif imageType == "Pixel":
+            xGridRes = self.dataChest.getParameter("X Resolution")
+            xIncrement = self.dataChest.getParameter("X Increment")
+            yGridRes = self.dataChest.getParameter("Y Resolution")
+            yIncrement = self.dataChest.getParameter("Y Increment")
+            x = dataset[::,0].flatten()
+            y = dataset[::,1].flatten()
+            z = dataset[::,2].flatten()
+            if len(x)>1:
+                if x[0]==x[1]:
+                    sweepType = "Y"
+                else:
+                    sweepType = "X"
+                print "sweepType=", sweepType
+                new = self.makeGrid(x, xGridRes, xIncrement, y, yGridRes, yIncrement, sweepType, z) #makeGrid(self, x, xGridRes, dX, y, yGridRes, dY, sweepType, z)
+                X = new[0]
+                Y = new[1]
+                Z = new[2]
+                im = ax.imshow(Z, extent=(X.min(), X.max(), Y.min(), Y.max()), interpolation='nearest', cmap=cm.gist_rainbow, origin='lower')
+                fig.colorbar(im, fraction = 0.15)
+            else:
+                print "return jack shit"
+        elif imageType == "Buffered":
+            print "Buffered"
+        return fig
+    
+    def basic1DPlot(self, dataset, variables, varsToIgnore):
+
+        fig = Figure(dpi=100)
+        ax = fig.add_subplot(111)
+        indepVars = variables[0]
+        depVars = variables[1]
+        scanType = self.dataChest.getParameter("X Scan Type")
         xlabel = self.dataChest.getParameter("X Label")
         if xlabel is None:
             xlabel = indepVars[0][0]
@@ -262,8 +328,16 @@ class Main(QtGui.QWidget):
         ax.set_ylabel(ylabel+" "+"("+depVars[0][3]+")") #for multiple deps with different units this is ambiguous
         for ii in range(0, len(depVars)):
             if depVars[ii][0] not in varsToIgnore:
-                x = dataset[::,0].flatten()
-                y = dataset[::,1+ii].flatten()
+                if scanType is None:
+                    x = dataset[::,0].flatten() #only works when all dims are same ==> perform checks *************
+                    y = dataset[::,1+ii].flatten()
+                elif scanType == "Lin":
+                    y = dataset[0][1+ii]  #only one row of data for this and log type supported
+                    x = np.linspace(dataset[0][0][0], dataset[0][0][1], num = len(y))
+                elif scanType == "Log":
+                    y = dataset[0][1+ii]
+                    x = np.logspace(np.log10(dataset[0][0][0]), np.log10(dataset[0][0][1]), num = len(y))
+                    ax.set_xscale('log')
                 ax.plot(x, y, label = depVars[ii][0])
         ax.legend()
         return fig
@@ -273,33 +347,35 @@ class Main(QtGui.QWidget):
         ax = fig.add_subplot(111)
         indepVars = variables[0]
         depVars = variables[1]
+        scanType = self.dataChest.getParameter("X Scan Type")
         xlabel = self.dataChest.getParameter("X Label")
-        if xlabel is None:
-            xlabel = indepVars[0][0]
-##        ylabel = self.dataChest.getParameter("Y Label") 
-##        if ylabel is None:
-##            ylabel = depVars[0][0] #for data with more than one dep, recommend ylabel
-        ylabel = "Statistical Frequency"
+##        if xlabel is None:
+##            xlabel = indepVars[0][0]
+        ylabel = self.dataChest.getParameter("Y Label") 
+        if ylabel is None:
+            ylabel = depVars[0][0] #for data with more than one dep, recommend ylabel
         plotTitle = self.dataChest.getParameter("Plot Title")
         if plotTitle is None:
             plotTitle = self.dataChest.getDatasetName()
         ax.set_title(plotTitle)
         dataset = np.asarray(dataset)
-        ax.set_xlabel(xlabel+" "+"("+indepVars[0][3]+")")
-        #ax.set_ylabel(ylabel+" "+"("+depVars[0][3]+")") #for multiple deps with different units this is ambiguous
-        ax.set_ylabel(ylabel)
+        ax.set_xlabel(ylabel+" "+"("+depVars[0][3]+")")
+        #for multiple deps with different units this is ambiguous
+        ax.set_ylabel("Statistical Frequency")
         for ii in range(0, len(depVars)):
             if depVars[ii][0] not in varsToIgnore:
-                x = dataset[::,0].flatten()
-                y = dataset[::,1+ii].flatten()
+                if scanType is None:
+                    y = dataset[::,1+ii].flatten()
+                elif scanType == "Lin":
+                    y = dataset[0][1+ii] 
+                elif scanType == "Log":
+                    y = dataset[0][1+ii]
                 weights = np.ones_like(y)/float(len(y))
                 ax.hist(y, 100, weights =weights, alpha=0.5, label = depVars[ii][0])
                 #ax.hist(y, 50, normed=1,weights =weights, alpha=0.5, label = depVars[ii][0])
         ax.legend()
         return fig
-
-    #def plot2D(self, dataset, variables, plotType, dataClass):
-            
+   
     def figFromFileInfo(self, filePath, fileName, selectedPlotType = None, varsToIgnore =[]):
         relPath = self.convertWindowsPathToDvPathArray(filePath)
         self.dataChest.cd(relPath)
@@ -310,8 +386,8 @@ class Main(QtGui.QWidget):
         dataset = self.dataChest.getData()
         if dataCategory == "1D":
             fig = self.plot1D(dataset, variables, selectedPlotType, None, varsToIgnore = varsToIgnore) #plot1D(self, dataset, variables, plotType, dataClass, varsToIgnore = [])
-        #elif dataCategory =="2D": #was "2D Sweep"
-        #    fig = Figure(dpi=100)
+        elif dataCategory =="2D": #was "2D Sweep"
+            fig = self.plot2D(dataset, variables, selectedPlotType, None, varsToIgnore = varsToIgnore)
         else:
             print ("1D data is the only type currently \r\n"+
                    "supported by this grapher.")
@@ -321,20 +397,6 @@ class Main(QtGui.QWidget):
         #yield self.cxn.data_vault.dump_existing_sessions()
         return fig
     
-def extractFrames(inGif):
-    inGif = Image.open(inGif)
-    nframes = 0
-    frames = []
-    while inGif:
-        #frame.save( '%s/%s-%s.gif' % (outFolder, os.path.basename(inGif), nframes ) , 'GIF')
-        
-        nframes += 1
-        try:
-            frame.seek( nframes )
-        except EOFError:
-            break;
-    return True
-
 ##    ax = fig.add_subplot(111)
 ##    ax.set_xlabel(indepVars[0][0]+" "+"("+indepVars[0][1]+")")
 ##    ax.set_ylabel(indepVars[1][0]+" "+"("+indepVars[1][1]+")")
@@ -354,63 +416,62 @@ def extractFrames(inGif):
 ##    im = ax.imshow(Z, extent=(X.min(), X.max(), Y.min(), Y.max()), interpolation='nearest', cmap=cm.gist_rainbow, origin='lower')
 ##    fig.colorbar(im, fraction = 0.15)
 
-##    def makeGrid(self, x, xGridRes, dX, y, yGridRes, dY, sweepType, z):
-##        
-##        totalNumPts = len(x)
-##        divNmod = divmod(len(x), yGridRes)
-##        
-##        if sweepType =="Y": #Y sweep type ==> fix x, sweep y, then go to x+dx and sweep y again ... 
-##            divNmod = divmod(len(x), yGridRes)
-##            numFullYslices = divNmod[0]
-##            numPartiallyComplete = divNmod[1]
-##            if numFullYslices < xGridRes:
-##                npxRemainder = np.array([])
-##                npyRemainder = np.array([])
-##                nanArray = np.zeros(shape = (yGridRes*xGridRes -yGridRes*numFullYslices-numPartiallyComplete,))
-##                nanArray[:] = np.NAN
-##                npzRemainder = np.concatenate([z[yGridRes*numFullYslices:yGridRes*numFullYslices+numPartiallyComplete], nanArray])
-##                for ii in range(numFullYslices, xGridRes):
-##                    npxRemainder = np.concatenate([npxRemainder, np.linspace(dX*ii+x[0], dX*ii+x[0], num = yGridRes)])
-##                    npyRemainder = np.concatenate([npyRemainder, np.linspace(y[0], y[0]+(yGridRes-1)*dY, num = yGridRes)])
-##            else:
-##                npxRemainder = np.array([])
-##                npyRemainder = np.array([])
-##                npzRemainder = np.array([])
-##
-##                
-##            npx = np.concatenate([x[0:yGridRes*numFullYslices], npxRemainder])
-##            npy = np.concatenate([y[0:yGridRes*numFullYslices], npyRemainder])
-##            npz = np.concatenate([z[0:yGridRes*numFullYslices], npzRemainder])
-##
-##            npx = npx.reshape(xGridRes, yGridRes).T
-##            npy = npy.reshape(xGridRes, yGridRes).T
-##            npz = npz.reshape(xGridRes, yGridRes).T
-##        elif sweepType =="X": #X sweep type ==> fix y, sweep x, then go to x+dy and sweep y again ...
-##            divNmod = divmod(len(x), xGridRes)
-##            numFullXslices = divNmod[0]
-##            numPartiallyComplete = divNmod[1]
-##            if numFullXslices < yGridRes:
-##                npxRemainder = np.array([])
-##                npyRemainder = np.array([])
-##                nanArray = np.zeros(shape = (yGridRes*xGridRes -xGridRes*numFullXslices-numPartiallyComplete,))
-##                nanArray[:] = np.NAN
-##                npzRemainder = np.concatenate([z[xGridRes*numFullXslices:xGridRes*numFullXslices+numPartiallyComplete], nanArray])
-##                for ii in range(numFullXslices, yGridRes):
-##                    npyRemainder = np.concatenate([npyRemainder, np.linspace(dY*ii+y[0], dY*ii+y[0], num = xGridRes)])
-##                    npxRemainder = np.concatenate([npxRemainder, np.linspace(x[0], x[0]+(xGridRes-1)*dX, num = xGridRes)])
-##            else:
-##                npxRemainder = np.array([])
-##                npyRemainder = np.array([])
-##                npzRemainder = np.array([])
-##            npx = np.concatenate([x[0:xGridRes*numFullXslices], npxRemainder])
-##            npy = np.concatenate([y[0:xGridRes*numFullXslices], npyRemainder])
-##            npz = np.concatenate([z[0:xGridRes*numFullXslices], npzRemainder])
-##
-##            npx = npx.reshape(xGridRes, yGridRes)
-##            npy = npy.reshape(xGridRes, yGridRes)
-##            npz = npz.reshape(xGridRes, yGridRes)
-##                
-##        return (npx,npy,npz)        
+    def makeGrid(self, x, xGridRes, dX, y, yGridRes, dY, sweepType, z):
+        
+        totalNumPts = len(x)
+        
+        if sweepType =="Y": #Y sweep type ==> fix x, sweep y, then go to x+dx and sweep y again ... 
+            divNmod = divmod(len(x), yGridRes)
+            numFullYslices = divNmod[0]
+            numPartiallyComplete = divNmod[1]
+            if numFullYslices < xGridRes:
+                npxRemainder = np.array([])
+                npyRemainder = np.array([])
+                nanArray = np.zeros(shape = (yGridRes*xGridRes -yGridRes*numFullYslices-numPartiallyComplete,))
+                nanArray[:] = np.NAN
+                npzRemainder = np.concatenate([z[yGridRes*numFullYslices:yGridRes*numFullYslices+numPartiallyComplete], nanArray])
+                for ii in range(numFullYslices, xGridRes):
+                    npxRemainder = np.concatenate([npxRemainder, np.linspace(dX*ii+x[0], dX*ii+x[0], num = yGridRes)])
+                    npyRemainder = np.concatenate([npyRemainder, np.linspace(y[0], y[0]+(yGridRes-1)*dY, num = yGridRes)])
+            else:
+                npxRemainder = np.array([])
+                npyRemainder = np.array([])
+                npzRemainder = np.array([])
+
+            print x[0]
+            npx = np.concatenate([x[0:yGridRes*numFullYslices], npxRemainder])
+            npy = np.concatenate([y[0:yGridRes*numFullYslices], npyRemainder])
+            npz = np.concatenate([z[0:yGridRes*numFullYslices], npzRemainder])
+
+            npx = npx.reshape(xGridRes, yGridRes).T
+            npy = npy.reshape(xGridRes, yGridRes).T
+            npz = npz.reshape(xGridRes, yGridRes).T
+        elif sweepType =="X": #X sweep type ==> fix y, sweep x, then go to x+dy and sweep y again ...
+            divNmod = divmod(len(x), xGridRes)
+            numFullXslices = divNmod[0]
+            numPartiallyComplete = divNmod[1]
+            if numFullXslices < yGridRes:
+                npxRemainder = np.array([])
+                npyRemainder = np.array([])
+                nanArray = np.zeros(shape = (yGridRes*xGridRes -xGridRes*numFullXslices-numPartiallyComplete,))
+                nanArray[:] = np.NAN
+                npzRemainder = np.concatenate([z[xGridRes*numFullXslices:xGridRes*numFullXslices+numPartiallyComplete], nanArray])
+                for ii in range(numFullXslices, yGridRes):
+                    npyRemainder = np.concatenate([npyRemainder, np.linspace(dY*ii+y[0], dY*ii+y[0], num = xGridRes)])
+                    npxRemainder = np.concatenate([npxRemainder, np.linspace(x[0], x[0]+(xGridRes-1)*dX, num = xGridRes)])
+            else:
+                npxRemainder = np.array([])
+                npyRemainder = np.array([])
+                npzRemainder = np.array([])
+            npx = np.concatenate([x[0:xGridRes*numFullXslices], npxRemainder])
+            npy = np.concatenate([y[0:xGridRes*numFullXslices], npyRemainder])
+            npz = np.concatenate([z[0:xGridRes*numFullXslices], npzRemainder])
+
+            npx = npx.reshape(xGridRes, yGridRes)
+            npy = npy.reshape(xGridRes, yGridRes)
+            npz = npz.reshape(xGridRes, yGridRes)
+        #print "npx=", npx    
+        return (npx,npy,npz)        
 
         
 if __name__ == "__main__":
