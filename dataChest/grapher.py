@@ -12,8 +12,8 @@ class Main(QtGui.QWidget):
     
     def __init__(self, parent = None):
         super(Main, self).__init__(parent)
-        self.root = 'Z:/mcdermott-group/DataChest'
-        self.pathRoot=QtCore.QString('Z:\mcdermott-group\DataChest')
+        self.root = 'C:/DataChest' #'Z:/mcdermott-group/DataChest'
+        self.pathRoot=QtCore.QString('C:\DataChest') #self.pathRoot=QtCore.QString('Z:\mcdermott-group\DataChest')
 
         self.filters =QtCore.QStringList()
         self.filters.append("*.hdf5")
@@ -148,10 +148,10 @@ class Main(QtGui.QWidget):
             self.addFigureToCanvas(self.currentFig)
 
     def convertWindowsPathToDvPathArray(self, windowsPath): #lets see what happens on a mac ???
-        if 'Z:/mcdermott-group/DataChest/' in windowsPath:
-            windowsPath = windowsPath.replace('Z:/mcdermott-group/DataChest/', '')
-        elif 'Z:/mcdermott-group/DataChest' in windowsPath:
-            windowsPath = windowsPath.replace('Z:/mcdermott-group/DataChest', '')
+        if 'C:/DataChest/' in windowsPath:
+            windowsPath = windowsPath.replace('C:/DataChest/', '')
+        elif 'C:/DataChest' in windowsPath:
+            windowsPath = windowsPath.replace('C:/DataChest', '')
         windowsPath = windowsPath.replace('.dir', '')
         return windowsPath.split('/')
         

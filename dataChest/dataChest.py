@@ -45,8 +45,8 @@ VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32',
 class dataChest(dateStamp):
 
   def __init__(self):
-    self.root = "Z:/mcdermott-group/DataChest"
-    self.cwdPath = "Z:/mcdermott-group/DataChest"
+    self.root = "C:/DataChest" #"Z:/mcdermott-group/DataChest"
+    self.cwdPath = "C:/DataChest" #"Z:/mcdermott-group/DataChest"
     os.chdir(self.cwdPath)
     self.dateStamp = dateStamp()
     self.currentHDF5Filename = None
@@ -168,7 +168,7 @@ class dataChest(dateStamp):
       self._dataChestError("Unable to create a unique filename.")
       return "Error"
     
-  def addData(self, data):
+  def addData(self, data): #optimize for 1D data
     """Adds data to the latest dataset created with new.
        Expects data of the form [[indep1_1, indep2_1, dep1_1, dep2_1],
        [indep1_2, indep2_2, dep1_2, dep2_2],...].
@@ -206,6 +206,7 @@ class dataChest(dateStamp):
                                  varData,
                                  flattenedVarShape,
                                  self.numDepWrites)
+              
           self.numIndepWrites = self.numIndepWrites+ 1 #after the entire column is written to 
           self.numDepWrites = self.numDepWrites+ 1
         self.currentFile.flush()
@@ -263,10 +264,11 @@ class dataChest(dateStamp):
           dataDict[variables]=[]
           for ii in range(0, numChunks):
             chunk =  np.asarray(fullDataSet[ii*chunkSize:(ii+1)*chunkSize])
-            if len(originalShape)>1:
+            if len(originalShape)>1 or originalShape!=[1]:
               chunk = np.reshape(chunk, tuple(originalShape))
-            dataDict[variables].append(chunk.tolist())
-
+              dataDict[variables].append(chunk.tolist())
+            else:
+              dataDict[variables].append(chunk[0])    
       #load parameters here perhaps
       data = []
       allVars = (self.varDict["independents"]["names"] +
@@ -499,31 +501,39 @@ class dataChest(dateStamp):
     numDeps = len(self.varDict["dependents"]["names"])
     if len(dataList) == (numIndeps+numDeps):
       for ii in range(0, (numIndeps+numDeps)):
-        if self._isColumnHomogeneousList(dataList[ii]):
-          array = np.asarray(dataList[ii])        
-          #check that all subelements are lists or nparrays ***
-          if ii < numIndeps:
-            if array.shape != tuple(self.varDict["independents"]["shapes"][ii]):
-              self._dataChestError("Data shapes do not match for the independent variable data.\r\n\t"+
-                                   "Expected shape: "+str(tuple(self.varDict["independents"]["shapes"][ii]))+".\r\n\t"+
-                                   "Received shape: "+str(array.shape))
+##        if self._isColumnHomogeneousList(dataList[ii]):
+        array = np.asarray(dataList[ii])        
+        #check that all subelements are lists or nparrays ***
+        if ii < numIndeps:
+          if self.varDict["independents"]["shapes"][ii]==[1]:
+            if array.shape!=():
+              self._dataChestError("Data of shape [1] should not be placed as an array.")
               return False
-            elif array.dtype.name != self.varDict["independents"]["types"][ii]:
-              self._dataChestError("Types do not match for independents")
-              return False           
-          else:
-            if array.shape != tuple(self.varDict["dependents"]["shapes"][ii-numIndeps]):
-              self._dataChestError("Data shapes do not match for the independent variable data.\r\n\t"+
-                                   "Expected shape: "+str(tuple(self.varDict["dependents"]["shapes"][ii-numIndeps]))+".\r\n\t"+
-                                   "Received shape: "+str(array.shape))
-              return False
-            elif array.dtype.name != self.varDict["dependents"]["types"][ii-numIndeps]:
-              self._dataChestError("Types do not match for dependents")  #this will most likely be our biggest problem
-              return False
+          elif array.shape != tuple(self.varDict["independents"]["shapes"][ii]):
+            self._dataChestError("Data shapes do not match for the independent variable data.\r\n\t"+
+                                 "Expected shape: "+str(tuple(self.varDict["independents"]["shapes"][ii]))+".\r\n\t"+
+                                 "Received shape: "+str(array.shape))
+            return False
+          elif array.dtype.name != self.varDict["independents"]["types"][ii]:
+            self._dataChestError("Types do not match for independents")
+            return False           
         else:
-          self._dataChestError("The column elements (along with all subelements)\r\n\t"+
-                               "of a row must be of type list or a numpy ndarray.")
-          return False
+          if self.varDict["dependents"]["shapes"][ii-numIndeps]==[1]:
+            if array.shape!=():
+              self._dataChestError("Data of shape [1] should not be placed as an array.")
+              return False
+          elif array.shape != tuple(self.varDict["dependents"]["shapes"][ii-numIndeps]):
+            self._dataChestError("Data shapes do not match for the independent variable data.\r\n\t"+
+                                 "Expected shape: "+str(tuple(self.varDict["dependents"]["shapes"][ii-numIndeps]))+".\r\n\t"+
+                                 "Received shape: "+str(array.shape))
+            return False
+          elif array.dtype.name != self.varDict["dependents"]["types"][ii-numIndeps]:
+            self._dataChestError("Types do not match for dependents")  #this will most likely be our biggest problem
+            return False
+##        else:
+##          self._dataChestError("The column elements (along with all subelements)\r\n\t"+
+##                               "of a row must be of type list or a numpy ndarray.")
+##          return False
     else:
       self._dataChestError("Incorrect number of data columns provided.")
       return False
