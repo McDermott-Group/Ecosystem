@@ -391,13 +391,15 @@ class AgilentN5230AServer(GPIBManagedServer):
             yield dev.write('CALC:FORM REAL')
             yield dev.write('CALC:PAR:SEL "Ixy_%s"' %Sp)
             yield dev.write('CALC:FORM IMAG')
-            yield dev.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 1))
-            yield dev.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 2))
             yield dev.write('SENS1:SWE:TIME:AUTO ON')
             yield dev.write('TRIG:SOUR IMM')
   
         yield dev.write('FORM ASC,0')
         
+        for k in range(len(S)):
+            yield dev.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 1))
+            yield dev.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 2))
+
         avgMode = yield self.average_mode(c)
         if avgMode:
             avgCount = yield self.average_points(c)
