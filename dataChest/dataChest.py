@@ -504,6 +504,7 @@ class dataChest(dateStamp):
           self._dataChestError("Unrecognized type was receieved. Please report this message on github.")
 
   def _addToDataset(self, dset, data, chunkSize, numWrites):
+    t0 = time.time()
     if numWrites == 0:
       data = np.reshape(data, (chunkSize,))
       if dset.shape[0] == 1 and chunkSize !=1: #accounts for 1D arbitrary data I believe
@@ -513,6 +514,8 @@ class dataChest(dateStamp):
       data = np.reshape(data, (chunkSize,))
       dset.resize((dset.shape[0]+chunkSize,))
       dset[-chunkSize:] = data
+    tf = time.time()
+    print "\t_addToDataSet Total Time=", tf-t0
 
   def _isDataValid(self, data):
     if isinstance(data, list): # checks that its a list
@@ -547,9 +550,8 @@ class dataChest(dateStamp):
     numDeps = len(self.varDict["dependents"]["names"])
     if len(dataList) == (numIndeps+numDeps):
       for ii in range(0, (numIndeps+numDeps)):
-##        if self._isColumnHomogeneousList(dataList[ii]):
+##        if self._isColumnHomogeneousList(dataList[ii]):  #check that all subelements are lists or nparrays ***
         array = np.asarray(dataList[ii])        
-        #check that all subelements are lists or nparrays ***
         if ii < numIndeps:
           if self.varDict["independents"]["shapes"][ii]==[1]:
             if array.shape!=():
@@ -687,5 +689,6 @@ class dataChest(dateStamp):
 ##TODO:
     ##cut lines to <=72 characters
     ##add dictionary parameter capabilities ***
-    ##test for speed, 1D case in particular shape = [1]
     ##over night writes both locally and on afs data corruption tests
+    ##add datetime format
+    ##refactor
