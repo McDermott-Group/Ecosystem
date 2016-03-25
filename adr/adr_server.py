@@ -147,7 +147,7 @@ class ADRServer(DeviceServer):
         sets up instruments, and sets up listeners for GPIB device 
         connect/disconnect messages.
         """
-        DeviceServer.initServer(self)
+        yield DeviceServer.initServer(self)
         try:
             yield self.client.registry.cd(self.ADRSettingsPath)
             self.file_path = yield self.client.registry.get('Log Path')

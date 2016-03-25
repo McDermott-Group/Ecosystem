@@ -24,7 +24,7 @@ import labrad
 from labrad import units
 from labrad.server import (inlineCallbacks, returnValue)
 from twisted.internet import tksupport, reactor
-import os
+import os, time
 
 class EntryWithAlert(Tkinter.Entry):
     """Inherited from the Tkinter Entry widget, this just turns red when a limit is reached"""
@@ -88,6 +88,13 @@ class ADRController(object):#Tkinter.Tk):
         yield self.initializeWindow()
         self.startListening()
     @inlineCallbacks
+    def correctServer(self,servId):
+        try:
+            id = yield self.cxn['ADR3'].ID
+            returnValue( id == servId )
+        except: 
+            returnValue( False )
+    @inlineCallbacks
     def startListening(self):
         """The ADR Server sends out named messages every time the state is changed, the log is updated, or magging or regulation cycles complete.  This function starts the listeners for them.  Note: We used named messages instead of Signals because Signals are registered directly with the server instead of the manager (like named messages), so if the adr server disconnects and reconnects, the signals will no longer be sent here."""
         mgr = self.cxn.manager
@@ -98,27 +105,33 @@ class ADRController(object):#Tkinter.Tk):
         # yield server.addListener(listener = update_state, source=None,ID=self.ID)
         
         # state update (only if 
-        update_state = lambda c, (s,payload): self.updateInterface() if s==self.cxn[self.selectedADR].ID else -1
+        update_state = lambda c, (s,payload): self.updateInterface() \
+                if self.correctServer(s) else -1
         self.cxn._cxn.addListener(update_state, source=mgr.ID, ID=101)
         yield mgr.subscribe_to_named_message('State Changed', 101, True)
         # log update
-        update_log = lambda c, (s,(m,a)): self.updateLog(m,a) if s==self.cxn[self.selectedADR].ID else -1 # &&& upon first opening, self.selectedADR == None, and this throws an error.
+        update_log = lambda c, (s,(m,a)): self.updateLog(m,a) \
+                if self.correctServer(s) else -1
         self.cxn._cxn.addListener(update_log, source=mgr.ID, ID=102)
         yield mgr.subscribe_to_named_message('Log Changed', 102, True)
         # magging up stopped
-        mag_stop = lambda c, (s,payload): self.magUpStopped() if s==self.cxn[self.selectedADR].ID else -1
+        mag_stop = lambda c, (s,payload): self.magUpStopped() \
+                if self.correctServer(s) else -1
         self.cxn._cxn.addListener(mag_stop, source=mgr.ID, ID=103)
         yield mgr.subscribe_to_named_message('MagUp Stopped', 103, True)
         # regulation stopped
-        reg_stop = lambda c, (s,payload): self.regulationStopped() if s==self.cxn[self.selectedADR].ID else -1
+        reg_stop = lambda c, (s,payload): self.regulationStopped() \
+                if self.correctServer(s) else -1
         self.cxn._cxn.addListener(reg_stop, source=mgr.ID, ID=104)
         yield mgr.subscribe_to_named_message('Regulation Stopped', 104, True)
         # magging up started
-        mag_start = lambda c, (s,payload): self.magUpStarted() if s==self.cxn[self.selectedADR].ID else -1
+        mag_start = lambda c, (s,payload): self.magUpStarted() \
+                if self.correctServer(s) else -1
         self.cxn._cxn.addListener(mag_start, source=mgr.ID, ID=105)
         yield mgr.subscribe_to_named_message('MagUp Started', 105, True)
         # regulation started
-        reg_start = lambda c, (s,payload): self.regulationStarted() if s==self.cxn[self.selectedADR].ID else -1
+        reg_start = lambda c, (s,payload): self.regulationStarted() \
+                if self.correctServer(s) else -1
         self.cxn._cxn.addListener(reg_start, source=mgr.ID, ID=106)
         yield mgr.subscribe_to_named_message('Regulation Started', 106, True)
         # servers starting and stopping
@@ -287,8 +300,16 @@ class ADRController(object):#Tkinter.Tk):
         else: 
             try:
                 self.adrSelect.set(runningADRs[0])
-            except IndexError as e: pass
+            except IndexError as e: 
+                self.resetButtons()
+                self.selectedADR = ''
             except Exception as e: print e
+    def resetButtons(self):
+        self.HSCloseButton.configure(state=Tkinter.DISABLED)
+        self.HSOpenButton.configure(state=Tkinter.DISABLED)
+        self.magUpButton.configure(state=Tkinter.DISABLED)
+        self.regulateButton.configure(state=Tkinter.DISABLED)
+        self.compressorButton.configure(state=Tkinter.DISABLED)
     @inlineCallbacks
     def changeFridge(self,*args):
         """Select which ADR you want to operate on.  Called when select ADR menu is changed."""
@@ -303,24 +324,30 @@ class ADRController(object):#Tkinter.Tk):
         self.stageFAA.set_xdata([])
         self.stageFAA.set_ydata([])
         # load saved temp data
-        adrSettingsPath = yield self.cxn[self.selectedADR].get_settings_path()
-        date_append = yield self.cxn[self.selectedADR].get_date_append()
+        # We have to sleep for 0.5s here because it seems like it takes
+        # a moment for the connected server to register in self.cxn, even
+        # though all this starts  because a message is received saying it
+        # is connected :\
+        time.sleep(0.5)
+        thisADR = yield self.cxn[self.selectedADR]
+        adrSettingsPath = yield thisADR.get_settings_path()
+        date_append = yield thisADR.get_date_append()
         reg = self.cxn.registry
         reg.cd(adrSettingsPath)
-        file_path = yield reg.get('Log Path')
-        file_length = os.stat(file_path+'\\temperatures'+date_append+'.temps')[6]
+        base_path = yield reg.get('Log Path')
+        file_path = base_path + '\\temperatures' + date_append + '.temps'
+        file_length = os.stat(file_path)[6]
         try:
-            with open(file_path+'\\temperatures'+date_append+'.temps', 'rb') as f:
+            with open(file_path, 'rb') as f:
                 first = False
                 n = 1
                 while first is False and file_length - n*5*8 > 0:
                     f.seek(file_length - n*5*8)
                     newRow = [struct.unpack('d',f.read(8))[0] for x in ['time','t1','t2','t3','t4']]
-                    #timeDisplayOptions = {'10 minutes':10,'1 hour':60,'6 hours':6*60,'24 hours':24*60,'All':0}
                     if len(self.stage60K.get_xdata()) < 1: xMin = mpl.dates.num2date(1)
                     else:
                         lastDatetime = mpl.dates.num2date(self.stage60K.get_xdata()[-1])
-                        xMin = lastDatetime-datetime.timedelta(minutes=6*60) #timeDisplayOptions[self.wScale.get()])
+                        xMin = lastDatetime-datetime.timedelta(minutes=6*60)
                     if mpl.dates.date2num(xMin) < newRow[0]:
                         self.stage60K.set_xdata(numpy.append(newRow[0],self.stage60K.get_xdata()))
                         self.stage60K.set_ydata(numpy.append(newRow[1],self.stage60K.get_ydata()))
