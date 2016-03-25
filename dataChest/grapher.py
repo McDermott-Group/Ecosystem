@@ -332,7 +332,7 @@ class Main(QtGui.QWidget):
                     x = dataset[::,0].flatten() #only works when all dims are same ==> perform checks *************
                     y = dataset[::,1+ii].flatten()
                 elif scanType == "Lin":
-                    y = dataset[0][1+ii]  #only one row of data for this and log type supported
+                    y = np.asarray(dataset[0][1+ii])  #only one row of data for this and log type supported
                     x = np.linspace(dataset[0][0][0], dataset[0][0][1], num = len(y))
                 elif scanType == "Log":
                     y = dataset[0][1+ii]

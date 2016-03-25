@@ -19,6 +19,7 @@ from dateStamp import *
 import numpy as np
 import string
 import inspect
+import time
 
 VAR_NAME_INDEX_POS = 0
 VAR_SHAPE_INDEX_POS = 1
@@ -186,29 +187,57 @@ class dataChest(dateStamp):
         numIndeps = len(self.varDict["independents"]["names"])
         numDeps = len(self.varDict["dependents"]["names"])
         numRows = len(data)
-        for rowIndex in range(0, numRows):
-          for colIndex in range(0, len(data[rowIndex])):
+        indepShapes = self.varDict["independents"]["shapes"]
+        depShapes = self.varDict["dependents"]["shapes"]
+        if self._isDataArbitrary1D(indepShapes, depShapes, data):
+          varData = np.asarray(data)
+          for colIndex in range(0, numIndeps+numDeps):
             if colIndex<numIndeps:
               varGrp = "independents"
               varName = self.varDict[varGrp]["names"][colIndex]
-              varData = np.asarray(data[rowIndex][colIndex])
-              flattenedVarShape = self._flattenedShape(self.varDict[varGrp]["shapes"][colIndex])[0]
+              dat = varData[:,colIndex]
+              flattenedVarShape = len(dat)
+              #print "flattenedVarShape=", flattenedVarShape
               self._addToDataset(self.currentFile[varGrp][varName],
-                                 varData,
+                                 dat,
                                  flattenedVarShape,
                                  self.numIndepWrites)
             else:
               varGrp = "dependents"
               varName = self.varDict[varGrp]["names"][colIndex-numIndeps]
-              varData = np.asarray(data[rowIndex][colIndex])
-              flattenedVarShape = self._flattenedShape(self.varDict[varGrp]["shapes"][colIndex-numIndeps])[0]
+              flattenedVarShape = len(dat)
+              dat = varData[:,colIndex]
               self._addToDataset(self.currentFile[varGrp][varName],
-                                 varData,
+                                 dat,
                                  flattenedVarShape,
                                  self.numDepWrites)
-              
-          self.numIndepWrites = self.numIndepWrites+ 1 #after the entire column is written to 
-          self.numDepWrites = self.numDepWrites+ 1
+          self.numIndepWrites = self.numIndepWrites+len(dat) #after the entire column is written to 
+          self.numDepWrites = self.numDepWrites+len(dat)
+        else:
+          for rowIndex in range(0, numRows):
+            for colIndex in range(0, len(data[rowIndex])):
+              if colIndex<numIndeps:
+                varGrp = "independents"
+                varName = self.varDict[varGrp]["names"][colIndex]
+                varData = np.asarray(data[rowIndex][colIndex])
+                flattenedVarShape = self._flattenedShape(self.varDict[varGrp]["shapes"][colIndex])[0]
+                self._addToDataset(self.currentFile[varGrp][varName],
+                                   varData,
+                                   flattenedVarShape,
+                                   self.numIndepWrites)
+              else:
+                varGrp = "dependents"
+                varName = self.varDict[varGrp]["names"][colIndex-numIndeps]
+                varData = np.asarray(data[rowIndex][colIndex])
+                flattenedVarShape = self._flattenedShape(self.varDict[varGrp]["shapes"][colIndex-numIndeps])[0]
+                self._addToDataset(self.currentFile[varGrp][varName],
+                                   varData,
+                                   flattenedVarShape,
+                                   self.numDepWrites)
+                
+            self.numIndepWrites = self.numIndepWrites+ 1 #after the entire column is written to 
+            self.numDepWrites = self.numDepWrites+ 1
+            
         self.currentFile.flush()
       else:
         #Invalid data provided and error message will be provided with details
@@ -218,6 +247,18 @@ class dataChest(dateStamp):
                            "attempting to write. Datasets are\r\n\t"+
                            "created using the createDataset()\r\n\t"+
                            "method of this class."))
+      return False
+    return True
+    
+  def _isDataArbitrary1D(self, indepShapes, depShapes, data):
+    allShapes = indepShapes+depShapes
+    for shape in allShapes:
+      if shape != [1]:
+        return False
+    data = np.asarray(data)
+    if len(data.shape)==2 and data.shape[1] == len(allShapes):
+      return True
+    else:
       return False
 
   def openDataset(self, name):
@@ -465,6 +506,8 @@ class dataChest(dateStamp):
   def _addToDataset(self, dset, data, chunkSize, numWrites):
     if numWrites == 0:
       data = np.reshape(data, (chunkSize,))
+      if dset.shape[0] == 1 and chunkSize !=1: #accounts for 1D arbitrary data I believe
+        dset.resize((chunkSize,))
       dset[:chunkSize] = data
     else:
       data = np.reshape(data, (chunkSize,))
@@ -475,19 +518,22 @@ class dataChest(dateStamp):
     if isinstance(data, list): # checks that its a list
       numRows = len(data)
       if numRows>0: # if length nonzero proceed to check tuples
-        for ii in range(0, numRows):
-          if not (isinstance(data[ii], list) or isinstance(data[ii], np.ndarray)): #each entry should be 
-            self._dataChestError(("For row ="+str(ii)+" of the data entered is not a list. \r\n\t"+
-            "Data entered should be of the form: \r\n\t"+
-            "[[indep1_0, indep2_0, dep1_0, dep2_0], ... \r\n\t"+
-            "[indep1_n, indep2_n, dep1_n, dep2_n]] \r\n\t"+
-            "where [indep1_m, indep2_m, dep1_m, dep2_m] \r\n\t"+
-            "is the m'th row of your data set."))
-            return False
-          else: #check that entries
-            # tuple form (dep1, dep2, ...,indep1, indep2,...) where dep(indep) are of the shape specified by new
-            if not self._isRowValid(data[ii]):
+        if self._isDataArbitrary1D(self.varDict["independents"]["shapes"],self.varDict["dependents"]["shapes"],data):
+          return True
+        else:
+          for ii in range(0, numRows):
+            if not (isinstance(data[ii], list) or isinstance(data[ii], np.ndarray)): #each entry should be 
+              self._dataChestError(("For row ="+str(ii)+" of the data entered is not a list. \r\n\t"+
+              "Data entered should be of the form: \r\n\t"+
+              "[[indep1_0, indep2_0, dep1_0, dep2_0], ... \r\n\t"+
+              "[indep1_n, indep2_n, dep1_n, dep2_n]] \r\n\t"+
+              "where [indep1_m, indep2_m, dep1_m, dep2_m] \r\n\t"+
+              "is the m'th row of your data set."))
               return False
+            else: #check that entries
+              # tuple form (dep1, dep2, ...,indep1, indep2,...) where dep(indep) are of the shape specified by new
+              if not self._isRowValid(data[ii]):
+                return False
       else: # [] is not a valid dataset
         self._dataChestError("Vacuous datasets are invalid.")
         return False
