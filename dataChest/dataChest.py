@@ -15,7 +15,7 @@
 
 import os
 import h5py
-from dateStamp import *
+from dateStamp import dateStamp
 import numpy as np
 import string
 import inspect
@@ -48,7 +48,7 @@ class dataChest(dateStamp):
 
   def __init__(self):
     self.root = "C:/DataChest" #"Z:/mcdermott-group/DataChest"
-    self.cwdPath = "C:/DataChest" #"Z:/mcdermott-group/DataChest"
+    self.cwdPath = self.root #initialized to root to start
     os.chdir(self.cwdPath)
     self.dateStamp = dateStamp()
     self.currentHDF5Filename = None
@@ -65,56 +65,51 @@ class dataChest(dateStamp):
     files = []
     folders = []
     for item in cwdContents:
-      if not item.startswith('.'): #ignores hidden sys files
+      if not item.startswith('.'): #ignore hidden sys files
         if "." in item:
           files.append(item)
         else:
           folders.append(item)
-    files = sorted(files) #alphabetize me captain...
+    files = sorted(files) #alphabetize for readibility
     folders = sorted(folders)
     return [files, folders]
 
-  def cd(self, directoryToMove): #needs to be debugged now that we accept below types
-    """Changes the current working directory.""" #accepts single string, path, list
+  def cd(self, directoryToMove):
+    """Changes the current working directory."""
     if isinstance(directoryToMove, str):
-      if "/" in directoryToMove:
-        print "Windows path provided...get with the times."
-        path = directoryToMove.split("/")
-      elif directoryToMove == "":
-        os.chdir(self.root)
-        self.cwdPath = os.getcwd().replace("\\", "/")
-        return self.cwdPath
-      else:
-        path = [directoryToMove]
+      path = [directoryToMove]
     elif isinstance(directoryToMove, list):
       path = directoryToMove
     else:
-      print "Acceptable types are of type str or list."
+      self._dataChestError("Acceptable argument types are string and list only.")
       return "Error"
+        
     if len(path)>0:
       for ii in range(0, len(path)):
         cwdContents = self.ls()
         if (path[ii] in cwdContents[1]):
           self.cwdPath = self.cwdPath+"/"+path[ii]
           os.chdir(self.cwdPath)
-          return self.cwdPath
         elif path[ii]=="..":#should never takes us out of root
           os.chdir("..")
-          self.cwdPath = os.getcwd().replace("\\", "/") #unix style paths
-          return self.cwdPath
-        elif path[ii]=="": #when would this occur??
           if len(path)>1:
-            print "Received and empty string in the middle of an array path."
-          return self.cwdPath
+            self._dataChestError("Received .. in the middle of an array path.", warning=True)
+          self.cwdPath = os.getcwd().replace("\\", "/") #unix style paths
+        elif path[ii]=="":
+          if len(path)>1:
+            self._dataChestError("Received an empty string in the middle of an array path.", warning=True)
+          os.chdir(self.root)
+          self.cwdPath = os.getcwd().replace("\\", "/")
         else:
           self._dataChestError("Directory does not exist.\r\n\t"+
                                "Directory name provided: "+str(directoryToMove))
           return "Error"
-      else:
-        return directoryToMove
+      return self.cwdPath
+    else:
+      return directoryToMove
 
-  def mkdir(self, directoryToMake): #doesn't cd automatically
-    """Makes a new directory within the current working directory."""
+  def mkdir(self, directoryToMake):
+    """Makes a new directory within the current working directory.""" #doesn't cd automatically
     dirContents = self.ls()[1]
     if self._formatFilename(directoryToMake) == directoryToMake:
       if directoryToMake not in dirContents:
@@ -132,7 +127,7 @@ class dataChest(dateStamp):
                            self._formatFilename(directoryToMake))
       return "Error"
     
-  def createDataset(self, datasetName, indepVarsList, depVarsList): 
+  def createDataset(self, datasetName, indepVarsList, depVarsList):
     "Creates a new dataset within the current working directory.""" 
     self.currentHDF5Filename = None #initialized to None
     self.readOnlyFlag = False
@@ -142,39 +137,21 @@ class dataChest(dateStamp):
                            "digits 0 through 9, and underscores\r\n\t"+
                            "in your dataset names."))
       return "Error"
-    elif not self._isVarsListValid(
-                                   "independents",
-                                   indepVarsList
-                                   ) == indepVarsList: 
+    elif not self._isVarsListValid("independents", indepVarsList): 
       return "Error"
-    elif not self._isVarsListValid(
-                                   "dependents",
-                                   depVarsList) == depVarsList:
+    elif not self._isVarsListValid("dependents", depVarsList):
       return "Error"
     elif self._getVariableNames(indepVarsList+depVarsList)==[]:
       return "Error"
     
     filename = self._generateUniqueFilename(datasetName)
-    if len(filename)>0: #generate unique name if not ****
-      self.currentFile = h5py.File(self.cwdPath+"/"+filename) #should check for success
-      self.currentHDF5Filename = self.cwdPath+"/"+filename  #before setting this
-      self.readOnlyFlag = False # newly created files have read and write access
-
-      self.currentFile.create_group("independents") #create indeps group
-      self.currentFile.create_group("dependents") #create deps group
-      self.currentFile.create_group("parameters") ##create params group
-
-      for varTypes in self.varDict.keys(): # ['independents', 'dependents']
-        for varAttrs in self.varDict[varTypes].keys(): # ['shapes', 'units', 'names', 'types']
-          varGrp = self.currentFile[varTypes]
-          varGrp.attrs[varAttrs] = self.varDict[varTypes][varAttrs] #sets attributes 
-        self._initDatasetGroup(varGrp, self.varDict[varTypes]) #init params group within
-      self.currentFile.flush()
+    if len(filename)>0:
+      self._initDataset(self.varDict, filename)
     else:
       self._dataChestError("Unable to create a unique filename.")
       return "Error"
     
-  def addData(self, data): #optimize for 1D data
+  def addData(self, data): #clean and design around string and datetime objects
     """Adds data to the latest dataset created with new.
        Expects data of the form [[indep1_1, indep2_1, dep1_1, dep2_1],
        [indep1_2, indep2_2, dep1_2, dep2_2],...].
@@ -254,33 +231,18 @@ class dataChest(dateStamp):
       return False
     return True
 
-  def isStringUTCFormat(self, dateStr):
-    RE = re.compile(r'^\d{4}-\d{2}-\d{2}[T]\d{2}:\d{2}:\d{2}[.]\d{6}[+-]\d{2}:\d{2}$')
-    return bool(RE.search(dateStr))
-    
-  def _isDataArbitraryOption1(self, indepShapes, depShapes, data):
-    allShapes = indepShapes+depShapes
-    for shape in allShapes:
-      if shape != [1]:
-        return False
-    data = np.asarray(data)
-    if len(data.shape)==2 and data.shape[1] == len(allShapes):
-      return True
-    else:
-      return False
-
-  def openDataset(self, name):
+  def openDataset(self, filename): #clean this up
     """Opens a dataset within the current working directory if it exists"""
-    if '.hdf5' not in name: #adds file extension if emitted.
-      name = name+".hdf5"
-    files = self.ls()[0]
-    if name in files:
+    if '.hdf5' not in filename: #adds file extension if emitted.
+      filename = filename+".hdf5"
+    existingFiles = self.ls()[0]
+    if filename in existingFiles:
       if hasattr(self, 'currentFile'):
         self.currentFile.close() #close current file if existent
-      self.currentFile = h5py.File(name,'r') #opened read only
+      self.currentFile = h5py.File(filename,'r') #opened read only
       
       self.readOnlyFlag = True
-      self.currentHDF5Filename = self.cwdPath + "/" + name
+      self.currentHDF5Filename = self.cwdPath + "/" + filename
       
       for keys in self.currentFile["independents"].attrs.keys():
         self.varDict["independents"][str(keys)] = self.currentFile["independents"].attrs[keys].tolist()
@@ -299,7 +261,7 @@ class dataChest(dateStamp):
                            "error on github."))
       return "Error"
     
-  def getData(self):
+  def getData(self): #clean and design around string and datetime objects
     # get data 1 var at a time, dechunk it and return in original format
     if self.currentHDF5Filename is not None:  #is this extremely inefficient for 1-D Data??
       dataDict = {}
@@ -390,24 +352,64 @@ class dataChest(dateStamp):
              "using either the openDataset method to open an existing\r\n\t"+
              "set or with the createDataset method."))
 
+  def _initDataset(self, varDict, filename):
+
+    self.numIndepWrites = 0
+    self.numDepWrites = 0
+    
+    self.currentFile = h5py.File(self.cwdPath+"/"+filename) #should check for success
+    self.currentHDF5Filename = self.cwdPath+"/"+filename  #before setting this
+    self.readOnlyFlag = False # newly created files have read and write access
+    
+    #create the following groups within file:
+    self.currentFile.create_group("independents")
+    self.currentFile.create_group("dependents")
+    self.currentFile.create_group("parameters")
+
+    for varTypes in varDict.keys(): #keys=['independents', 'dependents']
+      for varAttrs in varDict[varTypes].keys():# keys =['shapes','units','names','types']
+        varGrp = self.currentFile[varTypes]
+        varGrp.attrs[varAttrs] = varDict[varTypes][varAttrs] #sets attributes 
+      self._initDatasetGroup(varGrp, varDict[varTypes])
+    self.currentFile.flush()
+    
+
+  def _initDatasetGroup(self, group, varDict):
+    
+    for ii in range(0, len(varDict["names"])):
+      #creates each dataset, set datatype, chunksize, maxshape, fillvalue
+      dset = group.create_dataset(varDict["names"][ii],
+                                  tuple(self._flattenedShape(varDict["shapes"][ii])),
+                                  dtype=varDict["types"][ii],
+                                  chunks=tuple(self._flattenedShape(varDict["shapes"][ii])),
+                                  maxshape=(None,),
+                                  fillvalue=np.nan)
+      #stores name, shape, type, and units as attributes for this dataset
+      #(sort of redundant as this is done at the varType group level)
+      for keys in varDict:
+        if isinstance(varDict[keys][ii], str):
+          dset.attrs[keys] = unicode(varDict[keys][ii], "utf-8")
+        elif isinstance(varDict[keys][ii], list):
+          dset.attrs[keys] = varDict[keys][ii]
+        else:
+          self._dataChestError("Unrecognized type was receieved. Please report this message on github.")
+
   def _generateUniqueFilename(self, datasetName):
-    maxTries = 100
     uniquenessFlag = False
-    ii = 0
     uniqueName = ""
+    maxTries = 100
+    ii = 0
+    existingNames = self.ls()[0]
     while ii<maxTries and uniquenessFlag == False:
       if ii == 0:
-        if (self.dateStamp.dateStamp()+"_"+datasetName+".hdf5") not in self.ls()[0]:
-          uniqueName = (self.dateStamp.dateStamp()+"_"+datasetName+".hdf5")
-          uniquenessFlag = True
-        else:
-          ii = ii + 1
+        uniqueName = (self.dateStamp.dateStamp()+"_"+datasetName+".hdf5")
       else:
-        if (self.dateStamp.dateStamp()+"_"+str(ii)+"_"+datasetName+".hdf5") not in self.ls()[0]:
-          uniqueName = (self.dateStamp.dateStamp()+"_"+str(ii)+"_"+datasetName+".hdf5")
-          uniquenessFlag = True
-        else:
-          ii = ii + 1
+        uniqueName = (self.dateStamp.dateStamp()+"_"+str(ii)+"_"+datasetName+".hdf5") 
+
+      if uniqueName not in existingNames:
+        uniquenessFlag = True
+      else:
+        ii = ii + 1
     return uniqueName
 
   def _updateVariableDict(self, varDict, varList):
@@ -431,11 +433,10 @@ class dataChest(dateStamp):
       """Take a string and return a valid filename constructed from the string."""
       if additionalChars is None:
         valid_chars = "_%s%s" % (string.ascii_letters, string.digits) #maybe remove dot, dash, and () ??
-        filename = ''.join(c for c in fileName if c in valid_chars)
       else:
         valid_chars = "_"+additionalChars
         valid_chars = valid_chars+"%s%s" % (string.ascii_letters, string.digits)
-        filename = ''.join(c for c in fileName if c in valid_chars)
+      filename = ''.join(c for c in fileName if c in valid_chars)
       return filename
 
   def _areTypesValid(self, dataTypes):
@@ -491,26 +492,6 @@ class dataChest(dateStamp):
     for ii in range(0, len(varsList)):
       varTypes.append(varsList[ii][VAR_UNIT_INDEX_POS])
     return varTypes
-
-  def _initDatasetGroup(self, group, varDict):
-    self.numIndepWrites = 0
-    self.numDepWrites = 0
-    for ii in range(0, len(varDict["names"])):
-      #creates each dataset, set datatype, chunksize, maxshape, fillvalue
-      dset = group.create_dataset(varDict["names"][ii],
-                                  tuple(self._flattenedShape(varDict["shapes"][ii])),
-                                  dtype=varDict["types"][ii],
-                                  chunks=tuple(self._flattenedShape(varDict["shapes"][ii])),
-                                  maxshape=(None,),
-                                  fillvalue=np.nan)
-      #stores name, shape, type, and units as attributes for this dataset (sort of redundant as this is done at the varType group level)
-      for keys in varDict:
-        if isinstance(varDict[keys][ii], str):
-          dset.attrs[keys] = unicode(varDict[keys][ii], "utf-8")
-        elif isinstance(varDict[keys][ii], list):
-          dset.attrs[keys] = varDict[keys][ii]
-        else:
-          self._dataChestError("Unrecognized type was receieved. Please report this message on github.")
 
   def _addToDataset(self, dset, data, chunkSize, numWrites):
     t0 = time.time()
@@ -606,19 +587,18 @@ class dataChest(dateStamp):
     if isinstance(varsList, list):
       if len(varsList) == 0:
         self._dataChestError("A data set with no "+varType+" has no meaning.")
-        return "Error"
+        return False
       for ii in range(0, len(varsList)): #checks validity of each dep or indep tuple
         if not self._isTupleValid(varType, varsList[ii]):
-          return "Error"
+          return False
       self._updateVariableDict(self.varDict[varType], varsList)
       for varAttributes in self.varDict[varType].keys():
         if len(self.varDict[varType][varAttributes])==0:
-          #self._dataChestError("Invalid entry detected for key=" + varAttributes)
-          return "Error"
-      return varsList
+          return False
+      return True
     else:
       self._dataChestError("Expecting list of "+varType+" variables.")
-      return "Error"
+      return False
 
   def _isTupleValid(self, varType, tupleValue):
     
@@ -668,6 +648,29 @@ class dataChest(dateStamp):
       self._dataChestError("Parameter names must be of type str.")
       return False
 
+  def _dataChestError(self, errorMessage, warning = False):
+    fxnName = inspect.stack()[1][3]
+    if warning == False:
+      errMessage = ("\t***ERROR*** "+fxnName+"():\r\n\t"+errorMessage)
+    else:
+      errMessage = ("\t***WARNING*** "+fxnName+"():\r\n\t"+errorMessage)
+    print errMessage
+
+  def _isStringUTCFormat(self, dateStr):
+    RE = re.compile(r'^\d{4}-\d{2}-\d{2}[T]\d{2}:\d{2}:\d{2}[.]\d{6}[+-]\d{2}:\d{2}$')
+    return bool(RE.search(dateStr))
+    
+  def _isDataArbitraryOption1(self, indepShapes, depShapes, data):
+    allShapes = indepShapes+depShapes
+    for shape in allShapes:
+      if shape != [1]:
+        return False
+    data = np.asarray(data)
+    if len(data.shape)==2 and data.shape[1] == len(allShapes):
+      return True
+    else:
+      return False
+
 ##  def _isColumnHomogeneousList(self, colVal):
 ##    tup = None
 ##    checked = []
@@ -688,10 +691,6 @@ class dataChest(dateStamp):
 ##          answer = answer[i]
 ##      return answer
 
-  def _dataChestError(self, errorMessage):
-    fxnName = inspect.stack()[1][3]
-    errMessage = ("\t***ERROR*** "+fxnName+"():\r\n\t"+errorMessage)
-    print errMessage
 
 #automatically close file when new one is created or object is killed
 #make sure that files are always closed and we dont run into file already open conflicts

@@ -145,7 +145,7 @@ print "\tTotal Read Time =", tf-t0
 ##d.addParameter("Plot Title", "Q(Bias1,Bias2)")
 ##d.addParameter("Scan Type", "Lin-Lin")
 ##t0 = time.time()
-##d.addData([[t1[0], [-0.5, 0.5], t1]]) # *** no useful feedback when data is data = [t1[0], [-0.5, 0.5], t1]
+##d.addData([[t1[0], [-0.5, 0.5], t1]]) # *&^%&*%$#@%&%^$* no useful feedback when data is data = [t1[0], [-0.5, 0.5], t1]
 ##tf = time.time()
 ##print "\tTotal Write Time =", tf-t0
 ##t0 = time.time()
