@@ -20,6 +20,7 @@ import numpy as np
 import string
 import inspect
 import time
+import gc
 
 VAR_NAME_INDEX_POS = 0
 VAR_SHAPE_INDEX_POS = 1
@@ -41,7 +42,7 @@ VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32',
                     'int64', 'uint8', 'uint16', 'uint32',
                     'uint64','int_', 'float16', 'float32',
                     'float64','float_', 'complex64',
-                    'complex128', 'complex_']
+                    'complex128', 'complex_', 'utc_datetime', 'string']
 
 class dataChest(dateStamp):
 
@@ -77,6 +78,7 @@ class dataChest(dateStamp):
     """Changes the current working directory.""" #accepts single string, path, list
     if isinstance(directoryToMove, str):
       if "/" in directoryToMove:
+        print "Windows path provided...get with the times."
         path = directoryToMove.split("/")
       elif directoryToMove == "":
         os.chdir(self.root)
@@ -86,6 +88,9 @@ class dataChest(dateStamp):
         path = [directoryToMove]
     elif isinstance(directoryToMove, list):
       path = directoryToMove
+    else:
+      print "Acceptable types are of type str or list."
+      return "Error"
     if len(path)>0:
       for ii in range(0, len(path)):
         cwdContents = self.ls()
@@ -189,7 +194,7 @@ class dataChest(dateStamp):
         numRows = len(data)
         indepShapes = self.varDict["independents"]["shapes"]
         depShapes = self.varDict["dependents"]["shapes"]
-        if self._isDataArbitrary1D(indepShapes, depShapes, data):
+        if self._isDataArbitraryOption1(indepShapes, depShapes, data):
           varData = np.asarray(data)
           for colIndex in range(0, numIndeps+numDeps):
             if colIndex<numIndeps:
@@ -197,7 +202,6 @@ class dataChest(dateStamp):
               varName = self.varDict[varGrp]["names"][colIndex]
               dat = varData[:,colIndex]
               flattenedVarShape = len(dat)
-              #print "flattenedVarShape=", flattenedVarShape
               self._addToDataset(self.currentFile[varGrp][varName],
                                  dat,
                                  flattenedVarShape,
@@ -249,8 +253,12 @@ class dataChest(dateStamp):
                            "method of this class."))
       return False
     return True
+
+  def isStringUTCFormat(self, dateStr):
+    RE = re.compile(r'^\d{4}-\d{2}-\d{2}[T]\d{2}:\d{2}:\d{2}[.]\d{6}[+-]\d{2}:\d{2}$')
+    return bool(RE.search(dateStr))
     
-  def _isDataArbitrary1D(self, indepShapes, depShapes, data):
+  def _isDataArbitraryOption1(self, indepShapes, depShapes, data):
     allShapes = indepShapes+depShapes
     for shape in allShapes:
       if shape != [1]:
@@ -265,13 +273,12 @@ class dataChest(dateStamp):
     """Opens a dataset within the current working directory if it exists"""
     if '.hdf5' not in name: #adds file extension if emitted.
       name = name+".hdf5"
-    #print "Name=", name
-    #print "self.cwdPath=", self.cwdPath
     files = self.ls()[0]
     if name in files:
       if hasattr(self, 'currentFile'):
         self.currentFile.close() #close current file if existent
       self.currentFile = h5py.File(name,'r') #opened read only
+      
       self.readOnlyFlag = True
       self.currentHDF5Filename = self.cwdPath + "/" + name
       
@@ -279,6 +286,8 @@ class dataChest(dateStamp):
         self.varDict["independents"][str(keys)] = self.currentFile["independents"].attrs[keys].tolist()
       for keys in self.currentFile["dependents"].attrs.keys():
         self.varDict["dependents"][str(keys)] = self.currentFile["dependents"].attrs[keys].tolist()
+        
+      gc.collect()
         
     else:
       self.currentHDF5Filename = None
@@ -521,7 +530,7 @@ class dataChest(dateStamp):
     if isinstance(data, list): # checks that its a list
       numRows = len(data)
       if numRows>0: # if length nonzero proceed to check tuples
-        if self._isDataArbitrary1D(self.varDict["independents"]["shapes"],self.varDict["dependents"]["shapes"],data):
+        if self._isDataArbitraryOption1(self.varDict["independents"]["shapes"],self.varDict["dependents"]["shapes"],data):
           return True
         else:
           for ii in range(0, numRows):
@@ -659,25 +668,25 @@ class dataChest(dateStamp):
       self._dataChestError("Parameter names must be of type str.")
       return False
 
-  def _isColumnHomogeneousList(self, colVal):
-    tup = None
-    checked = []
-    for value in np.ndenumerate(colVal):
-        tup = value[0][:-1]
-        for ii in range(0, len(tup)):
-          if tup not in checked:
-            checked.append(tup)
-            if not isinstance(self.valByTup(tup, colVal),
-                              (list, np.ndarray)):
-              return False
-            tup = tup[:-1]
-    return True
-
-  def valByTup(self, tupl, array):
-      answer = array
-      for i in tupl:
-          answer = answer[i]
-      return answer
+##  def _isColumnHomogeneousList(self, colVal):
+##    tup = None
+##    checked = []
+##    for value in np.ndenumerate(colVal):
+##        tup = value[0][:-1]
+##        for ii in range(0, len(tup)):
+##          if tup not in checked:
+##            checked.append(tup)
+##            if not isinstance(self.valByTup(tup, colVal),
+##                              (list, np.ndarray)):
+##              return False
+##            tup = tup[:-1]
+##    return True
+##
+##  def valByTup(self, tupl, array):
+##      answer = array
+##      for i in tupl:
+##          answer = answer[i]
+##      return answer
 
   def _dataChestError(self, errorMessage):
     fxnName = inspect.stack()[1][3]
