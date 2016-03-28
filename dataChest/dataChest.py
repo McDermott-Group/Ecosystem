@@ -47,7 +47,7 @@ VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32',
 class dataChest(dateStamp):
 
   def __init__(self):
-    self.root = "C:/DataChest" #"Z:/mcdermott-group/DataChest"
+    self.root = "C:/DataChest" #Z:/mcdermott-group/DataChest"
     self.cwdPath = self.root #initialized to root to start
     os.chdir(self.cwdPath)
     self.dateStamp = dateStamp()
@@ -129,7 +129,7 @@ class dataChest(dateStamp):
     
   def createDataset(self, datasetName, indepVarsList, depVarsList):
     "Creates a new dataset within the current working directory.""" 
-    self.currentHDF5Filename = None #initialized to None
+    self.currentHDF5Filename = None #initialized
     self.readOnlyFlag = False
     if datasetName != self._formatFilename(datasetName):
       self._dataChestError(("An illegal fileName was provided.\r\n\t"+
@@ -150,7 +150,86 @@ class dataChest(dateStamp):
     else:
       self._dataChestError("Unable to create a unique filename.")
       return "Error"
+
+  def _categorizeDataset(self, varDict):
     
+    indepShapes = varDict["independents"]["shapes"]
+    depShapes = varDict["dependents"]["shapes"]
+    if self._isDataShapeArbType1(indepShapes, depShapes):
+      print "Arbitrary Data Type 1"
+    elif self._isDataShapeArbType2(indepShapes, depShapes):
+      print "Arbitrary Data Type 2"
+    elif self._isDataShape1DScan(indepShapes, depShapes):
+      print "1D Scan Data Type"
+    elif self._isDataShape2DScan(indepShapes, depShapes):
+      print "2D Scan Data Type"
+    else:
+      print "OTHER"
+
+  def _isDataShapeArbType1(self, indepShapes, depShapes):
+    
+    allShapes = indepShapes+depShapes
+    for shape in allShapes:
+      if shape != [1]:
+        return False
+    return True
+
+  def _isDataShapeArbType2(self, indepShapes, depShapes):
+    
+    allShapes = indepShapes+depShapes
+    lastShape = None
+    for ii in range(0,len(allShapes)):
+      if ii > 0:
+        if allShapes[ii] != lastShape:
+          return False
+        elif allShapes[ii] == [1]:
+          return False
+      lastShape = allShapes[ii]
+    return True
+
+  def _isDataShape1DScan(self, indepShapes, depShapes):
+    
+    if len(indepShapes)!=1:
+      return False
+    allShapes = indepShapes+depShapes
+    for ii in range(0,len(allShapes)):
+      if ii == 0 and allShapes[ii] != [2]:
+        return False
+      elif len(allShapes[ii])!=1 or allShapes[ii]<2:
+        return False
+      elif ii>1 and allShapes[ii] != lastShape:
+        return False
+      lastShape = allShapes[ii]
+    return True
+
+  def _isDataShape2DScan(self, indepShapes, depShapes):
+    
+    if len(indepShapes)!=2:
+      return False
+    elif not ((indepShapes[0] == [1] and indepShapes[1] == [2])
+           or (indepShapes[0] == [1] and indepShapes[1] == [2])):
+      return False
+    else:
+      for ii in range(0, len(depShapes)):
+        if len(depShapes[ii])!=1 or depShapes[ii]<2:
+          return False
+        elif ii>0 and depShapes[ii] != lastShape:
+          return False
+        lastShape = depShapes[ii]
+    return True
+        
+
+  def _isDataArbitraryOption1(self, indepShapes, depShapes, data):
+    allShapes = indepShapes+depShapes
+    for shape in allShapes:
+      if shape != [1]:
+        return False
+    data = np.asarray(data)
+    if len(data.shape)==2 and data.shape[1] == len(allShapes):
+      return True
+    else:
+      return False
+
   def addData(self, data): #clean and design around string and datetime objects
     """Adds data to the latest dataset created with new.
        Expects data of the form [[indep1_1, indep2_1, dep1_1, dep2_1],
@@ -171,6 +250,8 @@ class dataChest(dateStamp):
         numRows = len(data)
         indepShapes = self.varDict["independents"]["shapes"]
         depShapes = self.varDict["dependents"]["shapes"]
+        print self._categorizeDataset(self.varDict)
+
         if self._isDataArbitraryOption1(indepShapes, depShapes, data):
           varData = np.asarray(data)
           for colIndex in range(0, numIndeps+numDeps):
@@ -660,17 +741,6 @@ class dataChest(dateStamp):
     RE = re.compile(r'^\d{4}-\d{2}-\d{2}[T]\d{2}:\d{2}:\d{2}[.]\d{6}[+-]\d{2}:\d{2}$')
     return bool(RE.search(dateStr))
     
-  def _isDataArbitraryOption1(self, indepShapes, depShapes, data):
-    allShapes = indepShapes+depShapes
-    for shape in allShapes:
-      if shape != [1]:
-        return False
-    data = np.asarray(data)
-    if len(data.shape)==2 and data.shape[1] == len(allShapes):
-      return True
-    else:
-      return False
-
 ##  def _isColumnHomogeneousList(self, colVal):
 ##    tup = None
 ##    checked = []

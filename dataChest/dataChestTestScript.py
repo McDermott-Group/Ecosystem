@@ -57,15 +57,17 @@ mu, sigma = 1, 0.1
 gaussian = mu + sigma*np.random.randn(length)
 t0 = 0.0
 tf = 100.0
-d.createDataset("LinearWaveform", [("indepName1", [2], "float64", "Seconds")], [("depName1", [int(length)], "float64", "Volts")])
+d.createDataset("LinearWaveform", [("indepName1", [2], "float64", "Seconds")],
+                [("depName1", [int(length)], "float64", "Volts"),
+                 ("depName2", [int(length)], "float64", "Volts")])
 data = [t0, tf]
 
 d.addParameter("X Label", "Time")
 d.addParameter("Y Label", "Digitizer Noise")
 d.addParameter("Plot Title", "Linear Waveform Data")
-d.addParameter("X Scan Type", "Lin")
+d.addParameter("Scan Type", "Lin") #grapher looking for X Scan Type
 t0 = time.time()
-d.addData([[data,gaussian]])
+d.addData([[data,gaussian,gaussian]])
 tf = time.time()
 print "\tTotal Write Time =", tf-t0
 t0 = time.time()
