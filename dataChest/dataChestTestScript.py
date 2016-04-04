@@ -1,12 +1,15 @@
 from dataChest import *
 import numpy as np
 import time
+from datetime import datetime
 d = dataChest()
+
+utcdatestamp = datetime.utcnow().isoformat()
 
 #1D Arbitrary Data (Option 1 Style)
 #Random Number Generator
 print "1D Arbitrary Data (Option 1 Style):" #Most inneficient style by far
-numPoints = 4e4
+numPoints = 1e5
 print "\tNumber of Points =", numPoints
 mu, sigma = 1, 0.1
 #gaussian = mu + sigma*np.random.randn(histLen)
@@ -22,7 +25,7 @@ d.addData(net) #single row
 tf = time.time()
 print "\tTotal Write Time =", tf-t0
 t0 = time.time()
-d.addData(net) #single row
+d.getData() #single row
 tf = time.time()
 print "\tTotal Read Time =", tf-t0
 
@@ -51,7 +54,7 @@ print "\tTotal Read Time =", tf-t0
 
 #1D Linear Scan (Log Scan is same exact thing, just interpretted differently by grapher)
 print "1D Linear Scan Data (Log Scan Redundant):"
-length =1e5
+length =1e7
 print "\tNumber of Points =", length
 mu, sigma = 1, 0.1
 gaussian = mu + sigma*np.random.randn(length)
@@ -75,9 +78,10 @@ d.getData()
 tf = time.time()
 print "\tTotal Read Time =", tf-t0
 
+
 #2D Arbitrary Data (Option 1)
-print "2D Arbitrary Data (Option 1):"
-xyGridRes = 5e-3
+print "2D Arbitrary Data (Option 1):" #this need optimization for > 1000 x 1000 cases
+xyGridRes = 1e-2
 print "\tNumber of Points =", 1/xyGridRes
 t1 = np.arange(-0.5, 0.5, step=xyGridRes)
 t2 = np.arange(-0.5, 0.5, step=xyGridRes)
@@ -110,7 +114,7 @@ print "\tTotal Read Time =", tf-t0
 
 ##Arbitrary 2D datasets 
 print "2D Arbitrary Data (Option 2):"
-length = 1e4
+length = 1e7
 x = np.random.rand(length)
 y = np.random.rand(length)
 z = np.sin(x)+np.cos(y)
@@ -131,28 +135,45 @@ d.getData()
 tf = time.time()
 print "\tTotal Read Time =", tf-t0
 
-###2D Scan Data
-##print "2D Scan Data (Option 1):"
-##xyGridRes = 1e-5
-##print "\tNumber of Points =", 1/xyGridRes
-##t1 = np.arange(-0.5, 0.5, step=xyGridRes)
-###t2 = np.arange(-0.5, 0.5, step=xyGridRes)
+#2D Scan Data
+print "2D Scan Data (Option 1):"
+xyGridRes = 1e-7
+print "\tNumber of Points =", 1/xyGridRes
+t1 = np.arange(-0.5, 0.5, step=xyGridRes)
+t2 = np.arange(-0.5, 0.5, step=xyGridRes)
+
+d.createDataset("2DScan", [("indepName1", [1], "float64", "Volts"),
+                                        ("indepName2", [2], "float64", "Power")],
+                                       [("depName1", [len(t1)], "float64", "Current")])
+
+d.addParameter("X Label", "Bias1")
+d.addParameter("Y Label", "Bias2")
+d.addParameter("Plot Title", "Q(Bias1,Bias2)")
+d.addParameter("Scan Type", "Lin-Lin")
+t0 = time.time()
+d.addData([[t1[0], [-0.5, 0.5], t1]]) # *&^%&*%$#@%&%^$* no useful feedback when data is data = [t1[0], [-0.5, 0.5], t1]
+tf = time.time()
+print "\tTotal Write Time =", tf-t0
+t0 = time.time()
+d.getData()
+tf = time.time()
+print "\tTotal Read Time =", tf-t0
+
+ 
+##print "StringData"
+##d.createDataset("StringData", [("indepName1", [1], "string", "Seconds")], [("depName1", [1], "string", "Volts")])
+##stringy = [["some", "string"]]
+##d.addData(stringy)
+##print d.getData()
 ##
-##d.createDataset("2DScan", [("indepName1", [1], "float64", "Volts"),
-##                                        ("indepName2", [2], "float64", "Power")],
-##                                       [("depName1", [len(t1)], "float64", "Current")])
-##
-##d.addParameter("X Label", "Bias1")
-##d.addParameter("Y Label", "Bias2")
-##d.addParameter("Plot Title", "Q(Bias1,Bias2)")
-##d.addParameter("Scan Type", "Lin-Lin")
+##print "DatetimeData"
+##daty = datetime.utcnow().isoformat()
+##d.createDataset("DatetimeData", [("indepName1", [1], "utc_datetime", "Seconds")], [("depName1", [1], "utc_datetime", "Volts")])
+##datetimeStrings = []
+##for ii in range(0, 100000):
+##    datetimeStrings.append([daty, daty])
 ##t0 = time.time()
-##d.addData([[t1[0], [-0.5, 0.5], t1]]) # *&^%&*%$#@%&%^$* no useful feedback when data is data = [t1[0], [-0.5, 0.5], t1]
+##d.addData(datetimeStrings) # *&^%&*%$#@%&%^$* no useful feedback when data is data = [t1[0], [-0.5, 0.5], t1]
 ##tf = time.time()
 ##print "\tTotal Write Time =", tf-t0
-##t0 = time.time()
-##d.getData()
-##tf = time.time()
-##print "\tTotal Read Time =", tf-t0
-
-
+###print d.getData()
