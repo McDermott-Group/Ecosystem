@@ -419,7 +419,7 @@ class dataChest(dateStamp):
                                     maxshape=(None,),
                                     fillvalue=np.nan)
   
-      #stores name, shape, type, and units as attributes for this dataset
+      #stores name, shape, type, and units as attributes for this dset
       #(sort of redundant as this is done at the varType group level)???
       for keys in varDict:
         if isinstance(varDict[keys][ii], str):
@@ -508,16 +508,16 @@ class dataChest(dateStamp):
   def _getVariableShapes(self, varsList):
     varShapes= []
     for ii in range(0, len(varsList)):
-      if len(varsList[ii][VAR_SHAPE_INDEX])>0:  #shapes must be of form [num1], [num1, num2], ...
+      if len(varsList[ii][VAR_SHAPE_INDEX])>0:
         for kk in range(0, len(varsList[ii][VAR_SHAPE_INDEX])):
           if not isinstance(varsList[ii][VAR_SHAPE_INDEX][kk], int):
-            self._dataChestError("Non integer shape dimensions are not allowed.")
+            self._dataChestError("Non integer shapes are forbidden.")
             return []
           elif varsList[ii][VAR_SHAPE_INDEX][kk]<=0:
-            self._dataChestError("Zero or negative shape dimensions are not allowed.")
+            self._dataChestError("0 or negative shapes are forbidden.")
             return []
       else:
-        self._dataChestError("Shapes cannot be the empty list as this has no meaning")
+        self._dataChestError("Shapes cannot be the empty lists.")
       varShapes.append(varsList[ii][VAR_SHAPE_INDEX])
     return varShapes
 
@@ -538,7 +538,7 @@ class dataChest(dateStamp):
   def _addToDataset(self, dset, data, chunkSize, numWrites):
     if numWrites == 0:
       data = np.reshape(data, (chunkSize,))
-      if dset.shape[0] == 1 and chunkSize !=1: #accounts for 1D arbitrary data I believe
+      if dset.shape[0] == 1 and chunkSize !=1: #arbitrary type 1 hack
         dset.resize((chunkSize,))
       dset[:chunkSize] = data
     else:
@@ -572,7 +572,8 @@ class dataChest(dateStamp):
             return False
         else:
           for ii in range(0, numRows):
-            if not (isinstance(data[ii], list) or isinstance(data[ii], np.ndarray)): #each entry should be 
+            if not ((isinstance(data[ii], list) or
+                     isinstance(data[ii], np.ndarray))):
               self._dataChestError(("For row ="+str(ii)+
               " of the data entered is not a list. \r\n\t"+
               "Data entered should be of the form: \r\n\t"+
@@ -581,8 +582,7 @@ class dataChest(dateStamp):
               "where [indep1_m, indep2_m, dep1_m, dep2_m] \r\n\t"+
               "is the m'th row of your data set."))
               return False
-            else: #check that entries
-              # tuple form (dep1, dep2, ...,indep1, indep2,...) where dep(indep) are of the shape specified by new
+            else:
               if not self._isRowValid(data[ii]):
                 return False
       else: # [] is not a valid dataset
@@ -598,44 +598,54 @@ class dataChest(dateStamp):
     numDeps = len(self.varDict["dependents"]["names"])
     if len(dataList) == (numIndeps+numDeps):
       for ii in range(0, (numIndeps+numDeps)):
-##        if self._isColumnHomogeneousList(dataList[ii]):  #check that all subelements are lists or nparrays ***
+##        if self._isColumnHomogeneousList(dataList[ii]):#subelements
         array = np.asarray(dataList[ii])        
         if ii < numIndeps:
-          if self.varDict["independents"]["shapes"][ii]==[1]:
+          varShape = self.varDict["independents"]["shapes"][ii]
+          varType = self.varDict["independents"]["types"][ii]
+          if varShape==[1]:
             if array.shape!=():
-              self._dataChestError("Data of shape [1] should not be placed as an array.")
+              self._dataChestError(("Data of shape [1] "+
+                                    "should not be placed as an array."))
               return False
-          elif array.shape != tuple(self.varDict["independents"]["shapes"][ii]):
-            self._dataChestError("Data shapes do not match for the independent variable data.\r\n\t"+
-                                 "Expected shape: "+str(tuple(self.varDict["independents"]["shapes"][ii]))+".\r\n\t"+
+          elif array.shape != tuple(varShape):
+            self._dataChestError("Data shapes do not match for "+
+                                 "the independent variable data.\r\n\t"+
+                                 "Expected shape: "+
+                                 str(tuple(varShape))+".\r\n\t"+
                                  "Received shape: "+str(array.shape))
             return False
-          elif self.varDict["independents"]["types"][ii] == 'string':
+          elif varType == 'string':
             if not self._isArrayAllStrings(array):
               return False
-          elif self.varDict["independents"]["types"][ii] == 'utc_datetime':
+          elif varType == 'utc_datetime':
             if not self._isArrayAllUTCDatestamps(array):
               return False
-          elif array.dtype.name != self.varDict["independents"]["types"][ii]:
+          elif array.dtype.name != varType:
             self._dataChestError("Types do not match for independents")
             return False           
         else:
-          if self.varDict["dependents"]["shapes"][ii-numIndeps]==[1]:
+          varShape = self.varDict["dependents"]["shapes"][ii-numIndeps]
+          varType = self.varDict["dependents"]["types"][ii-numIndeps]
+          if varShape==[1]:
             if array.shape!=():
-              self._dataChestError("Data of shape [1] should not be placed as an array.")
+              self._dataChestError(("Data of shape [1] "+
+                                    "should not be placed as an array."))
               return False
-          elif array.shape != tuple(self.varDict["dependents"]["shapes"][ii-numIndeps]):
-            self._dataChestError("Data shapes do not match for the independent variable data.\r\n\t"+
-                                 "Expected shape: "+str(tuple(self.varDict["dependents"]["shapes"][ii-numIndeps]))+".\r\n\t"+
+          elif array.shape != tuple(varShape):
+            self._dataChestError("Data shapes do not match for "+
+                                 "the independent variable data.\r\n\t"+
+                                 "Expected shape: "+
+                                 str(tuple(varShape))+".\r\n\t"+
                                  "Received shape: "+str(array.shape))
             return False
-          elif self.varDict["dependents"]["types"][ii-numIndeps] == 'string':
+          elif varType == 'string':
             if not self._isArrayAllStrings(array):
               return False
-          elif self.varDict["dependents"]["types"][ii-numIndeps] == 'utc_datetime':
+          elif varType == 'utc_datetime':
             if not self._isArrayAllUTCDatestamps(array):
               return False
-          elif array.dtype.name != self.varDict["dependents"]["types"][ii-numIndeps]:
+          elif array.dtype.name != varType:
             self._dataChestError("Types do not match for dependents")
             return False
 ##        else:
