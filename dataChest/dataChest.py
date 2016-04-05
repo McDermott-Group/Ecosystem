@@ -23,10 +23,10 @@ import time
 import gc
 import re
 
-VAR_NAME_INDEX_POS = 0
-VAR_SHAPE_INDEX_POS = 1
-VAR_TYPE_INDEX_POS = 2
-VAR_UNIT_INDEX_POS = 3
+VAR_NAME_INDEX = 0
+VAR_SHAPE_INDEX = 1
+VAR_TYPE_INDEX = 2
+VAR_UNIT_INDEX = 3
 
 EXPECTED_TUPLE_LEN = 4
 EXPECTED_TUPLE_TYPES = [str, list, str, str]
@@ -397,7 +397,7 @@ class dataChest(dateStamp):
   def _initDatasetGroup(self, group, varDict):
     
     for ii in range(0, len(varDict["names"])):
-      #creates each dataset, set datatype, chunksize, maxshape, fillvalue
+      #creates each dataset set datatype, chunksize, maxshape, fillvalue
       varType = varDict["types"][ii]
       if (varType == 'string') or (varType == 'utc_datetime'):
         dataType = h5py.special_dtype(vlen=str)
@@ -464,17 +464,19 @@ class dataChest(dateStamp):
     units = varDict.attrs["units"]
     varList = []
     for ii in range(0, len(names)):
-      varList.append((names[ii], shapes[ii].tolist(),types[ii],units[ii]))
+      varTup = (names[ii],shapes[ii].tolist(),types[ii],units[ii])
+      varList.append(varTup)
     return varList
     
   def _formatFilename(self, fileName, additionalChars=None): 
       """Returns a valid filename from the filename provided."""
+      defaultCharsTup = (string.ascii_letters, string.digits)
       if additionalChars is None:
-        valid_chars = "_%s%s" % (string.ascii_letters, string.digits)
+        validChars = "_%s%s" % defaultCharsTup
       else:
-        valid_chars = "_"+additionalChars
-        valid_chars = valid_chars+"%s%s" % (string.ascii_letters, string.digits)
-      filename = ''.join(c for c in fileName if c in valid_chars)
+        validChars = "_"+additionalChars
+        validChars = validChars+"%s%s" % defaultCharsTup
+      filename = ''.join(c for c in fileName if c in validChars)
       return filename
 
   def _areTypesValid(self, dtypes):
@@ -489,12 +491,14 @@ class dataChest(dateStamp):
   def _getVariableNames(self, varsList):
     varNames = []
     for ii in range(0, len(varsList)):
-      if self._formatFilename(varsList[ii][VAR_NAME_INDEX_POS]) == varsList[ii][VAR_NAME_INDEX_POS]:
-        varNames.append(varsList[ii][VAR_NAME_INDEX_POS])
+      varName = varsList[ii][VAR_NAME_INDEX]
+      if self._formatFilename(varName) == varName:
+        varNames.append(varName)
       else:
-        self._dataChestError("Invalid variable name was provided.\r\n\t"+
-                             "Name provided: "+varsList[ii][VAR_NAME_INDEX_POS]+".\r\n\t"+
-                             "Suggested alternative: "+self._formatFilename(varsList[ii][VAR_NAME_INDEX_POS]))
+        self._dataChestError("Invalid variable name provided.\r\n\t"+
+                             "Name provided: "+varName+
+                             ".\r\n\t"+"Suggested alternative: "+
+                             self._formatFilename(varName))
         return []
     if len(varNames) != len(set(varNames)):
       self._dataChestError("All variable names must be distinct.")
@@ -504,23 +508,23 @@ class dataChest(dateStamp):
   def _getVariableShapes(self, varsList):
     varShapes= []
     for ii in range(0, len(varsList)):
-      if len(varsList[ii][VAR_SHAPE_INDEX_POS])>0:  #shapes must be of form [num1], [num1, num2], ...
-        for kk in range(0, len(varsList[ii][VAR_SHAPE_INDEX_POS])):
-          if not isinstance(varsList[ii][VAR_SHAPE_INDEX_POS][kk], int):
+      if len(varsList[ii][VAR_SHAPE_INDEX])>0:  #shapes must be of form [num1], [num1, num2], ...
+        for kk in range(0, len(varsList[ii][VAR_SHAPE_INDEX])):
+          if not isinstance(varsList[ii][VAR_SHAPE_INDEX][kk], int):
             self._dataChestError("Non integer shape dimensions are not allowed.")
             return []
-          elif varsList[ii][VAR_SHAPE_INDEX_POS][kk]<=0:
+          elif varsList[ii][VAR_SHAPE_INDEX][kk]<=0:
             self._dataChestError("Zero or negative shape dimensions are not allowed.")
             return []
       else:
         self._dataChestError("Shapes cannot be the empty list as this has no meaning")
-      varShapes.append(varsList[ii][VAR_SHAPE_INDEX_POS])
+      varShapes.append(varsList[ii][VAR_SHAPE_INDEX])
     return varShapes
 
   def _getVariableTypes(self, varsList):
     varTypes= []
     for ii in range(0, len(varsList)):
-      varTypes.append(varsList[ii][VAR_TYPE_INDEX_POS])
+      varTypes.append(varsList[ii][VAR_TYPE_INDEX])
     if not self._areTypesValid(varTypes):
       varTypes = []
     return varTypes
@@ -528,7 +532,7 @@ class dataChest(dateStamp):
   def _getVariableUnits(self, varsList):
     varTypes= []
     for ii in range(0, len(varsList)):
-      varTypes.append(varsList[ii][VAR_UNIT_INDEX_POS])
+      varTypes.append(varsList[ii][VAR_UNIT_INDEX])
     return varTypes
 
   def _addToDataset(self, dset, data, chunkSize, numWrites):
@@ -569,7 +573,8 @@ class dataChest(dateStamp):
         else:
           for ii in range(0, numRows):
             if not (isinstance(data[ii], list) or isinstance(data[ii], np.ndarray)): #each entry should be 
-              self._dataChestError(("For row ="+str(ii)+" of the data entered is not a list. \r\n\t"+
+              self._dataChestError(("For row ="+str(ii)+
+              " of the data entered is not a list. \r\n\t"+
               "Data entered should be of the form: \r\n\t"+
               "[[indep1_0, indep2_0, dep1_0, dep2_0], ... \r\n\t"+
               "[indep1_n, indep2_n, dep1_n, dep2_n]] \r\n\t"+
@@ -631,7 +636,7 @@ class dataChest(dateStamp):
             if not self._isArrayAllUTCDatestamps(array):
               return False
           elif array.dtype.name != self.varDict["dependents"]["types"][ii-numIndeps]:
-            self._dataChestError("Types do not match for dependents")  #this will most likely be our biggest problem
+            self._dataChestError("Types do not match for dependents")
             return False
 ##        else:
 ##          self._dataChestError("The column elements (along with all subelements)\r\n\t"+
@@ -648,12 +653,13 @@ class dataChest(dateStamp):
       totalDim = totalDim*shapeList[ii]
     return [totalDim]
       
-  def _isVarsListValid(self, varType, varsList): #all labels need different names
+  def _isVarsListValid(self, varType, varsList):
     if isinstance(varsList, list):
       if len(varsList) == 0:
-        self._dataChestError("A data set with no "+varType+" has no meaning.")
+        self._dataChestError(("A data set with no "+
+                              varType+" has no meaning."))
         return False
-      for ii in range(0, len(varsList)): #checks validity of each dep or indep tuple
+      for ii in range(0, len(varsList)): #validity of each dep/indep tup
         if not self._isTupleValid(varType, varsList[ii]):
           return False
       self._updateVariableDict(self.varDict[varType], varsList)
@@ -667,18 +673,20 @@ class dataChest(dateStamp):
 
   def _isTupleValid(self, varType, tupleValue):
     
-    if not isinstance(tupleValue, tuple): #Checks if it is actually a tuple
-      self._dataChestError("Expecting list elements to be of type tuple")
+    if not isinstance(tupleValue, tuple): #is it a tuple
+      self._dataChestError("Expecting list elements to be tuples")
       return False
-    elif not(len(tupleValue) == EXPECTED_TUPLE_LEN): # Checks tuple is of expected length
+    elif not(len(tupleValue) == EXPECTED_TUPLE_LEN): #expected length
       self._dataChestError("Expecting tuple elements to be of length "+
                            str(EXPECTED_TUPLE_LEN))
       return False
     
-    for jj in range(0, len(EXPECTED_TUPLE_TYPES)):  #Loops over all tuple elements
-      if not isinstance(tupleValue[jj], EXPECTED_TUPLE_TYPES[jj]): #Checks that the type is correct
-        self._dataChestError(("In the "+varType+" variables list,\r\n\t"+
-                              "for the tuple =" + str(tupleValue)+",\r\n\t"+
+    for jj in range(0, len(EXPECTED_TUPLE_TYPES)):#Loops over elements
+      if not isinstance(tupleValue[jj], EXPECTED_TUPLE_TYPES[jj]):#types
+        self._dataChestError(("In the "+varType+
+                              " variables list,\r\n\t"+
+                              "for the tuple =" +
+                              str(tupleValue)+",\r\n\t"+
                               "the "+str(jj)+ERROR_GRAMMAR[str(jj)]+
                               " element should be of\r\n\t"+
                               str(EXPECTED_TUPLE_TYPES[jj])))
@@ -850,9 +858,9 @@ class dataChest(dateStamp):
       for colIndex in range(0, numColumns):
           column = data[rowIndex][colIndex]
           column = np.asarray(column) #fails to be casted [1.0, [2.0]]
-          columnShape = column.shape
+          colShape = column.shape
           dtype = column.dtype.name
-          if colIndex == 0 and columnShape != (2,):
+          if colIndex == 0 and colShape != (2,):
             return False
           elif types[colIndex] == 'string':
             if not self._isArrayAllStrings(column):
@@ -862,9 +870,10 @@ class dataChest(dateStamp):
               return False
           elif dtype != types[colIndex]:
             return False
-          elif colIndex>1 and (len(columnShape)!=1 or columnShape[0]!=shapes[colIndex][0]):
+          elif (colIndex>1 and
+                (len(colShape)!=1 or colShape[0]!=shapes[colIndex][0])):
             return False
-          elif colIndex>2 and columnShape != lastShape:
+          elif colIndex>2 and colShape != lastShape:
             return False
           lastShape = column.shape
       return True
@@ -887,13 +896,17 @@ class dataChest(dateStamp):
 
     for rowIndex in range(0, numRows):
       row = data[rowIndex]
+      col1 = np.asarray(row[0])
+      col2 = np.asarray(row[1])
       if len(row) != totalNumVars:
         return False
-      if not ((np.asarray(row[0]).shape==() and np.asarray(row[1]).shape==(2,)) or (np.asarray(row[0]).shape==(2,) and np.asarray(row[1]).shape==())):
+      if not (((col1.shape==() and col2.shape==(2,)) or
+               (col1.shape==(2,) and col2.shape==()))):
         return False        
       for colIndex in range(0, totalNumVars):
         if colIndex > 1:
-          if len(np.asarray(row[colIndex]).shape)!=1 or np.asarray(row[colIndex]).shape[0]!=shapes[colIndex][0]:
+          if (len(np.asarray(row[colIndex]).shape)!=1 or
+              np.asarray(row[colIndex]).shape[0]!=shapes[colIndex][0]):
             return False
           elif types[colIndex] == 'string':
             if not self._isArrayAllStrings(column):
