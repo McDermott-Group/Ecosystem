@@ -82,7 +82,11 @@ class dataChest(dateStamp):
     elif isinstance(directoryToMove, list):
       path = directoryToMove
     else:
-      raise ValueError("Acceptable input types are str and list.")
+      raise ValueError(("Acceptable input types for are\r\n\t"+
+                        "string e.g. \"myFolderName\"\r\n\t"+
+                        "or list e.g. [\"dirName\",\"subDirName\"]\r\n\t"+
+                        "where the equivalent path would be \r\n\t"+
+                        "\\dirName\\subDirName"))
         
     if len(path)>0:
       for ii in range(0, len(path)):
@@ -92,14 +96,8 @@ class dataChest(dateStamp):
           os.chdir(self.cwdPath)
         elif path[ii]=="..":
           os.chdir("..")
-          if len(path)>1:
-            self._dataChestError("Received \"..\" in an array path.",
-                                 warning=True)
           self.cwdPath = os.getcwd().replace("\\", "/")#unix style path
         elif path[ii]=="":
-          if len(path)>1:
-            self._dataChestError("Received \"\" in an array path.",
-                                 warning=True)
           os.chdir(self.root)
           self.cwdPath = os.getcwd().replace("\\", "/")
         else:
@@ -123,9 +121,10 @@ class dataChest(dateStamp):
                          directoryToMake))
     else:
       raise ValueError(("Invalid directory name provided.\r\n\t"+
-                           "Directory name provided: "+directoryToMake+
-                           ".\r\n\t"+ "Suggested name: "+
-                           self._formatFilename(directoryToMake)))     
+                       "Directory name provided: "+
+                       directoryToMake+".\r\n\t"+
+                       "Suggested name: "+
+                       self._formatFilename(directoryToMake)))    
     
   def createDataset(self, datasetName, indepVarsList, depVarsList):
     "Creates a new dataset within the current working directory.""" 
@@ -156,11 +155,11 @@ class dataChest(dateStamp):
     
     if self.readOnlyFlag == True: 
       raise Warning(("You can't gain write privileges to\r\n\t"+
-                      "this file as it was opened read\r\n\t"+
-                      "only. Files opened with the\r\n\t"+
-                      "openDataset() method are read only\r\n\t"+
-                      "by design. You must make a new\r\n\t"+
-                      "dataset if you wish to write to one."))
+                    "this file as it was opened read\r\n\t"+
+                    "only. Any file opened with\r\n\t"+
+                    "openDataset() is read only\r\n\t"+
+                    "by design. You must make a new\r\n\t"+
+                    "dataset if you wish to addData() to one."))
     elif self.currentHDF5Filename is not None:
       if self._isDataValid(data):
         numIndeps = len(self.varDict["independents"]["names"])
@@ -224,9 +223,9 @@ class dataChest(dateStamp):
         raise self.exception
     else:
       raise Warning(("You must create a dataset before\r\n\t"+
-                     "attempting to write. Datasets are\r\n\t"+
-                     "created using the createDataset()\r\n\t"+
-                     "method of this class."))
+                    "attempting to write. Datasets are\r\n\t"+
+                    "created using the createDataset()\r\n\t"+
+                    "method of this class."))
     return True
 
   def openDataset(self, filename): #treat self.dataCategory consistently
@@ -406,7 +405,7 @@ class dataChest(dateStamp):
         elif isinstance(varDict[keys][ii], list):
           dset.attrs[keys] = varDict[keys][ii]
         else:
-          self._dataChestError(("Unrecognized dtype receieved.\r\n\t"+
+          raise TypeError(("Unrecognized dtype receieved.\r\n\t"+
                                 "Please report this to github."))
 
   def _generateUniqueFilename(self, datasetName):
@@ -574,10 +573,10 @@ class dataChest(dateStamp):
               if not self._isRowValid(data[ii]):
                 return False
       else: # [] is not a valid dataset
-        self._dataChestError("Vacuous datasets are invalid.")
+        self.exception = ValueError("Vacuous datasets are invalid.")
         return False
     else:
-      self._dataChestError("The dataset provided was not of type list.")
+      self.exception = TypeError("The dataset provided was not of type list.")
       return False
     return True
 
@@ -723,14 +722,6 @@ class dataChest(dateStamp):
       self.expection = TypeError("Parameter names must be of type str.")
       return False
 
-  def _dataChestError(self, errorMessage, warning = False):
-    fxnName = inspect.stack()[1][3]
-    if warning == False:
-      errMessage = ("\t***ERROR*** "+fxnName+"():\r\n\t"+errorMessage)
-    else:
-      errMessage = ("\t***WARNING*** "+fxnName+"():\r\n\t"+errorMessage)
-    print errMessage
-
   def _isStringUTCFormat(self, dateStr):
     RE = re.compile(r'^\d{4}-\d{2}-\d{2}[T]\d{2}:\d{2}:\d{2}[.]\d{6}$')
     return bool(RE.search(dateStr))
@@ -757,7 +748,7 @@ class dataChest(dateStamp):
         return False
     return True
 
-  def _isDataFormatArbType1(self, data, varDict):
+  def _isDataFormatArbType1(self, data, varDict): #catch data = [x,y] case
     indepShapes = varDict["independents"]["shapes"]
     depShapes = varDict["dependents"]["shapes"]
 
@@ -768,10 +759,20 @@ class dataChest(dateStamp):
     dataShape = np.asarray(data).shape
     totalNumVars = len(indepShapes+depShapes)
     if len(dataShape) != 2:
-      self.exception = ValueError("Invalid data shape provided.")
+      self.exception = ValueError("Arbitrary Type 1 Data has rows\r\n\t"+
+                                  "of the form:\r\n\t"+
+                                  "[indep1,...,indepM,dep1,...,depN]\r\n\t"+
+                                  "where each column entry is a\r\n\t"+
+                                  "scalar. The data is then a list of\r\n\t"+
+                                  "rows i.e. data = [row1,row2,...,rowK].")
       return False
     elif dataShape[1] != totalNumVars:
-      self.exception = ValueError("Invalid number columns provided.")
+      self.exception = ValueError("Invalid number of columns provided.\r\n\t"+
+                                  "Arbitrary Type 1 Data has rows\r\n\t"+
+                                  "of the form:\r\n\t"+
+                                  "[indep1,...,indepM,dep1,...,depN]\r\n\t"+
+                                  "where each column entry is a\r\n\t"+
+                                  "scalar. Each row should have M+N columns\r\n\t")
       return False
 
     for colIndex in range(0, totalNumVars):
@@ -780,18 +781,26 @@ class dataChest(dateStamp):
         columnShape = column.shape
         dtype = column.dtype.name
         if len(columnShape)!=1:
-          self.exception = ValueError("Incorrect data shape.")
+          self.exception = ValueError(("Data with shape = [1] should\r\n\t"+
+                                       "be entered into columns as number\r\n\t"+
+                                       "e.g. -11.756 and not [-11.756]"))
           return False
         elif types[colIndex] == 'string':
           if not self._isArrayAllStrings(column):
-            self.exception = TypeError("Expecting string data.")
+            self.exception = TypeError(("Expected all entries of this\r\n\t"+
+                                        "particular column to be of type string."))
             return False
         elif types[colIndex] == 'utc_datetime':
           if not self._isArrayAllUTCDatestamps(column):
-            self.exception = TypeError("Expecting utc_datetime data.")
+            self.exception = TypeError(("Expected all entries of this\r\n\t"+
+                                        "particular column to be of type utc_datetime."))
             return False
         elif dtype != types[colIndex]:
-          self.exception = TypeError("Incorrect data type.")
+          self.exception = TypeError(("Expected all entries of this\r\n\t"+
+                                     "particular column to be of type:\r\n\t"+
+                                      types[colIndex]+"\r\n\t"+
+                                      "Instead received data of type:\r\n\t"+
+                                      dtype))
           return False
     return True
 
@@ -808,7 +817,7 @@ class dataChest(dateStamp):
         return False
     return True
 
-  def _isDataFormatArbType2(self, data, varDict):
+  def _isDataFormatArbType2(self, data, varDict): #need to check that lengths are correct
     indepShapes = varDict["independents"]["shapes"]
     depShapes = varDict["dependents"]["shapes"]
 
@@ -819,13 +828,26 @@ class dataChest(dateStamp):
     dataShape = np.asarray(data).shape
     totalNumVars = len(indepShapes+depShapes)
     if len(dataShape) != 3:  # (1,totalNumVars,lengthOfDataArray)
-      self.exception = ValueError("Invalid data shape provided.")
+      self.exception = ValueError("Arbitrary Type 2 Data has rows\r\n\t"+
+                                  "of the form:\r\n\t"+
+                                  "[indep1,...,indepM,dep1,...,depN]\r\n\t"+
+                                  "where each column entry is a\r\n\t"+
+                                  "1D array (same length for all columns).\r\n\t"+
+                                  "The data is then a list of\r\n\t"+
+                                  "rows i.e. data = [row1,row2,...,rowK].")
       return False
     elif dataShape[1] != totalNumVars:
-      self.exception = ValueError("Invalid number columns provided.")
+      self.exception = ValueError("Invalid number of columns provided.\r\n\t"+
+                                  "Arbitrary Type 1 Data has rows\r\n\t"+
+                                  "of the form:\r\n\t"+
+                                  "[indep1,...,indepM,dep1,...,depN]\r\n\t"+
+                                  "where each column entry is a\r\n\t"+
+                                  "1D array (same length for all columns).\r\n\t"+
+                                  "Each row should have M+N columns.")
       return False
-    elif dataShape[2] < 2: #==> option 1 or mishapen
-      self.exception = ValueError("Invalid length for column elements.")
+    elif dataShape[2] < 2: #==> option 1 or mishapen (investigate mishapen aspect)
+      self.exception = ValueError(("Arbitrary Type 2 Data column\r\n\t"+
+                                  "elements should all be of length > 2."))
       return False
     
 
@@ -839,14 +861,20 @@ class dataChest(dateStamp):
           dtype = column.dtype.name
           if types[colIndex] == 'string':
             if not self._isArrayAllStrings(column):
-              self.exception = TypeError("Expecting string data.")
+              self.exception = TypeError(("Expected all entries of this\r\n\t"+
+                                         "particular column to be of type string."))
               return False
           elif types[colIndex] == 'utc_datetime':
             if not self._isArrayAllUTCDatestamps(column):
-              self.exception = TypeError("Expecting utc_datetime data.")
+              self.exception = TypeError(("Expected all entries of this\r\n\t"+
+                                         "particular column to be of type utc_datetime."))
               return False
           elif dtype != types[colIndex]:
-            self.exception = TypeError("Incorrect data type.")
+            self.exception = TypeError(("Expected all entries of this\r\n\t"+
+                                       "particular column to be of type:\r\n\t"+
+                                       types[colIndex]+"\r\n\t"+
+                                       "Instead received data of type:\r\n\t"+
+                                       dtype))
             return False
       return True
 
