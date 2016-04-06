@@ -61,7 +61,7 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
         p.stopbits(1L)
         p.bytesize(7L)
         p.parity('O')
-        p.timeout(1 * units.s)
+        p.timeout(0.01 * units.s)
         # Clear out the read buffer. This is necessary for some devices.
         p.read_line()
         yield p.send()
@@ -147,6 +147,14 @@ class OmegaTempMonitorServer(DeviceServer):
     def setAlertInterval(self, ctx, interval):
         """Configure the alert interval."""
         self.alertInterval = interval['s']
+        
+    @setting(12, 'Get Temperature', returns='v[degC]')
+    def rateSetting(self, ctx):
+        """Setting that returns rate"""
+        self.dev = self.selectedDevice(ctx)
+        temperature = yield self.getTemperature(self.dev)
+        #print(temperature)
+        returnValue(temperature)
         
     @inlineCallbacks
     def getTemperature(self, dev):
