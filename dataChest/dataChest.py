@@ -82,8 +82,7 @@ class dataChest(dateStamp):
     elif isinstance(directoryToMove, list):
       path = directoryToMove
     else:
-      self._dataChestError("Acceptable input types are str and list.")
-      return "Error"
+      raise ValueError("Acceptable input types are str and list.")
         
     if len(path)>0:
       for ii in range(0, len(path)):
@@ -104,10 +103,9 @@ class dataChest(dateStamp):
           os.chdir(self.root)
           self.cwdPath = os.getcwd().replace("\\", "/")
         else:
-          self._dataChestError("Directory does not exist.\r\n\t"+
-                               "Directory name provided: "+
-                               str(directoryToMove))
-          return "Error"
+          raise ValueError(("Directory does not exist.\r\n\t"+
+                           "Directory name provided: "+
+                           str(directoryToMove)))
       return self.cwdPath
     else:
       return directoryToMove
@@ -120,16 +118,14 @@ class dataChest(dateStamp):
         os.mkdir(directoryToMake)
         return directoryToMake
       else:
-        self._dataChestError("Directory already exists.\r\n\t"+
-                             "Directory name provided: "+
-                             directoryToMake)
-        return "Error"
+        raise ValueError(("Directory already exists.\r\n\t"+
+                         "Directory name provided: "+
+                         directoryToMake))
     else:
-      self._dataChestError("Invalid directory name provided.\r\n\t"+
+      raise ValueError(("Invalid directory name provided.\r\n\t"+
                            "Directory name provided: "+directoryToMake+
                            ".\r\n\t"+ "Suggested name: "+
-                           self._formatFilename(directoryToMake))
-      return "Error"
+                           self._formatFilename(directoryToMake)))     
     
   def createDataset(self, datasetName, indepVarsList, depVarsList):
     "Creates a new dataset within the current working directory.""" 
@@ -250,18 +246,17 @@ class dataChest(dateStamp):
         varGrp = self.currentFile[varType]
         for item in varGroupAttributes:
           self.varDict[varType][str(item)] = varGrp.attrs[item].tolist()
-        
+          
       gc.collect()
-        
+      
     else:
       self.currentHDF5Filename = None
-      self._dataChestError(("File not found, please cd into the\r\n\t"+
-                           "directory with the desired dataset.\r\n\t"+
-                           "If you are receiving this in error,\r\n\t"+
-                           "please use the ls() method to\r\n\t"+
-                           "confirm existence and report the\r\n\t"+
-                           "error on github."))
-      return "Error"
+      raise Warning(("File not found, please cd into the\r\n\t"+
+                    "directory with the desired dataset.\r\n\t"+
+                    "If you are receiving this in error,\r\n\t"+
+                    "please use the ls() method to\r\n\t"+
+                    "confirm existence and report the\r\n\t"+
+                    "error on github."))
     
   def getData(self): #inefficient for 1-D Data??, add docstring
 
@@ -294,11 +289,9 @@ class dataChest(dateStamp):
         data.append(row)
       return data
     else:
-      self._dataChestError(
-            ("No file is currently open. Please select a file\r\n\t"+
-             "using either openDataset() to open an existing\r\n\t"+
-             "set or with the createDataset method."))
-      return False
+      raise Warning(("No file is currently open. Please select a\r\n\t"+
+                    "file using either openDataset() to open an\r\n\t"+
+                    "existing set or with the createDataset method."))
 
   def getVariables(self):
     if self.currentHDF5Filename is not None:
@@ -306,48 +299,43 @@ class dataChest(dateStamp):
       deps = self._varListFromGrp(self.currentFile["dependents"])
       return [indeps, deps]
     else:
-      self._dataChestError(
-            ("No file is currently selected. Select a file\r\n\t"+
-             "using either openDataset() to open an existing\r\n\t"+
-             "set or createDataset() before using to getVariables()."))
-      return None
+      raise Warning(("No file is currently selected. Select a file\r\n\t"+
+                    "using either openDataset() to open an existing\r\n\t"+
+                    "set or createDataset() before using to getVariables()."))
 
   def getDatasetName(self):
     if self.currentHDF5Filename is not None:
       return self.currentHDF5Filename.split("/")[-1]
     else:
-      return None
+      raise Warning("No dataset is currently open.")
 
   def cwd(self):
     return self.cwdPath
 
   def addParameter(self, paramName, paramValue): 
-    if self.readOnlyFlag == True: 
-      self._dataChestError(
-      ("You cannot add parameters to this file for it was\r\n\t"+
-      "opened read only. Files opened with openDataset() are\r\n\t"+
-      "read only by design. You must make a new dataset if you\r\n\t"+
-      "wish to add parameters to one."))
+    if self.readOnlyFlag == True:
+      raise Warning(("You cannot add parameters to this file as it was\r\n\t"+
+                    "opened read only. Files opened with openDataset() are\r\n\t"+
+                    "read only by design. You must make a new dataset if you\r\n\t"+
+                    "wish to add parameters to one."))
     elif self.currentHDF5Filename is not None:
       if self._isParameterValid(paramName, paramValue):
         self.currentFile["parameters"].attrs[paramName] = paramValue
         self.currentFile.flush()
       else:
-        return False
+        raise self.exception
     else:
-      self._dataChestError(
-            ("No file is currently selected. Create a file\r\n\t"+
-             "using createDataset() before using addParameter()."))      
+      raise Warning(("No file is currently selected. Create a file\r\n\t"+
+             "using createDataset() before using addParameter()."))     
       
   def getParameter(self, parameterName):
     if self.currentHDF5Filename is not None:
       if parameterName in self.currentFile["parameters"].attrs.keys():
         return self.currentFile["parameters"].attrs[parameterName]
       else:
-        self._dataChestError("parameter not found!.")
+        raise ValueError("Parameter name not found.")
     else:
-      self._dataChestError(
-            ("No file is currently selected. Please select a\r\n\t"+
+      raise Warning(("No file is currently selected. Please select a\r\n\t"+
              "file using either openDataset() to open an\r\n\t"+
              "existing set or with createDataset()."))
 
@@ -355,8 +343,7 @@ class dataChest(dateStamp):
     if self.currentHDF5Filename is not None:
       return self.currentFile["parameters"].attrs.keys()
     else:
-      self._dataChestError(
-            ("No file is currently selected. Please select a\r\n\t"+
+      raise Warning(("No file is currently selected. Please select a\r\n\t"+
              "file using either openDataset() to open an\r\n\t"+
              "existing set or with createDataset()."))
 
@@ -714,26 +701,26 @@ class dataChest(dateStamp):
                   list, np.ndarray, str, unicode)
     if isinstance(parameterName, str):
       if self._formatFilename(parameterName, " ") != parameterName:
-        self._dataChestError("Invalid parameter name provided.")
+        self.exception = ValueError("Invalid parameter name provided.")
         return False
       elif not isinstance(parameterValue, validTypes): 
-        self._dataChestError("Invalid datatype parameter\r\n\t"+
-                             "was provided.\r\n\t"+
-                             "Accepted types: int, long, float,\r\n\t"+
-                             "complex, bool, list, np.ndarray,\r\n\t"+
-                             "str, unicode.\r\n\t"+
-                             "Type provided=", type(parameterValue))
+        self.exception = ValueError(("Invalid datatype parameter\r\n\t"+
+                                    "was provided.\r\n\t"+
+                                    "Accepted types: int, long, float,\r\n\t"+
+                                    "complex, bool, list, np.ndarray,\r\n\t"+
+                                    "str, unicode.\r\n\t"+
+                                    "Type provided=", type(parameterValue)))
         #lists must be of one type or else type conversion occurs
         #[12.0, 5e-67, "stringy"] --> ['12.0', '5e-67', 'stringy']                                   
         return False
       elif parameterName in self.currentFile["parameters"].attrs.keys():
-        self._dataChestError("Parameter name already exists. \r\n\t"+
-                             "Parameter values cannot be overwritten.")
+        self.expection = RuntimeError(("Parameter name already exists. \r\n\t"+
+                             "Parameter values cannot be overwritten."))                                   
         return False
       else:
         return True
     else:
-      self._dataChestError("Parameter names must be of type str.")
+      self.expection = TypeError("Parameter names must be of type str.")
       return False
 
   def _dataChestError(self, errorMessage, warning = False):
