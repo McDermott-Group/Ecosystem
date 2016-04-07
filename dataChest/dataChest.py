@@ -340,7 +340,8 @@ class dataChest(dateStamp):
 
   def getParameterList(self):
     if self.currentHDF5Filename is not None:
-      return self.currentFile["parameters"].attrs.keys()
+      unicodeList = self.currentFile["parameters"].attrs.keys()
+      return [str(x) for x in unicodeList]
     else:
       raise Warning(("No file is currently selected. Please select a\r\n\t"+
              "file using either openDataset() to open an\r\n\t"+
@@ -406,7 +407,7 @@ class dataChest(dateStamp):
           dset.attrs[keys] = varDict[keys][ii]
         else:
           raise TypeError(("Unrecognized dtype receieved.\r\n\t"+
-                                "Please report this to github."))
+                           "Please report this to github."))
 
   def _generateUniqueFilename(self, datasetName):
     uniquenessFlag = False
@@ -813,7 +814,6 @@ class dataChest(dateStamp):
   def _isArrayAllStrings(self, array):
     for ii in range(0, len(array)):
       if not isinstance(array[ii], str):
-        print
         return False
     return True
 
