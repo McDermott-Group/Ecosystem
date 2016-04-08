@@ -48,7 +48,7 @@ VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32',
 class dataChest(dateStamp):
 
   def __init__(self):
-    self.root = "/Users/alexanderopremcak/Desktop/dataChest"
+    self.root = "C:\DataChest"
     self.cwdPath = self.root #initialized to root to start
     os.chdir(self.cwdPath)
     self.dateStamp = dateStamp()
@@ -340,7 +340,8 @@ class dataChest(dateStamp):
 
   def getParameterList(self):
     if self.currentHDF5Filename is not None:
-      return self.currentFile["parameters"].attrs.keys()
+      unicodeList = self.currentFile["parameters"].attrs.keys()
+      return [str(x) for x in unicodeList]
     else:
       raise Warning(("No file is currently selected. Please select a\r\n\t"+
              "file using either openDataset() to open an\r\n\t"+
@@ -379,7 +380,7 @@ class dataChest(dateStamp):
       varType = varDict["types"][ii]
       if (varType == 'string') or (varType == 'utc_datetime'):
         dataType = h5py.special_dtype(vlen=str)
-        fillVal = None
+        #fillVal = None
         dShape = tuple(self._flatShape(varDict["shapes"][ii]))
         dset = group.create_dataset(varDict["names"][ii],
                                     dShape,
@@ -406,7 +407,7 @@ class dataChest(dateStamp):
           dset.attrs[keys] = varDict[keys][ii]
         else:
           raise TypeError(("Unrecognized dtype receieved.\r\n\t"+
-                                "Please report this to github."))
+                           "Please report this to github."))
 
   def _generateUniqueFilename(self, datasetName):
     uniquenessFlag = False
@@ -748,7 +749,7 @@ class dataChest(dateStamp):
         return False
     return True
 
-  def _isDataFormatArbType1(self, data, varDict): #catch data = [x,y] case
+  def _isDataFormatArbType1(self, data, varDict): #need to check that lengths are correct**** catch data = [x,y] case
     indepShapes = varDict["independents"]["shapes"]
     depShapes = varDict["dependents"]["shapes"]
 
@@ -797,17 +798,22 @@ class dataChest(dateStamp):
             return False
         elif dtype != types[colIndex]:
           self.exception = TypeError(("Expected all entries of this\r\n\t"+
-                                     "particular column to be of type:\r\n\t"+
+                                      "particular column to be of type:\r\n\t"+
                                       types[colIndex]+"\r\n\t"+
                                       "Instead received data of type:\r\n\t"+
                                       dtype))
           return False
+        elif colIndex>2 and colShape != lastShape:
+            self.exception = TypeError(("Arbitrary 1D Data requires one value\r\n\t"+
+                                        "for each independent and dependent\r\n\t"+
+                                        "variable per row of data."))
+            return False
+        lastShape = column.shape
     return True
 
   def _isArrayAllStrings(self, array):
     for ii in range(0, len(array)):
       if not isinstance(array[ii], str):
-        print
         return False
     return True
 
@@ -817,9 +823,10 @@ class dataChest(dateStamp):
         return False
     return True
 
-  def _isDataFormatArbType2(self, data, varDict): #need to check that lengths are correct
+  def _isDataFormatArbType2(self, data, varDict): #need to check that lengths are correct****, catch data = [x,y] case
     indepShapes = varDict["independents"]["shapes"]
     depShapes = varDict["dependents"]["shapes"]
+    allShapes = indepShapes+depShapes
 
     indepTypes = varDict["independents"]["types"]
     depTypes = varDict["dependents"]["types"]
@@ -871,11 +878,19 @@ class dataChest(dateStamp):
               return False
           elif dtype != types[colIndex]:
             self.exception = TypeError(("Expected all entries of this\r\n\t"+
-                                       "particular column to be of type:\r\n\t"+
-                                       types[colIndex]+"\r\n\t"+
-                                       "Instead received data of type:\r\n\t"+
-                                       dtype))
+                                        "particular column to be of type:\r\n\t"+
+                                        types[colIndex]+"\r\n\t"+
+                                        "Instead received data of type:\r\n\t"+
+                                        dtype))
             return False
+          elif columnShape != tuple(allShapes[colIndex]):
+            self.exception = ValueError(("Column entry has incorrect size\r\n\t"+
+                                         "or shape.\r\n\t"+
+                                         "Received a "+str(len(columnShape))+"D\r\n\t"+
+                                         "of length "+str(columnShape[0])+"\r\n\t."+
+                                         "Expecting a 1D array of length"+
+                                         str(allShapes[colIndex][0])))
+            
       return True
 
   def _isDataFormat1DScan(self, data, varDict): #column shape must match
@@ -889,11 +904,26 @@ class dataChest(dateStamp):
     
     dataShape = np.asarray(data).shape
     totalNumVars = len(indepShapes+depShapes)
-    if len(dataShape) != 2:  # (1,totalNumVars,lengthOfDataArray)
-      self.exception = ValueError("Invalid data shape provided.")
+    if len(dataShape) != 2:  # (numRows,totalNumVars)
+      self.exception = ValueError(("1D Scan Data has rows\r\n\t"+
+                                   "of the form:\r\n\t"+
+                                   "[indep1,dep1,...,depN]\r\n\t"+
+                                   "where indep1 is a 1D array of the form\r\n\t"+
+                                   "indep1 = [t_start, t_stop]\r\n\t"+
+                                   "and the dependent entries are 1D arrays\r\n\t"+
+                                   "(all of same length) where we assume\r\n\t"+
+                                   "dep1 = [dep1(t_start),...,dep1(t_stop)]."))
       return False
     elif dataShape[1] != totalNumVars:
-      self.exception = ValueError("Invalid number columns provided.")
+      self.exception = ValueError("Invalid number of columns provided.\r\n\t"+
+                                  "1D Scan Data has rows\r\n\t"+
+                                  "of the form:\r\n\t"+
+                                  "[indep1,dep1,...,depN]\r\n\t"+
+                                  "where indep1 is a 1D array of the form\r\n\t"+
+                                  "indep1 = [t_start, t_stop]\r\n\t"+
+                                  "and the dependent entries are 1D arrays\r\n\t"+
+                                  "(all of same length). Each row should\r\n\t"+
+                                  "have 1+N columns.")
       return False
     
     numRows = dataShape[0]
@@ -905,22 +935,36 @@ class dataChest(dateStamp):
           colShape = column.shape
           dtype = column.dtype.name
           if colIndex == 0 and colShape != (2,):
-            self.exception = ValueError("Invalid data shape for 1D Scan.")
+            self.exception = ValueError(("For 1D Scan Data, the first\r\n\t"+
+                                         "entry should be an array of\r\n\t"+
+                                         "the form [t_start, t_stop]\r\n\t"))
+            
             return False
           elif types[colIndex] == 'string':
             if not self._isArrayAllStrings(column):
-              self.exception = TypeError("Expecting string data.")
+              self.exception = TypeError(("Expected all entries of this\r\n\t"+
+                                         "particular column to be of type string."))
               return False
           elif types[colIndex] == 'utc_datetime':
             if not self._isArrayAllUTCDatestamps(column):
-              self.exception = TypeError("Expecting utc_datetime data.")
+              self.exception = TypeError(("Expected all entries of this\r\n\t"+
+                                          "particular column to be of type utc_datetime."))
               return False
           elif dtype != types[colIndex]:
-            self.exception = TypeError("Incorrect data type.")
+            self.exception = TypeError(("Expected all entries of this\r\n\t"+
+                                        "particular column to be of type:\r\n\t"+
+                                        types[colIndex]+"\r\n\t"+
+                                        "Instead received data of type:\r\n\t"+
+                                        dtype))
             return False
           elif (colIndex>1 and
                 (len(colShape)!=1 or colShape[0]!=shapes[colIndex][0])):
-            self.exception = ValueError("Column shape mismatch.")
+            self.exception = ValueError(("Column entry has incorrect size\r\n\t"+
+                                         "or shape.\r\n\t"+
+                                         "Received a "+str(len(colShape))+"D\r\n\t"+
+                                         "of length "+str(colShape[0])+"\r\n\t."+
+                                         "Expecting a 1D array of length"+
+                                         str(shapes[colIndex][0])))
             return False
       return True
 
@@ -949,21 +993,30 @@ class dataChest(dateStamp):
         return False        
       for colIndex in range(0, totalNumVars):
         if colIndex > 1:
-          if (len(np.asarray(row[colIndex]).shape)!=1 or
-              np.asarray(row[colIndex]).shape[0]!=shapes[colIndex][0]):
+          column =np.asarray(row[colIndex])
+          columnShape = column.shape
+          if (len(columnShape)!=1 or
+              column.shape[0]!=shapes[colIndex][0]):
             self.exception = ValueError("Column shape mismatch.")
             return False
           elif types[colIndex] == 'string':
             if not self._isArrayAllStrings(column):
-              self.exception = TypeError("Expecting string data.")
+              self.exception = TypeError(("Expected all entries of this\r\n\t"+
+                                         "particular column to be of type string."))
               return False
           elif types[colIndex] == 'utc_datetime':
             if not self._isArrayAllUTCDatestamps(column):
-              self.exception = TypeError("Expecting utc_datetime data.")
+              self.exception = TypeError(("Expected all entries of this\r\n\t"+
+                                          "particular column to be of type utc_datetime."))
               return False
           elif np.asarray(row[colIndex]).dtype.name != types[colIndex]:
-            self.exception = TypeError("Incorrect data type.")
+            self.exception = TypeError(("Expected all entries of this\r\n\t"+
+                                        "particular column to be of type:\r\n\t"+
+                                        types[colIndex]+"\r\n\t"+
+                                        "Instead received data of type:\r\n\t"+
+                                        dtype))
             return False
+          
       return True
   
   def _isDataShapeArbType2(self, indepShapes, depShapes): #local
