@@ -149,11 +149,13 @@ class OmegaRatemeterServer(DeviceServer):
         """Configure the alert interval."""
         self.alertInterval = interval['s']
     
-    @setting(12, 'Get Rate', returns='v[ml/min]')
+    @setting(12, 'Get Rate', returns='?')
     def rateSetting(self, ctx):
         """Setting that returns rate"""
         self.dev = self.selectedDevice(ctx)
         rate = yield self.getRate(self.dev)
+        if(rate is None):
+            rate = 0*units.galUS/units.min
         returnValue(rate)
         
     @inlineCallbacks
@@ -162,7 +164,7 @@ class OmegaRatemeterServer(DeviceServer):
         # The string '@U?V' asks the device for the current reading
         # The '\r' at the end is the carriage return letting the device
         # know that it was the end of the command.
-        print("getting rate")
+        #print("getting rate")
         yield dev.write_line("@U?V\r")
         yield time.sleep(0.5)
         reading = yield dev.read_line()

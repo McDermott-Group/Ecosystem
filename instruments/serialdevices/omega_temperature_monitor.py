@@ -147,7 +147,7 @@ class OmegaTempMonitorServer(DeviceServer):
     def setAlertInterval(self, ctx, interval):
         """Configure the alert interval."""
         self.alertInterval = interval['s']
-        
+    
     @setting(12, 'Get Temperature', returns='v[degC]')
     def rateSetting(self, ctx):
         """Setting that returns rate"""

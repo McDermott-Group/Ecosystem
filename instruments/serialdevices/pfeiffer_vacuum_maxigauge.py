@@ -180,6 +180,16 @@ class PfeifferVacuumControlServer(DeviceServer):
     def setAlertInterval(self, ctx, interval):
         """Configure the alert interval."""
         self.alertInterval = interval['s']
+    
+    @setting(12, 'Get Pressures', returns='?')
+    def pressure(self, c):
+        """Setting that returns an array of pressures"""
+        t1 = time.time()
+        self.dev = self.selectedDevice(c)
+        yield self.getPressures(self.dev)
+        print(time.time()-t1)
+        #print(self.measurements)
+        returnValue(self.measurements)
         
     @inlineCallbacks
     def getPressures(self, dev):
