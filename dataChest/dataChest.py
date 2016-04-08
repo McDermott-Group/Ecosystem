@@ -48,7 +48,7 @@ VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32',
 class dataChest(dateStamp):
 
   def __init__(self):
-    self.root = "/Users/alexanderopremcak/Desktop/dataChest"
+    self.root = "C:\DataChest"
     self.cwdPath = self.root #initialized to root to start
     os.chdir(self.cwdPath)
     self.dateStamp = dateStamp()
