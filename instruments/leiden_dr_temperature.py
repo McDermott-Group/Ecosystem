@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Leiden DR Temperature
-version = 0.2.1
+version = 0.2.2
 description =  Gives access to Leiden DR temperatures.
 instancename = Leiden DR Temperature
 
@@ -38,13 +38,13 @@ from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
 
 from labrad.server import LabradServer, setting
-from labrad.units import mK, s
+from labrad.units import mK, K, s
 
 
 class LeidenDRPseudoserver(LabradServer):
     """
     This server provides an access to the Leiden DR temperatures by
-    reading log files on the AFS.
+    reading the corresponding log files on the AFS.
     """
     name = 'Leiden DR Temperature'
     refreshInterval = 15 * s
@@ -62,13 +62,13 @@ class LeidenDRPseudoserver(LabradServer):
             
         if ('Leiden Log Files Path' not in keys or 
                 not os.path.exists(self._path)):
-                self._path = ('\\AFS\physics.wisc.edu\mcdermott-group' + 
+                self._path = ('\\AFS\physics.wisc.edu\mcdermott-group' +
                               '\Data\DR Log Files\Leiden')
-                
+
         if not os.path.exists(self._path):
-            raise Exception("Could not find the Leiden Log Files Path: '" +
-                    str(self._path) + "'")
-        print("Leiden Log Files Path is set to " + str(self._path))
+            raise Exception("Could not find the Leiden Log Files "
+                    "Path: '%s'" %str(self._path))
+        print("Leiden Log Files Path is set to '%s'." %str(self._path))
 
     @inlineCallbacks    
     def initServer(self):
@@ -123,6 +123,7 @@ class LeidenDRPseudoserver(LabradServer):
             self._still_temp = float(fields[10]) * mK
             self._exchange_temp = float(fields[11]) * mK
             self._mix_temp = float(fields[12]) * mK
+            self._mix_temp_PT1000 = float(fields[13]) * K
                 
     @setting(1, 'Refresh Temperatures')
     def refresh_temperatures(self, c):
@@ -143,6 +144,11 @@ class LeidenDRPseudoserver(LabradServer):
     def mix_temperature(self, c):
         """Return the mix chamber temperature."""
         return self._mix_temp
+        
+    @setting(13, 'Mix Temperature PT1000', returns='v[K]')
+    def mix_temperature_pt1000(self, c):
+        """Return the mix chamber temperature measured with PT1000."""
+        return self._mix_temp_PT1000
 
 
 __server__ = LeidenDRPseudoserver()
