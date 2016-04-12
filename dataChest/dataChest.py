@@ -342,17 +342,17 @@ class dataChest(dateStamp):
     else:
       raise Warning("No dataset is currently open.")
 
-  def cwd(self):
+  def pwd(self):
     return self.cwdPath
 
-  def addParameter(self, paramName, paramValue, overWrite = None): 
+  def addParameter(self, paramName, paramValue, overwrite = None): 
     if self.readOnlyFlag == True:
       raise Warning(("You cannot add parameters to this file as it was\r\n\t"+
                     "opened read only. Files opened with openDataset() are\r\n\t"+
                     "read only by design. You must make a new dataset if you\r\n\t"+
                     "wish to add parameters to one."))
     elif self.currentHDF5Filename is not None:
-      if self._isParameterValid(paramName, paramValue, overWrite):
+      if self._isParameterValid(paramName, paramValue, overwrite):
         self.currentFile["parameters"].attrs[paramName] = paramValue
         self.currentFile.flush()
       else:
@@ -730,7 +730,7 @@ class dataChest(dateStamp):
         return False
     return True
 
-  def _isParameterValid(self, parameterName, parameterValue, overWrite = None):
+  def _isParameterValid(self, parameterName, parameterValue, overwrite = None):
 
     validTypes = (int, long, float, complex, bool,
                   list, np.ndarray, str, unicode)
@@ -748,7 +748,7 @@ class dataChest(dateStamp):
         #lists must be of one type or else type conversion occurs
         #[12.0, 5e-67, "stringy"] --> ['12.0', '5e-67', 'stringy']
         return False
-      elif overWrite is None and parameterName in self.currentFile["parameters"].attrs.keys():
+      elif overwrite is None and parameterName in self.currentFile["parameters"].attrs.keys():
         self.exception = RuntimeError(("Parameter name already exists. \r\n\t"+
                              "Parameter values cannot be overwritten."))
         return False
