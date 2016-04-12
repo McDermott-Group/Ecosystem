@@ -424,14 +424,14 @@ class dataChest(dateStamp):
                                     maxshape=(None,))
       else:
         dataType = varDict["types"][ii]
-        fillVal = np.nan
+        fillVal = None
         dShape = tuple(self._flatShape(varDict["shapes"][ii]))
         dset = group.create_dataset(varDict["names"][ii],
                                     dShape,
                                     dtype=dataType,
                                     chunks=dShape,
                                     maxshape=(None,),
-                                    fillvalue=np.nan)
+                                    fillvalue=fillVal)
   
       #stores name, shape, type, and units as attributes for this dset
       #(sort of redundant as this is done at the varType group level)???
