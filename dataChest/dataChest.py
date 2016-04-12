@@ -218,6 +218,8 @@ class dataChest(dateStamp):
             self.numIndepWrites = self.numIndepWrites + 1
             self.numDepWrites = self.numDepWrites + 1
             
+        self.currentFile.attrs["Number Of Rows Added"] = self.numIndepWrites
+            
         self.currentFile.flush()
       else:
         raise self.exception
@@ -228,7 +230,7 @@ class dataChest(dateStamp):
                     "method of this class."))
     return True
 
-  def openDataset(self, filename): #treat self.dataCategory consistently
+  def openDataset(self, filename, modify = None):
     """Opens a dataset in the current working directory if it exists."""
     if '.hdf5' not in filename: #adds file extension if emitted
       filename = filename+".hdf5"
@@ -236,8 +238,12 @@ class dataChest(dateStamp):
     if filename in existingFiles:
       if hasattr(self, 'currentFile'):
         self.currentFile.close() #close current file if existent
-      self.currentFile = h5py.File(filename,'r') #opened read only
-      self.readOnlyFlag = True
+      if modify is True:
+        self.readOnlyFlag = False
+        self.currentFile = h5py.File(filename,'r+') #opened read only
+      else:
+        self.readOnlyFlag = True
+        self.currentFile = h5py.File(filename,'r') #opened read only
       self.currentHDF5Filename = self.cwdPath + "/" + filename
 
       for varType in self.varDict.keys():
@@ -245,6 +251,11 @@ class dataChest(dateStamp):
         varGrp = self.currentFile[varType]
         for item in varGroupAttributes:
           self.varDict[varType][str(item)] = varGrp.attrs[item].tolist()
+
+      self.dataCategory = self.currentFile.attrs["Data Category"]
+      self.numIndepWrites = self.currentFile.attrs["Number Of Rows Added"]
+      self.numDepWrites = self.numIndepWrites
+
           
       gc.collect()
       
@@ -257,10 +268,32 @@ class dataChest(dateStamp):
                     "confirm existence and report the\r\n\t"+
                     "error on github."))
     
-  def getData(self): #inefficient for 1-D Data??, add docstring
+  def getData(self, startIndex = None, stopIndex = None): #inefficient for 1-D Data??, add docstring
 
     if self.currentHDF5Filename is not None:
       dataDict = {}
+      if startIndex is not None:
+        if not isinstance(startIndex, int):
+          raise TypeError("startIndex should be an integer.")
+        elif startIndex<0:
+          raise ValueError("startIndex should be > 0.")
+        elif startIndex>self.currentFile.attrs["Number Of Rows Added"]:
+          raise ValueError("startIndex can be at most the total number of rows in the dataset")
+      else:
+        startIndex = 0
+      if stopIndex is not None:
+        if not isinstance(stopIndex, int):
+          raise TypeError("stopIndex should be an integer.")
+        elif stopIndex<0:
+          raise ValueError("stopIndex should be > 0.")
+        elif startIndex is not None and stopIndex<startIndex:
+          raise ValueError("stopIndex should be >= startIndex.")
+        elif stopIndex>self.currentFile.attrs["Number Of Rows Added"]:
+          raise ValueError("stopIndex can be at most the total number of rows in the dataset")
+      else:
+        stopIndex = self.currentFile.attrs["Number Of Rows Added"]
+
+
       for varTypes in self.varDict.keys():
         for variables in self.currentFile[varTypes].keys():
           varGrp = self.currentFile[varTypes]
@@ -276,12 +309,13 @@ class dataChest(dateStamp):
               chunk = np.reshape(chunk, tuple(originalShape))
               dataDict[variables].append(chunk.tolist())
             else:
-              dataDict[variables].append(chunk[0])    
+              dataDict[variables].append(chunk[0])
       #load parameters here perhaps
       data = []
       allVars = (self.varDict["independents"]["names"] +
                  self.varDict["dependents"]["names"])
-      for ii in range(0,numChunks):
+      
+      for ii in range(startIndex,stopIndex):
         row = []
         for jj in range(0,len(allVars)):
           row.append(dataDict[allVars[jj]][ii])
@@ -311,21 +345,21 @@ class dataChest(dateStamp):
   def cwd(self):
     return self.cwdPath
 
-  def addParameter(self, paramName, paramValue): 
+  def addParameter(self, paramName, paramValue, overWrite = None): 
     if self.readOnlyFlag == True:
       raise Warning(("You cannot add parameters to this file as it was\r\n\t"+
                     "opened read only. Files opened with openDataset() are\r\n\t"+
                     "read only by design. You must make a new dataset if you\r\n\t"+
                     "wish to add parameters to one."))
     elif self.currentHDF5Filename is not None:
-      if self._isParameterValid(paramName, paramValue):
+      if self._isParameterValid(paramName, paramValue, overWrite):
         self.currentFile["parameters"].attrs[paramName] = paramValue
         self.currentFile.flush()
       else:
         raise self.exception
     else:
       raise Warning(("No file is currently selected. Create a file\r\n\t"+
-             "using createDataset() before using addParameter()."))     
+             "using createDataset() before using addParameter()."))
       
   def getParameter(self, parameterName):
     if self.currentHDF5Filename is not None:
@@ -362,6 +396,7 @@ class dataChest(dateStamp):
     self.currentFile.create_group("parameters")
 
     self.currentFile.attrs["Data Category"] = self.dataCategory
+    self.currentFile.attrs["Number Of Rows Added"] = 0
 
     #varTypes in ['independents', 'dependents']
     #varAttrs in ['shapes','units','names','types']
@@ -695,7 +730,7 @@ class dataChest(dateStamp):
         return False
     return True
 
-  def _isParameterValid(self, parameterName, parameterValue):
+  def _isParameterValid(self, parameterName, parameterValue, overWrite = None):
 
     validTypes = (int, long, float, complex, bool,
                   list, np.ndarray, str, unicode)
@@ -711,16 +746,16 @@ class dataChest(dateStamp):
                                     "str, unicode.\r\n\t"+
                                     "Type provided=", type(parameterValue)))
         #lists must be of one type or else type conversion occurs
-        #[12.0, 5e-67, "stringy"] --> ['12.0', '5e-67', 'stringy']                                   
+        #[12.0, 5e-67, "stringy"] --> ['12.0', '5e-67', 'stringy']
         return False
-      elif parameterName in self.currentFile["parameters"].attrs.keys():
-        self.expection = RuntimeError(("Parameter name already exists. \r\n\t"+
-                             "Parameter values cannot be overwritten."))                                   
+      elif overWrite is None and parameterName in self.currentFile["parameters"].attrs.keys():
+        self.exception = RuntimeError(("Parameter name already exists. \r\n\t"+
+                             "Parameter values cannot be overwritten."))
         return False
       else:
         return True
     else:
-      self.expection = TypeError("Parameter names must be of type str.")
+      self.exception = TypeError("Parameter names must be of type str.")
       return False
 
   def _isStringUTCFormat(self, dateStr):
@@ -803,7 +838,7 @@ class dataChest(dateStamp):
                                       "Instead received data of type:\r\n\t"+
                                       dtype))
           return False
-        elif colIndex>2 and colShape != lastShape:
+        elif colIndex>2 and columnShape != lastShape:
             self.exception = TypeError(("Arbitrary 1D Data requires one value\r\n\t"+
                                         "for each independent and dependent\r\n\t"+
                                         "variable per row of data."))
@@ -1102,7 +1137,6 @@ class dataChest(dateStamp):
     ##cut lines to <=72 characters
     ##add dictionary parameter capabilities ***
     ##over night writes both locally and on afs data corruption tests
-    ##add datetime format
     ##refactor
 
  
