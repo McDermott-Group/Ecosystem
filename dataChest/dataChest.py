@@ -272,27 +272,12 @@ class dataChest(dateStamp):
 
     if self.currentHDF5Filename is not None:
       dataDict = {}
-      if startIndex is not np.nan:
-        if not isinstance(startIndex, int):
-          raise TypeError("startIndex should be an integer.")
-        elif startIndex<0:
-          raise ValueError("startIndex should be > 0.")
-        elif startIndex>self.currentFile.attrs["Number Of Rows Added"]:
-          raise ValueError("startIndex can be at most the total number of rows in the dataset")
-      else:
-        startIndex = 0
-      if stopIndex is not np.nan:
-        if not isinstance(stopIndex, int):
-          raise TypeError("stopIndex should be an integer.")
-        elif stopIndex<0:
-          raise ValueError("stopIndex should be > 0.")
-        elif startIndex is not np.nan and stopIndex<startIndex:
-          raise ValueError("stopIndex should be >= startIndex.")
-        elif stopIndex>self.currentFile.attrs["Number Of Rows Added"]:
-          raise ValueError("stopIndex can be at most the total number of rows in the dataset")
-      else:
-        stopIndex = self.currentFile.attrs["Number Of Rows Added"]
 
+      numRows = self.currentFile.attrs["Number Of Rows Added"]
+      sliceIndices = self._sortSliceIndices(startIndex, stopIndex, numRows)
+      if not isinstance(sliceIndices, list):
+        raise self.exception
+      startIndex, stopIndex = sliceIndices[0], sliceIndices[1]
 
       for varTypes in self.varDict.keys():
         for variables in self.currentFile[varTypes].keys():
@@ -507,6 +492,53 @@ class dataChest(dateStamp):
       else:
         self.exception = TypeError("Filenames should be type str.")
         return ""
+
+  def _sortSliceIndices(self, startIndex, stopIndex, numRows):
+
+    if startIndex is None: #make sure types are correct int, np.nan. or None
+      startIndex = 0
+    if stopIndex is None:
+      stopIndex = numRows
+    if startIndex !=0 and startIndex/abs(startIndex) == -1:
+      startIndex = abs(startIndex)
+      if startIndex >= numRows:
+        if startIndex > numRows and stopIndex is np.nan:
+          self.exception = IndexError("Negative startIndex is out of range.")
+          return "Error"
+        else:
+          startIndex = 0
+      else:
+        startIndex = numRows-startIndex
+    if stopIndex !=0 and stopIndex/abs(stopIndex) == -1:
+      stopIndex = abs(stopIndex)
+      if stopIndex >= numRows:
+        if startIndex is np.nan:
+          self.exception = IndexError("startIndex should be provided when attempting to obtain a single row.")
+          return "Error"
+        else:
+          stopIndex = 0
+      else:
+        stopIndex = numRows-stopIndex
+        
+    if startIndex >= numRows:
+      if stopIndex is not np.nan: #intent to slice
+        startIndex = numRows
+      else:
+        self.exception = IndexError("startIndex is out of range.")
+        return "Error"
+      
+    if stopIndex > numRows:
+      if startIndex is not np.nan: #intent to slice
+        stopIndex = numRows
+      else:
+        self.exception = IndexError("startIndex should be provided when attempting to obtain a single row.")
+        return "Error"
+    if [startIndex, stopIndex] == [np.nan, np.nan]:
+      startIndex = 0
+      stopIndex = numRows
+    elif stopIndex is np.nan:
+      stopIndex = startIndex + 1
+    return [startIndex, stopIndex]
 
   def _areTypesValid(self, dtypes):
     for ii in range(0, len(dtypes)):
