@@ -82,7 +82,7 @@ class dataChest(dateStamp):
     elif isinstance(directoryToMove, list):
       path = directoryToMove
     else:
-      raise ValueError(("Acceptable input types for are\r\n\t"+
+      raise TypeError(("Acceptable input types for are\r\n\t"+
                         "string e.g. \"myFolderName\"\r\n\t"+
                         "or list e.g. [\"dirName\",\"subDirName\"]\r\n\t"+
                         "where the equivalent path would be \r\n\t"+
@@ -101,7 +101,7 @@ class dataChest(dateStamp):
           os.chdir(self.root)
           self.cwdPath = os.getcwd().replace("\\", "/")
         else:
-          raise ValueError(("Directory does not exist.\r\n\t"+
+          raise IOError(("Directory does not exist.\r\n\t"+
                            "Directory name provided: "+
                            str(directoryToMove)))
       return self.cwdPath
