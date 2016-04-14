@@ -62,8 +62,7 @@ class dateStamp:
       """Change ``num'' to given base
       Upto base 36 is supported."""
       if dateISO == None:
-          dateISO = datetime.now().isoformat()
-      #print dateISO
+          dateISO = datetime.utcnow().isoformat()
       ymd = dateISO.split("T")[0].split("-")
       hms = dateISO.split("T")[1].split(":")
       hour = hms[0]
