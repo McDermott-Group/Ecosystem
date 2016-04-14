@@ -48,7 +48,7 @@ VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32',
 class dataChest(dateStamp):
 
   def __init__(self):
-    self.root = "C:\DataChest"
+    self.root ="C:\DataChest" #"/Users/alexanderopremcak/Desktop/dataChest"
     self.cwdPath = self.root #initialized to root to start
     os.chdir(self.cwdPath)
     self.dateStamp = dateStamp()
@@ -268,11 +268,11 @@ class dataChest(dateStamp):
                     "confirm existence and report the\r\n\t"+
                     "error on github."))
     
-  def getData(self, startIndex = None, stopIndex = None): #inefficient for 1-D Data??, add docstring
+  def getData(self, startIndex = np.nan, stopIndex = np.nan): #inefficient for 1-D Data??, add docstring
 
     if self.currentHDF5Filename is not None:
       dataDict = {}
-      if startIndex is not None:
+      if startIndex is not np.nan:
         if not isinstance(startIndex, int):
           raise TypeError("startIndex should be an integer.")
         elif startIndex<0:
@@ -281,12 +281,12 @@ class dataChest(dateStamp):
           raise ValueError("startIndex can be at most the total number of rows in the dataset")
       else:
         startIndex = 0
-      if stopIndex is not None:
+      if stopIndex is not np.nan:
         if not isinstance(stopIndex, int):
           raise TypeError("stopIndex should be an integer.")
         elif stopIndex<0:
           raise ValueError("stopIndex should be > 0.")
-        elif startIndex is not None and stopIndex<startIndex:
+        elif startIndex is not np.nan and stopIndex<startIndex:
           raise ValueError("stopIndex should be >= startIndex.")
         elif stopIndex>self.currentFile.attrs["Number Of Rows Added"]:
           raise ValueError("stopIndex can be at most the total number of rows in the dataset")
@@ -339,6 +339,12 @@ class dataChest(dateStamp):
   def getDatasetName(self):
     if self.currentHDF5Filename is not None:
       return self.currentHDF5Filename.split("/")[-1]
+    else:
+      raise Warning("No dataset is currently open.")
+
+  def getNumRows(self):
+    if self.currentHDF5Filename is not None:
+      return self.currentFile.attrs["Number Of Rows Added"]
     else:
       raise Warning("No dataset is currently open.")
 
