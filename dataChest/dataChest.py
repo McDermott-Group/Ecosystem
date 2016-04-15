@@ -47,10 +47,11 @@ VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32',
 
 class dataChest(dateStamp):
 
-  def __init__(self):
-    self.root ="C:\DataChest" #"/Users/alexanderopremcak/Desktop/dataChest"
-    self.cwdPath = self.root #initialized to root to start
-    os.chdir(self.cwdPath)
+  def __init__(self, path):
+    self.cwdPath = os.environ["DATA_CHEST_ROOT"]
+    os.chdir(self.cwdPath) #this needs to exists
+    self._initializeRoot(path)
+    self.root = self.cwdPath
     self.dateStamp = dateStamp()
     self.currentHDF5Filename = None
     self.readOnlyFlag = False
@@ -59,6 +60,27 @@ class dataChest(dateStamp):
     self.varDict["dependents"] ={}
     self.numIndepWrites = 0
     self.numDepWrites = 0
+
+  def _initializeRoot(self, path):
+    if isinstance(path, str):
+      if len(path)>0:
+        if path not in self.ls()[1]:
+          self.mkdir(path)
+        self.cd(path)
+        self.root = self.cwdPath
+      else:
+        raise TypeError("Empty strings are invalid")
+    elif isinstance(path, list):
+      if len(path)>=1:
+        for ii in range(0, len(path)):
+          if path[ii] not in self.ls()[1]:
+            self.mkdir(path[ii])
+          self.cd(path[ii])
+          self.root = self.cwdPath
+      else:
+        raise TypeError("Empty lists are invalid")
+    else:
+      raise TypeError("String and List type paths only.")
 
   def ls(self): #good
     """Lists the contents of the current working directory."""
@@ -104,6 +126,12 @@ class dataChest(dateStamp):
           raise IOError(("Directory does not exist.\r\n\t"+
                            "Directory name provided: "+
                            str(directoryToMove)))
+      if hasattr(self, 'root') and self.root not in self.cwdPath:
+        print "self.cwdPath=",self.cwdPath
+        print "self.root=", self.root
+        os.chdir(self.root)
+        self.cwdPath = os.getcwd().replace("\\", "/")
+        raise IOError("cd() cannot be used to take the user out of root.")
       return self.cwdPath
     else:
       return directoryToMove
@@ -111,9 +139,9 @@ class dataChest(dateStamp):
   def mkdir(self, directoryToMake):
     """Makes a new directory within the current working directory."""
     dirContents = self.ls()[1]
-    if self._formatFilename(directoryToMake) == directoryToMake:
+    if self._formatFilename(directoryToMake, " ") == directoryToMake:
       if directoryToMake not in dirContents:
-        os.mkdir(directoryToMake)
+        os.mkdir(directoryToMake) #Try except this even though safe gaurded
         return directoryToMake
       else:
         raise ValueError(("Directory already exists.\r\n\t"+
@@ -124,14 +152,14 @@ class dataChest(dateStamp):
                        "Directory name provided: "+
                        directoryToMake+".\r\n\t"+
                        "Suggested name: "+
-                       self._formatFilename(directoryToMake)))    
+                       self._formatFilename(directoryToMake, " ")))    
     
   def createDataset(self, datasetName, indepVarsList, depVarsList):
     "Creates a new dataset within the current working directory.""" 
     self.currentHDF5Filename = None
     self.readOnlyFlag = False
     self.dataCategory = None #treat self.dataCategory consistently
-    if datasetName != self._formatFilename(datasetName):
+    if datasetName != self._formatFilename(datasetName, " "):
       raise self.exception
     elif not self._isVarsListValid("independents", indepVarsList): 
       raise self.exception
@@ -477,7 +505,10 @@ class dataChest(dateStamp):
       """Returns a valid filename from the filename provided."""
       defaultCharsTup = (string.ascii_letters, string.digits)
       if isinstance(fileName, str):
-        if additionalChars is None:
+        if len(fileName)==0:
+          self.exception = TypeError("Filenames cannot be empty.")
+          return "Error" #fix this          
+        elif additionalChars is None:
           validChars = "_%s%s" % defaultCharsTup
         else:
           validChars = "_"+additionalChars
