@@ -14,10 +14,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import date, datetime, timedelta
+from dateutil import tz
+import re
 
 class dateStamp:
     
-  def intToAlphabet(self, num):
+  def _intToAlphabet(self, num):
       base = 26
       if num > 0:
           digits = []
@@ -37,7 +39,7 @@ class dateStamp:
           converted_digits = 'a' + converted_digits
       return converted_digits
 
-  def base26ToInt(self, chars):
+  def _base26ToInt(self, chars):
       chars = list(chars)
       letters = list("abcdefghijklmnopqrstuvwxyz")
       for ii in range(0, len(chars)):
@@ -49,12 +51,12 @@ class dateStamp:
           result = result + (26**kk)*int(chars[len(chars)-kk-1])
       return result
 
-  def intToYYYYMMDD(self, num):
+  def _intToYYYYMMDD(self, num):
       t0 = datetime(2015, 1, 1)
       tNow = str(t0 + timedelta(days=num))
       return tNow.split()[0]
 
-  def intToSeconds(self, num):
+  def _intToSeconds(self, num):
       dt = 60.0/(26**3-1)
       return dt*num
             
@@ -74,18 +76,57 @@ class dateStamp:
       d1 = date(int(ymd[0]), int(ymd[1]), int(ymd[2]))
       delta = d1 - d0
       numDays = delta.days
-      ymdConverted = self.intToAlphabet(numDays)
-      secsConverted = self.intToAlphabet(t)
+      ymdConverted = self._intToAlphabet(numDays)
+      secsConverted = self._intToAlphabet(t)
       return ymdConverted+hour+minute+secsConverted
 
   def invertDateStamp(self, dateStamp):
       ymd = dateStamp[0:3]
       secs = dateStamp[7:10]
-      ymd = self.base26ToInt(ymd)
-      ymd = self.intToYYYYMMDD(ymd)
-      secs = self.base26ToInt(secs)
-      secs = self.intToSeconds(secs)
+      ymd = self._base26ToInt(ymd)
+      ymd = self._intToYYYYMMDD(ymd)
+      secs = self._base26ToInt(secs)
+      secs = self._intToSeconds(secs)
       secs = str(secs)
       if len(secs.split(".")[0])==1:
           secs = '0'+secs
-      return ymd +'T'+dateStamp[3:5]+':'+dateStamp[5:7]+':'+secs 
+      return ymd +'T'+dateStamp[3:5]+':'+dateStamp[5:7]+':'+secs
+
+  def floatToUtcDateStr(self, utcFloat):
+    if isinstance(utcFloat, float):
+      return datetime.utcfromtimestamp(utcFloat).isoformat()
+    else:
+      raise IOError("Inputs can only be of type float.")
+    
+  def utcNowFloat(self):
+    utcNow = datetime.utcnow()
+    timeZero = datetime(1970,1,1)
+    return (utcNow-timeZero).total_seconds()
+
+  def localDateStrToFloat(self, localDateStr):
+    if self._isStringDateISOFormat(localDateStr):
+      localDatetime = datetime.strptime(localDateStr,'%Y-%m-%dT%H:%M:%S.%f')
+      utc = tz.tzutc()
+      local = tz.tzlocal()
+      declareTzoneToLocal = localDatetime.replace(tzinfo = local)
+      convertToUTC = declareTzoneToLocal.astimezone(utc).isoformat()
+      print "convertToUTC=", convertToUTC[:-5]
+      return self.utcDateStrToFloat(convertToUTC[:-6])
+    else:
+      raise IOError("Input strings should be Date ISO formatted.")
+
+  def utcDateStrToFloat(self, utcDateStr):
+    if self._isStringDateISOFormat(utcDateStr):
+      utcDatetime = datetime.strptime(utcDateStr,'%Y-%m-%dT%H:%M:%S.%f')
+      timeZero = datetime(1970,1,1)
+      return (utcDatetime-timeZero).total_seconds()
+    else:
+      raise IOError("Input strings should be Date ISO formatted.")
+
+  def _isStringDateISOFormat(self, dateStr): #checks for regular expression
+    RE = re.compile(r'^\d{4}-\d{2}-\d{2}[T]\d{2}:\d{2}:\d{2}[.]\d{6}$')
+    return bool(RE.search(dateStr))
+
+      
+    
+      
