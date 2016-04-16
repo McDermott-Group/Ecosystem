@@ -432,17 +432,19 @@ class dataChest(dateStamp):
     for ii in range(0, len(varDict["names"])):
       #creates each dataset set datatype, chunksize, maxshape, fillvalue
       varType = varDict["types"][ii]
-      if (varType == 'string') or (varType == 'utc_datetime'):
+      if varType == 'string':
         dataType = h5py.special_dtype(vlen=str)
-        #fillVal = None
         dShape = tuple(self._flatShape(varDict["shapes"][ii]))
         dset = group.create_dataset(varDict["names"][ii],
                                     dShape,
                                     dtype=dataType,
                                     chunks=dShape,
-                                    maxshape=(None,))
+                                    maxshape=(None,))       
       else:
-        dataType = varDict["types"][ii]
+        if varType == 'utc_datetime':
+          dataType = 'float64'
+        else:
+          dataType = varDict["types"][ii]
         fillVal = None
         dShape = tuple(self._flatShape(varDict["shapes"][ii]))
         dset = group.create_dataset(varDict["names"][ii],
@@ -711,10 +713,13 @@ class dataChest(dateStamp):
             if not self._isArrayAllStrings(array):
               self.exception = TypeError("Expecting string data.")
               return False
-          elif varType == 'utc_datetime':
-            if not self._isArrayAllUTCDatestamps(array):
-              self.exception = TypeError("Expecting utc_datetime data.")
-              return False
+          elif varType == 'utc_datetime' and array.dtype.name!="float64":
+##            if not self._isArrayAllUTCDatestamps(array):
+##              self.exception = TypeError("Expecting utc_datetime data.")
+##              return False
+            self.exception = TypeError("utc_datetime data should be a float64.")
+            return False
+            
           elif array.dtype.name != varType:
             self.exception = TypeError("Types do not match for independents")
             return False           
@@ -737,10 +742,13 @@ class dataChest(dateStamp):
             if not self._isArrayAllStrings(array):
               self.exception = TypeError("Expecting string data.")
               return False
-          elif varType == 'utc_datetime':
-            if not self._isArrayAllUTCDatestamps(array):
-              self.exception = TypeError("Expecting utc_datetime data.")
-              return False
+          elif varType == 'utc_datetime' and array.dtype.name!="float64":
+##            if not self._isArrayAllUTCDatestamps(array):
+##              self.exception = TypeError("Expecting utc_datetime data.")
+##              return False
+            self.exception = TypeError("utc_datetime data should be a float64.")
+            return False
+            
           elif array.dtype.name != varType:
             self.exception = TypeError("Types do not match for dependents")
             return False
@@ -895,11 +903,13 @@ class dataChest(dateStamp):
             self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                         "particular column to be of type string."))
             return False
-        elif types[colIndex] == 'utc_datetime':
-          if not self._isArrayAllUTCDatestamps(column):
-            self.exception = TypeError(("Expected all entries of this\r\n\t"+
-                                        "particular column to be of type utc_datetime."))
-            return False
+        elif types[colIndex] == 'utc_datetime' and dtype != 'float64':
+##          if not self._isArrayAllUTCDatestamps(column):
+##            self.exception = TypeError(("Expected all entries of this\r\n\t"+
+##                                        "particular column to be of type utc_datetime."))
+##            return False
+          self.exception = TypeError("utc_datetime data should be a float64.")
+          return False
         elif dtype != types[colIndex]:
           self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                       "particular column to be of type:\r\n\t"+
@@ -975,11 +985,13 @@ class dataChest(dateStamp):
               self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                          "particular column to be of type string."))
               return False
-          elif types[colIndex] == 'utc_datetime':
-            if not self._isArrayAllUTCDatestamps(column):
-              self.exception = TypeError(("Expected all entries of this\r\n\t"+
-                                         "particular column to be of type utc_datetime."))
-              return False
+          elif types[colIndex] == 'utc_datetime' and dtype != 'float64':
+##            if not self._isArrayAllUTCDatestamps(column):
+##              self.exception = TypeError(("Expected all entries of this\r\n\t"+
+##                                         "particular column to be of type utc_datetime."))
+##              return False
+            self.exception = TypeError("utc_datetime data should be a float64.")
+            return False
           elif dtype != types[colIndex]:
             self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                         "particular column to be of type:\r\n\t"+
@@ -1049,11 +1061,13 @@ class dataChest(dateStamp):
               self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                          "particular column to be of type string."))
               return False
-          elif types[colIndex] == 'utc_datetime':
-            if not self._isArrayAllUTCDatestamps(column):
-              self.exception = TypeError(("Expected all entries of this\r\n\t"+
-                                          "particular column to be of type utc_datetime."))
-              return False
+          elif types[colIndex] == 'utc_datetime' and dtype != 'float64':
+##            if not self._isArrayAllUTCDatestamps(column):
+##              self.exception = TypeError(("Expected all entries of this\r\n\t"+
+##                                          "particular column to be of type utc_datetime."))
+##              return False
+            self.exception = TypeError("utc_datetime data should be a float64.")
+            return False
           elif dtype != types[colIndex]:
             self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                         "particular column to be of type:\r\n\t"+
@@ -1108,11 +1122,13 @@ class dataChest(dateStamp):
               self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                          "particular column to be of type string."))
               return False
-          elif types[colIndex] == 'utc_datetime':
-            if not self._isArrayAllUTCDatestamps(column):
-              self.exception = TypeError(("Expected all entries of this\r\n\t"+
-                                          "particular column to be of type utc_datetime."))
-              return False
+          elif types[colIndex] == 'utc_datetime' and np.asarray(row[colIndex]).dtype.name != 'float64':
+##            if not self._isArrayAllUTCDatestamps(column):
+##              self.exception = TypeError(("Expected all entries of this\r\n\t"+
+##                                          "particular column to be of type utc_datetime."))
+##              return False
+            self.exception = TypeError("utc_datetime data should be a float64.")
+            return False            
           elif np.asarray(row[colIndex]).dtype.name != types[colIndex]:
             self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                         "particular column to be of type:\r\n\t"+
