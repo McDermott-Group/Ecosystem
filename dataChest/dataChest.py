@@ -154,7 +154,7 @@ class dataChest(dateStamp):
                        "Suggested name: "+
                        self._formatFilename(directoryToMake, " ")))    
     
-  def createDataset(self, datasetName, indepVarsList, depVarsList):
+  def createDataset(self, datasetName, indepVarsList, depVarsList, dateStamp = None):
     "Creates a new dataset within the current working directory.""" 
     self.currentHDF5Filename = None
     self.readOnlyFlag = False
@@ -167,8 +167,12 @@ class dataChest(dateStamp):
       raise self.exception
     elif self._getVariableNames(indepVarsList+depVarsList)==[]:
       raise self.exception
+    elif dateStamp is not None:
+      RE = re.compile(r'^[a-z]{3}[0-9]{4}[a-z]{3}$')
+      if not bool(RE.search(dateStamp)):
+        raise IOError("Invalid dateStamp provided.")
     
-    filename = self._generateUniqueFilename(datasetName)
+    filename = self._generateUniqueFilename(datasetName, dateStamp)
     if len(filename)>0:
       self.dataCategory = self._categorizeDataset(self.varDict)
       self._initDataset(self.varDict, filename)
@@ -465,18 +469,22 @@ class dataChest(dateStamp):
           raise TypeError(("Unrecognized dtype receieved.\r\n\t"+
                            "Please report this to github."))
 
-  def _generateUniqueFilename(self, datasetName):
+  def _generateUniqueFilename(self, datasetName, dateStamp):
     uniquenessFlag = False
     uniqueName = ""
     maxTries = 100
     ii = 0
     existingNames = self.ls()[0]
     while ii<maxTries and uniquenessFlag == False:
+      if dateStamp is None:
+        fileDateStamp = self.dateStamp.dateStamp()
+      else:
+        fileDateStamp = dateStamp
       if ii == 0:
-        uniqueName = (self.dateStamp.dateStamp()+
+        uniqueName = (fileDateStamp +
                       "_"+datasetName+".hdf5")
       else:
-        uniqueName = (self.dateStamp.dateStamp()+
+        uniqueName = (fileDateStamp +
                       "_"+str(ii)+"_"+datasetName+".hdf5") 
 
       if uniqueName not in existingNames:
