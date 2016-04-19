@@ -722,12 +722,13 @@ class dataChest(dateStamp):
             if not self._isArrayAllStrings(array):
               self.exception = TypeError("Expecting string data.")
               return False
-          elif varType == 'utc_datetime' and array.dtype.name!="float64":
+          elif varType == 'utc_datetime':
+            if array.dtype.name!="float64":
 ##            if not self._isArrayAllUTCDatestamps(array):
 ##              self.exception = TypeError("Expecting utc_datetime data.")
 ##              return False
-            self.exception = TypeError("utc_datetime data should be a float64.")
-            return False
+              self.exception = TypeError("utc_datetime data should be a float64.")
+              return False
             
           elif array.dtype.name != varType:
             self.exception = TypeError("Types do not match for independents")
@@ -751,12 +752,13 @@ class dataChest(dateStamp):
             if not self._isArrayAllStrings(array):
               self.exception = TypeError("Expecting string data.")
               return False
-          elif varType == 'utc_datetime' and array.dtype.name!="float64":
+          elif varType == 'utc_datetime':
+            if array.dtype.name!="float64":
 ##            if not self._isArrayAllUTCDatestamps(array):
 ##              self.exception = TypeError("Expecting utc_datetime data.")
 ##              return False
-            self.exception = TypeError("utc_datetime data should be a float64.")
-            return False
+              self.exception = TypeError("utc_datetime data should be a float64.")
+              return False
             
           elif array.dtype.name != varType:
             self.exception = TypeError("Types do not match for dependents")
@@ -912,13 +914,14 @@ class dataChest(dateStamp):
             self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                         "particular column to be of type string."))
             return False
-        elif types[colIndex] == 'utc_datetime' and dtype != 'float64':
+        elif types[colIndex] == 'utc_datetime':
+          if dtype != 'float64':
 ##          if not self._isArrayAllUTCDatestamps(column):
 ##            self.exception = TypeError(("Expected all entries of this\r\n\t"+
 ##                                        "particular column to be of type utc_datetime."))
 ##            return False
-          self.exception = TypeError("utc_datetime data should be a float64.")
-          return False
+            self.exception = TypeError("utc_datetime data should be a float64.")
+            return False
         elif dtype != types[colIndex]:
           self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                       "particular column to be of type:\r\n\t"+
@@ -994,13 +997,14 @@ class dataChest(dateStamp):
               self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                          "particular column to be of type string."))
               return False
-          elif types[colIndex] == 'utc_datetime' and dtype != 'float64':
+          elif types[colIndex] == 'utc_datetime':
+            if dtype != 'float64':
 ##            if not self._isArrayAllUTCDatestamps(column):
 ##              self.exception = TypeError(("Expected all entries of this\r\n\t"+
 ##                                         "particular column to be of type utc_datetime."))
 ##              return False
-            self.exception = TypeError("utc_datetime data should be a float64.")
-            return False
+              self.exception = TypeError("utc_datetime data should be a float64.")
+              return False
           elif dtype != types[colIndex]:
             self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                         "particular column to be of type:\r\n\t"+
@@ -1070,13 +1074,14 @@ class dataChest(dateStamp):
               self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                          "particular column to be of type string."))
               return False
-          elif types[colIndex] == 'utc_datetime' and dtype != 'float64':
+          elif types[colIndex] == 'utc_datetime':
+            if dtype != 'float64':
 ##            if not self._isArrayAllUTCDatestamps(column):
 ##              self.exception = TypeError(("Expected all entries of this\r\n\t"+
 ##                                          "particular column to be of type utc_datetime."))
 ##              return False
-            self.exception = TypeError("utc_datetime data should be a float64.")
-            return False
+              self.exception = TypeError("utc_datetime data should be a float64.")
+              return False
           elif dtype != types[colIndex]:
             self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                         "particular column to be of type:\r\n\t"+
@@ -1131,13 +1136,14 @@ class dataChest(dateStamp):
               self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                          "particular column to be of type string."))
               return False
-          elif types[colIndex] == 'utc_datetime' and np.asarray(row[colIndex]).dtype.name != 'float64':
+          elif types[colIndex] == 'utc_datetime':
+            if np.asarray(row[colIndex]).dtype.name != 'float64':
 ##            if not self._isArrayAllUTCDatestamps(column):
 ##              self.exception = TypeError(("Expected all entries of this\r\n\t"+
 ##                                          "particular column to be of type utc_datetime."))
 ##              return False
-            self.exception = TypeError("utc_datetime data should be a float64.")
-            return False            
+              self.exception = TypeError("utc_datetime data should be a float64.")
+              return False            
           elif np.asarray(row[colIndex]).dtype.name != types[colIndex]:
             self.exception = TypeError(("Expected all entries of this\r\n\t"+
                                         "particular column to be of type:\r\n\t"+
