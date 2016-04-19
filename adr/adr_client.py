@@ -18,11 +18,13 @@ import matplotlib as mpl
 mpl.use('TkAgg')
 import pylab, numpy
 import datetime, struct
+import timezone as tz
 import Tkinter
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 import labrad
 from labrad import units
 from labrad.server import (inlineCallbacks, returnValue)
+from dataChest.dataChest import dataChest
 from twisted.internet import tksupport, reactor
 import os, time
 
@@ -69,7 +71,7 @@ class ADRController(object):#Tkinter.Tk):
     """Provides a GUI for the ADRServer"""
     name = 'ADR Controller GUI'
     ID = 6116
-    
+
     def __init__(self,parent):
         #Tkinter.Tk.__init__(self,parent)
         self.parent = parent
@@ -92,7 +94,7 @@ class ADRController(object):#Tkinter.Tk):
         try:
             id = yield self.cxn['ADR3'].ID
             returnValue( id == servId )
-        except: 
+        except:
             returnValue( False )
     @inlineCallbacks
     def startListening(self):
@@ -103,8 +105,8 @@ class ADRController(object):#Tkinter.Tk):
         # update_state = lambda c, payload: self.updateInterface()
         # yield server.signal_state_changed(self.ID)
         # yield server.addListener(listener = update_state, source=None,ID=self.ID)
-        
-        # state update (only if 
+
+        # state update (only if
         update_state = lambda c, (s,payload): self.updateInterface() \
                 if self.correctServer(s) else -1
         self.cxn._cxn.addListener(update_state, source=mgr.ID, ID=101)
@@ -297,10 +299,10 @@ class ADRController(object):#Tkinter.Tk):
             self.adrSelectWidget['menu'].add_command(label=adrServerName, command=Tkinter._setit(self.adrSelect,adrServerName))
         if self.selectedADR in runningADRs:
             self.adrSelect.set(self.selectedADR)
-        else: 
+        else:
             try:
                 self.adrSelect.set(runningADRs[0])
-            except IndexError as e: 
+            except IndexError as e:
                 self.resetButtons()
                 self.selectedADR = ''
             except Exception as e: print e
@@ -336,29 +338,38 @@ class ADRController(object):#Tkinter.Tk):
         reg.cd(adrSettingsPath)
         base_path = yield reg.get('Log Path')
         file_path = base_path + '\\temperatures' + date_append + '.temps'
-        file_length = os.stat(file_path)[6]
         try:
-            with open(file_path, 'rb') as f:
-                first = False
-                n = 1
-                while first is False and file_length - n*5*8 > 0:
-                    f.seek(file_length - n*5*8)
-                    newRow = [struct.unpack('d',f.read(8))[0] for x in ['time','t1','t2','t3','t4']]
-                    if len(self.stage60K.get_xdata()) < 1: xMin = mpl.dates.num2date(1)
-                    else:
-                        lastDatetime = mpl.dates.num2date(self.stage60K.get_xdata()[-1])
-                        xMin = lastDatetime-datetime.timedelta(minutes=6*60)
-                    if mpl.dates.date2num(xMin) < newRow[0]:
-                        self.stage60K.set_xdata(numpy.append(newRow[0],self.stage60K.get_xdata()))
-                        self.stage60K.set_ydata(numpy.append(newRow[1],self.stage60K.get_ydata()))
-                        self.stage03K.set_xdata(numpy.append(newRow[0],self.stage03K.get_xdata()))
-                        self.stage03K.set_ydata(numpy.append(newRow[2],self.stage03K.get_ydata()))
-                        self.stageGGG.set_xdata(numpy.append(newRow[0],self.stageGGG.get_xdata()))
-                        self.stageGGG.set_ydata(numpy.append(newRow[3],self.stageGGG.get_ydata()))
-                        self.stageFAA.set_xdata(numpy.append(newRow[0],self.stageFAA.get_xdata()))
-                        self.stageFAA.set_ydata(numpy.append(newRow[4],self.stageFAA.get_ydata()))
-                    else: first = True
-                    n += 1
+            tempDataChest = dataChest(['ADR Logs',self.name])
+            tempDataChest.cd(self.selectedADR)
+            tempDataChest.openDataset() # &&&
+
+            first = False
+            n = tempDataChest.getNumRows()
+            while first is False and n > 0:
+                newRow = tempDataChest.getData(n)
+                # change utc time to local
+                utc = newRow[0]
+                # utc = datetime.datetime.strptime(utc, '%Y-%m-%dT%H:%M:%S.%f') # for string
+                utc = datetime.datetime.utcfromtimestamp(utc) # for float
+                utc = utc.replace(tzinfo=tz.tzutc())
+                newRow[0] = utc.astimezone(tz.tzlocal()) # local
+                # find limits for start time
+                if len(self.stage60K.get_xdata()) < 1: # then start at 1 and load appropriate past data
+                    xMin = mpl.dates.num2date(1)
+                else:  # start loading data from last recorded point
+                    lastDatetime = mpl.dates.num2date(self.stage60K.get_xdata()[-1])
+                    xMin = lastDatetime-datetime.timedelta(minutes=6*60)
+                if mpl.dates.date2num(xMin) < newRow[0]:
+                    self.stage60K.set_xdata(numpy.append(newRow[0],self.stage60K.get_xdata()))
+                    self.stage60K.set_ydata(numpy.append(newRow[1],self.stage60K.get_ydata()))
+                    self.stage03K.set_xdata(numpy.append(newRow[0],self.stage03K.get_xdata()))
+                    self.stage03K.set_ydata(numpy.append(newRow[2],self.stage03K.get_ydata()))
+                    self.stageGGG.set_xdata(numpy.append(newRow[0],self.stageGGG.get_xdata()))
+                    self.stageGGG.set_ydata(numpy.append(newRow[3],self.stageGGG.get_ydata()))
+                    self.stageFAA.set_xdata(numpy.append(newRow[0],self.stageFAA.get_xdata()))
+                    self.stageFAA.set_ydata(numpy.append(newRow[4],self.stageFAA.get_ydata()))
+                else: first = True
+                n -= 1
         except IOError: print 'temp file not created yet?' # file not created yet if first time opened
         self.updatePlot()
         # clear and reload log
@@ -416,9 +427,9 @@ class ADRController(object):#Tkinter.Tk):
             else: color = 'gray70'
             self.instrumentStatuses[name].config(bg=color)
         # change compressor button
-        if state['get_state_var'] == True: 
+        if state['get_state_var'] == True:
             self.compressorButton.configure(text='Stop Compressor', command=self.stopCompressor, state=Tkinter.NORMAL)
-        elif state['get_state_var'] == False: 
+        elif state['get_state_var'] == False:
             self.compressorButton.configure(text='Start Compressor', command=self.startCompressor, state=Tkinter.NORMAL)
         else: self.compressorButton.configure(state=Tkinter.DISABLED)
         # update current, voltage fields
@@ -437,14 +448,20 @@ class ADRController(object):#Tkinter.Tk):
         self.currentI.set( psI )
         self.currentV.set( psV )
         # update plot:
+        # change time from utc to local
+        utc = state['time']
+        utc = newRow[0]
+        utc = datetime.datetime.strptime(utc, '%Y-%m-%dT%H:%M:%S.%f')
+        utc = utc.replace(tzinfo=tz.tzutc())
+        localTime = utc.astimezone(tz.tzlocal()) # local
         # change data to plot
-        self.stage60K.set_xdata(numpy.append(self.stage60K.get_xdata(),mpl.dates.date2num(state['time'])))
+        self.stage60K.set_xdata(numpy.append(self.stage60K.get_xdata(),mpl.dates.date2num(localTime)))
         self.stage60K.set_ydata(numpy.append(self.stage60K.get_ydata(),temps['T_60K']['K']))
-        self.stage03K.set_xdata(numpy.append(self.stage03K.get_xdata(),mpl.dates.date2num(state['time'])))
+        self.stage03K.set_xdata(numpy.append(self.stage03K.get_xdata(),mpl.dates.date2num(localTime)))
         self.stage03K.set_ydata(numpy.append(self.stage03K.get_ydata(),temps['T_3K']['K']))
-        self.stageGGG.set_xdata(numpy.append(self.stageGGG.get_xdata(),mpl.dates.date2num(state['time'])))
+        self.stageGGG.set_xdata(numpy.append(self.stageGGG.get_xdata(),mpl.dates.date2num(localTime)))
         self.stageGGG.set_ydata(numpy.append(self.stageGGG.get_ydata(),temps['T_GGG']['K']))
-        self.stageFAA.set_xdata(numpy.append(self.stageFAA.get_xdata(),mpl.dates.date2num(state['time'])))
+        self.stageFAA.set_xdata(numpy.append(self.stageFAA.get_xdata(),mpl.dates.date2num(localTime)))
         self.stageFAA.set_ydata(numpy.append(self.stageFAA.get_ydata(),temps['T_FAA']['K']))
         #update plot
         self.updatePlot()
@@ -480,7 +497,7 @@ class ADRController(object):#Tkinter.Tk):
                         try:
                             ymin = min(ymin, numpy.nanmin(ydata))
                             ymax = max(ymax, numpy.nanmax(ydata))
-                        except ValueError as e: pass 
+                        except ValueError as e: pass
                 self.ax.set_xlim(xMin,lastDatetime)
                 self.ax.set_ylim(ymin - (ymax-ymin)/10, ymax + (ymax-ymin)/10)
                 hfmt = mpl.dates.DateFormatter('%H:%M:%S')
@@ -512,7 +529,7 @@ class ADRController(object):#Tkinter.Tk):
     def magUpStopped(self):
         self.magUpButton.configure(text='Mag Up', command=self.magUp)
         self.regulateButton.configure(state=Tkinter.NORMAL)
-    def regulate(self): 
+    def regulate(self):
         T_target = float(self.regulationTemp.get())
         self.cxn[self.selectedADR].regulate(T_target)
     def changeRegTemp(self, *args):
@@ -530,14 +547,14 @@ class ADRController(object):#Tkinter.Tk):
         self.regulateButton.configure(text='Regulate', command=self.regulate)
         self.magUpButton.configure(state=Tkinter.NORMAL)
         self.regulating = False
-        
+
     def _quit(self):
         """ called when the window is closed."""
         self.parent.quit()     # stops mainloop
         self.parent.destroy()  # this is necessary on Windows to prevent
                                # Fatal Python Error: PyEval_RestoreThread: NULL tstate
         reactor.stop()
-        
+
 if __name__ == "__main__":
     mstr = Tkinter.Tk()
     tksupport.install(mstr)

@@ -49,31 +49,32 @@ from labrad.server import (LabradServer, setting,
 from labrad.devices import DeviceServer
 from labrad import util, units
 from labrad.types import Error as LRError
+from dataChest.dataChest import dataChest
 import sys
- 
+
 def deltaT(dT):
     """
-    .total_seconds() is only supported by >py27 :(, so we use this 
+    .total_seconds() is only supported by >py27 :(, so we use this
     to subtract two datetime objects.
     """
-    try: 
+    try:
         return dT.total_seconds()
-    except: 
+    except:
         return dT.days * 86400 + dT.seconds + dT.microseconds * pow(10,-6)
 
 
 class ADRServer(DeviceServer):
     """
-    Provide a way to control all the instruments that control 
+    Provide a way to control all the instruments that control
     our ADRs.
     """
     name = 'ADR Server'
     deviceName = 'ADR'
-    # We no longer use signals.  That way if this server is turned on 
-    # and off, named_messages still get to clients.  
+    # We no longer use signals.  That way if this server is turned on
+    # and off, named_messages still get to clients.
     # This is an example of a signal, however:
     # stateChanged = Signal(1001, 'signal:state_changed', 's')
-    
+
     def __init__(self, args):
         DeviceServer.__init__(self)
         self.ADRSettingsPath = ADR_SETTINGS_BASE_PATH
@@ -81,12 +82,12 @@ class ADRServer(DeviceServer):
         if '-a' in args:    # Use -a to specify ADR
             index = args.index('-a')
             args.pop(index)
-            # if we do not pop these off, twisted will complain because 
+            # if we do not pop these off, twisted will complain because
             # this is not an allowed argument
-            selection = str( args.pop(index) )   
+            selection = str( args.pop(index) )
             if selection in AVAILABLE_ADRS:
                 selectedADR = selection
-            else: 
+            else:
                 print '%s is not a valid ADR selection.' %selection
         self.ADRSettingsPath.append(selectedADR)
         self.name = selectedADR
@@ -97,11 +98,11 @@ class ADRServer(DeviceServer):
                         'T_GGG': numpy.NaN * units.K,
                         'T_3K' : numpy.NaN * units.K,
                         'T_60K': numpy.NaN * units.K,
-                        'datetime' : datetime.datetime.now(),
+                        'datetime' : datetime.datetime.utcnow(),
                         'cycle': 0,
                         'magnetV': numpy.NaN * units.V,
                         'RuOxChan':'FAA',
-                        'RuOxChanSetTime':datetime.datetime.now(),
+                        'RuOxChanSetTime':datetime.datetime.utcnow(),
                         'PSCurrent':numpy.NaN * units.A,
                         'PSVoltage':numpy.NaN * units.V,
                         'maggingUp':False,
@@ -109,6 +110,8 @@ class ADRServer(DeviceServer):
                         'regulationTemp':0.1,
                         'PID_cumulativeError':0}
         self.lastState = self.state.copy()
+        # these are defaults.  they can be overridden in the registry by
+        # including a setting with the same name.
         self.ADRSettings ={ 'PID_KP': 0.75,
                             'PID_KI': 0,
                             'PID_KD': 15,
@@ -136,15 +139,23 @@ class ADRServer(DeviceServer):
                             'Magnet Voltage Monitor':'None',
                             'Heat Switch':'None',
                             'Compressor':'None'}
-        dt = datetime.datetime.now()
+        dt = datetime.datetime.utcnow()
         self.dateAppend = dt.strftime("_%y%m%d_%H%M")
+        self.tempDataChest = dataChest(['ADR Logs',self.name])
+        self.tempDataChest.createDataset("temperatures",
+                        [('time',[1],'utc_datetime','')],
+                        [('temp60K',[1],'float64','Kelvin'),('temp03K',[1],'float64','Kelvin'),
+                         ('tempGGG',[1],'float64','Kelvin'),('tempFAA',[1],'float64','Kelvin')])
+        self.tempDataChest.addParameter("X Label", "Time")
+        self.tempDataChest.addParameter("Y Label", "Temperature")
+        self.tempDataChest.addParameter("Plot Title", dt.strftime("ADR temperature history for run starting on %y/%m/%d %H:%M"))
         self.logMessages = []
-        
+
     @inlineCallbacks
     def initServer(self):
         """
         This method loads default settings from the registry,
-        sets up instruments, and sets up listeners for GPIB device 
+        sets up instruments, and sets up listeners for GPIB device
         connect/disconnect messages.
         """
         yield DeviceServer.initServer(self)
@@ -152,7 +163,7 @@ class ADRServer(DeviceServer):
             yield self.client.registry.cd(self.ADRSettingsPath)
             self.file_path = yield self.client.registry.get('Log Path')
         except Exception as e:
-            self.logMessage('{Saving log failed. ' 
+            self.logMessage('{Saving log failed. '
                             ' Check that AFS is working.} ')
         yield self.loadDefaults()
         yield util.wakeupCall( 3 ) # on the round ADR, the HP DMM takes forever to initialize.  This prevents it from going on before it is ready.
@@ -183,9 +194,9 @@ class ADRServer(DeviceServer):
     @inlineCallbacks
     def initializeInstruments(self):
         """
-        This method creates the instances of all the instruments and 
-        saves them in self.instruments. It then sends 
-        set_adr_settings_path and select_device.  If these both go 
+        This method creates the instances of all the instruments and
+        saves them in self.instruments. It then sends
+        set_adr_settings_path and select_device.  If these both go
         through (or are not valid methods, instr.connect is set to True.
         The power supply is also initialized.
         """
@@ -198,21 +209,21 @@ class ADRServer(DeviceServer):
                 self.instruments[instrName] = instr
                 if lastInstr != self.instruments[instrName]:
                     self.logMessage('Server running for '+instrName+'.')
-            except KeyError: 
+            except KeyError:
                 self.instruments[instrName] = None
                 if lastInstr != self.instruments[instrName]:
                     message = 'Server not found for '+instrName+'.'
                     self.logMessage(message, alert=True)
                 continue
-                
+
             # set adr settings path (if the server has that method)
             try: yield instr.set_adr_settings_path(self.ADRSettingsPath)
             except AttributeError: pass # not all instruments have the set_adr_settings_path setting
-            
+
             # select the device using the address in the registry under the instrument name
             if hasattr(instr,'connected'): lastStatus = instr.connected
             else: lastStatus = False
-            try: 
+            try:
                 yield instr.select_device( settings[1] )
                 instr.connected = True
                 if lastStatus != instr.connected:
@@ -227,24 +238,24 @@ class ADRServer(DeviceServer):
                 instr.connected = False
                 if message and ((lastStatus != instr.connected) or (lastInstr != self.instruments[instrName])): self.logMessage(message, alert=True)
                 continue
-            except Exception as e: 
+            except Exception as e:
                 instr.connected = False
                 self.logMessage('Could not connect to device for '+instrName+': '+str(e), alert=True)
-        
+
         # initialize power supply
         if hasattr(self.instruments['Power Supply'],'connected') and self.instruments['Power Supply'].connected == True:
-            try: 
+            try:
                 yield self.instruments['Power Supply'].initialize_ps()
                 self.logMessage('Power Supply Initialized.')
             except Exception as e:
                 self.logMessage( 'Power Supply could not be initialized.', alert=True)
-        
+
         # if ruox therms are being read through multiplexer, set the channels
         try:
             self.instruments['Ruox Temperature Monitor'].add_channel(self.ADRSettings['FAA MP Chan'])
             self.instruments['Ruox Temperature Monitor'].add_channel(self.ADRSettings['GGG MP Chan'])
         except AttributeError: pass # may not have add_channel methods
-        
+
     @inlineCallbacks
     def _refreshInstruments(self):
         """We can manually have all gpib buses refresh the list of devices connected to them."""
@@ -261,7 +272,7 @@ class ADRServer(DeviceServer):
         self.initializeInstruments()
     def logMessage(self, message, alert=False):
         """Applies a time stamp to the message and saves it to a file and an array."""
-        dt = datetime.datetime.now()
+        dt = datetime.datetime.utcnow()
         messageWithTimeStamp = dt.strftime("[%m/%d/%y %H:%M:%S] ") + message
         self.logMessages.append( (messageWithTimeStamp,alert) )
         try:
@@ -272,14 +283,14 @@ class ADRServer(DeviceServer):
         self.client.manager.send_named_message('Log Changed', (messageWithTimeStamp,alert))
     @inlineCallbacks
     def updateState(self):
-        """ This takes care of the real time reading of the instruments. 
+        """ This takes care of the real time reading of the instruments.
            It starts immediately upon starting the program, and never stops. """
         nan = numpy.nan
         while self.alive:
-            cycleStartTime = datetime.datetime.now()
+            cycleStartTime = datetime.datetime.utcnow()
             self.lastState = self.state.copy()
             # datetime, cycle
-            self.state['datetime'] = datetime.datetime.now()
+            self.state['datetime'] = datetime.datetime.utcnow()
             self.state['cycle'] += 1
             # compressor
             self.state['CompressorStatus'] = None
@@ -289,7 +300,7 @@ class ADRServer(DeviceServer):
             # diode temps
             try:
                 self.state['T_60K'],self.state['T_3K'] = yield self.instruments['Diode Temperature Monitor'].get_diode_temperatures()
-            except Exception as e: 
+            except Exception as e:
                 self.state['T_60K'],self.state['T_3K'] = nan*units.K, nan*units.K
                 try: self.instruments['Diode Temperature Monitor'].connected = False
                 except AttributeError: pass # in case instrument didn't initialize properly and is None
@@ -307,7 +318,7 @@ class ADRServer(DeviceServer):
             if self.state['T_FAA']['K'] == 45.0: self.state['T_FAA'] = nan*units.K
             # voltage across magnet
             try: self.state['magnetV'] = yield self.instruments['Magnet Voltage Monitor'].get_magnet_voltage()
-            except Exception as e: 
+            except Exception as e:
                 self.state['magnetV'] = nan*units.V
                 try: self.instruments['Magnet Voltage Monitor'].connected = False
                 except AttributeError: pass # in case instrument didn't initialize properly and is None
@@ -322,13 +333,11 @@ class ADRServer(DeviceServer):
                 except AttributeError: pass # in case instrument didn't initialize properly and is None
             # update relevant files
             try:
-                with open(self.file_path+'\\temperatures'+self.dateAppend+'.temps','ab') as f:
-                    newTemps = [self.state[t]['K'] for t in ['T_60K','T_3K','T_GGG','T_FAA']]
-                    f.write( struct.pack('d', mpl.dates.date2num(self.state['datetime'])) )
-                    [f.write(struct.pack('d', temp)) for temp in newTemps]
-                    #f.write(str(self.state['datetime']) + '\t' + '\t'.join(map(str,newTemps)))
+                newTemps = [self.state[t]['K'] for t in ['T_60K','T_3K','T_GGG','T_FAA']]
+                timestamp = deltaT(self.state['datetime'] - datetime(1970, 1, 1))
+                self.tempDataChest.addData([[timestamp]+newTemps])
             except Exception as e: self.logMessage('Recording Temps Failed: '+str(e))
-            cycleLength = deltaT(datetime.datetime.now() - cycleStartTime)
+            cycleLength = deltaT(datetime.datetime.utcnow() - cycleStartTime)
             self.client.manager.send_named_message('State Changed', 'state changed')
             #self.stateChanged('state changed')
             yield util.wakeupCall( max(0,self.ADRSettings['step_length']-cycleLength) )
@@ -364,7 +373,7 @@ class ADRServer(DeviceServer):
         self.logMessage('Beginning to mag up to '+str(self.ADRSettings['current_limit'])+'.')
         self.state['maggingUp'] = True
         while self.state['maggingUp']:
-            startTime = datetime.datetime.now()
+            startTime = datetime.datetime.utcnow()
             dI = self.state['PSCurrent'] - self.lastState['PSCurrent']
             dt = deltaT( self.state['datetime'] - self.lastState['datetime'] )
             if dt == 0: dt = 0.0000000001 #to prevent divide by zero error
@@ -378,7 +387,7 @@ class ADRServer(DeviceServer):
                     else: self.instruments['Power Supply'].voltage(self.ADRSettings['voltage_limit']*units.V)
                     #newCurrent = self.instruments['Power Supply'].current() + 0.005
                     #self.instruments['Power Supply'].current(newCurrent)
-                cycleLength = deltaT(datetime.datetime.now() - startTime)
+                cycleLength = deltaT(datetime.datetime.utcnow() - startTime)
                 yield util.wakeupCall( max(0,self.ADRSettings['step_length']-cycleLength) )
             else:
                 self.logMessage( 'Finished magging up. '+str(self.state['PSCurrent'])+' reached.' )
@@ -391,7 +400,7 @@ class ADRServer(DeviceServer):
         #self.regulationStopped('cancel')
         self.client.manager.send_named_message('Regulation Stopped', 'cancel')
     @inlineCallbacks
-    def _regulate(self,temp): 
+    def _regulate(self,temp):
         """ This function starts a PID loop to control the temperature.  The basics of it is that a new voltage V+dV is
         proposed.  dV is then limited as necessary, and the new voltage is set. As with magging up, regulate runs a cycle
         at approximately once per second. """
@@ -413,9 +422,9 @@ class ADRServer(DeviceServer):
         print 'beginning regulation'
         print 'V\tbackEMF\tdV/dT\tdV'
         while self.state['regulating']:
-            startTime = datetime.datetime.now()
+            startTime = datetime.datetime.utcnow()
             dI = self.state['PSCurrent'] - self.lastState['PSCurrent']
-            if numpy.isnan(self.state['T_FAA']['K']): 
+            if numpy.isnan(self.state['T_FAA']['K']):
                 self.logMessage( 'FAA temperature is not valid. Regulation cannot continue.' )
                 self._cancelRegulate()
             # print str(self.state['PSVoltage'])+'\t'+str(self.state['magnetV'])+'\t',
@@ -465,14 +474,14 @@ class ADRServer(DeviceServer):
                 runCycleAgain = True
             # print str(dV)
             self.instruments['Power Supply'].voltage(self.state['PSVoltage'] + dV)
-            cycleTime = deltaT(datetime.datetime.now() - startTime)
+            cycleTime = deltaT(datetime.datetime.utcnow() - startTime)
             if runCycleAgain: yield util.wakeupCall( max(0,self.ADRSettings['step_length']-cycleTime) )
             else:
                 self.logMessage( 'Regulation has completed. Mag up and try again.' )
                 self.state['regulating'] = False
                 #self.regulationStopped('done') #signal
                 self.client.manager.send_named_message('Regulation Stopped', 'done')
-    
+
     @setting(101, 'Get Settings Path', returns=['*s'])
     def getSettingsPath(self,c):
         return self.ADRSettingsPath
@@ -520,13 +529,13 @@ class ADRServer(DeviceServer):
         return self.state['cycle']
     @setting(114, 'time', returns=['t'])
     def time(self,c):
-        """Returns the time at which the last measurement cycle was run."""
+        """Returns the (UTC) time at which the last measurement cycle was run."""
         return self.state['datetime']
     @setting(115, 'Temperatures', returns=['*v'])
     def temperatures(self,c):
         """Returns the measured temperatures in an array: [60K,3K,GGG,FAA]"""
         return [self.state[t] for t in ('T_60K','T_3K','T_GGG','T_FAA')]
-    
+
     @setting(120, 'Regulate', temp=['v'])
     def regulate(self,c, temp=0.1):
         """Starts the PID Temperature control loop."""
@@ -584,7 +593,7 @@ class ADRServer(DeviceServer):
             self.logMessage('Compressor Stopped.')
         except Exception as e:
             self.logMessage('Stopping Compressor failed.',alert=True)
-    
+
     @setting(130, 'Set PID KP',k=['v'])
     def setPIDKP(self,c,k):
         """Set PID Proportional Constant."""
