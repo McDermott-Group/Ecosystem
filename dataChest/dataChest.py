@@ -47,10 +47,11 @@ VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32',
 
 class dataChest(dateStamp):
 
-  def __init__(self, path):
+  def __init__(self, path, setWorkingDirectoryToRoot = False):
     self.cwdPath = os.environ["DATA_CHEST_ROOT"]
     os.chdir(self.cwdPath) #this needs to exists
-    self._initializeRoot(path)
+    if not setWorkingDirectoryToRoot:
+      self._initializeRoot(path)
     self.root = self.cwdPath
     self.dateStamp = dateStamp()
     self.currentHDF5Filename = None

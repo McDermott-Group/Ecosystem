@@ -7,18 +7,19 @@ from matplotlib.backends.backend_qt4agg import (
 import matplotlib.cm as cm
 from dataChest import *
 from functools import partial
+import os
 
 class Main(QtGui.QWidget):
     
     def __init__(self, parent = None):
         super(Main, self).__init__(parent)
-        self.root = 'C:/DataChest' #'Z:/mcdermott-group/DataChest'
-        self.pathRoot=QtCore.QString('C:\DataChest') #self.pathRoot=QtCore.QString('Z:\mcdermott-group\DataChest')
+        self.root = os.environ["DATA_CHEST_ROOT"] #'Z:/mcdermott-group/DataChest'
+        self.pathRoot=QtCore.QString(self.root) #self.pathRoot=QtCore.QString('Z:\mcdermott-group\DataChest')
 
         self.filters =QtCore.QStringList()
         self.filters.append("*.hdf5")
 
-        self.dataChest = dataChest()
+        self.dataChest = dataChest(None, True)
 
         self.setWindowTitle('Data Chest Image Browser')
         self.setWindowIcon(QtGui.QIcon('rabi.jpg')) #add in rabi plot
