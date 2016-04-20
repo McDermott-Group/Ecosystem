@@ -2,7 +2,7 @@ from dataChest import *
 import numpy as np
 import time
 from datetime import datetime
-d = dataChest()
+d = dataChest("SomeFolder")
 
 utcdatestamp = datetime.utcnow().isoformat()
 
@@ -32,7 +32,7 @@ print "\tTotal Read Time =", tf-t0
 #1D Arbitrary Data (Option 2 Style)
 #Sinusoid
 print "1D Arbitrary Data (Option 2 Style):"
-res = 1e-7
+res = 1e-5
 timeAxis = np.arange(0.0, 1.0, res)
 print "\tNumber of Points =", 1.0/res
 d.createDataset("DampedOscillations", [("time", [len(timeAxis)], "float64", "Seconds")],
@@ -54,7 +54,7 @@ print "\tTotal Read Time =", tf-t0
 
 #1D Linear Scan (Log Scan is same exact thing, just interpretted differently by grapher)
 print "1D Linear Scan Data (Log Scan Redundant):"
-length =1e7
+length =1e6
 print "\tNumber of Points =", length
 mu, sigma = 1, 0.1
 gaussian = mu + sigma*np.random.randn(length)
@@ -114,7 +114,7 @@ print "\tTotal Read Time =", tf-t0
 
 ##Arbitrary 2D datasets 
 print "2D Arbitrary Data (Option 2):"
-length = 1e7
+length = 1e5
 x = np.random.rand(length)
 y = np.random.rand(length)
 z = np.sin(x)+np.cos(y)
@@ -137,7 +137,7 @@ print "\tTotal Read Time =", tf-t0
 
 #2D Scan Data
 print "2D Scan Data (Option 1):"
-xyGridRes = 1e-7
+xyGridRes = 1e-5
 print "\tNumber of Points =", 1/xyGridRes
 t1 = np.arange(-0.5, 0.5, step=xyGridRes)
 t2 = np.arange(-0.5, 0.5, step=xyGridRes)

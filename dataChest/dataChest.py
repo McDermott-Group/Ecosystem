@@ -128,8 +128,6 @@ class dataChest(dateStamp):
                            "Directory name provided: "+
                            str(directoryToMove)))
       if hasattr(self, 'root') and self.root not in self.cwdPath:
-        print "self.cwdPath=",self.cwdPath
-        print "self.root=", self.root
         os.chdir(self.root)
         self.cwdPath = os.getcwd().replace("\\", "/")
         raise IOError("cd() cannot be used to take the user out of root.")
@@ -385,12 +383,15 @@ class dataChest(dateStamp):
       raise Warning(("No file is currently selected. Create a file\r\n\t"+
              "using createDataset() before using addParameter()."))
       
-  def getParameter(self, parameterName):
+  def getParameter(self, parameterName, byIOError=False):
     if self.currentHDF5Filename is not None:
       if parameterName in self.currentFile["parameters"].attrs.keys():
         return self.currentFile["parameters"].attrs[parameterName]
       else:
-        raise ValueError("Parameter name not found.")
+        if not byIOError:
+          raise IOError("Parameter name not found.")
+        else:
+          return None
     else:
       raise Warning(("No file is currently selected. Please select a\r\n\t"+
              "file using either openDataset() to open an\r\n\t"+
