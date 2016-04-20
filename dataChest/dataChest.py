@@ -192,6 +192,8 @@ class dataChest(dateStamp):
                     "by design. You must make a new\r\n\t"+
                     "dataset if you wish to addData() to one."))
     elif self.currentHDF5Filename is not None:
+      if self.dataCategory == "Arbitrary Type 1":
+        data = np.asarray(data)
       if self._isDataValid(data):
         numIndeps = len(self.varDict["independents"]["names"])
         numDeps = len(self.varDict["dependents"]["names"])
@@ -199,10 +201,9 @@ class dataChest(dateStamp):
         indepShapes = self.varDict["independents"]["shapes"]
         depShapes = self.varDict["dependents"]["shapes"]
         if self.dataCategory == "Arbitrary Type 1":
-          varData = np.asarray(data)
+          varData = np.asarray(data).T
           for colNum in range(0, numIndeps+numDeps):
-            column = [data[ii][colNum] for ii in range(0, len(data))]
-            column = np.asarray(column)
+            column = varData[colNum]
             if colNum<numIndeps:
               varGrp = "independents"
               varName = self.varDict[varGrp]["names"][colNum]
@@ -215,13 +216,12 @@ class dataChest(dateStamp):
               varGrp = "dependents"
               varName = self.varDict[varGrp]["names"][colNum-numIndeps]
               flatLen = len(column)
-              dat = varData[:,colNum]
               self._addToDataset(self.currentFile[varGrp][varName],
                                  column,
                                  flatLen,
                                  self.numDepWrites)
-          self.numIndepWrites = self.numIndepWrites+len(dat)
-          self.numDepWrites = self.numDepWrites+len(dat)
+          self.numIndepWrites = self.numIndepWrites+flatLen
+          self.numDepWrites = self.numDepWrites+flatLen
         else:
           for rowIndex in range(0, numRows):
             for colNum in range(0, len(data[rowIndex])):
@@ -319,24 +319,30 @@ class dataChest(dateStamp):
           totalLen = varGrp[variables].shape[0]
           numChunks = totalLen/chunkSize
           dataDict[variables]=[]
-          for ii in range(0, numChunks):
-            chunk =  np.asarray(dataset[ii*chunkSize:(ii+1)*chunkSize])
-            if len(originalShape)>1 or originalShape!=[1]:
+          if len(originalShape)>1 or originalShape!=[1]:           
+            for ii in range(0, numChunks):
+              chunk =  np.asarray(dataset[ii*chunkSize:(ii+1)*chunkSize])
               chunk = np.reshape(chunk, tuple(originalShape))
               dataDict[variables].append(chunk.tolist())
-            else:
-              dataDict[variables].append(chunk[0])
+          else:
+            dataDict[variables] = dataset
       #load parameters here perhaps
       data = []
       allVars = (self.varDict["independents"]["names"] +
                  self.varDict["dependents"]["names"])
-      
-      for ii in range(startIndex,stopIndex):
-        row = []
-        for jj in range(0,len(allVars)):
-          row.append(dataDict[allVars[jj]][ii])
-        data.append(row)
-      return data
+      if self.getDataCategory() == "Arbitrary Type 1":
+        for ii in range(0, len(allVars)):
+          data.append(dataDict[allVars[ii]])
+        data = np.asarray(data)
+        data = data.T
+        return data[startIndex:stopIndex]
+      else:
+        for ii in range(startIndex,stopIndex):
+          row = []
+          for jj in range(0,len(allVars)):
+            row.append(dataDict[allVars[jj]][ii])
+          data.append(row)
+        return data
     else:
       raise Warning(("No file is currently open. Please select a\r\n\t"+
                     "file using either openDataset() to open an\r\n\t"+
@@ -392,6 +398,14 @@ class dataChest(dateStamp):
           raise IOError("Parameter name not found.")
         else:
           return None
+    else:
+      raise Warning(("No file is currently selected. Please select a\r\n\t"+
+             "file using either openDataset() to open an\r\n\t"+
+             "existing set or with createDataset()."))
+
+  def getDataCategory(self):
+    if self.currentHDF5Filename is not None:
+        return self.currentFile.attrs["Data Category"]
     else:
       raise Warning(("No file is currently selected. Please select a\r\n\t"+
              "file using either openDataset() to open an\r\n\t"+
@@ -453,10 +467,14 @@ class dataChest(dateStamp):
           dataType = varDict["types"][ii]
         fillVal = None
         dShape = tuple(self._flatShape(varDict["shapes"][ii]))
+        if dShape == (1,):
+          chunkShape = (100000,)
+        else:
+          chunkShape = dShape
         dset = group.create_dataset(varDict["names"][ii],
                                     dShape,
                                     dtype=dataType,
-                                    chunks=dShape,
+                                    chunks=chunkShape,
                                     maxshape=(None,),
                                     fillvalue=fillVal)
   
@@ -640,6 +658,7 @@ class dataChest(dateStamp):
     return varTypes
 
   def _addToDataset(self, dset, data, chunkSize, numWrites):
+
     if numWrites == 0:
       data = np.reshape(data, (chunkSize,))
       if dset.shape[0] == 1 and chunkSize !=1: #arbitrary type 1 hack
@@ -651,7 +670,7 @@ class dataChest(dateStamp):
       dset[-chunkSize:] = data
 
   def _isDataValid(self, data):
-    if isinstance(data, list): # checks that its a list
+    if isinstance(data, (list, np.ndarray)): # checks that its a list
       numRows = len(data)
       if numRows>0: # if length nonzero proceed to check tuples
         if self.dataCategory == "Arbitrary Type 1":
@@ -880,8 +899,9 @@ class dataChest(dateStamp):
     indepTypes = varDict["independents"]["types"]
     depTypes = varDict["dependents"]["types"]
     types = indepTypes + depTypes
-    
-    dataShape = np.asarray(data).shape
+
+    dataShape = data.shape
+
     totalNumVars = len(indepShapes+depShapes)
     if len(dataShape) != 2:
       self.exception = ValueError("Arbitrary Type 1 Data has rows\r\n\t"+
@@ -899,10 +919,9 @@ class dataChest(dateStamp):
                                   "where each column entry is a\r\n\t"+
                                   "scalar. Each row should have M+N columns\r\n\t")
       return False
-
+    transposedData = data.T
     for colIndex in range(0, totalNumVars):
-        column = [data[ii][colIndex] for ii in range(0, len(data))]
-        column = np.asarray(column)
+        column = transposedData[colIndex]
         columnShape = column.shape
         dtype = column.dtype.name
         if len(columnShape)!=1:
