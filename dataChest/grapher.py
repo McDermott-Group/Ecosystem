@@ -42,7 +42,10 @@ class Main(QtGui.QWidget):
         self.directoryTree = QtGui.QTreeView(self)
         self.directoryTree.setModel(self.model)
         self.directoryTree.setRootIndex(self.indexRoot)
+        self.directoryTree.header().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        self.directoryTree.header().setStretchLastSection(False)
         self.directoryTree.clicked.connect(self.dirTreeSelectionMade)
+
         
         #plot types drop down list configuration
         self.plotTypesComboBoxLabel = QtGui.QLabel(self)
@@ -56,21 +59,17 @@ class Main(QtGui.QWidget):
         self.scrollLayout = QtGui.QHBoxLayout(self)
         self.scrollWidget.setLayout(self.scrollLayout)
         self.scrollArea = QtGui.QScrollArea(self)
-        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn) #QtCore.Qt.ScrollBarAsNeeded
-        self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.scrollArea.setWidget(self.scrollWidget)
         self.scrollArea.setWidgetResizable(True) #what happens without???
-        #self.scrollArea.setEnabled(True) #what happens without???
-
-        
+       
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.directoryBrowserLabel)
         vbox.addWidget(self.directoryTree)
         vbox.addWidget(self.plotTypesComboBoxLabel)
         vbox.addWidget(self.plotTypesComboBox)
         vbox.addWidget(self.scrollArea)
-
-        #self.setLayout(vbox)
 
         self.mplwindow =QtGui.QWidget(self)
         self.mplvl = QtGui.QVBoxLayout(self.mplwindow)
@@ -139,7 +138,7 @@ class Main(QtGui.QWidget):
         if state == QtCore.Qt.Checked:
             self.varsToIgnore.remove(name)
             self.removeFigFromCanvas() #removes old figure, needs garbage collection too
-            self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, selectedPlotType=self.plotType, varsToIgnore =self.varsToIgnore) #figFromFileInfo(self, filePath, fileName, selectedPlotType = None, varsToIgnore =[]):
+            self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, selectedPlotType=self.plotType, varsToIgnore =self.varsToIgnore) 
             self.addFigureToCanvas(self.currentFig)
         else: #unchecked
             if name not in self.varsToIgnore:
@@ -149,11 +148,11 @@ class Main(QtGui.QWidget):
             self.addFigureToCanvas(self.currentFig)
 
     def convertPathToArray(self, windowsPath): #make this compatible with macs
-        if 'C:/DataChest/' in windowsPath:
-            windowsPath = windowsPath.replace('C:/DataChest/', '')
-        elif 'C:/DataChest' in windowsPath:
-            windowsPath = windowsPath.replace('C:/DataChest', '')
-        windowsPath = windowsPath.replace('.dir', '')
+
+        if self.root+"/" in windowsPath:
+            windowsPath = windowsPath.replace(self.root+"/", '')
+        elif self.root in windowsPath:
+            windowsPath = windowsPath.replace(self.root, '')
         return windowsPath.split('/')
         
     def addFigureToCanvas(self, fig): #adds mpl fig to the canvas
@@ -450,8 +449,7 @@ class Main(QtGui.QWidget):
 
             npx = npx.reshape(xGridRes, yGridRes)
             npy = npy.reshape(xGridRes, yGridRes)
-            npz = npz.reshape(xGridRes, yGridRes)
-        #print "npx=", npx    
+            npz = npz.reshape(xGridRes, yGridRes)   
         return (npx,npy,npz)        
 
         

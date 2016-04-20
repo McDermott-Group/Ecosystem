@@ -2,7 +2,7 @@ from dataChest import *
 import numpy as np
 import time
 from datetime import datetime
-d = dataChest("SomeFolder")
+d = dataChest(["SomeFolder", "Some Sub Folder"])
 
 utcdatestamp = datetime.utcnow().isoformat()
 
