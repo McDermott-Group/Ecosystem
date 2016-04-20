@@ -5,25 +5,27 @@ from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
 import matplotlib.cm as cm
+import matplotlib as mpl
 from dataChest import *
 from functools import partial
 import os
+mpl.rcParams['agg.path.chunksize'] = 10000
+
 
 class Main(QtGui.QWidget):
     
     def __init__(self, parent = None):
         super(Main, self).__init__(parent)
+        self.setWindowTitle('Data Chest Image Browser')
+        self.setWindowIcon(QtGui.QIcon('rabi.jpg')) #add in rabi plot
+        
         self.root = os.environ["DATA_CHEST_ROOT"] #'Z:/mcdermott-group/DataChest'
-        self.pathRoot=QtCore.QString(self.root) #self.pathRoot=QtCore.QString('Z:\mcdermott-group\DataChest')
+        self.pathRoot=QtCore.QString(self.root)
 
         self.filters =QtCore.QStringList()
         self.filters.append("*.hdf5")
 
         self.dataChest = dataChest(None, True)
-
-        self.setWindowTitle('Data Chest Image Browser')
-        self.setWindowIcon(QtGui.QIcon('rabi.jpg')) #add in rabi plot
-
 
         #directory browser configuration
         self.model = QtGui.QFileSystemModel(self)
@@ -40,7 +42,10 @@ class Main(QtGui.QWidget):
         self.directoryTree = QtGui.QTreeView(self)
         self.directoryTree.setModel(self.model)
         self.directoryTree.setRootIndex(self.indexRoot)
+        self.directoryTree.header().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        self.directoryTree.header().setStretchLastSection(False)
         self.directoryTree.clicked.connect(self.dirTreeSelectionMade)
+
         
         #plot types drop down list configuration
         self.plotTypesComboBoxLabel = QtGui.QLabel(self)
@@ -54,21 +59,17 @@ class Main(QtGui.QWidget):
         self.scrollLayout = QtGui.QHBoxLayout(self)
         self.scrollWidget.setLayout(self.scrollLayout)
         self.scrollArea = QtGui.QScrollArea(self)
-        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn) #QtCore.Qt.ScrollBarAsNeeded
-        self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.scrollArea.setWidget(self.scrollWidget)
         self.scrollArea.setWidgetResizable(True) #what happens without???
-        #self.scrollArea.setEnabled(True) #what happens without???
-
-        
+       
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.directoryBrowserLabel)
         vbox.addWidget(self.directoryTree)
         vbox.addWidget(self.plotTypesComboBoxLabel)
         vbox.addWidget(self.plotTypesComboBox)
         vbox.addWidget(self.scrollArea)
-
-        #self.setLayout(vbox)
 
         self.mplwindow =QtGui.QWidget(self)
         self.mplvl = QtGui.QVBoxLayout(self.mplwindow)
@@ -86,7 +87,7 @@ class Main(QtGui.QWidget):
         self.plotType = None
         self.varsToIgnore = []
 
-    def plotTypeSelected(self, plotType):
+    def plotTypeSelected(self, plotType): #called when a plotType selection is made from drop down
         #self.plotTypesComboBox.adjustSize()
         if plotType != self.plotType:
             self.removeFigFromCanvas()
@@ -95,10 +96,8 @@ class Main(QtGui.QWidget):
             self.updatePlotTypeOptions(plotType)
             self.plotType = plotType
             self.varsToIgnore = [] ##when is best time to do this??
-        else:
-            print "Nothing new"
 
-    def updatePlotTypeOptions(self, plotType):
+    def updatePlotTypeOptions(self, plotType): #updates area below plotType  selection drop down (add/remove variables)
         
         self.clearLayout(self.scrollLayout)
         if plotType == "1D" or "Histogram":
@@ -124,7 +123,7 @@ class Main(QtGui.QWidget):
                 self.scrollLayout.addLayout(optionsSlice)
             self.scrollLayout.addStretch(1)
             
-    def clearLayout(self, layout):
+    def clearLayout(self, layout):#clears the plotType options layout and all widgets therein
         for i in reversed(range(layout.count())):
             item = layout.itemAt(i)
             
@@ -135,11 +134,11 @@ class Main(QtGui.QWidget):
             # remove the item from layout
             layout.removeItem(item) 
             
-    def varStateChanged(self, name, state): #when status check box is selected this is called
+    def varStateChanged(self, name, state): #adds/removes variables from current displayed plot
         if state == QtCore.Qt.Checked:
             self.varsToIgnore.remove(name)
             self.removeFigFromCanvas() #removes old figure, needs garbage collection too
-            self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, selectedPlotType=self.plotType, varsToIgnore =self.varsToIgnore) #figFromFileInfo(self, filePath, fileName, selectedPlotType = None, varsToIgnore =[]):
+            self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, selectedPlotType=self.plotType, varsToIgnore =self.varsToIgnore) 
             self.addFigureToCanvas(self.currentFig)
         else: #unchecked
             if name not in self.varsToIgnore:
@@ -148,15 +147,15 @@ class Main(QtGui.QWidget):
             self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, selectedPlotType=self.plotType, varsToIgnore =self.varsToIgnore)
             self.addFigureToCanvas(self.currentFig)
 
-    def convertWindowsPathToDvPathArray(self, windowsPath): #lets see what happens on a mac ???
-        if 'C:/DataChest/' in windowsPath:
-            windowsPath = windowsPath.replace('C:/DataChest/', '')
-        elif 'C:/DataChest' in windowsPath:
-            windowsPath = windowsPath.replace('C:/DataChest', '')
-        windowsPath = windowsPath.replace('.dir', '')
+    def convertPathToArray(self, windowsPath): #make this compatible with macs
+
+        if self.root+"/" in windowsPath:
+            windowsPath = windowsPath.replace(self.root+"/", '')
+        elif self.root in windowsPath:
+            windowsPath = windowsPath.replace(self.root, '')
         return windowsPath.split('/')
         
-    def addFigureToCanvas(self, fig):
+    def addFigureToCanvas(self, fig): #adds mpl fig to the canvas
 
         self.canvas = FigureCanvas(fig)
         self.mplvl.addWidget(self.canvas)
@@ -165,7 +164,7 @@ class Main(QtGui.QWidget):
                 self.mplwindow, coordinates=True)
         self.mplvl.addWidget(self.toolbar)
 
-    def removeFigFromCanvas(self):
+    def removeFigFromCanvas(self): #removes fig from the canvas
 
         self.mplvl.removeWidget(self.canvas)
         self.canvas.close()
@@ -173,9 +172,8 @@ class Main(QtGui.QWidget):
         self.toolbar.close()
         self.currentFig.clf()
         
-    @QtCore.pyqtSlot(QtCore.QModelIndex)
-    def dirTreeSelectionMade(self, index): #logical flow could be improved
-
+    @QtCore.pyqtSlot(QtCore.QModelIndex) #logical flow could be improved
+    def dirTreeSelectionMade(self, index): #called when a directory tree selection is made
         indexItem = self.model.index(index.row(), 0, index.parent())
         fileName = str(self.model.fileName(indexItem))
         filePath = str(self.model.filePath(indexItem))
@@ -200,13 +198,13 @@ class Main(QtGui.QWidget):
             else:
                 self.fileName = None
                            
-    def updatePlotTypesList(self, plotTypes):
+    def updatePlotTypesList(self, plotTypes): #updates plotTypes list based on selected dataset
         self.plotTypesComboBox.clear()
         for element in plotTypes:
             if ".dir" not in str(element) and ".ini" not in str(element):
                 self.plotTypesComboBox.addItem(str(element))
    
-    def categorizeDataset(self, variables):
+    def categorizeDataset(self, variables): #categorizes dataset, this is now redundant
         indepVarsList = variables[0]
         numIndepVars = len(indepVarsList)
         if numIndepVars == 1:
@@ -216,7 +214,7 @@ class Main(QtGui.QWidget):
         else:
             return (str(numIndepVars)+"D")
 
-    def supportedPlotTypes(self, dimensionality):
+    def supportedPlotTypes(self, dimensionality): #provides list of plotTypes based on datasetType
         if dimensionality == "1D":
             plotTypes = ["1D", "Histogram"]
         elif dimensionality == "2D":
@@ -259,19 +257,19 @@ class Main(QtGui.QWidget):
         indepVars = variables[0]
         depVars = variables[1]
         dataset = np.asarray(dataset)
-        xlabel = self.dataChest.getParameter("X Label")
+        xlabel = self.dataChest.getParameter("X Label", True)
         if xlabel is None:
             xlabel = indepVars[0][0]
-        ylabel = self.dataChest.getParameter("Y Label") 
+        ylabel = self.dataChest.getParameter("Y Label", True) 
         if ylabel is None: #for data with more than one dep, recommend ylabel
             ylabel = depVars[0][0]
-        plotTitle = self.dataChest.getParameter("Plot Title")
+        plotTitle = self.dataChest.getParameter("Plot Title", True)
         if plotTitle is None:
             plotTitle = self.dataChest.getDatasetName()
         ax.set_title(plotTitle)
         ax.set_xlabel(xlabel+" "+"("+indepVars[0][3]+")")
         ax.set_ylabel(ylabel+" "+"("+depVars[0][3]+")") #for multiple deps with different units this is ambiguous
-        imageType = self.dataChest.getParameter("Image Type")
+        imageType = self.dataChest.getParameter("Image Type", True)
         if imageType is None: #add or "scatter"
             imageType ="Scatter"
             print "Scatter"
@@ -282,10 +280,10 @@ class Main(QtGui.QWidget):
                 im = ax.tricontourf(x,y,z, 100, cmap=cm.gist_rainbow, antialiased=True)
                 fig.colorbar(im, fraction = 0.15)
         elif imageType == "Pixel":
-            xGridRes = self.dataChest.getParameter("X Resolution")
-            xIncrement = self.dataChest.getParameter("X Increment")
-            yGridRes = self.dataChest.getParameter("Y Resolution")
-            yIncrement = self.dataChest.getParameter("Y Increment")
+            xGridRes = self.dataChest.getParameter("X Resolution", True)
+            xIncrement = self.dataChest.getParameter("X Increment", True)
+            yGridRes = self.dataChest.getParameter("Y Resolution", True)
+            yIncrement = self.dataChest.getParameter("Y Increment", True)
             x = dataset[::,0].flatten()
             y = dataset[::,1].flatten()
             z = dataset[::,2].flatten()
@@ -313,14 +311,14 @@ class Main(QtGui.QWidget):
         ax = fig.add_subplot(111)
         indepVars = variables[0]
         depVars = variables[1]
-        scanType = self.dataChest.getParameter("X Scan Type")
-        xlabel = self.dataChest.getParameter("X Label")
+        scanType = self.dataChest.getParameter("Scan Type", True)
+        xlabel = self.dataChest.getParameter("X Label", True)
         if xlabel is None:
             xlabel = indepVars[0][0]
-        ylabel = self.dataChest.getParameter("Y Label") 
+        ylabel = self.dataChest.getParameter("Y Label", True) 
         if ylabel is None: #for data with more than one dep, recommend ylabel
             ylabel = depVars[0][0]
-        plotTitle = self.dataChest.getParameter("Plot Title")
+        plotTitle = self.dataChest.getParameter("Plot Title", True)
         if plotTitle is None:
             plotTitle = self.dataChest.getDatasetName()
         ax.set_title(plotTitle)
@@ -348,14 +346,14 @@ class Main(QtGui.QWidget):
         ax = fig.add_subplot(111)
         indepVars = variables[0]
         depVars = variables[1]
-        scanType = self.dataChest.getParameter("X Scan Type")
-        xlabel = self.dataChest.getParameter("X Label")
+        scanType = self.dataChest.getParameter("Scan Type", True)
+        xlabel = self.dataChest.getParameter("X Label", True)
 ##        if xlabel is None:
 ##            xlabel = indepVars[0][0]
-        ylabel = self.dataChest.getParameter("Y Label") 
+        ylabel = self.dataChest.getParameter("Y Label", True) 
         if ylabel is None:
             ylabel = depVars[0][0] #for data with more than one dep, recommend ylabel
-        plotTitle = self.dataChest.getParameter("Plot Title")
+        plotTitle = self.dataChest.getParameter("Plot Title", True)
         if plotTitle is None:
             plotTitle = self.dataChest.getDatasetName()
         ax.set_title(plotTitle)
@@ -378,7 +376,7 @@ class Main(QtGui.QWidget):
         return fig
    
     def figFromFileInfo(self, filePath, fileName, selectedPlotType = None, varsToIgnore =[]):
-        relPath = self.convertWindowsPathToDvPathArray(filePath)
+        relPath = self.convertPathToArray(filePath)
         self.dataChest.cd(relPath)
         self.dataChest.openDataset(fileName) 
         variables = self.dataChest.getVariables()
@@ -397,25 +395,6 @@ class Main(QtGui.QWidget):
         self.dataChest.cd("")
         #yield self.cxn.data_vault.dump_existing_sessions()
         return fig
-    
-##    ax = fig.add_subplot(111)
-##    ax.set_xlabel(indepVars[0][0]+" "+"("+indepVars[0][1]+")")
-##    ax.set_ylabel(indepVars[1][0]+" "+"("+indepVars[1][1]+")")
-##    ax.set_title(plotTitle)
-##    xGridRes = yield self.cxn.data_vault.get_parameter('X Grid Resolution')
-##    dX = yield self.cxn.data_vault.get_parameter('dX')
-##    yGridRes = yield self.cxn.data_vault.get_parameter('Y Grid Resolution')
-##    dY = yield self.cxn.data_vault.get_parameter('dY')
-##    sweepType =yield self.cxn.data_vault.get_parameter('Sweep Type')
-##    x = np.asarray(dataset[:,0])
-##    y = np.asarray(dataset[:,1])
-##    z = np.asarray(dataset[:,2])
-##    new = self.makeGrid(x, xGridRes, dX, y, yGridRes, dY, sweepType, z)
-##    X = new[0]
-##    Y = new[1]
-##    Z = new[2]
-##    im = ax.imshow(Z, extent=(X.min(), X.max(), Y.min(), Y.max()), interpolation='nearest', cmap=cm.gist_rainbow, origin='lower')
-##    fig.colorbar(im, fraction = 0.15)
 
     def makeGrid(self, x, xGridRes, dX, y, yGridRes, dY, sweepType, z):
         
@@ -470,8 +449,7 @@ class Main(QtGui.QWidget):
 
             npx = npx.reshape(xGridRes, yGridRes)
             npy = npy.reshape(xGridRes, yGridRes)
-            npz = npz.reshape(xGridRes, yGridRes)
-        #print "npx=", npx    
+            npz = npz.reshape(xGridRes, yGridRes)   
         return (npx,npy,npz)        
 
         
