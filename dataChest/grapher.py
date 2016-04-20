@@ -13,6 +13,9 @@ class Main(QtGui.QWidget):
     
     def __init__(self, parent = None):
         super(Main, self).__init__(parent)
+        self.setWindowTitle('Data Chest Image Browser')
+        self.setWindowIcon(QtGui.QIcon('rabi.jpg')) #add in rabi plot
+        
         self.root = os.environ["DATA_CHEST_ROOT"] #'Z:/mcdermott-group/DataChest'
         self.pathRoot=QtCore.QString(self.root) #self.pathRoot=QtCore.QString('Z:\mcdermott-group\DataChest')
 
@@ -20,10 +23,6 @@ class Main(QtGui.QWidget):
         self.filters.append("*.hdf5")
 
         self.dataChest = dataChest(None, True)
-
-        self.setWindowTitle('Data Chest Image Browser')
-        self.setWindowIcon(QtGui.QIcon('rabi.jpg')) #add in rabi plot
-
 
         #directory browser configuration
         self.model = QtGui.QFileSystemModel(self)
