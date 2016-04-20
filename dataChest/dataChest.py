@@ -468,7 +468,7 @@ class dataChest(dateStamp):
         fillVal = None
         dShape = tuple(self._flatShape(varDict["shapes"][ii]))
         if dShape == (1,):
-          chunkShape = (100000,)
+          chunkShape = (10000,)
         else:
           chunkShape = dShape
         dset = group.create_dataset(varDict["names"][ii],
