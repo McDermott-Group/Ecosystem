@@ -274,11 +274,11 @@ class dataChest(dateStamp):
         self.currentFile.close() #close current file if existent
       if modify is True:
         self.readOnlyFlag = False
-        self.currentFile = h5py.File(filename,'r+') #opened read only
+        self.currentFile = h5py.File(self.pwd()+"/"+filename,'r+') #opened read only
       else:
         self.readOnlyFlag = True
-        self.currentFile = h5py.File(filename,'r') #opened read only
-      self.currentHDF5Filename = self.cwdPath + "/" + filename
+        self.currentFile = h5py.File(self.pwd()+"/"+filename,'r') #opened read only
+      self.currentHDF5Filename = self.pwd() + "/" + filename
 
       for varType in self.varDict.keys():
         varGroupAttributes = self.currentFile[varType].attrs.keys()
@@ -428,8 +428,8 @@ class dataChest(dateStamp):
     self.numIndepWrites = 0
     self.numDepWrites = 0
     #should check for success before setting self.currentHDF5Filename
-    self.currentFile = h5py.File(self.cwdPath+"/"+filename)
-    self.currentHDF5Filename = self.cwdPath+"/"+filename
+    self.currentFile = h5py.File(self.pwd()+"/"+filename)
+    self.currentHDF5Filename = self.pwd()+"/"+filename
     self.readOnlyFlag = False # gives read and write access
     
     #create base groups within file:
