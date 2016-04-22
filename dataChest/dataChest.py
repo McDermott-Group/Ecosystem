@@ -192,8 +192,9 @@ class dataChest(dateStamp):
                     "by design. You must make a new\r\n\t"+
                     "dataset if you wish to addData() to one."))
     elif self.currentHDF5Filename is not None:
-      if self.dataCategory == "Arbitrary Type 1":
-        data = np.asarray(data)
+      #self.resizeDataset(self.varDict)
+##      if self.dataCategory == "Arbitrary Type 1":
+##        data = np.asarray(data)
       if self._isDataValid(data):
         numIndeps = len(self.varDict["independents"]["names"])
         numDeps = len(self.varDict["dependents"]["names"])
@@ -201,9 +202,11 @@ class dataChest(dateStamp):
         indepShapes = self.varDict["independents"]["shapes"]
         depShapes = self.varDict["dependents"]["shapes"]
         if self.dataCategory == "Arbitrary Type 1":
-          varData = np.asarray(data).T
+          #varData = np.asarray(data).T
           for colNum in range(0, numIndeps+numDeps):
-            column = varData[colNum]
+            column = [data[ii][colNum] for ii in range(0, len(data))]
+            column = np.asarray(column)
+            #column = varData[colNum]
             if colNum<numIndeps:
               varGrp = "independents"
               varName = self.varDict[varGrp]["names"][colNum]
@@ -271,11 +274,11 @@ class dataChest(dateStamp):
         self.currentFile.close() #close current file if existent
       if modify is True:
         self.readOnlyFlag = False
-        self.currentFile = h5py.File(filename,'r+') #opened read only
+        self.currentFile = h5py.File(self.pwd()+"/"+filename,'r+') #opened read only
       else:
         self.readOnlyFlag = True
-        self.currentFile = h5py.File(filename,'r') #opened read only
-      self.currentHDF5Filename = self.cwdPath + "/" + filename
+        self.currentFile = h5py.File(self.pwd()+"/"+filename,'r') #opened read only
+      self.currentHDF5Filename = self.pwd() + "/" + filename
 
       for varType in self.varDict.keys():
         varGroupAttributes = self.currentFile[varType].attrs.keys()
@@ -425,8 +428,8 @@ class dataChest(dateStamp):
     self.numIndepWrites = 0
     self.numDepWrites = 0
     #should check for success before setting self.currentHDF5Filename
-    self.currentFile = h5py.File(self.cwdPath+"/"+filename)
-    self.currentHDF5Filename = self.cwdPath+"/"+filename
+    self.currentFile = h5py.File(self.pwd()+"/"+filename)
+    self.currentHDF5Filename = self.pwd()+"/"+filename
     self.readOnlyFlag = False # gives read and write access
     
     #create base groups within file:
@@ -658,10 +661,9 @@ class dataChest(dateStamp):
     return varTypes
 
   def _addToDataset(self, dset, data, chunkSize, numWrites):
-
     if numWrites == 0:
       data = np.reshape(data, (chunkSize,))
-      if dset.shape[0] == 1 and chunkSize !=1: #arbitrary type 1 hack
+      if dset.shape[0] == 1 and len(dset.shape) == 1: #arbitrary type 1 hack
         dset.resize((chunkSize,))
       dset[:chunkSize] = data
     else:
@@ -899,8 +901,8 @@ class dataChest(dateStamp):
     indepTypes = varDict["independents"]["types"]
     depTypes = varDict["dependents"]["types"]
     types = indepTypes + depTypes
-
-    dataShape = data.shape
+    
+    dataShape = np.asarray(data).shape
 
     totalNumVars = len(indepShapes+depShapes)
     if len(dataShape) != 2:
@@ -919,9 +921,12 @@ class dataChest(dateStamp):
                                   "where each column entry is a\r\n\t"+
                                   "scalar. Each row should have M+N columns\r\n\t")
       return False
-    transposedData = data.T
+    #transposedData = data.T
     for colIndex in range(0, totalNumVars):
-        column = transposedData[colIndex]
+        #column = transposedData[colIndex]
+        column = [data[ii][colIndex] for ii in range(0, len(data))]
+        #column = data[:,colIndex]
+        column = np.asarray(column)
         columnShape = column.shape
         dtype = column.dtype.name
         if len(columnShape)!=1:
