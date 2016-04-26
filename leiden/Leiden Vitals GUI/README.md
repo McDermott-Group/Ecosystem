@@ -16,4 +16,4 @@ LeidenGuiConfig.ui
 	-Open with QTDesigner
 	-Compiles to LeidenGuiConfig.py using pyuic4, here is an example.
 		From the windows command prompt, NOT the python console, type
-	pyuic4 C:\Path\To\Input\File\LeidenGuiConfig.ui -o C:\Path\To\Output\File\LeidenGui.py
+	pyuic4 C:\Path\To\Input\File\LeidenGuiConfig.ui -o C:\Path\To\Output\File\LeidenGuiConfig.py
