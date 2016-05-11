@@ -45,7 +45,6 @@ class Main(QtGui.QWidget):
         self.directoryTree.header().setResizeMode(QtGui.QHeaderView.ResizeToContents)
         self.directoryTree.header().setStretchLastSection(False)
         self.directoryTree.clicked.connect(self.dirTreeSelectionMade)
-
         
         #plot types drop down list configuration
         self.plotTypesComboBoxLabel = QtGui.QLabel(self)
@@ -82,9 +81,9 @@ class Main(QtGui.QWidget):
         self.currentFig = Figure()
         self.addFigureToCanvas(self.currentFig)
         
-        self.filePath = None
-        self.fileName = None
-        self.plotType = None
+        self.filePath = None #redundant
+        self.fileName = None #redundant
+        self.plotType = None #redundant
         self.varsToIgnore = []
 
     def plotTypeSelected(self, plotType): #called when a plotType selection is made from drop down
@@ -138,22 +137,27 @@ class Main(QtGui.QWidget):
         if state == QtCore.Qt.Checked:
             self.varsToIgnore.remove(name)
             self.removeFigFromCanvas() #removes old figure, needs garbage collection too
-            self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, selectedPlotType=self.plotType, varsToIgnore =self.varsToIgnore) 
+            self.currentFig = self.figFromFileInfo(self.filePath,
+                                                   self.fileName,
+                                                   selectedPlotType=self.plotType,
+                                                   varsToIgnore =self.varsToIgnore) 
             self.addFigureToCanvas(self.currentFig)
         else: #unchecked
             if name not in self.varsToIgnore:
                 self.varsToIgnore.append(name)
             self.removeFigFromCanvas() #removes old figure, needs garbage collection too
-            self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, selectedPlotType=self.plotType, varsToIgnore =self.varsToIgnore)
+            self.currentFig = self.figFromFileInfo(self.filePath,
+                                                   self.fileName,
+                                                   selectedPlotType=self.plotType,
+                                                   varsToIgnore =self.varsToIgnore)
             self.addFigureToCanvas(self.currentFig)
 
-    def convertPathToArray(self, windowsPath): #make this compatible with macs
-
-        if self.root+"/" in windowsPath:
-            windowsPath = windowsPath.replace(self.root+"/", '')
-        elif self.root in windowsPath:
-            windowsPath = windowsPath.replace(self.root, '')
-        return windowsPath.split('/')
+    def convertPathToArray(self, path):
+        if self.root+"/" in path:
+            path = path.replace(self.root+"/", '')
+        elif self.root in path:
+            path = path.replace(self.root, '')
+        return path.split('/')
         
     def addFigureToCanvas(self, fig): #adds mpl fig to the canvas
 
@@ -176,7 +180,9 @@ class Main(QtGui.QWidget):
     def dirTreeSelectionMade(self, index): #called when a directory tree selection is made
         indexItem = self.model.index(index.row(), 0, index.parent())
         fileName = str(self.model.fileName(indexItem))
+        print "fileName=", fileName
         filePath = str(self.model.filePath(indexItem))
+        print "filePath=", filePath
 
         if ".hdf5" in filePath: #removes fileName from path if file is chosen
             filePath = filePath[:-(len(fileName)+1)]
@@ -382,6 +388,10 @@ class Main(QtGui.QWidget):
         variables = self.dataChest.getVariables()
         dataCategory = self.categorizeDataset(variables)
         #otherwise refer to dataset name needs to be implemented
+        print "fileName=", fileName
+        print "self.dataChest.getDatasetName()=", self.dataChest.getDatasetName()
+        print "self.dataChest.pwd()=", self.dataChest.pwd()
+        print "filePath=", filePath
         dataset = self.dataChest.getData()
         if dataCategory == "1D":
             fig = self.plot1D(dataset, variables, selectedPlotType, None, varsToIgnore = varsToIgnore) #plot1D(self, dataset, variables, plotType, dataClass, varsToIgnore = [])

@@ -968,11 +968,11 @@ class dataChest(dateStamp):
         return False
     return True
 
-  def _isArrayAllUTCDatestamps(self, array):
-    for ii in range(0, len(array)):
-      if not self._isStringUTCFormat(array[ii]):
-        return False
-    return True
+##  def _isArrayAllUTCDatestamps(self, array):
+##    for ii in range(0, len(array)):
+##      if not self._isStringUTCFormat(array[ii]):
+##        return False
+##    return True
 
   def _isDataFormatArbType2(self, data, varDict): #need to check that lengths are correct****, catch data = [x,y] case
     indepShapes = varDict["independents"]["shapes"]
