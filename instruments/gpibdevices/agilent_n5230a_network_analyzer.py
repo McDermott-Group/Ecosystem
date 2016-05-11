@@ -349,14 +349,16 @@ class AgilentN5230AServer(GPIBManagedServer):
                  for k in range(length)]               
     	returnValue(data)
 
-    @setting(617, 'Get S Parameters', S='*s', returns='?')
+    @setting(617, 'Get S Parameters', S='*s', returns='*(*v[], *v[])')
     def get_s_parameters(self, c, S=['S43']):
     	"""
         Get a set of scattering parameters from the network analyzer. 
-		The input parameter should be  a list of strings in the format 
-		['S21','S43','S34',...] where Smn is the s-parameter connecting 
+		The input parameter should be a list of strings in the format 
+		['S21','S43','S34',...] where Smn is the S-parameter connecting 
 		port n to port m. Available ports are 1, 2, 3, and 4. The data
-		is returned as a list *[*Re Sxy, *Im Sxy].
+		is returned as a list *[*Re(Sxy), *Im(Sxy)]. The values are
+        unitless. To obtain the magnitude in dB use the following
+        equation: 20 * log10(Re(Sxy)^2 + Im(Sxy)^2).
         """
         S = [x.capitalize() for x in S]
         # Remove duplicates.

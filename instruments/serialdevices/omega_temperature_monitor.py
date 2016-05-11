@@ -164,7 +164,7 @@ class OmegaTempMonitorServer(DeviceServer):
         """
         # The string '*X01' asks the device for the current reading.
         yield dev.write_line("*X01")
-        yield time.sleep(0.5)
+        yield time.sleep(2)
         reading = yield dev.read_line()
         # Instrument randomly decides not to return, here's a hack.
         if not reading:
@@ -173,9 +173,9 @@ class OmegaTempMonitorServer(DeviceServer):
             # Get last number in string.
             reading.rsplit(None, 1)[-1]
             # Strip the 'X01' off the returned string.
-            reading = float(reading.lstrip("X01"))
+            reading = float(reading.lstrip("X01").strip())
             # Add correct units.
-            output = reading * units.degF
+            output = reading * units.degC
             returnValue(output)
 
     @inlineCallbacks
