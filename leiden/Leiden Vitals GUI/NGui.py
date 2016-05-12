@@ -91,13 +91,13 @@ class NGui(QtGui.QDialog):
 			
 			buttonLayout = QtGui.QHBoxLayout()
 			self.grids[i].addLayout(buttonLayout, 1, 1)
-			print(self.devices[i].getFrame().getButtons())
+			#print(self.devices[i].getFrame().getButtons())
 			if(len(self.devices[i].getFrame().getButtons()[0])>0):
 				for b in range(0, len(self.devices[i].getFrame().getButtons())):
 					self.buttons[i].append(QtGui.QPushButton(self.frames[i]))
 					self.buttons[i][b].setText(self.devices[i].getFrame().getButtons()[b][0])
 					#ctypes.cast(ctypes.addressof(e), ctypes.POINTER(ctypes.c_int)).contents.value
-					print()
+					#print()
 					#self.buttons[i][b].setText(str(b))
 					buttonLayout.addWidget(self.buttons[i][b])
 					
@@ -117,10 +117,12 @@ class NGui(QtGui.QDialog):
 			self.titles[i].setGeometry(QtCore.QRect(10,10,self.titles[i].fontMetrics().boundingRect(self.titles[i].text()).width(),40))
 			
 			for y in range(0, len(self.devices[i].getFrame().getNicknames())):
+				
 				# Add a new parameter to the current device
+				
 				self.parameters[i].append(QtGui.QLabel(self.frames[i]))
 				self.units[i].append(QtGui.QLabel(self.frames[i]))
-				self.parameters[i][y].setText(devices[i].getFrame().getNicknames()[y])
+				
 				#Get the width of the text
 				self.parameters[i][y].setFont(self.font)
 				self.parameters[i][y].setAlignment(QtCore.Qt.AlignLeft)
@@ -142,9 +144,22 @@ class NGui(QtGui.QDialog):
 				
 				self.parameters[i][y].setStyleSheet("color:rgb(189, 195, 199);")
 				#self.devices[i].getUnits[y]
-				self.grids[i].addWidget(self.parameters[i][y], y+2, 0)
-				self.grids[i].addWidget(self.lcds[i][y], y+2, 1)
-				self.grids[i].addWidget(self.units[i][y], y+2, 2)
+			
+				
+				self.parameters[i][y].hide()
+				self.lcds[i][y].hide()
+				self.units[i][y].hide()
+				if(self.devices[i].getFrame().getNicknames()[y] is not None):
+				
+					self.parameters[i][y].show()
+					self.lcds[i][y].show()
+					self.units[i][y].show()
+					self.parameters[i][y].setText(devices[i].getFrame().getNicknames()[y])
+					self.grids[i].addWidget(self.parameters[i][y], y+2, 0)
+					self.grids[i].addWidget(self.lcds[i][y], y+2, 1)
+					self.grids[i].addWidget(self.units[i][y], y+2, 2)
+	
+					#self.units[i].append(QtGui.QLabel(self.frames[i]))
 				
 		print("Gui initialized")
 		return
@@ -156,9 +171,9 @@ class NGui(QtGui.QDialog):
 		timer.start(1000)
 		sys.exit(app.exec_())
 	def buttonClicked(self, buttonNum, i):
-		self.devices[i].getFrame().buttonPressed(i)
-		print("button "+str(index)+" was clicked")
-		
+		#self.devices[i].getFrame().buttonPressed(i)
+		#print("button "+str(index)+" was clicked")
+		return
 	def update(self):
 		readings = [];
 		error = False;

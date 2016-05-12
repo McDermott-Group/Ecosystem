@@ -30,6 +30,7 @@ from PyQt4 import QtCore, QtGui
 import labrad
 import threading
 import NPopUp
+import sys, traceback
 class Device:
 	name = None
 	frame = None
@@ -84,15 +85,15 @@ class Device:
 	def connect(self):			
 		try:
 			
-			print("attempting connection to "+str(self.isDevice))
-			print(self.serverName)
+			#print("attempting connection to "+str(self.isDevice))
+			#print(self.serverName)
 			self.deviceServer = getattr(self.cxn, self.serverName)()
 			if(self.setDeviceCmd is not None):
 				getattr(self.deviceServer, self.setDeviceCmd)(self.selectedDevice)
 			print(self.settingNames)
 			return True
 		except:
-			self.frame.raiseError("Could Not connect to "+self.name)
+			self.frame.raiseError("")
 			#print("Could not connect to "+self.name)
 			return False
 		#print(self.deviceServer.pressure())
@@ -100,41 +101,65 @@ class Device:
 	def getFrame(self):
 		return self.frame
 	def prompt(self, button):
-		print("Device: "+self.name+", Button: "+self.frame.getButtons()[button][0])
-		if(self.frame.getButtons()[button][2] is not None):
-			self.warning = NPopUp.PopUp(self.frame.getButtons()[button][2])
-			self.warning.exec_()
-			if(self.warning.consent):
+		try:
+			print("Device: "+self.name+", Button: "+self.frame.getButtons()[button][0])
+			if(self.frame.getButtons()[button][2] is not None):
+				self.warning = NPopUp.PopUp(self.frame.getButtons()[button][2])
+				self.warning.exec_()
+				if(self.warning.consent):
+					getattr(self.deviceServer, self.frame.getButtons()[button][1])
+			else:
 				getattr(self.deviceServer, self.frame.getButtons()[button][1])
-		else:
-			getattr(self.deviceServer, self.frame.getButtons()[button][1])
+		except:
+			print("Device not connected.")
+			return
 	def Query(self):
+		#print("Querying")
 		if(not self.isDevice):
 			if(self.connect() is not self.isDevice):
 				print("Connected to "+self.name)
 				self.isDevice = True
 		else:
-			try:
-				#print("getting readings of " + self.name)
-				readings = []
-				units = []
-				for i in range(0, len(self.settingNames)):
-					reading = getattr(self.deviceServer, self.settingNames[i])()
-					if isinstance(reading, labrad.units.Value):
-						readings.append(reading._value)
-						units.append(reading.units)
-					else:
-						readings.append(reading)
-						units.append("")
-				self.frame.setReadings(readings)
-				self.frame.setUnits(units)
-				#print(units)
-				threading.Timer(2, self.Query).start()
-				self.frame.retractError()
+			#try:
+			readings = []
+			units = []
+			for i in range(0, len(self.settingNames)):
+				#print("HERE A")
+				reading = getattr(self.deviceServer, self.settingNames[i])()
+				#print(reading)
+				#print(type(reading))
+				if isinstance(reading, labrad.units.Value):
+					#print("HERE B")
+					readings.append(reading._value)
+					units.append(reading.units)
+				elif(isinstance(reading, labrad.units.ValueArray)):
+					#print("HERE C")
+					for i in range(0, len(reading)):
+						if isinstance(reading[i], labrad.units.Value):
+							readings.append(reading[i]._value)
+							units.append(reading[i].units)
+							
+						else:
+							readings.append(reading[i]._value)
+							units.append("")
+							
+				else:
+					#print("HERE D")
+					readings.append(reading[i])
+					units.append("")
+			#print("HERE E")
+			self.frame.setReadings(readings)
+			self.frame.setUnits(units)
+			#print(units)
+			#print(readings)
+			self.frame.retractError()
 				#print(readings)
-			except:
-				self.frame.raiseError("Problem communicating with "+self.name)
-				self.isDevice = False
-				
+			# except:
+				# exc_type, exc_value, exc_traceback = sys.exc_info()
+				# traceback.print_tb(exc_traceback)
+				# self.frame.raiseError("Problem communicating with "+self.name)
+				# self.isDevice = False
+		if(any((i.name == "MainThread") and i.is_alive() for i in threading.enumerate())):
+			threading.Timer(2, self.Query).start()
 			#print("problem communicating with "+self.name)
 		return 

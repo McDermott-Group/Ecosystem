@@ -51,8 +51,8 @@ class nViewer:
 		Flow = Device("omega_ratemeter_server","External Water Flow Rate", ["Flow Rate"], ["get_rate"], cxn, None, None, None, "select_device", 0)
 		self.devices.append(Flow)
 		
-		# testDevice = Device("Fridge Pressure", ["Pressure OVC","Pressure IVC", "Still Pressure"])
-		# self.devices.append(testDevice)
+		testDevice = Device("pfeiffer_vacuum_maxigauge", "Pressure Monitor", [None, None, None, "Pressure OVC","Pressure IVC", "Still Pressure"], ["get_pressures"], cxn, None, None, None,"select_device", 0)
+		self.devices.append(testDevice)
 		
 		# testDevice = Device("Fridge Temperature", ["Still", "Exchange", "Mix (TT)", "Mix (PT-1000)", "50K", "3K"])
 		# self.devices.append(testDevice)
