@@ -29,6 +29,8 @@ from PyQt4 import QtCore, QtGui
 from multiprocessing.pool import ThreadPool
 import threading
 import sys
+import ctypes
+from functools import partial
 class NGui(QtGui.QDialog):
 
 	dialog = None
@@ -41,6 +43,7 @@ class NGui(QtGui.QDialog):
 	titles = []
 	lcds = [[]]
 	units = [[]]
+	buttons = [[]]
 	
 	font = QtGui.QFont()
 	font.setPointSize(12)
@@ -74,9 +77,10 @@ class NGui(QtGui.QDialog):
 			self.parameters.append([])
 			self.lcds.append([])
 			self.units.append([])
+			self.buttons.append([])
 			# Configure grid layout
 			self.grids[i].setSpacing(10)
-			self.grids[i].addWidget(self.titles[i], 1, 0, 1, 1)
+			self.grids[i].addWidget(self.titles[i], 1, 0)
 			self.grids[i].setColumnStretch(0,1)
 			# Configure the frame (the box surrounding information for each device)
 			self.frames[i].setStyleSheet("background: rgb(52, 73, 94)")
@@ -84,6 +88,25 @@ class NGui(QtGui.QDialog):
 			self.frames[i].setFrameShadow(QtGui.QFrame.Plain)
 			self.frames[i].setLineWidth(2)
 			self.frames[i].setLayout(self.grids[i])
+			
+			buttonLayout = QtGui.QHBoxLayout()
+			self.grids[i].addLayout(buttonLayout, 1, 1)
+			print(self.devices[i].getFrame().getButtons())
+			if(len(self.devices[i].getFrame().getButtons()[0])>0):
+				for b in range(0, len(self.devices[i].getFrame().getButtons())):
+					self.buttons[i].append(QtGui.QPushButton(self.frames[i]))
+					self.buttons[i][b].setText(self.devices[i].getFrame().getButtons()[b][0])
+					#ctypes.cast(ctypes.addressof(e), ctypes.POINTER(ctypes.c_int)).contents.value
+					print()
+					#self.buttons[i][b].setText(str(b))
+					buttonLayout.addWidget(self.buttons[i][b])
+					
+					#self.buttons[i][b].clicked.connect(partial(self.buttonClicked, [b, i]))
+					self.buttons[i][b].clicked.connect(partial(self.devices[i].prompt, b))
+					self.buttons[i][b].setStyleSheet("color:rgb(189, 195, 199); background:rgb(70, 80, 88)")
+					
+					self.buttons[i][b].setFont(self.font)
+					
 			# Make the titles look nice
 			self.titles[i].setStyleSheet("color:rgb(189, 195, 199);")
 			self.font.setPointSize(18)
@@ -132,6 +155,9 @@ class NGui(QtGui.QDialog):
 		timer.timeout.connect(self.update)
 		timer.start(1000)
 		sys.exit(app.exec_())
+	def buttonClicked(self, buttonNum, i):
+		self.devices[i].getFrame().buttonPressed(i)
+		print("button "+str(index)+" was clicked")
 		
 	def update(self):
 		readings = [];

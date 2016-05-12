@@ -29,6 +29,7 @@ from NFrame import NFrame
 from PyQt4 import QtCore, QtGui
 import labrad
 import threading
+import NPopUp
 class Device:
 	name = None
 	frame = None
@@ -40,8 +41,12 @@ class Device:
 	isDevice = False
 	selectedDevice = None
 	setDeviceCmd = None
+	buttonNames = []
+	buttonSettings = []
+	buttonMessages = []
+	buttons = [[]]
 	cxn = None
-	def __init__(self, serverName, name, nicknames, settingNames, cxn, setDeviceCmd = None, selectedDevice = 0):
+	def __init__(self, serverName, name, nicknames, settingNames, cxn, buttonNames, buttonSettings, buttonMessages,  setDeviceCmd = None, selectedDevice = 0):
 		print("making device")
 		self.name = name
 		self.nicknames = nicknames
@@ -52,31 +57,57 @@ class Device:
 		self.settingNames = settingNames
 		self.setDeviceCmd = setDeviceCmd
 		self.selectedDevice = selectedDevice
+		
+		if(buttonMessages is not None):
+			self.buttonMessages = buttonMessages
+		if(buttonNames is not None):
+			self.buttonNames = buttonNames
+			self.buttonSettings = buttonSettings
+			
+			for i in range(0, len(self.buttonNames)):
+				if(i is not 0):
+					self.buttons.append([])
+				self.buttons[i].append(self.buttonNames[i])
+				self.buttons[i].append(self.buttonSettings[i])
+				self.buttons[i].append(self.buttonMessages[i])
+				
+			self.frame.setButtons(self.buttons)
+			
 		self.connect()
 		self.Query()
 		
 		self.deviceThread = threading.Thread(target = self.Query, args=[])
+		self.deviceThread.daemon = True
 		self.deviceThread.start()
 		
 
-	def connect(self):
+	def connect(self):			
 		try:
 			
-			print("attempting connection "+str(self.isDevice))
+			print("attempting connection to "+str(self.isDevice))
+			print(self.serverName)
 			self.deviceServer = getattr(self.cxn, self.serverName)()
 			if(self.setDeviceCmd is not None):
-				getattr(self.deviceServer, self.setDeviceCmd)(0)
+				getattr(self.deviceServer, self.setDeviceCmd)(self.selectedDevice)
 			print(self.settingNames)
 			return True
 		except:
 			self.frame.raiseError("Could Not connect to "+self.name)
-			print("Could not connect to "+self.name)
+			#print("Could not connect to "+self.name)
 			return False
 		#print(self.deviceServer.pressure())
 		
 	def getFrame(self):
 		return self.frame
-		
+	def prompt(self, button):
+		print("Device: "+self.name+", Button: "+self.frame.getButtons()[button][0])
+		if(self.frame.getButtons()[button][2] is not None):
+			self.warning = NPopUp.PopUp(self.frame.getButtons()[button][2])
+			self.warning.exec_()
+			if(self.warning.consent):
+				getattr(self.deviceServer, self.frame.getButtons()[button][1])
+		else:
+			getattr(self.deviceServer, self.frame.getButtons()[button][1])
 	def Query(self):
 		if(not self.isDevice):
 			if(self.connect() is not self.isDevice):

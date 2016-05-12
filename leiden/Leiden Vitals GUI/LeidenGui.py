@@ -13,8 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Utilities libraries.
-
 
 """
 ### BEGIN NODE INFO
@@ -34,7 +32,6 @@ import threading
 import labrad
 import labrad.units as units
 class nViewer:
-	print("HEREA")
 	gui = None
 	devices =[]
 	def __init__(self, parent = None):
@@ -42,7 +39,7 @@ class nViewer:
 		cxn = labrad.connect();
 		
 		
-		testDevice = Device("my_server", "Random Number Generator", ["Random Pressure", "Random Temperature"], ["pressure", "temperature"],cxn)
+		testDevice = Device("my_server", "Random Number Generator", ["Random Pressure", "Random Temperature"], ["pressure", "temperature"], cxn, ["Pressure","Temperature"], ["pressure", "temperature"], ["You are about to get a random pressure", None])
 		self.devices.append(testDevice)
 		
 		# testDevice = Device("Compressor", ["Water Temperature In", "Water Temperature Out"])
@@ -51,7 +48,7 @@ class nViewer:
 		# testDevice = Device("External Water Temperature", ["Ext. Temperature"])
 		# self.devices.append(testDevice)
 		
-		Flow = Device("omega_ratemeter_server","External Water Flow Rate", ["Flow Rate"], ["get_rate"], cxn, "select_device", "0")
+		Flow = Device("omega_ratemeter_server","External Water Flow Rate", ["Flow Rate"], ["get_rate"], cxn, None, None, None, "select_device", 0)
 		self.devices.append(Flow)
 		
 		# testDevice = Device("Fridge Pressure", ["Pressure OVC","Pressure IVC", "Still Pressure"])

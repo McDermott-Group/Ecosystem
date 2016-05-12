@@ -35,6 +35,9 @@ class NFrame:
 	error = False
 	errmsg = None
 	units = []
+	buttons = [[]]
+	buttonInd = None
+	buttonPushed = False
 	def __init__(self, title, nicknames):
 		self.serverTitle = title
 		self.nicknames = nicknames
@@ -62,3 +65,16 @@ class NFrame:
 		self.units = units
 	def getUnits(self):
 		return self.units
+	def getButtons(self):
+		return self.buttons
+	def setButtons(self, buttons):
+		self.buttons = buttons
+	def buttonPressed(self, buttonInd):
+		self.buttonInd = buttonInd
+		self.buttonPushed = True
+	def getButtonPressed(self):
+		self.buttonPushed = False
+		return self.buttonInd
+	def isButtonPressed(self):
+		return self.buttonPushed
+		
