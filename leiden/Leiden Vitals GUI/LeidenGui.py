@@ -24,8 +24,9 @@ description = Monitors Leiden Devices
 ### END NODE INFO
 """
 import NGui				# Handles all gui operations. Independent of labrad.
-from PyQt4 import QtCore, QtGui
-from NFrame import NFrame		# Handles the information passibg between 
+
+#from PyQt4 import QtCore, QtGui
+
 from Device import Device
 from multiprocessing.pool import ThreadPool
 import threading
@@ -35,31 +36,61 @@ class nViewer:
 	gui = None
 	devices =[]
 	def __init__(self, parent = None):
-	
-		cxn = labrad.connect();
+		# Establish a connection to labrad
+		try:
+			cxn = labrad.connect();
+		except:
+			print("Please start the labrad manager")
+		##################################################################
+		# How to Use nViewer:	 
+		################################################################
+		#	nViewer can be used with any labrad server, and given a new device class (it must have a "prompt" function), anything else.
+		#	It is meant to be a tool which allows much, much easier creation of straightforward gui's.
+		#	To create you own, make a new class in which you establish a connection to labrad, create new
+		#	device instances, and start the gui.
+		#
+		#
+		# Here are the steps to create your own gui.
+		# 1. Establish LabRad connection
+		#		cxn = labrad.connect()
+		#
+		# 2. Create Device
+		#		 ex = Device("NAME OF LABRAD SERVER", 
+		#						 "TITLE TO BE SHOWN ON GUI", 
+		#						 [LIST OF FIELDS TO BE DISPLAYED ON GUI],
+		#						 [LIST OF THOSE FIELDS' CORRESPONDING SERVER SETTINGS], 
+		#						 CONNECTION REFERENCE,
+		#						 ["LIST","OF","BUTTONS"], 
+		#						 ["SETTINGS", "ACTIVATED", "BY BUTTONS"], 
+		#						 ["ALERT TO BE DISPLAYED WITH EACH BUTTON PRESS", "NONE IF NO MESSAGE"]
+		#						 "SELECT DEVICE COMMAND (OPTIONAL FOR SERVERS THAT DO NOT REQUIRE DEVICE SELECTION)", 
+		#						 "DEVICE NUMBER")
+		# 3. Start nGui
+		# 		self.gui = NGui.NGui()
+		#		self.gui.startGui(self.devices)
+		#
+		# 4. Initialize nViewer OUTSIDE OF THE CLASS
+		#		viewer = nViewer()	
+		#		viewer.__init__()
+		###################################################################
 		
-		
-		testDevice = Device("my_server", "Random Number Generator", ["Random Pressure", "Random Temperature"], ["pressure", "temperature"], cxn, ["Pressure","Temperature"], ["pressure", "temperature"], ["You are about to get a random pressure", None])
+		# This is my test server
+		testDevice = Device("my_server", "Random Number Generator", ["Random Pressure", "Random Temperature"], ["pressure", "temperature"], [None, None], cxn, ["Pressure","Temperature"], ["pressure", "temperature"], ["You are about to get a random pressure", None],[None,None])
 		self.devices.append(testDevice)
-		
-		# testDevice = Device("Compressor", ["Water Temperature In", "Water Temperature Out"])
-		# self.devices.append(testDevice)
-		
-		# testDevice = Device("External Water Temperature", ["Ext. Temperature"])
-		# self.devices.append(testDevice)
-		
-		Flow = Device("omega_ratemeter_server","External Water Flow Rate", ["Flow Rate"], ["get_rate"], cxn, None, None, None, "select_device", 0)
+		# Omega Temperature Monitor server
+		Temperature = Device("omega_temp_monitor_server","External Water Temperature",["Temperature"], ["get_temperature"],[None], cxn, None, None, None, [None],"select_device", 0)
+		self.devices.append(Temperature)
+		# Omega Flow Meter
+		Flow = Device("omega_ratemeter_server","External Water Flow Rate", ["Flow Rate"], ["get_rate"], [None], cxn, None, None, None, "select_device", 0)
 		self.devices.append(Flow)
-		
-		testDevice = Device("pfeiffer_vacuum_maxigauge", "Pressure Monitor", [None, None, None, "Pressure OVC","Pressure IVC", "Still Pressure"], ["get_pressures"], cxn, None, None, None,"select_device", 0)
+		# Pfeiffer Vacuum Monitor
+		testDevice = Device("pfeiffer_vacuum_maxigauge", "Pressure Monitor", [None, None, None, "Pressure OVC","Pressure IVC", "Still Pressure"], ["get_pressures"], [None], cxn, None, None, None,[None],"select_device", 0)
 		self.devices.append(testDevice)
-		
-		# testDevice = Device("Fridge Temperature", ["Still", "Exchange", "Mix (TT)", "Mix (PT-1000)", "50K", "3K"])
-		# self.devices.append(testDevice)
 	
+		# Create the gui
 		self.gui = NGui.NGui()
 		self.gui.startGui(self.devices)
 
-		
+# In phython, the main class's __init__() IS NOT automatically called
 viewer = nViewer()	
 viewer.__init__()

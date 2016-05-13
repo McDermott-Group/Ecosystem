@@ -53,23 +53,17 @@ class NGui(QtGui.QDialog):
 	def initGui(self, devices, parent = None):
 		'''Create a base gui to start from'''
 		QtGui.QWidget.__init__(self, parent)
-		
-		#self.resize(800,400)
+		# Make pretty
 		self.setStyleSheet("background:rgb(70, 80, 88)")
-		
-		
+		# Get list of devices
 		self.devices = devices
-		yPos = 5;
-		
+		# Stack the device frames
 		self.setLayout(self.mainHBox)
 		self.mainHBox.addLayout(self.mainVBox)
-		#self.mainHBox.addStretch(1)
 		# For each device, add a GUI frame for it.
 		for i in range(0,len(self.devices)):
-		
 			#Append a new gui frame
 			self.frames.append(QtGui.QFrame(self))
-			#self.frames[i].setGeometry(QtCore.QRect(10, yPos, 300, 70+60*len(devices[i].getFrame().getNicknames())))
 			self.mainVBox.addWidget(self.frames[i])
 			# Add new titles, grids, parameters, and lcds for the new parameter
 			self.titles.append(QtGui.QLabel(self.frames[i]))
@@ -88,23 +82,22 @@ class NGui(QtGui.QDialog):
 			self.frames[i].setFrameShadow(QtGui.QFrame.Plain)
 			self.frames[i].setLineWidth(2)
 			self.frames[i].setLayout(self.grids[i])
-			
+			# Configure the layout of the buttons within the grid
 			buttonLayout = QtGui.QHBoxLayout()
 			self.grids[i].addLayout(buttonLayout, 1, 1)
-			#print(self.devices[i].getFrame().getButtons())
+			# Create all buttons.
 			if(len(self.devices[i].getFrame().getButtons()[0])>0):
 				for b in range(0, len(self.devices[i].getFrame().getButtons())):
+					# Append a new button to the array of buttons and set the parent as the current frame
 					self.buttons[i].append(QtGui.QPushButton(self.frames[i]))
+					# Set the text of the button to the name specified when the device was initialized
 					self.buttons[i][b].setText(self.devices[i].getFrame().getButtons()[b][0])
-					#ctypes.cast(ctypes.addressof(e), ctypes.POINTER(ctypes.c_int)).contents.value
-					#print()
-					#self.buttons[i][b].setText(str(b))
+					# Add the button to the screen.
 					buttonLayout.addWidget(self.buttons[i][b])
-					
-					#self.buttons[i][b].clicked.connect(partial(self.buttonClicked, [b, i]))
+					# Connect the button to function, passing the number of the button that was clicked
 					self.buttons[i][b].clicked.connect(partial(self.devices[i].prompt, b))
+					# Make the button pretty
 					self.buttons[i][b].setStyleSheet("color:rgb(189, 195, 199); background:rgb(70, 80, 88)")
-					
 					self.buttons[i][b].setFont(self.font)
 					
 			# Make the titles look nice
@@ -117,19 +110,14 @@ class NGui(QtGui.QDialog):
 			self.titles[i].setGeometry(QtCore.QRect(10,10,self.titles[i].fontMetrics().boundingRect(self.titles[i].text()).width(),40))
 			
 			for y in range(0, len(self.devices[i].getFrame().getNicknames())):
-				
 				# Add a new parameter to the current device
-				
 				self.parameters[i].append(QtGui.QLabel(self.frames[i]))
 				self.units[i].append(QtGui.QLabel(self.frames[i]))
-				
 				#Get the width of the text
 				self.parameters[i][y].setFont(self.font)
 				self.parameters[i][y].setAlignment(QtCore.Qt.AlignLeft)
 				self.units[i][y].setFont(self.font)
 				self.units[i][y].setAlignment(QtCore.Qt.AlignRight)
-				
-					
 				# Configure the QLCDnumber widgets that display information
 				self.lcds[i].append(QtGui.QLCDNumber())
 				self.lcds[i][y].setNumDigits(11)
@@ -140,17 +128,15 @@ class NGui(QtGui.QDialog):
 				self.lcds[i][y].setMidLineWidth(100)
 				self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n")
 				self.lcds[i][y].setFixedSize(350,60)
+				# Make the parameters pretty
 				self.parameters[i][y].setWordWrap(True)
-				
-				self.parameters[i][y].setStyleSheet("color:rgb(189, 195, 199);")
-				#self.devices[i].getUnits[y]
-			
-				
+				self.parameters[i][y].setStyleSheet("color:rgb(189, 195, 199);")	
+				# Hide everything until we know that it should be displayed. This is essential to be able to handle arrays
 				self.parameters[i][y].hide()
 				self.lcds[i][y].hide()
 				self.units[i][y].hide()
+				# If a nickname for the setting has been defined, go ahead and display whatever is necessary
 				if(self.devices[i].getFrame().getNicknames()[y] is not None):
-				
 					self.parameters[i][y].show()
 					self.lcds[i][y].show()
 					self.units[i][y].show()
@@ -158,42 +144,41 @@ class NGui(QtGui.QDialog):
 					self.grids[i].addWidget(self.parameters[i][y], y+2, 0)
 					self.grids[i].addWidget(self.lcds[i][y], y+2, 1)
 					self.grids[i].addWidget(self.units[i][y], y+2, 2)
-	
-					#self.units[i].append(QtGui.QLabel(self.frames[i]))
-				
 		print("Gui initialized")
 		return
 	def startGui(self, devices):
+		# Call the class's init function
 		self.initGui(devices)
+		# Show the gui
 		self.show()
 		timer = QtCore.QTimer(self)
+		# Update the gui every so often. This CAN ONLY be done in the main thread.
 		timer.timeout.connect(self.update)
 		timer.start(1000)
 		sys.exit(app.exec_())
-	def buttonClicked(self, buttonNum, i):
-		#self.devices[i].getFrame().buttonPressed(i)
-		#print("button "+str(index)+" was clicked")
-		return
 	def update(self):
 		readings = [];
 		error = False;
+		# loop through all devices
 		for i in range(0, len(self.devices)):
-
+			# If there is no error with the device
 			if(not self.devices[i].getFrame().isError()):
+				# Get the readings from the frame
 				readings = self.devices[i].getFrame().getReadings();
-				for y in range(0, len(readings)):
-					self.lcds[i][y].setSegmentStyle(QtGui.QLCDNumber.Flat)
-					self.lcds[i][y].display(readings[y])
-					#print(len(self.devices[i].getFrame().getUnits()))
-					if(len(self.devices[i].getFrame().getUnits())>0):
-						#print(y)
-						self.units[i][y].setText(self.devices[i].getFrame().getUnits()[y])
-						self.font.setPointSize(18)
-						self.units[i][y].setFont(self.font)
-						self.font.setPointSize(12)
-						self.units[i][y].setStyleSheet("color:rgb(189, 195, 199);")
-				#print(self.devices[i].getFrame().errorMsg())
+				if(readings is not None):
+					# Update all QLcds with the reading
+					for y in range(0, len(readings)):
+						self.lcds[i][y].setSegmentStyle(QtGui.QLCDNumber.Flat)
+						self.lcds[i][y].display(readings[y])
+						# If there are units, put them next to the number
+						if(len(self.devices[i].getFrame().getUnits())>0):
+							self.units[i][y].setText(self.devices[i].getFrame().getUnits()[y])
+							self.font.setPointSize(18)
+							self.units[i][y].setFont(self.font)
+							self.font.setPointSize(12)
+							self.units[i][y].setStyleSheet("color:rgb(189, 195, 199);")
 			else:
+				# Otherwise if there is an error, show that on the gui through outlined lcd numbers
 				for y in range(0, len(self.lcds[i])):
 					self.lcds[i][y].setSegmentStyle(QtGui.QLCDNumber.Outline)
 				
