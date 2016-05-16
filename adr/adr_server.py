@@ -170,19 +170,22 @@ class ADRServer(DeviceServer):
         yield self.initializeInstruments()
         # subscribe to messages
         # the server ones are not used right now, but at some point they could be
-        connect_func = lambda c, (s, payload): self.gpib_device_connect(*payload)
-        disconnect_func = lambda c, (s, payload): self.gpib_device_disconnect(*payload)
         serv_conn_func = lambda c, (s, payload): self.serversChanged(*payload)
         serv_disconn_func = lambda c, (s, payload): self.serversChanged(*payload)
         mgr = self.client.manager
-        self._cxn.addListener(connect_func, source=mgr.ID, ID=10)
-        self._cxn.addListener(disconnect_func, source=mgr.ID, ID=11)
         self._cxn.addListener(serv_conn_func, source=mgr.ID, ID=12)
         self._cxn.addListener(serv_disconn_func, source=mgr.ID, ID=13)
-        yield mgr.subscribe_to_named_message('GPIB Device Connect', 10, True)
-        yield mgr.subscribe_to_named_message('GPIB Device Disconnect', 11, True)
         yield mgr.subscribe_to_named_message('Server Connect', 12, True)
         yield mgr.subscribe_to_named_message('Server Disconnect', 13, True)
+
+        # listen for device connect/disconnect signals
+        dev_con_changed = lambda c, (s, payload): self.device_connection_changed(*payload)
+        try: # in case the device manager is not running
+             # &&& do this whenever device manager starts or something?
+            devManager = self.client.gpib_device_manager
+            yield devManager.device_connection_changed(self.ID)
+            yield devManager.addListener(listener = dev_con_changed, source = None, ID = self.ID)
+
         self.updateState()
     @inlineCallbacks
     def loadDefaults(self):
@@ -264,9 +267,8 @@ class ADRServer(DeviceServer):
         for serv in [n for s,n in serverList]:#[tuple[1].replace(' ','_').lower() for tuple in serverList]:
             if 'gpib_bus' in serv or 'GPIB Bus' in serv:# or 'sim900_srs_mainframe' in serv:
                 yield self.client[serv].refresh_devices()
-    def gpib_device_connect(self, server, channel):
-        self.initializeInstruments()
-    def gpib_device_disconnect(self, server, channel):
+    def device_connection_changed(self, device, server, channel, isConnected):
+        print '%s connected: %b'%(device,isConnected)
         self.initializeInstruments()
     def serversChanged(self,*args):
         self.initializeInstruments()
