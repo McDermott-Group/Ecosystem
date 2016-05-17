@@ -235,7 +235,8 @@ class ADRServer(DeviceServer):
                 instr.connected = True
                 if lastStatus != instr.connected:
                     self.logMessage(instrName+' Connected.')
-            except AttributeError: instr.connected = False # may not have a select_device method (heat switch, for ex)
+            except AttributeError as e: 
+                instr.connected = False # may not have a select_device method (heat switch, for ex)
             except LRError as e:
                 if 'NoDevicesAvailableError' in e.msg:
                     message = 'No devices connected for '+instrName+'.'
@@ -272,8 +273,16 @@ class ADRServer(DeviceServer):
             if 'gpib_bus' in serv or 'GPIB Bus' in serv:# or 'sim900_srs_mainframe' in serv:
                 yield self.client[serv].refresh_devices()
     def device_connection_changed(self, device, server, channel, isConnected):
-        print '%s connected: %s'%(device,isConnected)
-        self.initializeInstruments()
+        print '%s connected: %s'%(device, isConnected)
+        # if instrument added, initialize instruments.  if it is removed,
+        # mark it as disconnected.
+        for instName in self.instruments.keys():
+            instAddress = self.ADRSettings[instName][1]
+            if server in instAddress and channel in instAddress:
+                if isConnected == False:
+                    self.instruments[instName].connected = False
+                else:
+                    self.initializeInstruments()
     def serversChanged(self,*args):
         self.initializeInstruments()
     def logMessage(self, message, alert=False):
