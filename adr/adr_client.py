@@ -343,35 +343,25 @@ class ADRController(object):#Tkinter.Tk):
             tempDataChest = dataChest(['ADR Logs'])
             tempDataChest.cd(self.selectedADR)
             tempDataChest.openDataset('ati1504dix_temperatures') # &&&
-
-            first = False
+            
             n = tempDataChest.getNumRows()
-            while first is False and n > 0:
-                newRow = tempDataChest.getData(n-1)[0]
+            pastTempData = tempDataChest.getData(max(0,n-6*60*60), )
+            for newRow in pastTempData:
                 # change utc time to local
                 utc = newRow[0]
-                # utc = datetime.datetime.strptime(utc, '%Y-%m-%dT%H:%M:%S.%f') # for string
                 utc = datetime.datetime.utcfromtimestamp(utc) # for float
                 utc = utc.replace(tzinfo=tz.tzutc())
                 local = utc.astimezone(tz.tzlocal())
                 newRow[0] = mpl.dates.date2num(local)
-                # find limits for start time
-                if len(self.stage60K.get_xdata()) < 1: # then start at 1 and load appropriate past data
-                    xMin = mpl.dates.num2date(1)
-                else:  # start loading data from last recorded point
-                    lastDatetime = mpl.dates.num2date(self.stage60K.get_xdata()[-1])
-                    xMin = lastDatetime-datetime.timedelta(minutes=6*60)
-                if mpl.dates.date2num(xMin) < newRow[0]:
-                    self.stage60K.set_xdata(numpy.append(newRow[0],self.stage60K.get_xdata()))
-                    self.stage60K.set_ydata(numpy.append(newRow[1],self.stage60K.get_ydata()))
-                    self.stage03K.set_xdata(numpy.append(newRow[0],self.stage03K.get_xdata()))
-                    self.stage03K.set_ydata(numpy.append(newRow[2],self.stage03K.get_ydata()))
-                    self.stageGGG.set_xdata(numpy.append(newRow[0],self.stageGGG.get_xdata()))
-                    self.stageGGG.set_ydata(numpy.append(newRow[3],self.stageGGG.get_ydata()))
-                    self.stageFAA.set_xdata(numpy.append(newRow[0],self.stageFAA.get_xdata()))
-                    self.stageFAA.set_ydata(numpy.append(newRow[4],self.stageFAA.get_ydata()))
-                else: first = True
-                n -= 1
+                # add old data from file into plot
+                self.stage60K.set_xdata(numpy.append(newRow[0],self.stage60K.get_xdata()))
+                self.stage60K.set_ydata(numpy.append(newRow[1],self.stage60K.get_ydata()))
+                self.stage03K.set_xdata(numpy.append(newRow[0],self.stage03K.get_xdata()))
+                self.stage03K.set_ydata(numpy.append(newRow[2],self.stage03K.get_ydata()))
+                self.stageGGG.set_xdata(numpy.append(newRow[0],self.stageGGG.get_xdata()))
+                self.stageGGG.set_ydata(numpy.append(newRow[3],self.stageGGG.get_ydata()))
+                self.stageFAA.set_xdata(numpy.append(newRow[0],self.stageFAA.get_xdata()))
+                self.stageFAA.set_ydata(numpy.append(newRow[4],self.stageFAA.get_ydata()))
         except IOError: print 'temp file not created yet?' # file not created yet if first time opened
         self.updatePlot()
         # clear and reload log
