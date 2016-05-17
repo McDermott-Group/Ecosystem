@@ -1,5 +1,5 @@
 # Copyright (C) 2008  Matthew Neeley
-#           (C) 2015  Chris Wilen, Ivan Pechenezhskiy 
+#           (C) 2015  Chris Wilen, Ivan Pechenezhskiy
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ import string
 from twisted.internet.defer import DeferredList, DeferredLock
 from twisted.internet.reactor import callLater
 
-from labrad.server import LabradServer, setting, inlineCallbacks, returnValue
+from labrad.server import LabradServer, setting, inlineCallbacks, returnValue, Signal
 from labrad.units import Unit,Value
 
 UNKNOWN = '<unknown>'
@@ -62,7 +62,7 @@ def parseIDNResponse(s, idn_cmd='*IDN?'):
             # "08340BREV07 APR 92".
             elif model == '08340B':
                 return 'HEWLETT-PACKARD 8340B'
-            # HP8673E response string is expected to be similar to 
+            # HP8673E response string is expected to be similar to
             # "8673".
             elif model == '8673':
                 return 'HEWLETT-PACKARD 8673E'
@@ -83,18 +83,24 @@ class GPIBDeviceManager(LabradServer):
     by the device manager to properly identify the device.
     """
     name = 'GPIB Device Manager'
-    
+
+    # signal for when devices are hanged
+    connectionChangedEvent = Signal(123456, 'device connection changed', '?')
+    # signals have to be called in init, not initServer
+
     @inlineCallbacks
     def initServer(self):
         """Initialize the server after connecting to LabRAD."""
         self.knownDevices = {} # maps (server, channel) to (name, idn)
-        self.deviceServers = {} # maps device name to list of interested servers
+        self.deviceServers = {} # maps device name to list of interested servers.
+                        # each interested server is {'target':<>,'context':<>,'messageID':<>}
         self.identFunctions = {} # maps server to (setting, ctx) for ident
         self.identLock = DeferredLock()
-        
+
         # named messages are sent with source ID first, which we ignore
         connect_func = lambda c, (s, payload): self.gpib_device_connect(*payload)
         disconnect_func = lambda c, (s, payload): self.gpib_device_disconnect(*payload)
+
         mgr = self.client.manager
         self._cxn.addListener(connect_func, source=mgr.ID, ID=10)
         self._cxn.addListener(disconnect_func, source=mgr.ID, ID=11)
@@ -103,7 +109,7 @@ class GPIBDeviceManager(LabradServer):
 
         # do an initial scan of the available GPIB devices
         yield self.refreshDeviceLists()
-        
+
     @inlineCallbacks
     def refreshDeviceLists(self):
         """Ask all GPIB bus servers for their available GPIB devices."""
@@ -135,7 +141,7 @@ class GPIBDeviceManager(LabradServer):
         # forward message if someone cares about this device
         if device in self.deviceServers:
             self.notifyServers(device, server, channel, True)
-    
+
     def gpib_device_disconnect(self, server, channel):
         """Handle messages when devices connect."""
         print 'Device Disconnect:', server, channel
@@ -146,7 +152,7 @@ class GPIBDeviceManager(LabradServer):
         # forward message if someone cares about this device
         if device in self.deviceServers:
             self.notifyServers(device, server, channel, False)
-        
+
     @inlineCallbacks
     def lookupDeviceName(self, server, channel):
         """Try to send a *IDN? or an alternative query to lookup info
@@ -208,7 +214,7 @@ class GPIBDeviceManager(LabradServer):
                 self.knownDevices[server, channel] = (name, idn)
                 if name in self.deviceServers:
                     self.notifyServers(name, server, channel, True)
-        return self.identLock.run(_doServerIdentify)        
+        return self.identLock.run(_doServerIdentify)
 
     @inlineCallbacks
     def tryIdentFunc(self, server, channel, idn, identifier):
@@ -236,7 +242,7 @@ class GPIBDeviceManager(LabradServer):
                 returnValue(resp)
             else:
                 print("Server " + str(identifier) + ' could not identify device ' + str(server) + ' ' + str(channel))
-    
+
     @setting(1, 'Register Server',
              devices=['s', '*s'], messageID='w',
              returns='*(s{device} s{server} s{address}, b{isConnected})')
@@ -277,7 +283,7 @@ class GPIBDeviceManager(LabradServer):
         """Specify a setting to be called to identify devices.
 
         This setting must accept either of the following:
-        
+
             s, s, s: server, address, *IDN? response
             s, s:    server, address
 
@@ -301,11 +307,14 @@ class GPIBDeviceManager(LabradServer):
         return (str(self.knownDevices),
                 str(self.deviceServers),
                 str(self.identFunctions))
-    
+                
     def notifyServers(self, device, server, channel, isConnected):
-        """Notify all registered servers about a device status change."""
+        """Notify all registered servers about a device status change and emit a
+        signal saying a device connection has been changed in general."""
+        message = (device, server, channel, isConnected)
+        self.connectionChangedEvent(message)
         for s in self.deviceServers[device]:
-            rec = s['messageID'], (device, server, channel, isConnected)
+            rec = s['messageID'], message
             print 'Sending message:', s['target'], s['context'], [rec]
             self.client._sendMessage(s['target'], [rec], context=s['context'])
 
@@ -326,13 +335,13 @@ class GPIBDeviceManager(LabradServer):
                 recognizeServer = True
         if recognizeServer:
             callLater(0, self.identifyDevicesWithServer, ID)
-        
+
     def serverDisconnected(self, ID, name):
         """Disconnect devices when a bus server disconnects."""
         for (server, channel) in list(self.knownDevices.keys()):
             if server == name:
                 self.gpib_device_disconnect(server, channel)
-    
+
     def expireContext(self, c):
         """Stop sending notifications when a context expires."""
         print 'Expiring context:', c.ID

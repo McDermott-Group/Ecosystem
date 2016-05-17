@@ -37,7 +37,7 @@ from twisted.internet import threads as twistedThreads
 from labrad import units, util
 import numpy as np
 
-MIN_REFRESH_RATE = 2 * units.s
+MIN_REFRESH_RATE = 1 * units.s
 
 class NRuoxServer(LabradServer):
     """
@@ -45,13 +45,13 @@ class NRuoxServer(LabradServer):
     RuOx temps with the same AC bridge.
     """
     name = 'AC Bridge with Multiplexer'
-                
+
     @inlineCallbacks
     def startTakingTemps(self, c):
         if 'currentChan' not in c:
             c['currentChan'] = 0
         chans = c['chans'].keys()
-        if len(chans) == 0: 
+        if len(chans) == 0:
             # To not take up too many resources if no channels are
             # selected.
             callLater(MIN_REFRESH_RATE['s'],self.startTakingTemps,c)
@@ -68,7 +68,7 @@ class NRuoxServer(LabradServer):
         c['chans'][chan] = yield c['ACB'].get_ruox_temperature()
         c['currentChan'] += 1
         callLater(0.1,self.startTakingTemps,c)
-    
+
     @setting(101, 'Select Device', addrs='*2s')
     def select_device(self, c, addrs):
         """
@@ -92,7 +92,7 @@ class NRuoxServer(LabradServer):
             c['chans'] = {}
         if chan not in c['chans']:
             c['chans'][chan] = np.nan * units.K
-    
+
     @setting(103, 'Remove Channel', chan='i')
     def remove_channel(self, c, chan):
         """No longer measure this channel."""
@@ -100,11 +100,11 @@ class NRuoxServer(LabradServer):
             del c['chans'][chan]
         except KeyError:
             pass
-        
+
     @setting(104, 'Get Ruox Temperature', chan='i', returns='?')
     def get_ruox_temperature(self, c, chan=None):
         if chan == None:
-            return [c['chans'][chan] for chan in c['chans']] 
+            return [c['chans'][chan] for chan in c['chans']]
         else:
             return c['chans'][chan]
 
