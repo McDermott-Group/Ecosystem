@@ -26,6 +26,7 @@ import labrad
 from labrad import units
 from labrad.server import (inlineCallbacks, returnValue)
 from dataChest import dataChest
+from dateStamp import dateStamp
 from twisted.internet import tksupport, reactor
 import os, time
 
@@ -332,17 +333,14 @@ class ADRController(object):#Tkinter.Tk):
         # though all this starts  because a message is received saying it
         # is connected :\
         time.sleep(0.5)
-        thisADR = yield self.cxn[self.selectedADR]
-        adrSettingsPath = yield thisADR.get_settings_path()
-        date_append = yield thisADR.get_date_append()
-        reg = self.cxn.registry
-        reg.cd(adrSettingsPath)
-        base_path = yield reg.get('Log Path')
-        file_path = base_path + '\\temperatures' + date_append + '.temps'
+        startDateTime = yield self.cxn[self.selectedADR].get_start_datetime()
         try:
             tempDataChest = dataChest(['ADR Logs'])
             tempDataChest.cd(self.selectedADR)
-            tempDataChest.openDataset('ati1504dix_temperatures') # &&&
+            ds = dateStamp()
+            dset = '%s_temperatures'%ds.dateStamp(startDateTime.isoformat())
+            print dset
+            tempDataChest.openDataset(dset)
             
             n = tempDataChest.getNumRows()
             pastTempData = tempDataChest.getData(max(0,n-6*60*60), )

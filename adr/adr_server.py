@@ -50,6 +50,7 @@ from labrad.devices import DeviceServer
 from labrad import util, units
 from labrad.types import Error as LRError
 from dataChest import dataChest
+from dateStamp import dateStamp
 import sys
 
 def deltaT(dT):
@@ -139,16 +140,19 @@ class ADRServer(DeviceServer):
                             'Magnet Voltage Monitor':'None',
                             'Heat Switch':'None',
                             'Compressor':'None'}
-        dt = datetime.datetime.utcnow()
-        self.dateAppend = dt.strftime("_%y%m%d_%H%M")
+        self.startDatetime = datetime.datetime.utcnow()
         self.tempDataChest = dataChest(['ADR Logs',self.name])
+        dts = dateStamp()
+        iso = self.startDatetime.isoformat().split('+')[0] # dateStamp doesn't deal properly with iso with TZ info
+        dtstamp = dts.dateStamp(iso)
         self.tempDataChest.createDataset("temperatures",
                         [('time',[1],'utc_datetime','')],
                         [('temp60K',[1],'float64','Kelvin'),('temp03K',[1],'float64','Kelvin'),
-                         ('tempGGG',[1],'float64','Kelvin'),('tempFAA',[1],'float64','Kelvin')])
+                         ('tempGGG',[1],'float64','Kelvin'),('tempFAA',[1],'float64','Kelvin')],
+                         dateStamp=dtstamp)
         self.tempDataChest.addParameter("X Label", "Time")
         self.tempDataChest.addParameter("Y Label", "Temperature")
-        self.tempDataChest.addParameter("Plot Title", dt.strftime("ADR temperature history for run starting on %y/%m/%d %H:%M"))
+        self.tempDataChest.addParameter("Plot Title", self.startDatetime.strftime("ADR temperature history for run starting on %y/%m/%d %H:%M"))
         self.logMessages = []
 
     @inlineCallbacks
@@ -278,7 +282,7 @@ class ADRServer(DeviceServer):
         messageWithTimeStamp = dt.strftime("[%m/%d/%y %H:%M:%S] ") + message
         self.logMessages.append( (messageWithTimeStamp,alert) )
         try:
-            with open(self.file_path+'\\log'+self.dateAppend+'.txt', 'a') as f:
+            with open(self.file_path+self.startDatetime.strftime("\\log_%y%m%d_%H%M.txt"), 'a') as f:
                 f.write( messageWithTimeStamp + '\n' )
         except Exception as e: self.logMessage("Could not write to log file: " + str(e))
         print '[log] '+ message
@@ -487,9 +491,9 @@ class ADRServer(DeviceServer):
     @setting(101, 'Get Settings Path', returns=['*s'])
     def getSettingsPath(self,c):
         return self.ADRSettingsPath
-    @setting(102, 'Get Date Append', returns=['s'])
-    def getDateAppend(self,c):
-        return self.dateAppend
+    @setting(102, 'Get Start Datetime', returns=['t'])
+    def getStartDatetime(self,c):
+        return self.startDatetime
     @setting(103, 'Get Log', n=['v'], returns=['*(s,b)'])
     def getLog(self,c, n=0):
         """Get an array of the last n logs."""
