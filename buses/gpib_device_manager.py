@@ -84,6 +84,10 @@ class GPIBDeviceManager(LabradServer):
     """
     name = 'GPIB Device Manager'
 
+    # signal for when devices are hanged
+    connectionChangedEvent = Signal(123456, 'device connection changed', '?')
+    # signals have to be called in init, not initServer
+
     @inlineCallbacks
     def initServer(self):
         """Initialize the server after connecting to LabRAD."""
@@ -96,9 +100,6 @@ class GPIBDeviceManager(LabradServer):
         # named messages are sent with source ID first, which we ignore
         connect_func = lambda c, (s, payload): self.gpib_device_connect(*payload)
         disconnect_func = lambda c, (s, payload): self.gpib_device_disconnect(*payload)
-
-        # signal for when devices are hanged
-        self.connectionChangedEvent = Signal(123456, 'device connection changed', '?')
 
         mgr = self.client.manager
         self._cxn.addListener(connect_func, source=mgr.ID, ID=10)
@@ -306,7 +307,7 @@ class GPIBDeviceManager(LabradServer):
         return (str(self.knownDevices),
                 str(self.deviceServers),
                 str(self.identFunctions))
-
+                
     def notifyServers(self, device, server, channel, isConnected):
         """Notify all registered servers about a device status change and emit a
         signal saying a device connection has been changed in general."""

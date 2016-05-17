@@ -49,7 +49,7 @@ from labrad.server import (LabradServer, setting,
 from labrad.devices import DeviceServer
 from labrad import util, units
 from labrad.types import Error as LRError
-from dataChest.dataChest import dataChest
+from dataChest import dataChest
 import sys
 
 def deltaT(dT):
@@ -166,7 +166,6 @@ class ADRServer(DeviceServer):
             self.logMessage('{Saving log failed. '
                             ' Check that AFS is working.} ')
         yield self.loadDefaults()
-        yield util.wakeupCall( 3 ) # on the round ADR, the HP DMM takes forever to initialize.  This prevents it from going on before it is ready.
         yield self.initializeInstruments()
         # subscribe to messages
         # the server ones are not used right now, but at some point they could be
@@ -179,13 +178,14 @@ class ADRServer(DeviceServer):
         yield mgr.subscribe_to_named_message('Server Disconnect', 13, True)
 
         # listen for device connect/disconnect signals
-        dev_con_changed = lambda c, (s, payload): self.device_connection_changed(*payload)
+        dev_con_changed = lambda c, payload: self.device_connection_changed(*payload)
         try: # in case the device manager is not running
              # &&& do this whenever device manager starts or something?
             devManager = self.client.gpib_device_manager
             yield devManager.device_connection_changed(self.ID)
             yield devManager.addListener(listener = dev_con_changed, source = None, ID = self.ID)
-
+        except Exception as e:
+            print str(e)
         self.updateState()
     @inlineCallbacks
     def loadDefaults(self):
@@ -268,7 +268,7 @@ class ADRServer(DeviceServer):
             if 'gpib_bus' in serv or 'GPIB Bus' in serv:# or 'sim900_srs_mainframe' in serv:
                 yield self.client[serv].refresh_devices()
     def device_connection_changed(self, device, server, channel, isConnected):
-        print '%s connected: %b'%(device,isConnected)
+        print '%s connected: %s'%(device,isConnected)
         self.initializeInstruments()
     def serversChanged(self,*args):
         self.initializeInstruments()
@@ -336,7 +336,7 @@ class ADRServer(DeviceServer):
             # update relevant files
             try:
                 newTemps = [self.state[t]['K'] for t in ['T_60K','T_3K','T_GGG','T_FAA']]
-                timestamp = deltaT(self.state['datetime'] - datetime(1970, 1, 1))
+                timestamp = deltaT(self.state['datetime'] - datetime.datetime(1970, 1, 1))
                 self.tempDataChest.addData([[timestamp]+newTemps])
             except Exception as e: self.logMessage('Recording Temps Failed: '+str(e))
             cycleLength = deltaT(datetime.datetime.utcnow() - cycleStartTime)

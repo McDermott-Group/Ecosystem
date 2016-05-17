@@ -15,16 +15,17 @@
 
 
 import matplotlib as mpl
+import matplotlib.dates
 mpl.use('TkAgg')
 import pylab, numpy
 import datetime, struct
-import timezone as tz
+from dateutil import tz
 import Tkinter
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 import labrad
 from labrad import units
 from labrad.server import (inlineCallbacks, returnValue)
-from dataChest.dataChest import dataChest
+from dataChest import dataChest
 from twisted.internet import tksupport, reactor
 import os, time
 
@@ -339,20 +340,21 @@ class ADRController(object):#Tkinter.Tk):
         base_path = yield reg.get('Log Path')
         file_path = base_path + '\\temperatures' + date_append + '.temps'
         try:
-            tempDataChest = dataChest(['ADR Logs',self.name])
+            tempDataChest = dataChest(['ADR Logs'])
             tempDataChest.cd(self.selectedADR)
-            tempDataChest.openDataset() # &&&
+            tempDataChest.openDataset('ati1504dix_temperatures') # &&&
 
             first = False
             n = tempDataChest.getNumRows()
             while first is False and n > 0:
-                newRow = tempDataChest.getData(n)
+                newRow = tempDataChest.getData(n-1)[0]
                 # change utc time to local
                 utc = newRow[0]
                 # utc = datetime.datetime.strptime(utc, '%Y-%m-%dT%H:%M:%S.%f') # for string
                 utc = datetime.datetime.utcfromtimestamp(utc) # for float
                 utc = utc.replace(tzinfo=tz.tzutc())
-                newRow[0] = utc.astimezone(tz.tzlocal()) # local
+                local = utc.astimezone(tz.tzlocal())
+                newRow[0] = mpl.dates.date2num(local)
                 # find limits for start time
                 if len(self.stage60K.get_xdata()) < 1: # then start at 1 and load appropriate past data
                     xMin = mpl.dates.num2date(1)
@@ -450,8 +452,6 @@ class ADRController(object):#Tkinter.Tk):
         # update plot:
         # change time from utc to local
         utc = state['time']
-        utc = newRow[0]
-        utc = datetime.datetime.strptime(utc, '%Y-%m-%dT%H:%M:%S.%f')
         utc = utc.replace(tzinfo=tz.tzutc())
         localTime = utc.astimezone(tz.tzlocal()) # local
         # change data to plot
@@ -478,8 +478,13 @@ class ADRController(object):#Tkinter.Tk):
         it can be called when the time selection menu is changed."""
         # set x limits
         timeDisplayOptions = {'10 minutes':10,'1 hour':60,'6 hours':6*60,'24 hours':24*60,'All':0}
-        lastDatetime = mpl.dates.num2date(self.stage60K.get_xdata()[-1])
-        firstDatetime = mpl.dates.num2date(self.stage60K.get_xdata()[0])
+        try:
+            lastDatetime = mpl.dates.num2date(self.stage60K.get_xdata()[-1])
+            firstDatetime = mpl.dates.num2date(self.stage60K.get_xdata()[0])
+        except IndexError: # no data yet
+            now = datetime.datetime.utcnow().toordinal()
+            firstDatetime = mpl.dates.num2date(now)
+            lastDatetime = firstDatetime
         xMin = lastDatetime-datetime.timedelta(minutes=timeDisplayOptions[self.wScale.get()])
         xMin = max([ firstDatetime, xMin ])
         if self.wScale.get() == 'All': xMin = firstDatetime
