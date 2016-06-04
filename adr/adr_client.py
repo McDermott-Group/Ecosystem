@@ -339,18 +339,16 @@ class ADRController(object):#Tkinter.Tk):
             tempDataChest.cd(self.selectedADR)
             ds = dateStamp()
             dset = '%s_temperatures'%ds.dateStamp(startDateTime.isoformat())
-            print dset
             tempDataChest.openDataset(dset)
             
             n = tempDataChest.getNumRows()
-            pastTempData = tempDataChest.getData(max(0,n-6*60*60), )
+            pastTempData = tempDataChest.getData(max(0,n-6*60*60), ) # load approximately the last 6 hours of data
             for newRow in pastTempData:
                 # change utc time to local
                 utc = newRow[0]
                 utc = datetime.datetime.utcfromtimestamp(utc) # for float
                 utc = utc.replace(tzinfo=tz.tzutc())
-                local = utc.astimezone(tz.tzlocal())
-                newRow[0] = mpl.dates.date2num(local)
+                newRow[0] = mpl.dates.date2num(utc)
                 # add old data from file into plot
                 self.stage60K.set_xdata(numpy.append(newRow[0],self.stage60K.get_xdata()))
                 self.stage60K.set_ydata(numpy.append(newRow[1],self.stage60K.get_ydata()))
@@ -388,6 +386,7 @@ class ADRController(object):#Tkinter.Tk):
         if reg:
             self.regulateButton.configure(text='Stop Regulating', command=self.cancelRegulate)
             self.magUpButton.configure(state=Tkinter.DISABLED)
+        # update heat switch buttons
         HSAvailable = yield self.cxn[self.selectedADR].get_instrument_state(['Heat Switch'])
         if HSAvailable[0][1][0]:
             self.HSCloseButton.configure(state=Tkinter.NORMAL)
@@ -416,6 +415,11 @@ class ADRController(object):#Tkinter.Tk):
             elif status[1] == True: color = 'green3'
             else: color = 'gray70'
             self.instrumentStatuses[name].config(bg=color)
+        # enable/disable mag up/reg buttons depending on instrument status
+        # disable if power supply or magnet voltage sensor is down
+        self.lastStateM = self.magUpButton.cget('state')
+        self.lastStateR = self.regulateButton.cget('state')
+        # &&&
         # change compressor button
         if state['get_state_var'] == True:
             self.compressorButton.configure(text='Stop Compressor', command=self.stopCompressor, state=Tkinter.NORMAL)
@@ -438,18 +442,14 @@ class ADRController(object):#Tkinter.Tk):
         self.currentI.set( psI )
         self.currentV.set( psV )
         # update plot:
-        # change time from utc to local
-        utc = state['time']
-        utc = utc.replace(tzinfo=tz.tzutc())
-        localTime = utc.astimezone(tz.tzlocal()) # local
         # change data to plot
-        self.stage60K.set_xdata(numpy.append(self.stage60K.get_xdata(),mpl.dates.date2num(localTime)))
+        self.stage60K.set_xdata(numpy.append(self.stage60K.get_xdata(),mpl.dates.date2num(state['time'])))
         self.stage60K.set_ydata(numpy.append(self.stage60K.get_ydata(),temps['T_60K']['K']))
-        self.stage03K.set_xdata(numpy.append(self.stage03K.get_xdata(),mpl.dates.date2num(localTime)))
+        self.stage03K.set_xdata(numpy.append(self.stage03K.get_xdata(),mpl.dates.date2num(state['time'])))
         self.stage03K.set_ydata(numpy.append(self.stage03K.get_ydata(),temps['T_3K']['K']))
-        self.stageGGG.set_xdata(numpy.append(self.stageGGG.get_xdata(),mpl.dates.date2num(localTime)))
+        self.stageGGG.set_xdata(numpy.append(self.stageGGG.get_xdata(),mpl.dates.date2num(state['time'])))
         self.stageGGG.set_ydata(numpy.append(self.stageGGG.get_ydata(),temps['T_GGG']['K']))
-        self.stageFAA.set_xdata(numpy.append(self.stageFAA.get_xdata(),mpl.dates.date2num(localTime)))
+        self.stageFAA.set_xdata(numpy.append(self.stageFAA.get_xdata(),mpl.dates.date2num(state['time'])))
         self.stageFAA.set_ydata(numpy.append(self.stageFAA.get_ydata(),temps['T_FAA']['K']))
         #update plot
         self.updatePlot()
@@ -493,7 +493,7 @@ class ADRController(object):#Tkinter.Tk):
                         except ValueError as e: pass
                 self.ax.set_xlim(xMin,lastDatetime)
                 self.ax.set_ylim(ymin - (ymax-ymin)/10, ymax + (ymax-ymin)/10)
-                hfmt = mpl.dates.DateFormatter('%H:%M:%S')
+                hfmt = mpl.dates.DateFormatter('%H:%M:%S', tz=tz.tzlocal())
                 self.ax.xaxis.set_major_formatter(hfmt)
                 self.fig.autofmt_xdate()
                 self.fig.tight_layout()
