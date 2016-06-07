@@ -67,9 +67,9 @@ class nViewer:
 		#						 ["ARGUMENTS PASSED TO THE SETTINGS TRIGGERED BY THE BUTTONS"]
 		#						 "SELECT DEVICE COMMAND (OPTIONAL FOR SERVERS THAT DO NOT REQUIRE DEVICE SELECTION)", 
 		#						 "DEVICE NUMBER")
-		# 3. Start nGui
+		# 3. Start nGui and name the window
 		# 		self.gui = NGui.NGui()
-		#		self.gui.startGui(self.devices)
+		#		self.gui.startGui(self.devices, Window title)
 		#
 		# 4. Initialize nViewer OUTSIDE OF THE CLASS
 		#		viewer = nViewer()	
@@ -91,7 +91,7 @@ class nViewer:
 	
 		# Create the gui
 		self.gui = NGui.NGui()
-		self.gui.startGui(self.devices)
+		self.gui.startGui(self.devices, 'Leiden Gui')
 
 # In phython, the main class's __init__() IS NOT automatically called
 viewer = nViewer()	

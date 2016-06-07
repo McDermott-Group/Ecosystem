@@ -59,6 +59,7 @@ class PopUp(QtGui.QDialog):
 		#self.cancelButton.setStyleSheet("background-color: maroon")
 		self.cancelButton.setFont(font)
 		self.cancelButton.clicked.connect(self.cancelClicked)
+		self.setWindowTitle('Warning')
 		
 	def okClicked(self):
 		'''Called when the ok button is clicked'''

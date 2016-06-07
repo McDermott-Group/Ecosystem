@@ -61,6 +61,7 @@ class NGui(QtGui.QDialog):
 		self.setLayout(self.mainHBox)
 		self.mainHBox.addLayout(self.mainVBox)
 		# For each device, add a GUI frame for it.
+		
 		for i in range(0,len(self.devices)):
 			#Append a new gui frame
 			self.frames.append(QtGui.QFrame(self))
@@ -146,9 +147,10 @@ class NGui(QtGui.QDialog):
 					self.grids[i].addWidget(self.units[i][y], y+2, 2)
 		print("Gui initialized")
 		return
-	def startGui(self, devices):
+	def startGui(self, devices, title):
 		# Call the class's init function
 		self.initGui(devices)
+		self.setWindowTitle(title)
 		# Show the gui
 		self.show()
 		timer = QtCore.QTimer(self)
