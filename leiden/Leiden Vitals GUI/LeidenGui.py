@@ -79,6 +79,7 @@ class nViewer:
 		# This is my test server
 		testDevice = Device("my_server", "Random Number Generator", ["Random Pressure", "Random Temperature"], ["pressure", "temperature"], [None, None], cxn, ["Pressure","Temperature"], ["pressure", "temperature"], ["You are about to get a random pressure", None],[None,None])
 		self.devices.append(testDevice)
+		#Compressor = Device("cp2800_compressor", "Compressor",[)
 		# Omega Temperature Monitor server
 		Temperature = Device("omega_temp_monitor_server","External Water Temperature",["Temperature"], ["get_temperature"],[None], cxn, None, None, None, [None],"select_device", 0)
 		self.devices.append(Temperature)
@@ -91,7 +92,7 @@ class nViewer:
 	
 		# Create the gui
 		self.gui = NGui.NGui()
-		self.gui.startGui(self.devices, 'Leiden Gui')
+		self.gui.startGui(self.devices, 'Leiden Gui', 'Leiden Data')
 
 # In phython, the main class's __init__() IS NOT automatically called
 viewer = nViewer()	

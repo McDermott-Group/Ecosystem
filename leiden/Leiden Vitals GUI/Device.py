@@ -55,7 +55,7 @@ class Device:
 	
 	cxn = None
 	def __init__(self, serverName, name, nicknames, settingNames, settingArgs, cxn, buttonNames, buttonSettings, buttonMessages,  buttonArgs, setDeviceCmd = None, selectedDevice = 0):
-		print("making device")
+		#print("making device")
 		# Get all the stuff from the constructor.
 		self.name = name
 		self.nicknames = nicknames
@@ -74,11 +74,11 @@ class Device:
 		if(buttonNames is not None):
 			self.buttonNames = buttonNames
 			self.buttonSettings = buttonSettings
-			print(buttonArgs)
+			#print(buttonArgs)
 			for i in range(0, len(self.buttonNames)):
-				print(self.name)
-				print()
-				print(i)
+				#print(self.name)
+				#print()
+				#print(i)
 				if(i is not 0):
 					self.buttons.append([])
 				self.buttons[i].append(self.buttonNames[i])
@@ -143,7 +143,7 @@ class Device:
 				else:
 					getattr(self.deviceServer, self.frame.getButtons()[button][1])
 		except:
-			print("Device not connected.")
+			#print("Device not connected.")
 			return
 	def Query(self):
 		'''Ask the device for readings'''
@@ -151,7 +151,7 @@ class Device:
 		if(not self.isDevice):
 			# Try to connect again, if the value changes, then we know that the device has connected.
 			if(self.connect() is not self.isDevice):
-				print("Connected to "+self.name)
+				#print("Connected to "+self.name)
 				self.isDevice = True
 		# Otherwise, if the device is already connected
 		else:
@@ -198,7 +198,8 @@ class Device:
 				#exc_type, exc_value, exc_traceback = sys.exc_info()
 				#traceback.print_tb(exc_traceback)
 				self.frame.raiseError("Problem communicating with "+self.name)
+				self.frame.setReadings(None)
 				self.isDevice = False
 		# Query calls itself again, this keeps the thread alive.
-		threading.Timer(2, self.Query).start()
+		threading.Timer(1, self.Query).start()
 		return 
