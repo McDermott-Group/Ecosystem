@@ -15,11 +15,10 @@
 
 # Utilities libraries.
 
-
 """
 ### BEGIN NODE INFO
 [info]
-name = NGui class
+name = NFrame class
 version = 1.0.1
 description = Organizes information returned by servers
 

@@ -32,6 +32,7 @@ from multiprocessing.pool import ThreadPool
 import threading
 import labrad
 import labrad.units as units
+from dataChestWrapper import *
 class nViewer:
 	gui = None
 	devices =[]
@@ -79,6 +80,7 @@ class nViewer:
 		# This is my test server
 		testDevice = Device("my_server", "Random Number Generator", ["Random Pressure", "Random Temperature"], ["pressure", "temperature"], [None, None], cxn, ["Pressure","Temperature"], ["pressure", "temperature"], ["You are about to get a random pressure", None],[None,None])
 		self.devices.append(testDevice)
+		#Compressor = Device("cp2800_compressor", "Compressor",[)
 		# Omega Temperature Monitor server
 		Temperature = Device("omega_temp_monitor_server","External Water Temperature",["Temperature"], ["get_temperature"],[None], cxn, None, None, None, [None],"select_device", 0)
 		self.devices.append(Temperature)
@@ -88,11 +90,15 @@ class nViewer:
 		# Pfeiffer Vacuum Monitor
 		testDevice = Device("pfeiffer_vacuum_maxigauge", "Pressure Monitor", [None, None, None, "Pressure OVC","Pressure IVC", "Still Pressure"], ["get_pressures"], [None], cxn, None, None, None,[None],"select_device", 0)
 		self.devices.append(testDevice)
-	
+		
+		# Start the datalogger. This line can be commented out if no datalogging is required.
+		self.chest = dataChestWrapper(self.devices)
+		
 		# Create the gui
 		self.gui = NGui.NGui()
-		self.gui.startGui(self.devices, 'Leiden Gui')
-
+		self.gui.startGui(self.devices, 'Leiden Gui', 'Leiden Data')
+		
+		
 # In phython, the main class's __init__() IS NOT automatically called
 viewer = nViewer()	
 viewer.__init__()

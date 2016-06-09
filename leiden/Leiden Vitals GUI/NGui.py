@@ -31,8 +31,9 @@ import threading
 import sys
 import ctypes
 from functools import partial
-class NGui(QtGui.QDialog):
+import os
 
+class NGui(QtGui.QDialog):
 	dialog = None
 	parameters = [[]]
 	frames = []
@@ -41,6 +42,7 @@ class NGui(QtGui.QDialog):
 	mainVBox = QtGui.QVBoxLayout()
 	mainHBox = QtGui.QHBoxLayout()
 	titles = []
+	dataSets = []
 	lcds = [[]]
 	units = [[]]
 	buttons = [[]]
@@ -61,7 +63,6 @@ class NGui(QtGui.QDialog):
 		self.setLayout(self.mainHBox)
 		self.mainHBox.addLayout(self.mainVBox)
 		# For each device, add a GUI frame for it.
-		
 		for i in range(0,len(self.devices)):
 			#Append a new gui frame
 			self.frames.append(QtGui.QFrame(self))
@@ -72,7 +73,7 @@ class NGui(QtGui.QDialog):
 			self.parameters.append([])
 			self.lcds.append([])
 			self.units.append([])
-			self.buttons.append([])
+			self.buttons.append([])			
 			# Configure grid layout
 			self.grids[i].setSpacing(10)
 			self.grids[i].addWidget(self.titles[i], 1, 0)
@@ -99,8 +100,7 @@ class NGui(QtGui.QDialog):
 					self.buttons[i][b].clicked.connect(partial(self.devices[i].prompt, b))
 					# Make the button pretty
 					self.buttons[i][b].setStyleSheet("color:rgb(189, 195, 199); background:rgb(70, 80, 88)")
-					self.buttons[i][b].setFont(self.font)
-					
+					self.buttons[i][b].setFont(self.font)	
 			# Make the titles look nice
 			self.titles[i].setStyleSheet("color:rgb(189, 195, 199);")
 			self.font.setPointSize(18)
@@ -109,7 +109,6 @@ class NGui(QtGui.QDialog):
 			# Get the title of the device
 			self.titles[i].setText(self.devices[i].getFrame().getTitle())
 			self.titles[i].setGeometry(QtCore.QRect(10,10,self.titles[i].fontMetrics().boundingRect(self.titles[i].text()).width(),40))
-			
 			for y in range(0, len(self.devices[i].getFrame().getNicknames())):
 				# Add a new parameter to the current device
 				self.parameters[i].append(QtGui.QLabel(self.frames[i]))
@@ -122,7 +121,8 @@ class NGui(QtGui.QDialog):
 				# Configure the QLCDnumber widgets that display information
 				self.lcds[i].append(QtGui.QLCDNumber())
 				self.lcds[i][y].setNumDigits(11)
-				self.lcds[i][y].setSegmentStyle(QtGui.QLCDNumber.Flat)
+				self.lcds[i][y].setSegmentStyle(QtGui.QLCDNumber.Outline)
+				self.lcds[i][y].display("-")
 				self.lcds[i][y].setFrameShape(QtGui.QFrame.WinPanel)
 				self.lcds[i][y].setFrameShadow(QtGui.QFrame.Plain)
 				self.lcds[i][y].setLineWidth(100)
@@ -147,7 +147,10 @@ class NGui(QtGui.QDialog):
 					self.grids[i].addWidget(self.units[i][y], y+2, 2)
 		print("Gui initialized")
 		return
-	def startGui(self, devices, title):
+	def startGui(self, devices, title, dataTitle):
+		'''Start the GUI'''
+		# Used as the name of the dataChest data title
+		self.dataTitle = dataTitle
 		# Call the class's init function
 		self.initGui(devices)
 		self.setWindowTitle(title)
@@ -158,7 +161,9 @@ class NGui(QtGui.QDialog):
 		timer.timeout.connect(self.update)
 		timer.start(1000)
 		sys.exit(app.exec_())
+
 	def update(self):
+		'''Update the GUI'''
 		readings = [];
 		error = False;
 		# loop through all devices
@@ -168,6 +173,8 @@ class NGui(QtGui.QDialog):
 				# Get the readings from the frame
 				readings = self.devices[i].getFrame().getReadings();
 				if(readings is not None):
+					# Holds an array containing the new data for use when adding data to the current dataset
+					newData = []
 					# Update all QLcds with the reading
 					for y in range(0, len(readings)):
 						self.lcds[i][y].setSegmentStyle(QtGui.QLCDNumber.Flat)
@@ -183,7 +190,7 @@ class NGui(QtGui.QDialog):
 				# Otherwise if there is an error, show that on the gui through outlined lcd numbers
 				for y in range(0, len(self.lcds[i])):
 					self.lcds[i][y].setSegmentStyle(QtGui.QLCDNumber.Outline)
-				
+					self.lcds[i][y].display("-")
 		return
 			
 
