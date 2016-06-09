@@ -1,4 +1,30 @@
+# Copyright (C) 2016 Noah Meltzer
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Utilities libraries.
+
+
+"""
+### BEGIN NODE INFO
+[info]
+name = NPopUp class
+version = 1.0.1
+description = Creates a popUp
+
+### END NODE INFO
+"""
 from PyQt4 import QtCore, QtGui
 class PopUp(QtGui.QDialog):
 	'''Small class for a popup window'''
@@ -17,7 +43,6 @@ class PopUp(QtGui.QDialog):
 		self.setObjectName("Warning")
 		self.resize(500,400)
 		self.setStyleSheet("background:rgb(70, 80, 88)")
-		
 		frame = QtGui.QFrame(self)
 		frame.setGeometry(QtCore.QRect(10,10, 480, 300))
 		frame.setStyleSheet("background: rgb(52, 73, 94)")
@@ -31,7 +56,6 @@ class PopUp(QtGui.QDialog):
 		frame.setLayout(frameHBox)
 		frameHBox.addWidget(self.warning)
 		mainHBox = QtGui.QHBoxLayout()
-	
 		# Configure a font to use.
 		font = QtGui.QFont()
 		font.setPointSize(12)

@@ -96,7 +96,6 @@ class Device:
 		# Start the thread
 		self.deviceThread.start()
 		
-
 	def connect(self):	
 		'''Connect to the device'''
 		try:
