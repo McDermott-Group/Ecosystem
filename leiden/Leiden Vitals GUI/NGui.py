@@ -32,8 +32,8 @@ import sys
 import ctypes
 from functools import partial
 import os
-
-class NGui(QtGui.QDialog):
+from NotifierGUI import NotifierGUI
+class NGui(QtGui.QMainWindow):
 	dialog = None
 	parameters = [[]]
 	frames = []
@@ -56,12 +56,41 @@ class NGui(QtGui.QDialog):
 		'''Create a base gui to start from'''
 		QtGui.QWidget.__init__(self, parent)
 		# Make pretty
+		self.central_widget = QtGui.QWidget()
+		self.setCentralWidget(self.central_widget)
+		
 		self.setStyleSheet("background:rgb(70, 80, 88)")
 		# Get list of devices
 		self.devices = devices
 		# Stack the device frames
-		self.setLayout(self.mainHBox)
+		# #self.setLayout(self.mainHBox)
+		self.central_widget.setLayout(self.mainHBox)
 		self.mainHBox.addLayout(self.mainVBox)
+		
+		menubar = self.menuBar()
+		menubar.setStyleSheet("QMenuBar {background-color: rgb(189, 195, 199)}"
+				"QMenuBar::item {background: transparent} QMenu{background-color:rgb(189, 195, 199)}")
+		#self.statusBar()
+		#self.statusBar().setStyleSheet("background-color: rgb(189, 195, 199)")
+
+		exitAction = QtGui.QAction('&Exit', self)        
+		exitAction.setShortcut('Ctrl+Q')
+		exitAction.setStatusTip('Exit application')
+		exitAction.triggered.connect(QtGui.qApp.quit)
+		
+		DCSettingsAction = QtGui.QAction('&Settings...', self)
+		
+		NotifierSettingsAction = QtGui.QAction('&Settings...', self)
+		NotifierSettingsAction.triggered.connect(self.openNotifierSettings)
+		
+		fileMenu = menubar.addMenu('&File')
+		fileMenu.addAction(exitAction)
+		
+		DCMenu = menubar.addMenu('&Data Chest')
+		DCMenu.addAction(DCSettingsAction)
+		
+		NotifierMenu = menubar.addMenu('&Notifier')
+		NotifierMenu.addAction(NotifierSettingsAction)
 		# For each device, add a GUI frame for it.
 		for i in range(0,len(self.devices)):
 			#Append a new gui frame
@@ -164,6 +193,10 @@ class NGui(QtGui.QDialog):
 					self.grids[i].addWidget(self.units[i][y], y+2, 2)
 		print("Gui initialized")
 		return
+	def openNotifierSettings(self):
+		print("HI")
+		self.dialog = NotifierGUI(self.devices)
+		self.dialog.exec_()
 	def startGui(self, devices, title, dataTitle):
 		'''Start the GUI'''
 		# Used as the name of the dataChest data title
