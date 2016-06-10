@@ -69,7 +69,8 @@ class PopUp(QtGui.QDialog):
 		self.warning.setFont(font)
 		# Create an 'Ok' button at the bottom of the screen.
 		self.okButton = QtGui.QPushButton(Dialog)
-		self.okButton.setStyleSheet("color:rgb(189, 195, 199); background: rgb(52, 73, 94)")
+		self.okButton.setStyleSheet("color:rgb(189, 195, 199);"
+			"background: rgb(52, 73, 94)")
 		self.okButton.setGeometry(QtCore.QRect(20, 330, 191, 61))
 		self.okButton.setText("Ok")
 		#self.okButton.setStyleSheet("background-color: green")
@@ -77,7 +78,8 @@ class PopUp(QtGui.QDialog):
 		self.okButton.clicked.connect(self.okClicked)
 		# Create a 'Cancel button' at the bottom of the screen.
 		self.cancelButton = QtGui.QPushButton(Dialog)
-		self.cancelButton.setStyleSheet("color:rgb(189, 195, 199); background: rgb(52, 73, 94)\n")
+		self.cancelButton.setStyleSheet("color:rgb(189, 195, 199);"
+			"background: rgb(52, 73, 94)\n")
 		self.cancelButton.setGeometry(QtCore.QRect(290, 330, 191, 61))
 		self.cancelButton.setText("Cancel")
 		#self.cancelButton.setStyleSheet("background-color: maroon")

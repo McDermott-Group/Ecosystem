@@ -33,6 +33,7 @@ class NFrame:
 	readings = None
 	error = False
 	errmsg = None
+	yLabel = "HI"
 	units = []
 	buttons = [[]]
 	buttonInd = None
@@ -76,4 +77,7 @@ class NFrame:
 		return self.buttonInd
 	def isButtonPressed(self):
 		return self.buttonPushed
-		
+	def setYLabel(self, y):
+		self.yLabel = y
+	def getYLabel(self):
+		return self.yLabel

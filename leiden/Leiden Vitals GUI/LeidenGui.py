@@ -66,32 +66,81 @@ class nViewer:
 		#						 ["SETTINGS", "ACTIVATED", "BY BUTTONS"], 
 		#						 ["ALERT TO BE DISPLAYED WITH EACH BUTTON PRESS", "NONE IF NO MESSAGE"]
 		#						 ["ARGUMENTS PASSED TO THE SETTINGS TRIGGERED BY THE BUTTONS"]
-		#						 "SELECT DEVICE COMMAND (OPTIONAL FOR SERVERS THAT DO NOT REQUIRE DEVICE SELECTION)", 
-		#						 "DEVICE NUMBER")
-		# 3. Start nGui and name the window
+		#						"yAxis Label"(OPTIONAL),
+		#						"SELECT DEVICE COMMAND (OPTIONAL FOR SERVERS THAT DO NOT REQUIRE DEVICE SELECTION)", 
+		#						 "DEVICE NUMBER",)
+		# 3. Start the dataChest datalogger, this line can be commented out
+		#	if no datalogging is required.
+		#			self.chest = dataChestWrapper(self.devices)
+		#	
+		# 4. Start nGui and name the window
 		# 		self.gui = NGui.NGui()
 		#		self.gui.startGui(self.devices, Window title)
 		#
-		# 4. Initialize nViewer OUTSIDE OF THE CLASS
+		# 5. Initialize nViewer OUTSIDE OF THE CLASS
 		#		viewer = nViewer()	
 		#		viewer.__init__()
 		###################################################################
 		
 		# This is my test server
-		testDevice = Device("my_server", "Random Number Generator", ["Random Pressure", "Random Temperature"], ["pressure", "temperature"], [None, None], cxn, ["Pressure","Temperature"], ["pressure", "temperature"], ["You are about to get a random pressure", None],[None,None])
-		self.devices.append(testDevice)
-		#Compressor = Device("cp2800_compressor", "Compressor",[)
+		# testDevice = Device("my_server", "Random Number Generator", ["Random Pressure", "Random Temperature"], ["pressure", "temperature"], [None, None], cxn, ["Pressure","Temperature"], ["pressure", "temperature"], ["You are about to get a random pressure", None],[None,None])
+		# self.devices.append(testDevice)
+		# Leiden DR monitor
+		LeidenDRTemperature = Device("leiden_dr_temperature", 
+						"Leiden DR", 
+						["Mix (PT-1000)",
+						"Mix (TT)", 
+						"Still",
+						"Exchange"], 
+						["mix_temperature_pt1000",
+						"mix_temperature",
+						"still_temperature", 
+						"exchange_temperature"],
+						[None], cxn, None,None, None,[None])
+		self.devices.append(LeidenDRTemperature)
+		# Compressor Monitor
+		Compressor = Device("cp2800_compressor",
+						"Compressor",
+						["Input Water Temperature", 
+						"Output Water Temperature", 
+						"Helium Temperature",
+						"Oil Temperature"],
+						["temperaturesforgui"], 
+						[None], cxn, 
+						["Turn On", "Turn Off"], 
+						["status", "status"], 
+						["You are about to turn the compressor on",
+						"You are about to turn the compressor off"], 
+						[None, None], "Temperature", "select_device", 0)
+		self.devices.append(Compressor)
 		# Omega Temperature Monitor server
-		Temperature = Device("omega_temp_monitor_server","External Water Temperature",["Temperature"], ["get_temperature"],[None], cxn, None, None, None, [None],"select_device", 0)
+		Temperature = Device("omega_temp_monitor_server",
+						"External Water Temperature",
+						["Temperature"],
+						["get_temperature"],
+						[None], cxn, None, None, None, [None],None,
+						"select_device", 0)
 		self.devices.append(Temperature)
 		# Omega Flow Meter
-		Flow = Device("omega_ratemeter_server","External Water Flow Rate", ["Flow Rate"], ["get_rate"], [None], cxn, None, None, None, "select_device", 0)
+		Flow = Device("omega_ratemeter_server","External Water Flow Rate", 
+						["Flow Rate"], 
+						["get_rate"],
+						[None], cxn, None, None, None, None,None,
+						"select_device", 0)
 		self.devices.append(Flow)
 		# Pfeiffer Vacuum Monitor
-		testDevice = Device("pfeiffer_vacuum_maxigauge", "Pressure Monitor", [None, None, None, "Pressure OVC","Pressure IVC", "Still Pressure"], ["get_pressures"], [None], cxn, None, None, None,[None],"select_device", 0)
-		self.devices.append(testDevice)
+		vacuum = Device("pfeiffer_vacuum_maxigauge", "Pressure Monitor", 
+						[None, None, None, 
+						"OVC Pressure",
+						"IVC Pressure", 
+						"Still Pressure"], 
+						["get_pressures"], 
+						[None], cxn, None, None, None,[None],None,
+						"select_device", 0)
+		self.devices.append(vacuum)
 		
-		# Start the datalogger. This line can be commented out if no datalogging is required.
+		# Start the datalogger. This line can be commented
+		# out if no datalogging is required.
 		self.chest = dataChestWrapper(self.devices)
 		
 		# Create the gui
