@@ -20,7 +20,7 @@ class NMail:
 			smtpObj.login('physics.labrad@gmail.com', 'mcdermott')
 
 			smtpObj.sendmail('physics.labrad@gmail.com',To , msg.as_string())         
-			print "Successfully sent email"
+			print "Successfully sent mail"
 			smtpObj.quit()
 		except:
 			print "Mail failed."

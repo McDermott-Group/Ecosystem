@@ -36,18 +36,18 @@ class NAlert:
 				for y in range(0, len(self.devices[i].getFrame().getReadings())):
 					if(self.devices[i].getFrame().getNicknames()[y] is not None):
 						
-						if(self.mins[z]>
-						self.devices[i]
-						.getFrame().getReadings()[y]):
-							#print(z)
-							self.generateMessage(z,y,i)
-							#print(z)
-							self.sendMail(i, y, z)
-							#print(self.mins[z])
+						if(self.mins[z]>self.devices[i].getFrame().getReadings()[y]):
+							if(self.mins[z] is not ''):
+								#print(self.mins[z])
+								self.generateMessage(z,y,i)
+								#print(z)
+								self.sendMail(i, y, z)
+								#print(self.mins[z])
 							
 						if(self.maxs[z]<self.devices[i].getFrame().getReadings()[y]):
-							self.generateMessage(z,y,i)
-							self.sendMail(i, y, z)
+							if(self.maxs[z] is not ''):
+								self.generateMessage(z,y,i)
+								self.sendMail(i, y, z)
 						z = z+1
 		if(self.keepGoing):
 			threading.Timer(1, self.monitorReadings).start()
