@@ -31,9 +31,14 @@ import pickle
 
 class NotifierGUI(QtGui.QDialog):
 	def __init__(self,devices, parent = None):
+		'''Initialize the Notifier Gui'''
 		super(NotifierGUI, self).__init__(parent)
+		# Create a new tab
 		tabWidget = QtGui.QTabWidget()
+		# New SMS widget
 		self.smsTab = SMSTab(devices)
+		# Add the new SMS widget to the tab
+		self.allDatatxt = [[],[],[]]
 		tabWidget.addTab(self.smsTab, "SMS Alerts")
 		mainLayout = QtGui.QVBoxLayout()
 		mainLayout.addWidget(tabWidget)
@@ -51,7 +56,7 @@ class NotifierGUI(QtGui.QDialog):
 		cancelButton.clicked.connect(self.close)
 	def saveData(self):
 		print("Saving Data")
-		allData = []
+		self.allDatatxt = []
 		txtmins = []
 		txtmaxs = []
 		txtcontacts = []
@@ -60,15 +65,24 @@ class NotifierGUI(QtGui.QDialog):
 			#allData = [self.smsTab.mins,self.smsTab. maxs,self.smsTab.contacts]
 			txtmaxs.append(str(self.smsTab.maxs[i].text()))
 			txtcontacts.append(str(self.smsTab.contacts[i].text()))
+		print("Saving all data")
+		self.allDatatxt.append(txtmins)
+		self.allDatatxt.append(txtmaxs)
+		self.allDatatxt.append(txtcontacts)
+		print "just stored" ,(self.allDatatxt)
 
-		allData.append(txtmins)
-		allData.append(txtmaxs)
-		allData.append(txtcontacts)
-		print(txtmins)
-
-		pickle.dump(allData, open("NotifierConfig.p", "wb"))
+		pickle.dump(self.allDatatxt, open("NotifierConfig.nview", "wb"))
 		self.close()
-
+	def getMins(self):
+		#print("Getting Mins")
+		#self.smsTab.openData()
+		
+		return self.smsTab.openData()[0]
+	def getMaxs(self):
+		return self.smsTab.openData()[1]
+	def getContacts(self):
+		return self.smsTab.openData()[2]
+		
 class SMSTab(QtGui.QWidget):
 	def __init__(self,devices, parent = None):
 		super(SMSTab, self).__init__(parent)
@@ -137,12 +151,16 @@ class SMSTab(QtGui.QWidget):
 					x = x+1
 	
 	def openData(self):
+		print("opening data")
 		try:
-			self.allDatatxt = pickle.load(open('NotifierConfig.p', 'rb'))
+			self.allDatatxt = pickle.load(open('NotifierConfig.nview', 'rb'))
+			NotifierGUI.allDatatxt = self.allDatatxt
 			#print "mins: ", self.allDatatxt
 		except:
 			self.allDatatxt = [[],[],[]]
 			print("No config file found")
+		return self.allDatatxt
+	
 # if __name__ == '__main__':
 	# app = QtGui.QApplication(sys.argv)
 	# # dialog = NotifierGUI()

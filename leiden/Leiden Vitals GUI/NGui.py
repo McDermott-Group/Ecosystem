@@ -33,13 +33,15 @@ import ctypes
 from functools import partial
 import os
 from NotifierGUI import NotifierGUI
+import math
+import NAlert
 class NGui(QtGui.QMainWindow):
 	dialog = None
 	parameters = [[]]
 	frames = []
 	grids = []
 	devices = None
-	mainVBox = QtGui.QVBoxLayout()
+	mainVBox = [QtGui.QVBoxLayout()]
 	mainHBox = QtGui.QHBoxLayout()
 	titles = []
 	dataSets = []
@@ -52,6 +54,7 @@ class NGui(QtGui.QMainWindow):
 	font.setBold(False)
 	font.setWeight(50)
 	font.setKerning(True)
+	VBoxColumn = 0
 	def initGui(self, devices, parent = None):
 		'''Create a base gui to start from'''
 		QtGui.QWidget.__init__(self, parent)
@@ -60,12 +63,14 @@ class NGui(QtGui.QMainWindow):
 		self.setCentralWidget(self.central_widget)
 		
 		self.setStyleSheet("background:rgb(70, 80, 88)")
-		# Get list of devices
-		self.devices = devices
+		# # Get list of devices
+		# self.devices = devices
 		# Stack the device frames
 		# #self.setLayout(self.mainHBox)
 		self.central_widget.setLayout(self.mainHBox)
-		self.mainHBox.addLayout(self.mainVBox)
+		self.mainHBox.addLayout(self.mainVBox[self.VBoxColumn])
+		
+		
 		
 		menubar = self.menuBar()
 		menubar.setStyleSheet("QMenuBar {background-color: rgb(189, 195, 199)}"
@@ -92,10 +97,20 @@ class NGui(QtGui.QMainWindow):
 		NotifierMenu = menubar.addMenu('&Notifier')
 		NotifierMenu.addAction(NotifierSettingsAction)
 		# For each device, add a GUI frame for it.
+		numWidgets = 0
 		for i in range(0,len(self.devices)):
+			numWidgets = numWidgets+1
 			#Append a new gui frame
 			self.frames.append(QtGui.QFrame(self))
-			self.mainVBox.addWidget(self.frames[i])
+			self.mainVBox[self.VBoxColumn].addWidget(self.frames[i])
+			#if(1.5*self.frameSize().height()>self.frameSize().width()):
+			print len(self.mainVBox[self.VBoxColumn].children())
+			if(math.sqrt(len(devices))<numWidgets):
+				self.mainVBox[self.VBoxColumn].addStretch(1)
+				self.VBoxColumn = self.VBoxColumn+1;
+				self.mainVBox.append(QtGui.QVBoxLayout())
+				self.mainHBox.addLayout(self.mainVBox[self.VBoxColumn])
+				numWidgets = 0
 			# Add new titles, grids, parameters, 
 			# and lcds for the new parameter
 			self.titles.append(QtGui.QLabel(self.frames[i]))
@@ -191,18 +206,42 @@ class NGui(QtGui.QMainWindow):
 					self.grids[i].addWidget(self.parameters[i][y], y+2, 0)
 					self.grids[i].addWidget(self.lcds[i][y], y+2, 1)
 					self.grids[i].addWidget(self.units[i][y], y+2, 2)
+		self.mainVBox[self.VBoxColumn].addStretch(1)
 		print("Gui initialized")
 		return
 	def openNotifierSettings(self):
-		print("HI")
-		self.dialog = NotifierGUI(self.devices)
-		self.dialog.exec_()
+		# Start the notifier gui
+		# NOTE, this is run on the main thread, so while it is open the main
+		# GUI will not be running.
+		self.NotifierGUI = NotifierGUI(self.devices)
+		self.NotifierGUI.exec_()
+		
+		print "The mins received were", (self.NotifierGUI.getMins())
+		# Start the messenger service
+		try:
+			self.NAlert.stop()
+		except:
+			print("Starting NAlert for first time")
+		self.NAlert = NAlert.NAlert(self.NotifierGUI.getMins(),
+											self.NotifierGUI.getMaxs(),
+											self.NotifierGUI.getContacts(),
+											self.devices)
 	def startGui(self, devices, title, dataTitle):
 		'''Start the GUI'''
 		# Used as the name of the dataChest data title
 		self.dataTitle = dataTitle
+		# Start the notifier
+		self.devices = devices
+		self.NotifierGUI = NotifierGUI(self.devices)
+		self.NAlert = NAlert.NAlert(self.NotifierGUI.getMins(),
+											self.NotifierGUI.getMaxs(),
+											self.NotifierGUI.getContacts(),
+											self.devices)
 		# Call the class's init function
 		self.initGui(devices)
+		
+		
+											
 		self.setWindowTitle(title)
 		# Show the gui
 		self.show()
@@ -211,6 +250,7 @@ class NGui(QtGui.QMainWindow):
 		# in the main thread.
 		timer.timeout.connect(self.update)
 		timer.start(1000)
+		
 		sys.exit(app.exec_())
 
 	def update(self):
