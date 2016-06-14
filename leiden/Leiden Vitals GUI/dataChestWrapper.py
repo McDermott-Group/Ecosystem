@@ -15,15 +15,9 @@
 
 # Utilities libraries.
 
-
 """
-### BEGIN NODE INFO
-[info]
-name = NGui class
 version = 1.0.1
 description = Handles datalogging using DataChest
-
-### END NODE INFO
 """
 
 from PyQt4 import QtCore, QtGui

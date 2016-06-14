@@ -17,14 +17,10 @@
 
 
 """
-### BEGIN NODE INFO
-[info]
-name = NotifierGUI
-version = 1.0.1
-description = Allows user to enter data about when to notify
-
-### END NODE INFO
+# version = 1.0.1
+# description = Allows user to enter data about when to notify
 """
+
 from PyQt4 import QtCore, QtGui
 import sys
 import pickle

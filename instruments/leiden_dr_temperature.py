@@ -55,18 +55,17 @@ class LeidenDRPseudoserver(LabradServer):
         Get registry keys for the Leiden DR Temperature Pseudoserver.
         """
         reg = self.client.registry()
-	print(os.environ['COMPUTERNAME'].lower())
         yield reg.cd(['', 'Servers', 'Leiden DR Temperature', os.environ['COMPUTERNAME'].lower()], True)
         dirs, keys = yield reg.dir()
-	print(keys)
+        
         if 'Leiden Log Files Path' in keys:
             self._path = yield reg.get('Leiden Log Files Path')
-            print("In keys")
+        
         if ('Leiden Log Files Path' not in keys or 
                 not os.path.exists(self._path)):
-                self._path = ('\\AFS\physics.wisc.edu\mcdermott-group' +
+                self._path = ('\\AFS\physics.wisc.edu\mcdermott-group'
                               '\Data\DR Log Files\Leiden')
-		print("Not In keys")
+        
         if not os.path.exists(self._path):
             raise Exception("Could not find the Leiden Log Files "
                     "Path: '%s'" %str(self._path))

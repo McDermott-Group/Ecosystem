@@ -13,18 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Utilities libraries.
-
 
 """
-### BEGIN NODE INFO
-[info]
-name = Device class
 version = 1.0.1
 description = References a device
-
-### END NODE INFO
 """
+
 # Import nGui tools
 from NFrame import NFrame
 import NPopUp

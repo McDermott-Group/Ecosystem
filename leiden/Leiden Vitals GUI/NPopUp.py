@@ -17,14 +17,10 @@
 
 
 """
-### BEGIN NODE INFO
-[info]
-name = NPopUp class
 version = 1.0.1
 description = Creates a popUp
-
-### END NODE INFO
 """
+
 from PyQt4 import QtCore, QtGui
 class PopUp(QtGui.QDialog):
 	'''Small class for a popup window'''
