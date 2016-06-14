@@ -16,28 +16,33 @@
 # Utilities libraries.
 
 """
-version = 1.0.1
+version = 1.2.1
 description = Handles datalogging using DataChest
 """
 
 from PyQt4 import QtCore, QtGui
-import os
-from dataChest import *
-import sys
+
 from dateStamp import *
+from dataChest import *
+
+import sys
+import os
+
 import datetime
-import threading
 import numpy
 import re, string
+
 import atexit
+import threading
 class dataChestWrapper:
-	'''The dataChestWrapper class handles all 
-	datalogging.'''
+	'''The dataChestWrapper class handles all datalogging. An instance 
+	of dataChestWrapper should be created in the main class in order to
+	begin datalogging.'''
 	def __init__(self, devices):
 		'''Initiallize the dataChest'''
+		# Define the current time
 		now = datetime.datetime.now()
-		# Create a devices reference that can be 
-		# accessed outside of this scope.
+		# Create a devices reference that can be accessed outside of this scope.
 		self.devices = devices
 		# These arrays will hold all dataChest data sets.
 		self.dataSets = []
@@ -45,19 +50,16 @@ class dataChestWrapper:
 		self.hasValue = False
 		# The done function must be called when the GUI exits
 		atexit.register(self.done)
-		# The datalogging is handled by its own thread
+		# The datalogging is executed on its own thread
 		self.deviceThread = threading.Thread(target = 
 			self.save, args=[])
 		# If the main thread stops, stop the child thread
 		self.deviceThread.daemon = True
 		# Start the thread
 		self.deviceThread.start()
-		# For each device, assume it is not connected and we should not log
-		# data until the gui actually gets readings.
 		for i in range(0, len(self.devices)):
 			# Append a new dataChest object to the end
-			# of the datasets array.Note, no dataset is being created.
-			
+			# of the datasets array. Note, no dataset is being created.
 			self.dataSets.append(dataChest(str(
 				now.year)))
 			self.hasData.append(False)
@@ -68,7 +70,7 @@ class dataChestWrapper:
 		now = datetime.datetime.now()
 		self.hasData[i] = True
 		# Generate a title for the dataset. NOTE: if 
-		# the title of the device is changed in the devices constructor
+		# the title of the device is changed in the device's constructor
 		# in the main class, then a different data set will be created. 
 		# This is because datasets are stored using the name of the device,
 		# which is what the program looks for when checking if there are
@@ -82,11 +84,9 @@ class dataChestWrapper:
 		except:
 			self.dataSets[i].mkdir(str(now.month))
 			self.dataSets[i].cd(str(now.month))
-	
 		# Look at the names of all existing datasets and check if the 
 		# name contains the title of the current device. 
 		existingFiles = self.dataSets[i].ls()
-		
 		# foundit becomes true if a dataset file already exists
 		foundit = False
 		# Go through all existing dataset files
@@ -101,22 +101,24 @@ class dataChestWrapper:
 			print("Previously existing data set found for "+title)
 		# If the dataset does not already exist, we must create it.
 		else:
-			#if(not self.devices[i].getFrame().isError()):
-			#if(len(self.devices[i].getFrame().getUnits())>0):
-				# Arrays to hold any variables
 			# Name of the parameter. This is the name of the parameter
 			# displayed on the gui except without spaces or 
 			# non-alphanumerical characters.
 			paramName = None
+			# Arrays to hold any variables
 			depvars = []
 			indepvars = []
+			# For each device, assume it is not connected and we should not log
+			# data until the gui actually gets readings.
 			# Loop through all parameters in the device
 			for y in range (0, len(self.devices[i].getFrame().getNicknames())):
 				# If the name of the parameter has not been defined as None 
 				# in the constructor, then we want to log it.
 				if(self.devices[i].getFrame().getNicknames()[y] is not None):
 					# The name of the parameter in the dataset is the same 
-					# name displayed on the GUI except without spaces
+					# name displayed on the GUI except without 
+					# non-alphanumerical characters. Use regular expressions
+					# to do this.
 					paramName = str(self.devices[i].getFrame().getNicknames()
 						[y]).replace(" ","")
 					paramName = re.sub(r'\W+', '', paramName)
@@ -125,6 +127,7 @@ class dataChestWrapper:
 						.getFrame().getUnits()[y]))
 					# Add it to the array of dependent variables
 					depvars.append(tup)
+			# Get the datestamp from the datachest helper class.
 			dStamp = dateStamp()
 			# Time is the only independent variable
 			indepvars.append(("time", [1], "utc_datetime", "s"))
@@ -133,24 +136,26 @@ class dataChestWrapper:
 			vars.extend(indepvars)
 			vars.extend(depvars)
 			# Construct the data set
-			self.dataSets[i].createDataset(title,
-									indepvars,
-									depvars)
+			self.dataSets[i].createDataset(title, indepvars, depvars)
 			# The datawidth parameter says how many variables 
 			# (independent and dependent) make up the dataset.
 			# DataWidth is used internally only.
 			self.dataSets[i].addParameter("DataWidth", len(vars))
 			if(self.devices[i].getFrame().getYLabel() is not None):
+				# Configure the label of the y axis given in the device'same
+				# constructor.
 				self.dataSets[i].addParameter("Y Label", self.devices[i]
 					.getFrame().getYLabel()) 
 	def done(self):
-		'''Run when GUI is exited. Cleanly ends the dataset 
+		'''Run when GUI is exited. Cleanly terminates the dataset 
 		with Nan values.'''
 		dStamp = dateStamp()
 		for i in range(0, len(self.dataSets)):
+			# If the dataset was being logged
 			if(self.hasData[i]):
 				vars = []
 				vars.append(dStamp.utcNowFloat())
+				# Append Nan
 				for y in range(1, self.dataSets[i].getParameter("DataWidth")):
 					vars.append(np.nan)
 				print(vars)
@@ -198,7 +203,8 @@ class dataChestWrapper:
 					vars.extend(indepvars)
 					vars.extend(depvars)
 					self.dataSets[i].addData([vars])
-		
+		# Keep the thread going. Without this, the thread terminates and
+		# is garbage-collected.
 		threading.Timer(1, self.save).start()
 		
 				

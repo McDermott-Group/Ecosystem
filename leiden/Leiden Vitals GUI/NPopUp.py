@@ -17,13 +17,15 @@
 
 
 """
-version = 1.0.1
-description = Creates a popUp
+version = 2.0.1
+description = Creates a popUp window used for warnings.
 """
 
 from PyQt4 import QtCore, QtGui
 class PopUp(QtGui.QDialog):
-	'''Small class for a popup window'''
+	'''Small class for a popup window which displays a message
+	and allows the user to select ok or cancel'''
+	# consent holds the user's decision
 	consent = None
 	def __init__(self, message, parent=None):
 		'''Initialize the pop-up'''
@@ -52,7 +54,7 @@ class PopUp(QtGui.QDialog):
 		frame.setLayout(frameHBox)
 		frameHBox.addWidget(self.warning)
 		mainHBox = QtGui.QHBoxLayout()
-		# Configure a font to use.
+		# Configure a font.
 		font = QtGui.QFont()
 		font.setPointSize(12)
 		font.setBold(False)
@@ -69,7 +71,6 @@ class PopUp(QtGui.QDialog):
 			"background: rgb(52, 73, 94)")
 		self.okButton.setGeometry(QtCore.QRect(20, 330, 191, 61))
 		self.okButton.setText("Ok")
-		#self.okButton.setStyleSheet("background-color: green")
 		self.okButton.setFont(font)
 		self.okButton.clicked.connect(self.okClicked)
 		# Create a 'Cancel button' at the bottom of the screen.
@@ -78,7 +79,6 @@ class PopUp(QtGui.QDialog):
 			"background: rgb(52, 73, 94)\n")
 		self.cancelButton.setGeometry(QtCore.QRect(290, 330, 191, 61))
 		self.cancelButton.setText("Cancel")
-		#self.cancelButton.setStyleSheet("background-color: maroon")
 		self.cancelButton.setFont(font)
 		self.cancelButton.clicked.connect(self.cancelClicked)
 		self.setWindowTitle('Warning')

@@ -210,13 +210,14 @@ class NGui(QtGui.QMainWindow):
 		self.NotifierGUI = NotifierGUI(self.devices)
 		self.NotifierGUI.exec_()
 		
-		print "The mins received were", (self.NotifierGUI.getMins())
+		#print "The mins received were", (self.NotifierGUI.getMins())
 		# Start the messenger service
 		try:
 			self.NAlert.stop()
 		except:
 			print("Starting NAlert for first time")
-		self.NAlert = NAlert.NAlert(self.NotifierGUI.getMins(),
+		self.NAlert = NAlert.NAlert(self.NotifierGUI.getCheckboxes(),
+											self.NotifierGUI.getMins(),
 											self.NotifierGUI.getMaxs(),
 											self.NotifierGUI.getContacts(),
 											self.devices)
@@ -227,15 +228,14 @@ class NGui(QtGui.QMainWindow):
 		# Start the notifier
 		self.devices = devices
 		self.NotifierGUI = NotifierGUI(self.devices)
-		self.NAlert = NAlert.NAlert(self.NotifierGUI.getMins(),
+		self.NAlert = NAlert.NAlert(self.NotifierGUI.getCheckboxes(),
+											self.NotifierGUI.getMins(),
 											self.NotifierGUI.getMaxs(),
 											self.NotifierGUI.getContacts(),
 											self.devices)
 		# Call the class's init function
 		self.initGui(devices)
-		
-		
-											
+									
 		self.setWindowTitle(title)
 		# Show the gui
 		self.show()

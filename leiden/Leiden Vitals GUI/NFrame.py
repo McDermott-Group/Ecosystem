@@ -15,22 +15,34 @@
 
 
 """
-version = 1.0.1
+version = 1.5.1
 description = Organizes information returned by servers
 """
 
 class NFrame:
+	'''This class acts as the interface between the devices and all classes
+	which use the device or any of its parameters'''
+	# Name of device's server
 	serverTitle = None
+	# Parameter names to be displayed on GUI
 	nicknames = None
+	# Settings which are called by the GUI
 	serverSettings = None
-	serverUnits = None
+	# Device readings
 	readings = None
+	# Errors
 	error = False
+	# Error messages
 	errmsg = None
-	yLabel = "HI"
+	# Label on the y axis of the datachest dataplot
+	yLabel = ""
+	# Units used for each parameter
 	units = []
+	# Buttons on the GUI used to control the device
 	buttons = [[]]
+	# Stores an index of a certain button
 	buttonInd = None
+	# Is a specified button pushed
 	buttonPushed = False
 	def __init__(self, title, nicknames):
 		self.serverTitle = title
