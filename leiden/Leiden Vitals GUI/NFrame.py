@@ -13,16 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Utilities libraries.
 
 """
-### BEGIN NODE INFO
-[info]
-name = NFrame class
 version = 1.0.1
 description = Organizes information returned by servers
-
-### END NODE INFO
 """
 
 class NFrame:

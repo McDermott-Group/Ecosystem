@@ -15,14 +15,10 @@
 
 
 """
-### BEGIN NODE INFO
-[info]
-name = Leiden Vitals Gui
 version = 1.1.0
 description = Monitors Leiden Devices
-
-### END NODE INFO
 """
+
 import NGui				# Handles all gui operations. Independent of labrad.
 
 #from PyQt4 import QtCore, QtGui
@@ -39,7 +35,7 @@ class nViewer:
 	def __init__(self, parent = None):
 		# Establish a connection to labrad
 		try:
-			cxn = labrad.connect();
+			cxn = labrad.connect()
 		except:
 			print("Please start the labrad manager")
 		##################################################################

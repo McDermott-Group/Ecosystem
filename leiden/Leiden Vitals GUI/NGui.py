@@ -13,18 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Utilities libraries.
-
 
 """
-### BEGIN NODE INFO
-[info]
-name = NGui class
 version = 1.0.1
 description = Handles easy construction of GUI
-
-### END NODE INFO
 """
+
 from PyQt4 import QtCore, QtGui
 from multiprocessing.pool import ThreadPool
 import threading
@@ -255,8 +249,8 @@ class NGui(QtGui.QMainWindow):
 
 	def update(self):
 		'''Update the GUI'''
-		readings = [];
-		error = False;
+		readings = []
+		error = False
 		# loop through all devices
 		for i in range(0, len(self.devices)):
 			# If there is no error with the device
