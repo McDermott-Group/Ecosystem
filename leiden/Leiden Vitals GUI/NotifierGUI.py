@@ -88,7 +88,7 @@ class NotifierGUI(QtGui.QDialog):
 						raise
 				txtcontacts.append(str(self.alert.contacts[i].text()))
 				boolChecked.append(self.alert.checkBoxes[i].isChecked())
-				print("Saving all data")
+			print("Saving all data")
 		
 	
 			# Combine all arrays

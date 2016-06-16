@@ -64,8 +64,7 @@ class NGui(QtGui.QMainWindow):
 		self.central_widget.setLayout(self.mainHBox)
 		self.mainHBox.addLayout(self.mainVBox[self.VBoxColumn])
 		
-		
-		
+	
 		menubar = self.menuBar()
 		menubar.setStyleSheet("QMenuBar {background-color: rgb(189, 195, 199)}"
 				"QMenuBar::item {background: transparent} QMenu{background-color:rgb(189, 195, 199)}")
@@ -92,13 +91,16 @@ class NGui(QtGui.QMainWindow):
 		NotifierMenu.addAction(NotifierSettingsAction)
 		# For each device, add a GUI frame for it.
 		numWidgets = 0
+        
+		
+		
 		for i in range(0,len(self.devices)):
 			numWidgets = numWidgets+1
 			#Append a new gui frame
 			self.frames.append(QtGui.QFrame(self))
 			self.mainVBox[self.VBoxColumn].addWidget(self.frames[i])
 			#if(1.5*self.frameSize().height()>self.frameSize().width()):
-			print len(self.mainVBox[self.VBoxColumn].children())
+			#print len(self.mainVBox[self.VBoxColumn].children())
 			if(math.sqrt(len(devices))<numWidgets):
 				self.mainVBox[self.VBoxColumn].addStretch(1)
 				self.VBoxColumn = self.VBoxColumn+1;
@@ -179,7 +181,9 @@ class NGui(QtGui.QMainWindow):
 				self.lcds[i][y].setLineWidth(100)
 				self.lcds[i][y].setMidLineWidth(100)
 				self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n")
-				self.lcds[i][y].setFixedSize(350,60)
+				self.lcds[i][y].setFixedHeight(self.scrnHeight/30)
+				self.lcds[i][y].setMinimumWidth(self.scrnWidth/10)
+
 				# Make the parameters pretty
 				self.parameters[i][y].setWordWrap(True)
 				self.parameters[i][y].setStyleSheet(
@@ -198,7 +202,11 @@ class NGui(QtGui.QMainWindow):
 					self.parameters[i][y].setText(devices[i].getFrame()
 						.getNicknames()[y])
 					self.grids[i].addWidget(self.parameters[i][y], y+2, 0)
-					self.grids[i].addWidget(self.lcds[i][y], y+2, 1)
+					lcdHBoxLayout = QtGui.QHBoxLayout()
+					lcdHBoxLayout.addStretch(1)
+					lcdHBoxLayout.addWidget(self.lcds[i][y])
+					
+					self.grids[i].addLayout(lcdHBoxLayout, y+2, 1)
 					self.grids[i].addWidget(self.units[i][y], y+2, 2)
 		self.mainVBox[self.VBoxColumn].addStretch(1)
 		print("Gui initialized")
@@ -233,11 +241,23 @@ class NGui(QtGui.QMainWindow):
 											self.NotifierGUI.getMaxs(),
 											self.NotifierGUI.getContacts(),
 											self.devices)
+		screen_resolution = QtGui.QDesktopWidget().screenGeometry()
+		self.scrnWidth = screen_resolution.width()
+		self.scrnHeight = screen_resolution.height()
+
 		# Call the class's init function
 		self.initGui(devices)
-									
+		
+
+		#app = QtGui.QApplication([])
+		
+		# print "width", self.width
+		# print "height", self.height
+		
+		
 		self.setWindowTitle(title)
 		# Show the gui
+		
 		self.show()
 		timer = QtCore.QTimer(self)
 		# Update the gui every so often. This CAN ONLY be done 
@@ -286,4 +306,5 @@ class NGui(QtGui.QMainWindow):
 			
 
 app=QtGui.QApplication(sys.argv)
+
 
