@@ -74,12 +74,12 @@ class NotifierGUI(QtGui.QDialog):
 					#print()
 					txtmins.append(str(float(self.alert.mins[i].text())))
 				else:
-					txtmins.append(self.alert.mins[i].text())
+					txtmins.append(str(self.alert.mins[i].text()))
 					
 				if(len(self.alert.maxs[i].text()) is not 0):
 					txtmaxs.append(str(float(self.alert.maxs[i].text())))
 				else:
-					txtmaxs.append(self.alert.maxs[i].text())
+					txtmaxs.append(str(self.alert.maxs[i].text()))
 					
 				if(len(txtmaxs[i]) is not 0 and len(txtmins[i]) is not 0):
 				
@@ -90,16 +90,22 @@ class NotifierGUI(QtGui.QDialog):
 				boolChecked.append(self.alert.checkBoxes[i].isChecked())
 			print("Saving all data")
 		
-	
+			print(txtcontacts)
+			print(boolChecked)
 			# Combine all arrays
 			self.allDatatxt.append(txtmins)
+			print(self.allDatatxt)
 			self.allDatatxt.append(txtmaxs)
 			self.allDatatxt.append(txtcontacts)
-			self.allDatatxt.append(boolChecked)
 			
+
+			self.allDatatxt.append(boolChecked)
+			#print boolChecked
+			print(self.allDatatxt)
 			#print "just stored" ,(self.allDatatxt)
 			# Pickle the arrays and store them
 			pickle.dump(self.allDatatxt, open("NotifierConfig.nview", "wb"))
+			print("Data Saved")
 		except:
 			print("Data not saved, make sure you enter numbers. ")
 			# "Exponents can be written '4e5'.")
@@ -212,12 +218,13 @@ class AlertConfig(QtGui.QWidget):
 	def openData(self):
 		'''Retreive a user's previous settings.'''
 		#print("opening data")
-		self.allDatatxt = pickle.load(open('NotifierConfig.nview', 'rb'))
-
+		#self.allDatatxt = pickle.load(open('NotifierConfig.nview', 'rb'))
+		
 		try:
 			self.allDatatxt = pickle.load(open('NotifierConfig.nview', 'rb'))
 			NotifierGUI.allDatatxt = self.allDatatxt
-			#print "mins: ", self.allDatatxt
+			print "Config Data Opened"
+			print "mins: ", self.allDatatxt
 		except:
 			self.allDatatxt = [[],[],[],[]]
 			print("No config file found")

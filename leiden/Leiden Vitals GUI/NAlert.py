@@ -10,7 +10,7 @@ class NAlert:
 		# Configure all public variables
 		self.devices = devices
 		self.mins = mins
-		print(mins)
+		#print(mins)
 		self.maxs = maxs
 		self.contacts = contacts
 		self.message = []
