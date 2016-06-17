@@ -10,6 +10,7 @@ class NAlert:
 		# Configure all public variables
 		self.devices = devices
 		self.mins = mins
+		print(mins)
 		self.maxs = maxs
 		self.contacts = contacts
 		self.message = []
@@ -48,6 +49,7 @@ class NAlert:
 					#print(self.devices[i].getFrame().getNicknames())
 					if(self.devices[i].getFrame().getNicknames()[y] is not None):
 						# Get that specific reading
+						# print "z: ", z
 						if(len(str(self.mins[z])) is not 0):
 							if(float(self.mins[z])>float(self.devices[i].getFrame().getReadings()[y])):
 							# If a min has been specified
@@ -64,7 +66,7 @@ class NAlert:
 									self.sendMail(i, y, z)
 						#print "z",(z)
 						#print "y", y
-					z = z+1
+                                                z = z+1
 			else:
 				
 				z=z+len(self.devices[i].getFrame().getNicknames())

@@ -39,6 +39,7 @@ class NMail:
 		smtpObj.starttls()
 		# try:
 			# Login
+		#print(msg.as_string())
 		if(len(To) is not 0):
 			print To
 			smtpObj.login('physics.labrad@gmail.com', 'mcdermott')

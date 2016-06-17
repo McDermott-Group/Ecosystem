@@ -212,6 +212,8 @@ class AlertConfig(QtGui.QWidget):
 	def openData(self):
 		'''Retreive a user's previous settings.'''
 		#print("opening data")
+		self.allDatatxt = pickle.load(open('NotifierConfig.nview', 'rb'))
+
 		try:
 			self.allDatatxt = pickle.load(open('NotifierConfig.nview', 'rb'))
 			NotifierGUI.allDatatxt = self.allDatatxt

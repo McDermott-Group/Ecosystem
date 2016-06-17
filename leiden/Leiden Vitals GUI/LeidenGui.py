@@ -137,7 +137,7 @@ class nViewer:
 		
 		# Start the datalogger. This line can be commented
 		# out if no datalogging is required.
-		#self.chest = dataChestWrapper(self.devices)
+		self.chest = dataChestWrapper(self.devices)
 		
 		# Create the gui
 		self.gui = NGui.NGui()
