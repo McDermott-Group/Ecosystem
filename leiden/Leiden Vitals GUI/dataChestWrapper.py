@@ -47,7 +47,7 @@ class dataChestWrapper:
 		# These arrays will hold all dataChest data sets.
 		self.dataSets = []
 		self.hasData = []
-		self.hasValue = False
+		#self.hasValue = False
 		# The done function must be called when the GUI exits
 		atexit.register(self.done)
 		# The datalogging is executed on its own thread
@@ -101,6 +101,7 @@ class dataChestWrapper:
 			print("Previously existing data set found for "+title)
 		# If the dataset does not already exist, we must create it.
 		else:
+                        print("Creating dataset for "+title)
 			# Name of the parameter. This is the name of the parameter
 			# displayed on the gui except without spaces or 
 			# non-alphanumerical characters.
@@ -169,8 +170,9 @@ class dataChestWrapper:
 				is not None):
 				# If the device did not have any readings and now it does
 				# then we want to create a dataset.
-				if(not self.hasValue):
-					self.hasValue = True
+				if(not self.hasData[i]):
+					#self.hasValue = True
+				
 					self.createDataSet(i)
 		# For all datasets		
 		for i in range(0, len(self.dataSets)):
