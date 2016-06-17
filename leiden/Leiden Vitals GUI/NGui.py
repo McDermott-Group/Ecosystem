@@ -124,7 +124,7 @@ class NGui(QtGui.QMainWindow):
 			self.frames[i].setStyleSheet("background: rgb(52, 73, 94)")
 			self.frames[i].setFrameShape(QtGui.QFrame.WinPanel)
 			self.frames[i].setFrameShadow(QtGui.QFrame.Plain)
-			self.frames[i].setLineWidth(2*self.scrnWidth/3200)
+			self.frames[i].setLineWidth(2)
 			self.frames[i].setLayout(self.grids[i])
 			# Configure the layout of the buttons within the grid
 			buttonLayout = QtGui.QHBoxLayout()
@@ -154,9 +154,9 @@ class NGui(QtGui.QMainWindow):
 					self.buttons[i][b].setFont(self.font)	
 			# Make the titles look nice
 			self.titles[i].setStyleSheet("color:rgb(189, 195, 199);")
-			self.font.setPointSize(18*self.scrnWidth/3200)
+			self.font.setPointSize(18)
 			self.titles[i].setFont(self.font)
-			self.font.setPointSize(12*self.scrnWidth/3200)
+			self.font.setPointSize(12)
 			# Get the title of the device
 			self.titles[i].setText(self.devices[i].getFrame().getTitle())
 			self.titles[i].setGeometry(QtCore.QRect(10,10,self.titles[i]
@@ -178,7 +178,7 @@ class NGui(QtGui.QMainWindow):
 				self.lcds[i][y].display("-")
 				self.lcds[i][y].setFrameShape(QtGui.QFrame.Panel)
 				self.lcds[i][y].setFrameShadow(QtGui.QFrame.Plain)
-				self.lcds[i][y].setLineWidth(2*self.scrnWidth/3200)
+				self.lcds[i][y].setLineWidth(2)
 				self.lcds[i][y].setMidLineWidth(100)
 				self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n")
 				self.lcds[i][y].setFixedHeight(self.scrnHeight/30)
@@ -290,9 +290,9 @@ class NGui(QtGui.QMainWindow):
 						if(len(self.devices[i].getFrame().getUnits())>0):
 							self.units[i][y].setText(self.devices[i]
 								.getFrame().getUnits()[y])
-							self.font.setPointSize(18*self.scrnWidth/3200)
+							self.font.setPointSize(18)
 							self.units[i][y].setFont(self.font)
-							self.font.setPointSize(12*self.scrnWidth/3200)
+							self.font.setPointSize(12)
 							self.units[i][y].setStyleSheet(
 								"color:rgb(189, 195, 199);")
 			else:
