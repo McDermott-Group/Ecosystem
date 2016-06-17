@@ -23,8 +23,8 @@
 
 from PyQt4 import QtCore, QtGui
 import sys
-import pickle
-
+import cPickle as pickle
+import os
 class NotifierGUI(QtGui.QDialog):
 	def __init__(self,devices, parent = None):
 		'''Initialize the Notifier Gui'''
@@ -90,24 +90,29 @@ class NotifierGUI(QtGui.QDialog):
 				boolChecked.append(self.alert.checkBoxes[i].isChecked())
 			print("Saving all data")
 		
-			print(txtcontacts)
-			print(boolChecked)
+			#print(txtcontacts)
+			#print(boolChecked)
 			# Combine all arrays
 			self.allDatatxt.append(txtmins)
-			print(self.allDatatxt)
+			#print(self.allDatatxt)
 			self.allDatatxt.append(txtmaxs)
 			self.allDatatxt.append(txtcontacts)
 			
 
 			self.allDatatxt.append(boolChecked)
 			#print boolChecked
-			print(self.allDatatxt)
+			#print(self.allDatatxt)
 			#print "just stored" ,(self.allDatatxt)
 			# Pickle the arrays and store them
-			pickle.dump(self.allDatatxt, open("NotifierConfig.nview", "wb"))
+			here = os.path.dirname(os.path.abspath(__file__))
+			pickle.dump(self.allDatatxt, open(os.path.join(here, 'NotifierConfig1.nview'), 'wb'))
+			print(here)
+
 			print("Data Saved")
 		except:
 			print("Data not saved, make sure you enter numbers. ")
+		here = os.path.dirname(os.path.abspath(__file__))
+		pickle.dump(self.allDatatxt, open(os.path.join(here, 'NotifierConfig1.nview'), 'wb'))
 			# "Exponents can be written '4e5'.")
 		# Close the window
 		self.close()
@@ -219,12 +224,17 @@ class AlertConfig(QtGui.QWidget):
 		'''Retreive a user's previous settings.'''
 		#print("opening data")
 		#self.allDatatxt = pickle.load(open('NotifierConfig.nview', 'rb'))
-		
+		here = os.path.dirname(os.path.abspath(__file__))
+		print(here)
+		print(os.path.join(here, 'NotifierConfig1.nview'))
+		#self.allDatatxt = pickle.load(open(os.path.join(here, 'NotifierConfig1.nview'), 'rb'))
+
+		print(here)
 		try:
-			self.allDatatxt = pickle.load(open('NotifierConfig.nview', 'rb'))
+			self.allDatatxt = pickle.load(open(os.path.join(here, 'NotifierConfig1.nview'), 'rb'))
 			NotifierGUI.allDatatxt = self.allDatatxt
 			print "Config Data Opened"
-			print "mins: ", self.allDatatxt
+			#print "mins: ", self.allDatatxt
 		except:
 			self.allDatatxt = [[],[],[],[]]
 			print("No config file found")
