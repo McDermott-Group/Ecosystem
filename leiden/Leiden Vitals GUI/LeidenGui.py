@@ -38,6 +38,12 @@ class nViewer:
 			cxn = labrad.connect()
 		except:
 			print("Please start the labrad manager")
+			sys.exit(0)
+		try:
+			tele = cxn.telecomm_server
+		except:
+			print("Please start the telecomm server")
+			sys.exit(1)
 		##################################################################
 		# How to Use nViewer:	 
 		################################################################
@@ -141,7 +147,7 @@ class nViewer:
 		
 		# Create the gui
 		self.gui = NGui.NGui()
-		self.gui.startGui(self.devices, 'Leiden Gui', 'Leiden Data')
+		self.gui.startGui(self.devices, 'Leiden Gui', 'Leiden Data', tele)
 		
 		
 # In phython, the main class's __init__() IS NOT automatically called

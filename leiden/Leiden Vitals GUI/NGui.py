@@ -228,19 +228,22 @@ class NGui(QtGui.QMainWindow):
 											self.NotifierGUI.getMins(),
 											self.NotifierGUI.getMaxs(),
 											self.NotifierGUI.getContacts(),
-											self.devices)
-	def startGui(self, devices, title, dataTitle):
+											self.devices,
+											self.tele)
+	def startGui(self, devices, title, dataTitle, tele):
 		'''Start the GUI'''
 		# Used as the name of the dataChest data title
 		self.dataTitle = dataTitle
 		# Start the notifier
+		self.tele = tele
 		self.devices = devices
 		self.NotifierGUI = NotifierGUI(self.devices)
 		self.NAlert = NAlert.NAlert(self.NotifierGUI.getCheckboxes(),
 											self.NotifierGUI.getMins(),
 											self.NotifierGUI.getMaxs(),
 											self.NotifierGUI.getContacts(),
-											self.devices)
+											self.devices,
+											self.tele)
 		screen_resolution = QtGui.QDesktopWidget().screenGeometry()
 		self.scrnWidth = screen_resolution.width()
 		self.scrnHeight = screen_resolution.height()

@@ -2,10 +2,11 @@ import smtplib
 import NMail
 import threading
 import time
+
 #from email.mime.text import MIMEText
 
 class NAlert:
-	def __init__(self,checkBoxes,mins, maxs, contacts,  devices):
+	def __init__(self,checkBoxes,mins, maxs, contacts,  devices, tele):
 		#print "Mins: ", mins, " \r\nMaxs:", maxs, " \r\nContacts:", contacts
 		# Configure all public variables
 		self.devices = devices
@@ -15,6 +16,7 @@ class NAlert:
 		self.contacts = contacts
 		self.message = []
 		self.checkBoxes = checkBoxes
+		self.tele = tele
 		self.t1 = 0
 		# Have the specified people been notified about the specific device?
 		self.mailSent =[]
@@ -82,13 +84,24 @@ class NAlert:
 		#print(len(self.mailSent))
 		if(not self.mailSent[z]):
 			#print("try")
-			self.message.append(("On "
+			# self.message.append(("On "
+				# +time.asctime( time.localtime(time.time()) )
+				# +", the "+self.devices[i].getFrame().getTitle()+"'s "
+				# + self.devices[i].getFrame().getNicknames()[y] + " was "+
+				# str(self.devices[i].getFrame().getReadings()[y])+
+				# self.devices[i].getFrame().getUnits()[y] +
+				# " which is out of the specified range of "
+				# +str(self.mins[z]) 
+				# + self.devices[i].getFrame().getUnits()[y]+
+				# " - " +str(self.maxs[z])+
+				# self.devices[i].getFrame().getUnits()[y]+"."))
+			self.message.append(("Time: "
 				+time.asctime( time.localtime(time.time()) )
-				+", the "+self.devices[i].getFrame().getTitle()+"'s "
-				+ self.devices[i].getFrame().getNicknames()[y] + " was "+
+				+" | "+self.devices[i].getFrame().getTitle()+"->"
+				+ self.devices[i].getFrame().getNicknames()[y] + ": "+
 				str(self.devices[i].getFrame().getReadings()[y])+
 				self.devices[i].getFrame().getUnits()[y] +
-				" which is out of the specified range of "
+				" | Range: "
 				+str(self.mins[z]) 
 				+ self.devices[i].getFrame().getUnits()[y]+
 				" - " +str(self.maxs[z])+
@@ -112,9 +125,15 @@ class NAlert:
 		
 		
 		if(HOURS_BETWEEN_EMAILS<elapsedHrs):
-			NMail.NMail(self.contacts[z],self.devices[i].getFrame()
-				.getTitle(), self.devices[i].getFrame().getNicknames()[y], str(self.message))
+			# NMail.NMail(self.contacts[z],self.devices[i].getFrame()
+				# .getTitle(), self.devices[i].getFrame().getNicknames()[y], str(self.message))
+			success, address = self.tele.send_sms(self.devices[i].getFrame().getNicknames()[y], str(self.message), self.contacts[z].split(','), "labrad_physics")
+			if (not success):
+				print("Couldn't send email to group: "+self.contacts[z].split(',')+ 
+				", someone may be missing from the registry or incorrectly entered")
 			#print(self.message)
+			else:
+				print("Mail sent")
 			self.message = []
 			self.mailSent = []
 			for i in range(0, len(self.devices)):

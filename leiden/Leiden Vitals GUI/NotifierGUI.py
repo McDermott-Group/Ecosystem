@@ -156,7 +156,7 @@ class AlertConfig(QtGui.QWidget):
 		layout.addWidget(maxlbl, 1,5)
 		
 		cnctlbl = QtGui.QLabel()
-		cnctlbl.setText("Contact (Separate with comma, no space)")
+		cnctlbl.setText("Contact (NAME1,NAME2,etc...)")
 		layout.addWidget(cnctlbl, 1,7)
 		# These are indexing variables
 		z = 1
@@ -225,11 +225,11 @@ class AlertConfig(QtGui.QWidget):
 		#print("opening data")
 		#self.allDatatxt = pickle.load(open('NotifierConfig.nview', 'rb'))
 		here = os.path.dirname(os.path.abspath(__file__))
-		print(here)
-		print(os.path.join(here, 'NotifierConfig1.nview'))
+		#print(here)
+		#print(os.path.join(here, 'NotifierConfig1.nview'))
 		#self.allDatatxt = pickle.load(open(os.path.join(here, 'NotifierConfig1.nview'), 'rb'))
 
-		print(here)
+		#print(here)
 		try:
 			self.allDatatxt = pickle.load(open(os.path.join(here, 'NotifierConfig1.nview'), 'rb'))
 			NotifierGUI.allDatatxt = self.allDatatxt
