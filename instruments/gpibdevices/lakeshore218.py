@@ -34,10 +34,10 @@ from labrad.server import setting
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 import labrad.units as units
 from labrad import util
+from twisted.internet.defer import inlineCallbacks, returnValue
 
 class LakeShore218Wrapper(GPIBDeviceWrapper):
      @inlineCallbacks
-     
      def getTemperature(self, input):
           # To get just one temperature, enter a number 1-8, to get all, enter 0.
           result = yield self.query('CRDG? '+str(input))
