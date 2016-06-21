@@ -85,8 +85,8 @@ class nViewer:
 		###################################################################
 		
 		# This is my test server
-		testDevice = Device("my_server", "Random Number Generator", ["Random Pressure", "Random Temperature"], ["pressure", "temperature"], [None, None], cxn, ["Pressure","Temperature"], ["pressure", "temperature"], ["You are about to get a random pressure", None],[None,None])
-		self.devices.append(testDevice)
+		# testDevice = Device("my_server", "Random Number Generator", ["Random Pressure", "Random Temperature"], ["pressure", "temperature"], [None, None], cxn, ["Pressure","Temperature"], ["pressure", "temperature"], ["You are about to get a random pressure", None],[None,None])
+		# self.devices.append(testDevice)
 		# Leiden DR monitor
 		LeidenDRTemperature = Device("leiden_dr_temperature", 
 						"Leiden DR", 

@@ -55,75 +55,88 @@ class NotifierGUI(QtGui.QDialog):
 		# Configure buttons
 		okButton.clicked.connect(self.saveData)
 		cancelButton.clicked.connect(self.close)
+		
+		self.devices = devices
+		
 	def saveData(self):
 		'''Save the data upon exit'''
 		#print("Saving Data")
 		# Arrays used to assist in storing data
-		self.allDatatxt = []
-		txtmins = []
-		txtmaxs = []
-		txtcontacts = []
-		boolChecked = []
-		# For all of the rows
 		
+		self.allDataDict = {}
 		try:
-			for i in range(0, len(self.alert.mins)):
-				# Put the text in the textboxes in the arrays
-				if(len(self.alert.mins[i].text()) is not 0):
-					#print(i)
-					#print()
-					txtmins.append(str(float(self.alert.mins[i].text())))
-				else:
-					txtmins.append(str(self.alert.mins[i].text()))
+			for device in self.devices:
+				title = device.getFrame().getTitle()
+				for nickname in device.getFrame().getNicknames():
+					if(nickname is not None):
 					
-				if(len(self.alert.maxs[i].text()) is not 0):
-					txtmaxs.append(str(float(self.alert.maxs[i].text())))
-				else:
-					txtmaxs.append(str(self.alert.maxs[i].text()))
-					
-				if(len(txtmaxs[i]) is not 0 and len(txtmins[i]) is not 0):
-				
-					if(float(txtmaxs[i])<float(txtmins[i])):
-						print("Error: min cannot be greater than max")
-						raise
-				txtcontacts.append(str(self.alert.contacts[i].text()))
-				boolChecked.append(self.alert.checkBoxes[i].isChecked())
-			print("Saving all data")
+						key = title+":"+nickname
+						deviceDataArray = []
+						deviceDataArray.append(self.alert.allWidgetDict[key][0].checkState())
+						if len(self.alert.allWidgetDict[key][1].text()) is not 0:
+							deviceDataArray.append(float(self.alert.allWidgetDict[key][1].text()))
+						else:
+							deviceDataArray.append('')
+						if len(self.alert.allWidgetDict[key][2].text()) is not 0:
+							deviceDataArray.append(float(self.alert.allWidgetDict[key][2].text()))
+						else:
+							deviceDataArray.append('')
+						
+						deviceDataArray.append(self.alert.allWidgetDict[key][3].text())
+						
+						if(deviceDataArray[1]>deviceDataArray[2] and deviceDataArray[1] is not None
+							and deviceDataArray[2] is not None):
+							#print(deviceDataArray[1])
+							raise
+						self.allDataDict[title+":"+nickname] = deviceDataArray
+						
+				#print boolChecked
+				#print(self.allDatatxt)
+				#print "just stored" ,(self.allDatatxt)
+				# Pickle the arrays and store them
+				here = os.path.dirname(os.path.abspath(__file__))
+				pickle.dump(self.allDataDict, open(os.path.join(here, 'NotifierConfig1.nview'), 'wb'))
+				print(here)
+
+				print("Data Saved")
 		
-			#print(txtcontacts)
-			#print(boolChecked)
-			# Combine all arrays
-			self.allDatatxt.append(txtmins)
-			#print(self.allDatatxt)
-			self.allDatatxt.append(txtmaxs)
-			self.allDatatxt.append(txtcontacts)
+		#except:
+		except ValueError:
 			
-
-			self.allDatatxt.append(boolChecked)
-			#print boolChecked
-			#print(self.allDatatxt)
-			#print "just stored" ,(self.allDatatxt)
-			# Pickle the arrays and store them
-			here = os.path.dirname(os.path.abspath(__file__))
-			pickle.dump(self.allDatatxt, open(os.path.join(here, 'NotifierConfig1.nview'), 'wb'))
-			print(here)
-
-			print("Data Saved")
+			print("Enter only numbers into 'Minimum' and 'Maximum' fields.")
+			print("Data Not Saved")
+			
 		except:
-			print("Data not saved, make sure you enter numbers. ")
-		here = os.path.dirname(os.path.abspath(__file__))
-		pickle.dump(self.allDatatxt, open(os.path.join(here, 'NotifierConfig1.nview'), 'wb'))
+			print("Minimum values cannot be greater than maximum values.")
+			print("Data Not Saved")
+
+	
+				#print("Data not saved, make sure you enter numbers. ")
+			# here = os.path.dirname(os.path.abspath(__file__))
+			# pickle.dump(self.allDataDict, open(os.path.join(here, 'NotifierConfig1.nview'), 'wb'))
 			# "Exponents can be written '4e5'.")
 		# Close the window
 		self.close()
 	def getMins(self):
-		return self.alert.openData()[0]
+		mins = []
+		for key in self.alert.allWidgetDict.keys():
+			mins.append(self.alert.allWidgetDict[key][1])
+		return mins
 	def getMaxs(self):
-		return self.alert.openData()[1]
+		maxs = []
+		for key in self.alert.allWidgetDict.keys():
+			maxs.append(self.alert.allWidgetDict[key][2])
+		return maxs
 	def getContacts(self):
-		return self.alert.openData()[2]
+		contacts = []
+		for key in self.alert.allWidgetDict.keys():
+			contacts.append(self.alert.allWidgetDict[key][3])
+		return contacts
 	def getCheckboxes(self):
-		return self.alert.openData()[3]
+		boxs = []
+		for key in self.alert.allWidgetDict.keys():
+			boxs.append(self.alert.allWidgetDict[key][0])
+		return boxs
 		
 class AlertConfig(QtGui.QWidget):
 	def __init__(self,devices, parent = None):
@@ -133,10 +146,11 @@ class AlertConfig(QtGui.QWidget):
 		layout = QtGui.QGridLayout()
 		# Set the layout
 		self.setLayout(layout)
-		self.mins = []
-		self.maxs = []
-		self.contacts = []
-		self.checkBoxes = []
+		self.mins = {}
+		self.maxs = {}
+		self.contacts = {}
+		self.checkBoxes = {}
+		self.allWidgetDict = {}
 		# Retreive the previous settings
 		self.openData()
 		# Set up font
@@ -173,39 +187,42 @@ class AlertConfig(QtGui.QWidget):
 			z=z+1
 			# Create all of the information fields and put the saved data in
 			# them.
+			
+			
+			
 			for y in range(1, len(self.devices[j].getFrame().getNicknames())+1):
 				paramName = self.devices[j].getFrame().getNicknames()[y-1]
+				u = y-1
 				if(paramName is not None):
-					if(len(self.allDatatxt[3])>x):
-						self.checkBoxes.append(QtGui.QCheckBox())
-						self.checkBoxes[x].setChecked(self.allDatatxt[3][x])
+					title = self.devices[j].getFrame().getTitle()
+					nickname = self.devices[j].getFrame().getNicknames()[u]
+					key = (title+":"+nickname)
+					if(key in self.allDataDict):
+						for data in self.allDataDict[key]:
+							# All widget dict holds the Qt objects
+							self.allWidgetDict[key] = [QtGui.QCheckBox(),
+													QtGui.QLineEdit(),
+													QtGui.QLineEdit(),
+													QtGui.QLineEdit()]	
+							self.allWidgetDict[key][0].setChecked(self.allDataDict[key][0])
+							self.allWidgetDict[key][1].setText(str(self.allDataDict[key][1]))
+							self.allWidgetDict[key][2].setText(str(self.allDataDict[key][2]))
+							self.allWidgetDict[key][3].setText(str(self.allDataDict[key][3]))
 					else:
-						self.checkBoxes.append(QtGui.QCheckBox())
-					if(len(self.allDatatxt[0])>x):
-						self.mins.append(QtGui.QLineEdit())
-						self.mins[x].setText(str(self.allDatatxt[0][x]))
-					else:
-						self.maxs.append(QtGui.QLineEdit())
-					if(len(self.allDatatxt[1])>x):
-						self.maxs.append(QtGui.QLineEdit())
-						self.maxs[x].setText(str(self.allDatatxt[1][x]))
-					else:
-						self.contacts .append(QtGui.QLineEdit())
-					if(len(self.allDatatxt[2])>x):
-						self.contacts .append(QtGui.QLineEdit())
-						self.contacts [x].setText(str(self.allDatatxt[2][x]))
-					else:
-						self.mins.append(QtGui.QLineEdit())
-					self.maxs.append(QtGui.QLineEdit())
-					self.contacts.append(QtGui.QLineEdit())
+						self.allWidgetDict[key] = [QtGui.QCheckBox(),
+													QtGui.QLineEdit(),
+													QtGui.QLineEdit(),
+													QtGui.QLineEdit()]	
+					#self.maxs.append(QtGui.QLineEdit())
+					#self.contacts.append(QtGui.QLineEdit())
 					label = QtGui.QLabel()
 					# Add the new widgets
 					label.setText(paramName)
 					layout.addWidget(label, z, 1)
-					layout.addWidget(self.mins[x], z, 3)					
-					layout.addWidget(self.maxs[x],z, 5)
-					layout.addWidget(self.contacts[x],z, 7)
-					layout.addWidget(self.checkBoxes[x],z, 2)
+					layout.addWidget(self.allWidgetDict[key][1], z, 3)					
+					layout.addWidget(self.allWidgetDict[key][2],z, 5)
+					layout.addWidget(self.allWidgetDict[key][3],z, 7)
+					layout.addWidget(self.allWidgetDict[key][0],z, 2)
 					
 					if(len(self.devices[j].getFrame().getUnits())>(y-1)):
 						unitLabel = QtGui.QLabel()
@@ -231,14 +248,14 @@ class AlertConfig(QtGui.QWidget):
 
 		#print(here)
 		try:
-			self.allDatatxt = pickle.load(open(os.path.join(here, 'NotifierConfig1.nview'), 'rb'))
-			NotifierGUI.allDatatxt = self.allDatatxt
+			self.allDataDict = pickle.load(open(os.path.join(here, 'NotifierConfig1.nview'), 'rb'))
+			NotifierGUI.allDataDict = self.allDataDict
 			print "Config Data Opened"
 			#print "mins: ", self.allDatatxt
 		except:
-			self.allDatatxt = [[],[],[],[]]
+			self.allDataDict = {}
 			print("No config file found")
-		return self.allDatatxt
+		return self.allDataDict
 	
 # if __name__ == '__main__':
 	# app = QtGui.QApplication(sys.argv)
