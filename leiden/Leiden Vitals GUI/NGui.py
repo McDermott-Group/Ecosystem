@@ -122,9 +122,9 @@ class NGui(QtGui.QMainWindow):
 			# Configure the frame (the box surrounding 
 			# information for each device)
 			self.frames[i].setStyleSheet("background: rgb(52, 73, 94)")
-			self.frames[i].setFrameShape(QtGui.QFrame.WinPanel)
+			self.frames[i].setFrameShape(QtGui.QFrame.Panel)
 			self.frames[i].setFrameShadow(QtGui.QFrame.Plain)
-			self.frames[i].setLineWidth(2)
+			self.frames[i].setLineWidth(1800/self.scrnWidth)
 			self.frames[i].setLayout(self.grids[i])
 			# Configure the layout of the buttons within the grid
 			buttonLayout = QtGui.QHBoxLayout()
@@ -178,7 +178,7 @@ class NGui(QtGui.QMainWindow):
 				self.lcds[i][y].display("-")
 				self.lcds[i][y].setFrameShape(QtGui.QFrame.Panel)
 				self.lcds[i][y].setFrameShadow(QtGui.QFrame.Plain)
-				self.lcds[i][y].setLineWidth(2)
+				self.lcds[i][y].setLineWidth(1800/self.scrnWidth)
 				self.lcds[i][y].setMidLineWidth(100)
 				self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n")
 				self.lcds[i][y].setFixedHeight(self.scrnHeight/30)
@@ -267,7 +267,7 @@ class NGui(QtGui.QMainWindow):
 		# in the main thread.
 		timer.timeout.connect(self.update)
 		timer.start(1000)
-		
+		self.NAlert.begin()
 		sys.exit(app.exec_())
 
 	def update(self):
@@ -285,10 +285,12 @@ class NGui(QtGui.QMainWindow):
 					# when adding data to the current dataset
 					newData = []
 					# Update all QLcds with the reading
-					for y in range(0, len(readings)):
+					for y in range(0, len(self.devices[i].getFrame().getNicknames())):
 						self.lcds[i][y].setSegmentStyle(
 							QtGui.QLCDNumber.Flat)
 						z = self.devices[i].getFrame().getReadingIndices()
+						#print(readings)
+						#print(z)
 						self.lcds[i][y].display(readings[z[y]])
 						# If there are units, put them next to the number
 						if(len(self.devices[i].getFrame().getUnits())>0):

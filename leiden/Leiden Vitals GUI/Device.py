@@ -15,7 +15,7 @@
 
 
 """
-version = 1.0.1
+version = 2.0.1
 description = References a device
 """
 
@@ -36,6 +36,9 @@ class Device:
 	def __init__(self,name):
 		#print("making device")
 		# Get all the stuff from the constructor.
+		# Has a the device made an appearance, this is so we dont alert the
+		# user more than once if a device dissapears.
+		self.foundDevice = False
 		# self.cxn = cxn
 		self.name = name
 		# Nicknames of settings (the ones that show up on th Gui)
@@ -93,20 +96,21 @@ class Device:
 			#print "buttonNames: ", self.buttonNames
 			#print "buttons: ", self.frame.getButtons()
 		
-		
-	
 	def setServerName(self, name):
 		self.serverName = name
-	def addParameter(self, parameter, setting, arg, index = 0):
-		index = len(self.nicknames)
-		if(setting not in self.settingNames):
-			self.settingNames.append(setting)
+		
+	def addParameter(self, parameter, setting, arg=None, index = None):
+		if(index is None):
+			index = len(self.nicknames)
+		self.settingNames.append(setting)
 		self.settingResultIndices.append(index)
 		self.nicknames.append(parameter)
 		self.settingArgs.append(arg)
+		
 	def connection(self, cxn):
 		self.cxn = cxn
-	def addButton(self, name, msg, setting, arg):
+		
+	def addButton(self, name, msg, setting, arg=None):
 		self.buttons.append([])
 		i = len(self.buttons)-1
 		self.buttons[i].append(name)
@@ -115,14 +119,15 @@ class Device:
 		self.buttons[i].append(arg)
 		self.frame.setButtons(self.buttons)
 		#print(self.buttons)
+		
 	def setYLabel(self, yLbl):
 		self.frame.setYLabel(yLbl)
+		
 	def selectDeviceCommand(self, cmd, arg):
 		self.selectedDevice = arg	
 		self.setDeviceCmd = cmd	
-	def begin(self):
-	
 		
+	def begin(self):
 		self.frame.setTitle(self.name)
 		self.frame.setNicknames(self.nicknames)
 		self.frame.setReadingIndices(self.settingResultIndices)
@@ -139,7 +144,7 @@ class Device:
 		
 	def connect(self):	
 		'''Connect to the device'''
-	
+		#self.deviceServer = getattr(self.cxn, self.serverName)()
 		try:
 			# Attempt to connect to the server given the connection 
 			# and the server name.
@@ -154,13 +159,15 @@ class Device:
 					self.selectedDevice)
 		
 			# True means successfully connected
+			self.foundDevice= False
 			return True
-		except labrad.client.NotFoundError:
-			print("The selectDeviceCommand contains an invalid argument")
+		except labrad.client.NotFoundError, AttributeError:
+			if( not self.foundDevice):
+				self.foundDevice = True
+				print("Unable to find device: "+self.serverName)
+			self.frame.raiseError("Labrad issue")
+
 		except:
-			if(self.setDeviceCmd is not None):
-				getattr(self.deviceServer, self.setDeviceCmd)(
-				self.selectedDevice)
 			#print("error, server not found")
 			# The nFrame class can pass an error along with a message
 			self.frame.raiseError("Labrad issue")

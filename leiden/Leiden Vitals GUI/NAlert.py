@@ -30,6 +30,7 @@ class NAlert:
 				if(self.devices[i].getFrame().getNicknames()[y] is not None):
 					self.mailSent.append(False)
 					#print(len(self.mailSent))
+	def begin(self):
 		# This runs on its own thread
 		self.deviceThread = threading.Thread(target = self.monitorReadings, args=[])
 		# If the main thread stops, stop the child thread
@@ -46,12 +47,11 @@ class NAlert:
 			# If it has readings
 			if(self.devices[i].getFrame().getReadings() is not None):
 				# Loop through all readings
-				for y in range(0, len(self.devices[i].getFrame().getReadings())):
+				for y in range(0, len(self.devices[i].getFrame().getNicknames())):
 					# If the reading is displayed on the GUI
 					#print(self.devices[i].getFrame().getNicknames())
 					if(self.devices[i].getFrame().getNicknames()[y] is not None):
 						# Get that specific reading
-						# print "z: ", z
 						if(len(str(self.mins[z])) is not 0):
 							if(float(self.mins[z])>float(self.devices[i].getFrame().getReadings()[y])):
 							# If a min has been specified
@@ -68,7 +68,7 @@ class NAlert:
 									self.sendMail(i, y, z)
 						#print "z",(z)
 						#print "y", y
-                                                z = z+1
+						z = z+1
 			else:
 				
 				z=z+len(self.devices[i].getFrame().getNicknames())
@@ -77,6 +77,7 @@ class NAlert:
 			
 	def stop(self):
 		self.keepGoing = False
+		
 	def generateMessage(self,z, y, i):
 		#print "HERE 1 ", z
 		#print(self.mins[z])

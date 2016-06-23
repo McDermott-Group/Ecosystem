@@ -109,11 +109,14 @@ class nViewer:
 		# Leiden DR monitor
 	
 		LeidenDRTemperature = Device("Leiden DR")
+		LeidenDRTemperature.connection(cxn)
+
 		LeidenDRTemperature.setServerName("leiden_dr_temperature")
 		LeidenDRTemperature.addParameter("Mix (PT-1000)","mix_temperature_pt1000", None)
 		LeidenDRTemperature.addParameter("Mix (TT)", "mix_temperature", None)
 		LeidenDRTemperature.addParameter("Still", "still_temperature", None)
 		LeidenDRTemperature.addParameter("Exchange","exchange_temperature", None)
+		LeidenDRTemperature.selectDeviceCommand("select_device", 0)
 		LeidenDRTemperature.begin()
 		self.devices.append(LeidenDRTemperature)
 
@@ -143,6 +146,12 @@ class nViewer:
 		Compressor.addParameter("Output Water Temperature", "temperaturesforgui", None, 1)
 		Compressor.addParameter("Helium Temperature", "temperaturesforgui", None, 2)
 		Compressor.addParameter("Oil Temperature", "temperaturesforgui", None, 3)
+		Compressor.selectDeviceCommand("select_device", 0)
+		Compressor.connection(cxn)
+
+		Compressor.begin()
+		self.devices.append(Compressor)
+
 						# ["temperaturesfor,
 		
 		# self.devices.append(Compressor)
@@ -153,6 +162,13 @@ class nViewer:
 						# ["get_temperature"],
 						# [None], cxn, None, None, None, [None],None,
 						# "select_device", 0)
+		Temperature = Device("Temperature")
+		Temperature.connection(cxn)
+		Temperature.setServerName("omega_temp_monitor_server")
+		Temperature.addParameter("Exteranal Water Temperature", "get_temperature")
+		Temperature.selectDeviceCommand("select_device",0)
+		Temperature.begin()
+		self.devices.append(Temperature)
 		# self.devices.append(Temperature)
 		# # Omega Flow Meter
 		# Flow = Device("omega_ratemeter_server","External Water Flow Rate", 
@@ -160,6 +176,14 @@ class nViewer:
 						# ["get_rate"],
 						# [None], cxn, None, None, None, None,None,
 						# "select_device", 0)
+		Flow = Device("Flow Meter")
+		Flow.connection(cxn)
+		Flow.setServerName("omega_ratemeter_server")
+		Flow.addParameter("External Water Flow Rate", "get_rate")
+		Flow.selectDeviceCommand("select_device", 0)
+		Flow.begin()
+		self.devices.append(Flow)
+		
 		# self.devices.append(Flow)
 		# # Pfeiffer Vacuum Monitor
 		# vacuum = Device("pfeiffer_vacuum_maxigauge", "Pressure Monitor", 
@@ -170,7 +194,16 @@ class nViewer:
 						# ["get_pressures"], 
 						# [None], cxn, None, None, None,[None],None,
 						# "select_device", 0)
-		# self.devices.append(vacuum)
+		Vacuum = Device("Vacuum")
+		Vacuum.setServerName("pfeiffer_vacuum_maxigauge")
+		Vacuum.connection(cxn)
+		Vacuum.addParameter("OVC Pressure", "get_pressures", None, 3)
+		Vacuum.addParameter("IVC Pressure", "get_pressures", None, 4)
+		Vacuum.addParameter("Still Pressure", "get_pressures", None, 5)
+
+		Vacuum.selectDeviceCommand("select_device", 0)
+		Vacuum.begin()
+		self.devices.append(Vacuum)
 		
 		# Start the datalogger. This line can be commented
 		# out if no datalogging is required.
