@@ -127,13 +127,19 @@ class NAlert:
 		if(HOURS_BETWEEN_EMAILS<elapsedHrs):
 			# NMail.NMail(self.contacts[z],self.devices[i].getFrame()
 				# .getTitle(), self.devices[i].getFrame().getNicknames()[y], str(self.message))
-			success, address = self.tele.send_sms(self.devices[i].getFrame().getNicknames()[y], str(self.message), self.contacts[z].split(','), "labrad_physics")
+			#print str(self.devices[i].getFrame().getNicknames()[y])
+			#print str(self.message)
+			#print self.contacts[z].split(',')
+			success, address = self.tele.send_sms(self.devices[i].getFrame().getNicknames()[y], 
+									str(self.message), 
+									self.contacts[z].split(','),
+									"labrad_physics")
 			if (not success):
-				print("Couldn't send email to group: "+self.contacts[z].split(',')+ 
-				", someone may be missing from the registry or incorrectly entered")
+				print("Couldn't send email to group: "+str(self.contacts[z].split(','))+ 
+				", someone may be missing from the registry or incorrectly entered.")
 			#print(self.message)
-			else:
-				print("Mail sent")
+			#else:
+				#print("Mail sent")
 			self.message = []
 			self.mailSent = []
 			for i in range(0, len(self.devices)):

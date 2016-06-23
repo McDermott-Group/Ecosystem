@@ -84,66 +84,97 @@ class nViewer:
 		#		viewer.__init__()
 		###################################################################
 		
-		# This is my test server
-		# testDevice = Device("my_server", "Random Number Generator", ["Random Pressure", "Random Temperature"], ["pressure", "temperature"], [None, None], cxn, ["Pressure","Temperature"], ["pressure", "temperature"], ["You are about to get a random pressure", None],[None,None])
+		# # This is my test server
+		# testDevice = Device("my_server", "Random Number Generator", 
+		# ["Random Pressure", "Random Temperature"], ["pressure", "temperature"], 
+		# [None, None], cxn, ["Pressure","Temperature"], ["pressure", "temperature"], 
+	# ["You are about to get a random pressure", None],[None,None])
+
 		# self.devices.append(testDevice)
+
+
+		testDevice = Device("Random Number Generator")
+
+		testDevice.setServerName("my_server")
+		testDevice.addParameter("Random Pressure", "pressure", None)
+		testDevice.addParameter("Random Temperature", "temperature", None)
+		testDevice.connection(cxn)
+		testDevice.addButton("Pressure", "You are about to get a random pressure", "pressure", None)
+		testDevice.addButton("Temperature", None,"temperature", None)
+		testDevice.setYLabel("Example")
+		#testDevice.selectDeviceCommand("select_device", 0)
+		testDevice.begin()
+		self.devices.append(testDevice)
+
 		# Leiden DR monitor
-		LeidenDRTemperature = Device("leiden_dr_temperature", 
-						"Leiden DR", 
-						["Mix (PT-1000)",
-						"Mix (TT)", 
-						"Still",
-						"Exchange"], 
-						["mix_temperature_pt1000",
-						"mix_temperature",
-						"still_temperature", 
-						"exchange_temperature"],
-						[None], cxn, None,None, None,[None])
+	
+		LeidenDRTemperature = Device("Leiden DR")
+		LeidenDRTemperature.setServerName("leiden_dr_temperature")
+		LeidenDRTemperature.addParameter("Mix (PT-1000)","mix_temperature_pt1000", None)
+		LeidenDRTemperature.addParameter("Mix (TT)", "mix_temperature", None)
+		LeidenDRTemperature.addParameter("Still", "still_temperature", None)
+		LeidenDRTemperature.addParameter("Exchange","exchange_temperature", None)
+		LeidenDRTemperature.begin()
 		self.devices.append(LeidenDRTemperature)
-		# Compressor Monitor
-		Compressor = Device("cp2800_compressor",
-						"Compressor",
-						["Input Water Temperature", 
-						"Output Water Temperature", 
-						"Helium Temperature",
-						"Oil Temperature"],
-						["temperaturesforgui"], 
-						[None], cxn, 
-						["Turn On", "Turn Off"], 
-						["status", "status"], 
-						["You are about to turn the compressor on",
-						"You are about to turn the compressor off"], 
-						[None, None], "Temperature", "select_device", 0)
-		self.devices.append(Compressor)
-		# Omega Temperature Monitor server
-		Temperature = Device("omega_temp_monitor_server",
-						"External Water Temperature",
-						["Temperature"],
-						["get_temperature"],
-						[None], cxn, None, None, None, [None],None,
-						"select_device", 0)
-		self.devices.append(Temperature)
-		# Omega Flow Meter
-		Flow = Device("omega_ratemeter_server","External Water Flow Rate", 
-						["Flow Rate"], 
-						["get_rate"],
-						[None], cxn, None, None, None, None,None,
-						"select_device", 0)
-		self.devices.append(Flow)
-		# Pfeiffer Vacuum Monitor
-		vacuum = Device("pfeiffer_vacuum_maxigauge", "Pressure Monitor", 
-						[None, None, None, 
-						"OVC Pressure",
-						"IVC Pressure", 
-						"Still Pressure"], 
-						["get_pressures"], 
-						[None], cxn, None, None, None,[None],None,
-						"select_device", 0)
-		self.devices.append(vacuum)
+
+		# # LeidenDRTemperature = Device("Leiden DR")
+		# # LeidenDRTemperature.setServerName("leiden_dr_temperature")
+		# # LeidenDRTemperature.addParameter("Mix (PT-1000)", "mix_temperature_pt1000"
+		# self.devices.append(LeidenDRTemperature)
+		# # Compressor Monitor
+		# Compressor = Device("cp2800_compressor",
+						# "Compressor",
+						# ["Input Water Temperature", 
+						# "Output Water Temperature", 
+						# "Helium Temperature",
+						# "Oil Temperature"],
+						# ["temperaturesforgui"], 
+						# [None], cxn, 
+						# ["Turn On", "Turn Off"], 
+						# ["status", "status"], 
+						# ["You are about to turn the compressor on",
+						# "You are about to turn the compressor off"], 
+						# [None, None], "Temperature", "select_device", 0)
+		Compressor = Device("Compressor")
+		Compressor.setServerName("cp2800_compressor")
+		Compressor.addButton("Turn On", "You are about to turn the compressor on.", "status", None)
+		Compressor.addButton("Turn Off", "You are about to turn the compressor off." , "status", None)
+		Compressor.addParameter("Input Water Temperature", "temperaturesforgui", None, 0)
+		Compressor.addParameter("Output Water Temperature", "temperaturesforgui", None, 1)
+		Compressor.addParameter("Helium Temperature", "temperaturesforgui", None, 2)
+		Compressor.addParameter("Oil Temperature", "temperaturesforgui", None, 3)
+						# ["temperaturesfor,
+		
+		# self.devices.append(Compressor)
+		# # Omega Temperature Monitor server
+		# Temperature = Device("omega_temp_monitor_server",
+						# "External Water Temperature",
+						# ["Temperature"],
+						# ["get_temperature"],
+						# [None], cxn, None, None, None, [None],None,
+						# "select_device", 0)
+		# self.devices.append(Temperature)
+		# # Omega Flow Meter
+		# Flow = Device("omega_ratemeter_server","External Water Flow Rate", 
+						# ["Flow Rate"], 
+						# ["get_rate"],
+						# [None], cxn, None, None, None, None,None,
+						# "select_device", 0)
+		# self.devices.append(Flow)
+		# # Pfeiffer Vacuum Monitor
+		# vacuum = Device("pfeiffer_vacuum_maxigauge", "Pressure Monitor", 
+						# [None, None, None, 
+						# "OVC Pressure",
+						# "IVC Pressure", 
+						# "Still Pressure"], 
+						# ["get_pressures"], 
+						# [None], cxn, None, None, None,[None],None,
+						# "select_device", 0)
+		# self.devices.append(vacuum)
 		
 		# Start the datalogger. This line can be commented
 		# out if no datalogging is required.
-		self.chest = dataChestWrapper(self.devices)
+		#self.chest = dataChestWrapper(self.devices)
 		
 		# Create the gui
 		self.gui = NGui.NGui()

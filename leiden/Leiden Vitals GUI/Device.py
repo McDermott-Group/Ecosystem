@@ -33,67 +33,99 @@ import sys, traceback
 class Device:
 
 	
-	def __init__(self, serverName, name, nicknames, settingNames, settingArgs, cxn, 
-				buttonNames, buttonSettings, buttonMessages,  buttonArgs, 
-				yLabel =None, setDeviceCmd = None, selectedDevice = 0):
+	def __init__(self,name):
 		#print("making device")
 		# Get all the stuff from the constructor.
-		self.cxn = cxn
+		# self.cxn = cxn
 		self.name = name
 		# Nicknames of settings (the ones that show up on th Gui)
-		self.nicknames=nicknames			
+		self.nicknames=[]			
 		# Device's frame
-		self.frame = NFrame(self.name, self.nicknames)	
 		# The device's labrad server		
-		self.serverName = serverName	
+		#self.serverName = serverName	
 		# List of settings that the user wants run on their device
 		settings=[]				
 		# The actual names of the settings
-		self.settingNames = settingNames	
+		self.settingNames = []
 		# Stores the actual reference to the labrad server		
 		deviceServer = None	
 		# True if device is functioning correctly
 		self.isDevice = False			
 		# Used for device.select_device(selectedDevice) setting
-		self.selectedDevice = selectedDevice	
+		self.selectedDevice = 0
 		# stores the setting to select device (almost always 'select_device')
-		self.setDeviceCmd = setDeviceCmd	
+		self.setDeviceCmd = None	
 		# Stores the buttons along with their parameters
 		buttons = [[]]				
 		# Arguments that should be passed to settings if necessary
-		self.settingArgs = settingArgs		
-		
+		self.settingArgs =[]	
+		self.settingResultIndices = []
 		#print name, ":", yLabel
-		self.frame.setYLabel(yLabel)
+		self.frame = NFrame()
+		self.frame.setYLabel(None)
 		#print "Now it is: ", self.frame.getYLabel()
 		# Determine which buttons get messages
-		if(buttonMessages is not None):
-			self.buttonMessages = buttonMessages
+#		if(buttonMessages is not None):
+		self.buttonMessages = []
 		# Setup all buttons
-		if(buttonNames is not None):
-			self.buttonNames = buttonNames
-			self.buttonSettings = buttonSettings
+		#if(buttonNames is not None):
+		self.buttonNames = []
+		self.buttonSettings = []
 			#print(buttonArgs)
-			self.buttons = []
-			#print "buttons before:  ", self.buttons
-			for i in range(0, len(self.buttonNames)):
-				#print(self.name)
-				#print()
-				#print(i)
-				#if(i is not 0):
-				self.buttons.append([])
-				#print(i)
-				#print(len(self.buttons))
-				self.buttons[i].append(self.buttonNames[i])
-				self.buttons[i].append(self.buttonSettings[i])
-				self.buttons[i].append(self.buttonMessages[i])
-				self.buttons[i].append(buttonArgs[i])
-			self.frame.setButtons(self.buttons)
+		self.buttons = []
+			# # print "buttons before:  ", self.buttons
+			# for i in range(0, len(self.buttonNames)):
+				# # print(self.name)
+				# # print()
+				# # print(i)
+				# # if(i is not 0):
+				# self.buttons.append([])
+				# # print(i)
+				# # print(len(self.buttons))
+				# self.buttons[i].append(self.buttonNames[i])
+				# self.buttons[i].append(self.buttonSettings[i])
+				# self.buttons[i].append(self.buttonMessages[i])
+				# self.buttons[i].append(buttonArgs[i])
+			# self.frame.setButtons(self.buttons)
 			
 			#print "Device: ", self.name
 			
 			#print "buttonNames: ", self.buttonNames
 			#print "buttons: ", self.frame.getButtons()
+		
+		
+	
+	def setServerName(self, name):
+		self.serverName = name
+	def addParameter(self, parameter, setting, arg, index = 0):
+		index = len(self.nicknames)
+		if(setting not in self.settingNames):
+			self.settingNames.append(setting)
+		self.settingResultIndices.append(index)
+		self.nicknames.append(parameter)
+		self.settingArgs.append(arg)
+	def connection(self, cxn):
+		self.cxn = cxn
+	def addButton(self, name, msg, setting, arg):
+		self.buttons.append([])
+		i = len(self.buttons)-1
+		self.buttons[i].append(name)
+		self.buttons[i].append(setting)
+		self.buttons[i].append(msg)
+		self.buttons[i].append(arg)
+		self.frame.setButtons(self.buttons)
+		#print(self.buttons)
+	def setYLabel(self, yLbl):
+		self.frame.setYLabel(yLbl)
+	def selectDeviceCommand(self, cmd, arg):
+		self.selectedDevice = arg	
+		self.setDeviceCmd = cmd	
+	def begin(self):
+	
+		
+		self.frame.setTitle(self.name)
+		self.frame.setNicknames(self.nicknames)
+		self.frame.setReadingIndices(self.settingResultIndices)
 		# Connect to the device's server
 		self.connect()
 		# Each device NEEDS to run on a different thread 
@@ -107,19 +139,32 @@ class Device:
 		
 	def connect(self):	
 		'''Connect to the device'''
+	
 		try:
 			# Attempt to connect to the server given the connection 
 			# and the server name.
+			#print(self.cxn)
+		
 			self.deviceServer = getattr(self.cxn, self.serverName)()
+			
 			# If the select device command is not none, run it.
+			#print(self.deviceServer)
 			if(self.setDeviceCmd is not None):
 				getattr(self.deviceServer, self.setDeviceCmd)(
 					self.selectedDevice)
+		
 			# True means successfully connected
 			return True
+		except labrad.client.NotFoundError:
+			print("The selectDeviceCommand contains an invalid argument")
 		except:
+			if(self.setDeviceCmd is not None):
+				getattr(self.deviceServer, self.setDeviceCmd)(
+				self.selectedDevice)
+			#print("error, server not found")
 			# The nFrame class can pass an error along with a message
-			self.frame.raiseError("")
+			self.frame.raiseError("Labrad issue")
+			
 			return False
 		
 	def getFrame(self):

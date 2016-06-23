@@ -96,7 +96,7 @@ class NotifierGUI(QtGui.QDialog):
 				# Pickle the arrays and store them
 				here = os.path.dirname(os.path.abspath(__file__))
 				pickle.dump(self.allDataDict, open(os.path.join(here, 'NotifierConfig1.nview'), 'wb'))
-				print(here)
+				#print(here)
 
 				print("Data Saved")
 		
@@ -119,23 +119,26 @@ class NotifierGUI(QtGui.QDialog):
 		self.close()
 	def getMins(self):
 		mins = []
-		for key in self.alert.allWidgetDict.keys():
-			mins.append(self.alert.allWidgetDict[key][1])
+		for key in self.alert.allDataDict.keys():
+			mins.append(self.alert.allDataDict[key][1])
+		#print mins
 		return mins
 	def getMaxs(self):
 		maxs = []
-		for key in self.alert.allWidgetDict.keys():
-			maxs.append(self.alert.allWidgetDict[key][2])
+		for key in self.alert.allDataDict.keys():
+			maxs.append(self.alert.allDataDict[key][2])
 		return maxs
 	def getContacts(self):
 		contacts = []
-		for key in self.alert.allWidgetDict.keys():
-			contacts.append(self.alert.allWidgetDict[key][3])
+		for key in self.alert.allDataDict.keys():
+			
+			contacts.append(str(self.alert.allDataDict[key][3]))
+		#print contacts
 		return contacts
 	def getCheckboxes(self):
 		boxs = []
-		for key in self.alert.allWidgetDict.keys():
-			boxs.append(self.alert.allWidgetDict[key][0])
+		for key in self.alert.allDataDict.keys():
+			boxs.append(self.alert.allDataDict[key][0])
 		return boxs
 		
 class AlertConfig(QtGui.QWidget):

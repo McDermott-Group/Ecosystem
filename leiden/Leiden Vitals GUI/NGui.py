@@ -288,7 +288,8 @@ class NGui(QtGui.QMainWindow):
 					for y in range(0, len(readings)):
 						self.lcds[i][y].setSegmentStyle(
 							QtGui.QLCDNumber.Flat)
-						self.lcds[i][y].display(readings[y])
+						z = self.devices[i].getFrame().getReadingIndices()
+						self.lcds[i][y].display(readings[z[y]])
 						# If there are units, put them next to the number
 						if(len(self.devices[i].getFrame().getUnits())>0):
 							self.units[i][y].setText(self.devices[i]

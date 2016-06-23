@@ -44,19 +44,24 @@ class NFrame:
 	buttonInd = None
 	# Is a specified button pushed
 	buttonPushed = False
-	def __init__(self, title, nicknames):
-		self.serverTitle = title
-		self.nicknames = nicknames
+	def __init__(self):
+		print("New Frame")
 	def setTitle(self, title):
 		self.serverTitle = title
 	def getTitle(self):
 		return self.serverTitle
 	def getNicknames(self):
 		return self.nicknames
+	def setNicknames(self, nicknames):
+		self.nicknames = nicknames
 	def setReadings(self, readings):
 		self.readings = readings
 	def getReadings(self):
 		return self.readings
+	def setReadingIndices(self, index):
+		self.readingIndices = index
+	def getReadingIndices(self):
+		return self.readingIndices
 	def raiseError(self, msg):
 		self.error = True
 		self.errmsg = msg
