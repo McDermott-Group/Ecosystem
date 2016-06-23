@@ -209,8 +209,8 @@ class Device:
 							readings.append(reading)
 							units.append("")
 						except:
-							print("Problem with readings, type/n"
-								+type(reading)+"\ncannot be displayed")
+							print("Problem with readings, type '"
+								+type(reading)+"' cannot be displayed")
 				# Pass the readings and units to the frame
 				self.frame.setReadings(readings)
 				self.frame.setUnits(units)
