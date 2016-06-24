@@ -406,7 +406,7 @@ class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
 	def display_format(self, fmt):
 		raise NotImplementedError
 
-class Agilent8720ETDeviceWrapper(AgilentN5230ADeviceWrapper):
+class Agilent8720ETDeviceWrapper(GPIBDeviceWrapper):
 	# Override the N5320A's method
 	@inlineCallbacks
 	def initialize(self):
@@ -416,7 +416,12 @@ class Agilent8720ETDeviceWrapper(AgilentN5230ADeviceWrapper):
 		
 	def clear_status(self):
 		raise NotImplementedError
-
+		
+	@inlineCallbacks
+	def preset(self):
+		"""Preset the network analyzer."""
+		yield self.initialize()
+		
 	def power_output(self, pow):
 		raise NotImplementedError
 	
