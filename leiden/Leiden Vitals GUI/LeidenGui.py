@@ -146,6 +146,8 @@ class nViewer:
 		Compressor.addParameter("Output Water Temperature", "temperaturesforgui", None, 1)
 		Compressor.addParameter("Helium Temperature", "temperaturesforgui", None, 2)
 		Compressor.addParameter("Oil Temperature", "temperaturesforgui", None, 3)
+		Compressor.addPlot()
+		Compressor.setYLabel("Pressure")
 		Compressor.selectDeviceCommand("select_device", 0)
 		Compressor.connection(cxn)
 
@@ -167,6 +169,8 @@ class nViewer:
 		Temperature.setServerName("omega_temp_monitor_server")
 		Temperature.addParameter("Exteranal Water Temperature", "get_temperature")
 		Temperature.selectDeviceCommand("select_device",0)
+		Temperature.addPlot()
+		Temperature.setYLabel("Temperature")
 		Temperature.begin()
 		self.devices.append(Temperature)
 		# self.devices.append(Temperature)

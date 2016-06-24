@@ -66,6 +66,8 @@ class Device:
 		#print name, ":", yLabel
 		self.frame = NFrame()
 		self.frame.setYLabel(None)
+		# Store the graph
+		#self.plots = []
 		#print "Now it is: ", self.frame.getYLabel()
 		# Determine which buttons get messages
 #		if(buttonMessages is not None):
@@ -120,8 +122,8 @@ class Device:
 		self.frame.setButtons(self.buttons)
 		#print(self.buttons)
 		
-	def setYLabel(self, yLbl):
-		self.frame.setYLabel(yLbl)
+	def setYLabel(self, yLbl, units = ''):
+		self.frame.setYLabel(yLbl, units)
 		
 	def selectDeviceCommand(self, cmd, arg):
 		self.selectedDevice = arg	
@@ -142,6 +144,8 @@ class Device:
 		# Start the thread
 		self.deviceThread.start()
 		
+	def addPlot(self):
+		self.frame.addPlot()
 	def connect(self):	
 		'''Connect to the device'''
 		#self.deviceServer = getattr(self.cxn, self.serverName)()

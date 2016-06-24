@@ -29,6 +29,9 @@ import os
 from NotifierGUI import NotifierGUI
 import math
 import NAlert
+
+import NGrapher
+
 class NGui(QtGui.QMainWindow):
 	dialog = None
 	parameters = [[]]
@@ -42,7 +45,7 @@ class NGui(QtGui.QMainWindow):
 	lcds = [[]]
 	units = [[]]
 	buttons = [[]]
-	
+	plots = [[]]
 	font = QtGui.QFont()
 	#font.setPointSize(12)
 	font.setBold(False)
@@ -55,13 +58,13 @@ class NGui(QtGui.QMainWindow):
 		# Make pretty
 		self.central_widget = QtGui.QWidget()
 		self.setCentralWidget(self.central_widget)
-		
+		self.central_widget.setLayout(self.mainHBox)
 		self.setStyleSheet("background:rgb(70, 80, 88)")
 		# # Get list of devices
 		# self.devices = devices
 		# Stack the device frames
 		# #self.setLayout(self.mainHBox)
-		self.central_widget.setLayout(self.mainHBox)
+		
 		self.mainHBox.addLayout(self.mainVBox[self.VBoxColumn])
 		
 	
@@ -92,8 +95,13 @@ class NGui(QtGui.QMainWindow):
 		# For each device, add a GUI frame for it.
 		numWidgets = 0
         
+		self.scrollArea = QtGui.QScrollArea()
 		
 		
+		self.scrollArea.setWidget(self.central_widget)
+		self.scrollArea.setWidgetResizable(True)
+
+		self.setCentralWidget(self.scrollArea)
 		for i in range(0,len(self.devices)):
 			numWidgets = numWidgets+1
 			#Append a new gui frame
@@ -114,7 +122,8 @@ class NGui(QtGui.QMainWindow):
 			self.parameters.append([])
 			self.lcds.append([])
 			self.units.append([])
-			self.buttons.append([])			
+			self.buttons.append([])
+			self.plots.append([])
 			# Configure grid layout
 			self.grids[i].setSpacing(10)
 			self.grids[i].addWidget(self.titles[i], 1, 0)
@@ -208,6 +217,24 @@ class NGui(QtGui.QMainWindow):
 					
 					self.grids[i].addLayout(lcdHBoxLayout, y+2, 1)
 					self.grids[i].addWidget(self.units[i][y], y+2, 2)
+			# Configure the plots
+			if (self.devices[i].getFrame().getPlot()):
+				
+				# self.plots[i].append(Figure(figsize=(5, 4), dpi=100))
+				 
+				# self.axes = self.plots[i][y].add_subplot(111)
+				# self.axes.hold(False)
+				# FigureCanvas.__init__(self, self.plots[i][y])
+				# self.setParent(parent)
+				# FigureCanvas.setSizePolicy(self,
+                                   # QtGui.QSizePolicy.Expanding,
+                                   # QtGui.QSizePolicy.Expanding)
+				# FigureCanvas.updateGeometry(self)
+				# self.axes.plot([0, 1, 2, 3], [1, 2, 0, 4], 'r')
+				self.main_widget = self.frames[i]
+				dc = NGrapher.DynamicMplCanvas(self.devices[i])
+				yPos = len(self.devices[i].getFrame().getNicknames())+3
+				self.grids[i].addWidget(dc, yPos, 0,yPos,3 )
 		self.mainVBox[self.VBoxColumn].addStretch(1)
 		print("Gui initialized")
 		return

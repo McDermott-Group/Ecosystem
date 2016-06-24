@@ -44,6 +44,13 @@ class NFrame:
 	buttonInd = None
 	# Is a specified button pushed
 	buttonPushed = False
+	# Store the plots
+	plot = False
+	# Just in case the user wants to label their NGui plot with
+	# custom units (note these are only the units displayed onscreen,
+	# not the units that the data is logged with)
+	custUnits = ''
+	
 	def __init__(self):
 		print("New Frame")
 	def setTitle(self, title):
@@ -76,6 +83,8 @@ class NFrame:
 		self.units = units
 	def getUnits(self):
 		return self.units
+	def getCustomUnits(self):
+		return self.custUnits
 	def getButtons(self):
 		return self.buttons
 	def setButtons(self, buttons):
@@ -88,7 +97,12 @@ class NFrame:
 		return self.buttonInd
 	def isButtonPressed(self):
 		return self.buttonPushed
-	def setYLabel(self, y):
+	def setYLabel(self, y, custUnits=''):
+		self.custUnits = custUnits
 		self.yLabel = y
 	def getYLabel(self):
 		return self.yLabel
+	def addPlot(self):
+		self.plot=True
+	def getPlot(self):
+		return self.plot
