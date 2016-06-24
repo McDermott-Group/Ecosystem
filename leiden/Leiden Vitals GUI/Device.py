@@ -144,8 +144,8 @@ class Device:
 		# Start the thread
 		self.deviceThread.start()
 		
-	def addPlot(self):
-		self.frame.addPlot()
+	def addPlot(self, length = None):
+		self.frame.addPlot(length)
 	def connect(self):	
 		'''Connect to the device'''
 		#self.deviceServer = getattr(self.cxn, self.serverName)()

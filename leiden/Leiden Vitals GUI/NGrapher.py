@@ -84,11 +84,15 @@ class DynamicMplCanvas(MyMplCanvas):
 			self.data.append(self.device.getFrame().getReadings())
 			#thisData = []
 			#print(self.data)
-			datalen = len(self.data)-1
+			
 			# only plot data shown on GUI
 			#print 
 			self.axes.clear()
-
+			if self.device.getFrame().getPlotLength() is not None:
+				while len(self.data) > self.device.getFrame().getPlotLength():
+					self.data.pop(0)
+				self.axes.set_xlim(0, self.device.getFrame().getPlotLength()-1)
+			datalen = len(self.data)-1
 			if (type(self.data[datalen]) is list):
 				for i in range(len(self.device.getFrame().getReadingIndices())):
 					#print(self.device.getFrame().getReadingIndices())

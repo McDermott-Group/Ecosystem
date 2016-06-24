@@ -146,7 +146,7 @@ class nViewer:
 		Compressor.addParameter("Output Water Temperature", "temperaturesforgui", None, 1)
 		Compressor.addParameter("Helium Temperature", "temperaturesforgui", None, 2)
 		Compressor.addParameter("Oil Temperature", "temperaturesforgui", None, 3)
-		Compressor.addPlot()
+		Compressor.addPlot(12)
 		Compressor.setYLabel("Temperature")
 		Compressor.selectDeviceCommand("select_device", 0)
 		Compressor.connection(cxn)

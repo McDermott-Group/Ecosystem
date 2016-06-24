@@ -50,7 +50,8 @@ class NFrame:
 	# custom units (note these are only the units displayed onscreen,
 	# not the units that the data is logged with)
 	custUnits = ''
-	
+	# If the length of the graph should be plotted over a fixed interval
+	plotLength = None
 	def __init__(self):
 		print("New Frame")
 	def setTitle(self, title):
@@ -102,7 +103,10 @@ class NFrame:
 		self.yLabel = y
 	def getYLabel(self):
 		return self.yLabel
-	def addPlot(self):
+	def addPlot(self, length = None):
 		self.plot=True
+		self.plotLength = length
 	def getPlot(self):
 		return self.plot
+	def getPlotLength(self):
+		return self.plotLength
