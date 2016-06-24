@@ -34,6 +34,7 @@ from numpy import arange, sin, pi
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib import rc
+import matplotlib.pyplot as plt
 progname = os.path.basename(sys.argv[0])
 progversion = "0.1"
 
@@ -42,15 +43,16 @@ class MyMplCanvas(FigureCanvas):
 	"""Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
 
 	def __init__(self, parent=None, width=5, height=4, dpi=100):
-		fig = Figure(figsize=(5, 4), dpi=100)
-		self.axes = fig.add_subplot(111)
+		#self.fig = Figure(figsize=(5, 4), dpi=100)
+		self.fig = plt.figure()
+		self.axes = self.fig.add_subplot(1,1,1)
 		# We want the axes cleared every time plot() is called
-		self.axes.hold(False)
+		#self.axes.hold(False)
 
 		#self.compute_initial_figure()
 
 		#
-		FigureCanvas.__init__(self, fig)
+		FigureCanvas.__init__(self, self.fig)
 		self.setParent(parent)
 
 		FigureCanvas.setSizePolicy(self,
@@ -78,16 +80,39 @@ class DynamicMplCanvas(MyMplCanvas):
 				, self.device.getFrame().getReadings(), 'r')
 
 	def update_figure(self):
-		# Build a list of 4 random integers between 0 and 10 (both inclusive)
 		if(self.device.getFrame().getReadings() is not None):
 			self.data.append(self.device.getFrame().getReadings())
-			self.axes.plot(self.data)
-			self.axes.set_xlabel("Data Point", fontsize = 10)
+			#thisData = []
+			#print(self.data)
+			datalen = len(self.data)-1
+			# only plot data shown on GUI
+			#print 
+			self.axes.clear()
+
+			if (type(self.data[datalen]) is list):
+				for i in range(len(self.device.getFrame().getReadingIndices())):
+					#print(self.device.getFrame().getReadingIndices())
+					index = self.device.getFrame().getReadingIndices()[i]
+				
+				
+					column = [row[index] for row in self.data]
+					self.axes.plot(column, label = self.device.getFrame().getNicknames()[i])
+					#b,self.axes = self.fig.subplots()
+					#self.axes.plot(column, label = "Test")
+
+			#else:
+				#print "printing 1d array: ", self.device.getFrame().getTitle()
+				#self.axes.plot(self.data, label = self.device.getFrame().getNicknames()[0])
+				
 			
+			self.axes.set_xlabel("Data Point", fontsize = 10)
+			self.axes.legend(loc='upper left')
 			if(self.device.getFrame().getYLabel() is not None and
 						len(self.device.getFrame().getUnits()) is not 0):
+				
 				self.axes.set_ylabel(self.device.getFrame().getYLabel()+" ("+
 							self.device.getFrame().getUnits()[0]+")", fontsize = 10)
+			
 			elif(self.device.getFrame().getYLabel() is not None and
 						len(self.device.getFrame().getCustomUnits()) is not 0):
 				self.axes.set_ylabel(self.device.getFrame().getYLabel()+" ("+
