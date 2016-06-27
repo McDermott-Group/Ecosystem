@@ -55,7 +55,7 @@ class NotifierGUI(QtGui.QDialog):
 		# Configure buttons
 		okButton.clicked.connect(self.saveData)
 		cancelButton.clicked.connect(self.close)
-		
+		self.setWindowTitle("Notifier Settings")
 		self.devices = devices
 		
 	def saveData(self):

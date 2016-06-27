@@ -29,7 +29,7 @@ import os
 from NotifierGUI import NotifierGUI
 import math
 import NAlert
-
+import numpy as np
 import NGrapher
 
 class NGui(QtGui.QMainWindow):
@@ -318,7 +318,13 @@ class NGui(QtGui.QMainWindow):
 						z = self.devices[i].getFrame().getReadingIndices()
 						#print(readings)
 						#print(z)
-						self.lcds[i][y].display(readings[z[y]])
+						try:
+							if(not math.isnan(readings[z[y]])):
+								self.lcds[i][y].display(readings[z[y]])
+							else:
+								self.lcds[i][y].display("-")
+						except TypeError:
+							pass
 						# If there are units, put them next to the number
 						if(len(self.devices[i].getFrame().getUnits())>0):
 							self.units[i][y].setText(self.devices[i]

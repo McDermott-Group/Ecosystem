@@ -30,15 +30,15 @@ if use_pyside:
 else:
 	from PyQt4 import QtGui, QtCore
 
-from numpy import arange, sin, pi
+#from numpy import arange, sin, pi
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
+#from matplotlib.figure import Figure
 from matplotlib import rc
 import matplotlib.pyplot as plt
 progname = os.path.basename(sys.argv[0])
 progversion = "0.1"
-
-
+from datetime import datetime as t
+import time
 class MyMplCanvas(FigureCanvas):
 	"""Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
 
@@ -74,33 +74,41 @@ class DynamicMplCanvas(MyMplCanvas):
 		timer.timeout.connect(self.update_figure)
 		timer.start(1000)
 		self.data = []
-
+		self.times = []
+		self.startTime = time.time()
 	def compute_initial_figure(self):
 		self.axes.plot(range(len(self.device.getFrame().getReadings()))
 				, self.device.getFrame().getReadings(), 'r')
 
 	def update_figure(self):
 		if(self.device.getFrame().getReadings() is not None):
-			self.data.append(self.device.getFrame().getReadings())
+			self.data.append((self.device.getFrame().getReadings()))
+			self.times.append(time.time()-self.startTime)
 			#thisData = []
 			#print(self.data)
 			
 			# only plot data shown on GUI
-			#print 
+			#print
+
 			self.axes.clear()
 			if self.device.getFrame().getPlotLength() is not None:
 				while len(self.data) > self.device.getFrame().getPlotLength():
 					self.data.pop(0)
-				self.axes.set_xlim(0, self.device.getFrame().getPlotLength()-1)
+					self.times.pop(0)
+				self.axes.set_xlim(0, time.time()-self.startTime)
 			datalen = len(self.data)-1
+
 			if (type(self.data[datalen]) is list):
 				for i in range(len(self.device.getFrame().getReadingIndices())):
 					#print(self.device.getFrame().getReadingIndices())
+
 					index = self.device.getFrame().getReadingIndices()[i]
 				
-				
+		
 					column = [row[index] for row in self.data]
-					self.axes.plot(column, label = self.device.getFrame().getNicknames()[i])
+					#print column
+					#time = [row[index] for row[1] in self.data]
+					self.axes.plot(self.times, column, label = self.device.getFrame().getNicknames()[i])
 					#b,self.axes = self.fig.subplots()
 					#self.axes.plot(column, label = "Test")
 
@@ -109,7 +117,7 @@ class DynamicMplCanvas(MyMplCanvas):
 				#self.axes.plot(self.data, label = self.device.getFrame().getNicknames()[0])
 				
 			
-			self.axes.set_xlabel("Data Point", fontsize = 10)
+			self.axes.set_xlabel("Time Since "+time.ctime(self.startTime)+" (s)", fontsize = 10)
 			self.axes.legend(loc='upper left')
 			if(self.device.getFrame().getYLabel() is not None and
 						len(self.device.getFrame().getUnits()) is not 0):
