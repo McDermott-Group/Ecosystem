@@ -83,30 +83,6 @@ class nViewer:
 		#		viewer = nViewer()	
 		#		viewer.__init__()
 		###################################################################
-		
-		# # This is my test server
-		# testDevice = Device("my_server", "Random Number Generator", 
-		# ["Random Pressure", "Random Temperature"], ["pressure", "temperature"], 
-		# [None, None], cxn, ["Pressure","Temperature"], ["pressure", "temperature"], 
-	# ["You are about to get a random pressure", None],[None,None])
-
-		# self.devices.append(testDevice)
-
-
-		testDevice = Device("Random Number Generator")
-
-		testDevice.setServerName("my_server")
-		testDevice.addParameter("Random Pressure", "pressure", None)
-		testDevice.addParameter("Random Temperature", "temperature", None)
-		testDevice.connection(cxn)
-		testDevice.addButton("Pressure", "You are about to get a random pressure", "pressure", None)
-		testDevice.addButton("Temperature", None,"temperature", None)
-		testDevice.setYLabel("Example")
-		#testDevice.selectDeviceCommand("select_device", 0)
-		testDevice.begin()
-		self.devices.append(testDevice)
-
-		# Leiden DR monitor
 	
 		LeidenDRTemperature = Device("Leiden DR")
 		LeidenDRTemperature.connection(cxn)
@@ -120,24 +96,6 @@ class nViewer:
 		LeidenDRTemperature.begin()
 		self.devices.append(LeidenDRTemperature)
 
-		# # LeidenDRTemperature = Device("Leiden DR")
-		# # LeidenDRTemperature.setServerName("leiden_dr_temperature")
-		# # LeidenDRTemperature.addParameter("Mix (PT-1000)", "mix_temperature_pt1000"
-		# self.devices.append(LeidenDRTemperature)
-		# # Compressor Monitor
-		# Compressor = Device("cp2800_compressor",
-						# "Compressor",
-						# ["Input Water Temperature", 
-						# "Output Water Temperature", 
-						# "Helium Temperature",
-						# "Oil Temperature"],
-						# ["temperaturesforgui"], 
-						# [None], cxn, 
-						# ["Turn On", "Turn Off"], 
-						# ["status", "status"], 
-						# ["You are about to turn the compressor on",
-						# "You are about to turn the compressor off"], 
-						# [None, None], "Temperature", "select_device", 0)
 		Compressor = Device("Compressor")
 		Compressor.setServerName("cp2800_compressor")
 		Compressor.addButton("Turn On", "You are about to turn the compressor on.", "status", None)
@@ -150,20 +108,17 @@ class nViewer:
 		Compressor.setYLabel("Temperature")
 		Compressor.selectDeviceCommand("select_device", 0)
 		Compressor.connection(cxn)
-
 		Compressor.begin()
 		self.devices.append(Compressor)
 
-						# ["temperaturesfor,
-		
-		# self.devices.append(Compressor)
-		# # Omega Temperature Monitor server
-		# Temperature = Device("omega_temp_monitor_server",
-						# "External Water Temperature",
-						# ["Temperature"],
-						# ["get_temperature"],
-						# [None], cxn, None, None, None, [None],None,
-						# "select_device", 0)
+		Flow = Device("Flow Meter")
+		Flow.connection(cxn)
+		Flow.setServerName("omega_ratemeter_server")
+		Flow.addParameter("External Water Flow Rate", "get_rate")
+		Flow.selectDeviceCommand("select_device", 0)
+		Flow.begin()
+		self.devices.append(Flow)
+
 		Temperature = Device("Temperature")
 		Temperature.connection(cxn)
 		Temperature.setServerName("omega_temp_monitor_server")
@@ -173,31 +128,7 @@ class nViewer:
 		Temperature.setYLabel("Temperature")
 		Temperature.begin()
 		self.devices.append(Temperature)
-		# self.devices.append(Temperature)
-		# # Omega Flow Meter
-		# Flow = Device("omega_ratemeter_server","External Water Flow Rate", 
-						# ["Flow Rate"], 
-						# ["get_rate"],
-						# [None], cxn, None, None, None, None,None,
-						# "select_device", 0)
-		Flow = Device("Flow Meter")
-		Flow.connection(cxn)
-		Flow.setServerName("omega_ratemeter_server")
-		Flow.addParameter("External Water Flow Rate", "get_rate")
-		Flow.selectDeviceCommand("select_device", 0)
-		Flow.begin()
-		self.devices.append(Flow)
 		
-		# self.devices.append(Flow)
-		# # Pfeiffer Vacuum Monitor
-		# vacuum = Device("pfeiffer_vacuum_maxigauge", "Pressure Monitor", 
-						# [None, None, None, 
-						# "OVC Pressure",
-						# "IVC Pressure", 
-						# "Still Pressure"], 
-						# ["get_pressures"], 
-						# [None], cxn, None, None, None,[None],None,
-						# "select_device", 0)
 		Vacuum = Device("Vacuum")
 		Vacuum.setServerName("pfeiffer_vacuum_maxigauge")
 		Vacuum.connection(cxn)
