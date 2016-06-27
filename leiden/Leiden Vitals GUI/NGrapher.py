@@ -76,6 +76,7 @@ class DynamicMplCanvas(MyMplCanvas):
 		self.data = []
 		self.times = []
 		self.startTime = time.time()
+		self.endTime = time.time()
 	def compute_initial_figure(self):
 		self.axes.plot(range(len(self.device.getFrame().getReadings()))
 				, self.device.getFrame().getReadings(), 'r')
@@ -94,8 +95,9 @@ class DynamicMplCanvas(MyMplCanvas):
 			if self.device.getFrame().getPlotLength() is not None:
 				while len(self.data) > self.device.getFrame().getPlotLength():
 					self.data.pop(0)
-					self.times.pop(0)
-				self.axes.set_xlim(0, time.time()-self.startTime)
+					self.endTime = self.times.pop(0)+self.startTime
+				print(self.endTime-self.startTime)
+				self.axes.set_xlim(self.endTime-self.startTime, time.time()-self.startTime)
 			datalen = len(self.data)-1
 
 			if (type(self.data[datalen]) is list):
