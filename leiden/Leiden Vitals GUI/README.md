@@ -83,6 +83,7 @@ Compressor.addParameter("Output Water Temperature", "temperaturesforgui", None, 
 Compressor.addParameter("Helium Temperature", "temperaturesforgui", None, 2)
 Compressor.addParameter("Oil Temperature", "temperaturesforgui", None, 3)
 ```
+
 The `mView.addParameter()` method takes three to four arguments.
 * The first argument specifies the label to be shown in front of the readout. This name is also used as the independent variable when plotting and datalogging.
 * The second argument specifies the server setting that returns the desired reading.
