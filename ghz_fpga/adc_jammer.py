@@ -40,3 +40,5 @@ while not passed:
  
 readback = boards.adc_register_readback
 bringup = boards.adc_bringup
+
+cxn.disconnect()
