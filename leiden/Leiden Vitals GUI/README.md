@@ -77,6 +77,7 @@ Note that there are four aguments passed to this method.
 
 Now that we have configured the buttons, it is time to move onto the data readouts. In order to add numerical readouts to the GUI, we use the `mView.addParameter()` method. We have four temperatures that we want to read from our compressor. 
 >Note: The compressor's server returns an array of data. This is not a problem as we can specify the index of the reading in the array.
+
 ```python
 Compressor.addParameter("Input Water Temperature", "temperaturesforgui", None, 0)
 Compressor.addParameter("Output Water Temperature", "temperaturesforgui", None, 1)
