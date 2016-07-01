@@ -37,8 +37,5 @@ while not passed:
 
     if successes == 0 and counter % 1000 == 0:
         boards.adc_recalibrate()
- 
-readback = boards.adc_register_readback
-bringup = boards.adc_bringup
 
 cxn.disconnect()
