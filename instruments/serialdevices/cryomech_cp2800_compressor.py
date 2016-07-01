@@ -226,7 +226,14 @@ class CompressorServer(DeviceServer):
         """
         dev = self.selectedDevice(c)
         return dev.temperatures()
-        
+
+    @setting(1050, 'TemperaturesForGui',returns='*v[K]{curr}')
+    def temperaturesForGui(self, c):
+        dev = self.selectedDevice(c)
+        allTemps = yield dev.temperatures()
+	#print allTemps
+        temps = [i[0] for i in allTemps]
+        returnValue( temps)
     @setting(1100, 'Pressures',
              returns='*(v[torr]{curr}, v[torr]{min}, v[torr]{max})')
     def pressures(self, c):

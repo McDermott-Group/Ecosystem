@@ -177,7 +177,9 @@ class OmegaRatemeterServer(DeviceServer):
             # Strip the 'L' off the string.
             reading = float(reading.lstrip("L"))
             # Convert the reading to the correct units.
-            output = reading * units.galUS / units.min
+            gal = units.WithUnit(1, 'gal')
+            output = reading * gal / units.min
+            #print(output)
             returnValue(output)
 
     @inlineCallbacks

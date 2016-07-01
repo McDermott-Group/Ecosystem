@@ -158,7 +158,7 @@ class dataChest(dateStamp):
     self.currentHDF5Filename = None
     self.readOnlyFlag = False
     self.dataCategory = None #treat self.dataCategory consistently
-    if datasetName != self._formatFilename(datasetName, " "):
+    if datasetName != self._formatFilename(datasetName, " +-."):
       raise self.exception
     elif not self._isVarsListValid("independents", indepVarsList): 
       raise self.exception
@@ -617,7 +617,7 @@ class dataChest(dateStamp):
     varNames = []
     for ii in range(0, len(varsList)):
       varName = varsList[ii][VAR_NAME_INDEX]
-      if self._formatFilename(varName) == varName:
+      if self._formatFilename(varName, " +-.") == varName:
         varNames.append(varName)
       else:
         self.exception = ValueError(("Invalid variable name provided.\r\n\t"+
@@ -845,7 +845,7 @@ class dataChest(dateStamp):
     validTypes = (int, long, float, complex, bool,
                   list, np.ndarray, str, unicode)
     if isinstance(parameterName, str):
-      if self._formatFilename(parameterName, " ") != parameterName:
+      if self._formatFilename(parameterName, " +-.") != parameterName:
         self.exception = ValueError("Invalid parameter name provided.")
         return False
       elif not isinstance(parameterValue, validTypes): 
