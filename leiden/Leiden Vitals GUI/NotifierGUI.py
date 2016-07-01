@@ -20,9 +20,10 @@
 # version = 1.0.5
 # description = Allows user to configure notifications
 """
-
-from PyQt4 import QtCore, QtGui
 import sys
+sys.dont_write_bytecode = True
+from PyQt4 import QtCore, QtGui
+
 import cPickle as pickle
 import os
 class NotifierGUI(QtGui.QDialog):

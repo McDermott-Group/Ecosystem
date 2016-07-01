@@ -18,8 +18,9 @@
 version = 1.1.0
 description = Monitors Leiden Devices
 """
-
-import NGui				# Handles all gui operations. Independent of labrad.
+import sys
+sys.dont_write_bytecode = True
+import MGui				# Handles all gui operations. Independent of labrad.
 
 #from PyQt4 import QtCore, QtGui
 
@@ -29,9 +30,11 @@ import threading
 import labrad
 import labrad.units as units
 from dataChestWrapper import *
+
 class nViewer:
 	gui = None
 	devices =[]
+	
 	def __init__(self, parent = None):
 		# Establish a connection to labrad
 		try:
@@ -98,8 +101,8 @@ class nViewer:
 
 		Compressor = Device("Compressor")
 		Compressor.setServerName("cp2800_compressor")
-		Compressor.addButton("Turn On", "You are about to turn the compressor on.", "status", None)
 		Compressor.addButton("Turn Off", "You are about to turn the compressor off." , "status", None)
+		Compressor.addButton("Turn On", "You are about to turn the compressor on." , "status", None)
 		Compressor.addParameter("Input Water Temperature", "temperaturesforgui", None, 0)
 		Compressor.addParameter("Output Water Temperature", "temperaturesforgui", None, 1)
 		Compressor.addParameter("Helium Temperature", "temperaturesforgui", None, 2)
@@ -124,7 +127,7 @@ class nViewer:
 		Temperature.setServerName("omega_temp_monitor_server")
 		Temperature.addParameter("Exteranal Water Temperature", "get_temperature")
 		Temperature.selectDeviceCommand("select_device",0)
-		Temperature.addPlot(12)
+		Temperature.addPlot()
 		Temperature.setYLabel("Temperature")
 		Temperature.begin()
 		self.devices.append(Temperature)
@@ -145,7 +148,7 @@ class nViewer:
 		#self.chest = dataChestWrapper(self.devices)
 		
 		# Create the gui
-		self.gui = NGui.NGui()
+		self.gui = MGui.MGui()
 		self.gui.startGui(self.devices, 'Leiden Gui', 'Leiden Data', tele)
 		
 		

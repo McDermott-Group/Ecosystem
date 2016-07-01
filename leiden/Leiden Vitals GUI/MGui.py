@@ -18,21 +18,23 @@
 version = 1.0.1
 description = Handles easy construction of GUI
 """
-
+import sys
+sys.dont_write_bytecode = True
 from PyQt4 import QtCore, QtGui
 from multiprocessing.pool import ThreadPool
 import threading
-import sys
 import ctypes
 from functools import partial
 import os
 from NotifierGUI import NotifierGUI
 import math
-import NAlert
+import MAlert
 import numpy as np
-import NGrapher
+import MGrapher
 
-class NGui(QtGui.QMainWindow):
+
+class MGui(QtGui.QMainWindow):
+	
 	dialog = None
 	parameters = [[]]
 	frames = []
@@ -133,7 +135,9 @@ class NGui(QtGui.QMainWindow):
 			self.frames[i].setStyleSheet("background: rgb(52, 73, 94)")
 			self.frames[i].setFrameShape(QtGui.QFrame.Panel)
 			self.frames[i].setFrameShadow(QtGui.QFrame.Plain)
-			self.frames[i].setLineWidth(1800/self.scrnWidth)
+			self.ratio =float(self.scrnWidth)/1800+1
+			#print(self.ratio)
+			self.frames[i].setLineWidth(self.ratio)
 			self.frames[i].setLayout(self.grids[i])
 			# Configure the layout of the buttons within the grid
 			buttonLayout = QtGui.QHBoxLayout()
@@ -187,7 +191,7 @@ class NGui(QtGui.QMainWindow):
 				self.lcds[i][y].display("-")
 				self.lcds[i][y].setFrameShape(QtGui.QFrame.Panel)
 				self.lcds[i][y].setFrameShadow(QtGui.QFrame.Plain)
-				self.lcds[i][y].setLineWidth(1800/self.scrnWidth)
+				self.lcds[i][y].setLineWidth(self.ratio)
 				self.lcds[i][y].setMidLineWidth(100)
 				self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n")
 				self.lcds[i][y].setFixedHeight(self.scrnHeight/30)
@@ -232,7 +236,7 @@ class NGui(QtGui.QMainWindow):
 				# FigureCanvas.updateGeometry(self)
 				# self.axes.plot([0, 1, 2, 3], [1, 2, 0, 4], 'r')
 				self.main_widget = self.frames[i]
-				dc = NGrapher.DynamicMplCanvas(self.devices[i])
+				dc = MGrapher.DynamicMplCanvas(self.devices[i])
 				yPos = len(self.devices[i].getFrame().getNicknames())+3
 				self.grids[i].addWidget(dc, yPos, 0,yPos,3 )
 		self.mainVBox[self.VBoxColumn].addStretch(1)
@@ -248,10 +252,10 @@ class NGui(QtGui.QMainWindow):
 		#print "The mins received were", (self.NotifierGUI.getMins())
 		# Start the messenger service
 		try:
-			self.NAlert.stop()
+			self.MAlert.stop()
 		except:
-			print("Starting NAlert for first time")
-		self.NAlert = NAlert.NAlert(self.NotifierGUI.getCheckboxes(),
+			print("Starting MAlert for first time")
+		self.MAlert = MAlert.MAlert(self.NotifierGUI.getCheckboxes(),
 											self.NotifierGUI.getMins(),
 											self.NotifierGUI.getMaxs(),
 											self.NotifierGUI.getContacts(),
@@ -265,7 +269,7 @@ class NGui(QtGui.QMainWindow):
 		self.tele = tele
 		self.devices = devices
 		self.NotifierGUI = NotifierGUI(self.devices)
-		self.NAlert = NAlert.NAlert(self.NotifierGUI.getCheckboxes(),
+		self.MAlert = MAlert.MAlert(self.NotifierGUI.getCheckboxes(),
 											self.NotifierGUI.getMins(),
 											self.NotifierGUI.getMaxs(),
 											self.NotifierGUI.getContacts(),
@@ -294,7 +298,7 @@ class NGui(QtGui.QMainWindow):
 		# in the main thread.
 		timer.timeout.connect(self.update)
 		timer.start(1000)
-		self.NAlert.begin()
+		self.MAlert.begin()
 		sys.exit(app.exec_())
 
 	def update(self):
@@ -343,6 +347,7 @@ class NGui(QtGui.QMainWindow):
 					self.lcds[i][y].display("-")
 		return
 			
+
 
 app=QtGui.QApplication(sys.argv)
 

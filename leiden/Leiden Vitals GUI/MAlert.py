@@ -1,11 +1,12 @@
 import smtplib
-import NMail
+import MMail
 import threading
 import time
-
+import sys
+sys.dont_write_bytecode = True
 #from email.mime.text import MIMEText
 
-class NAlert:
+class MAlert:
 	def __init__(self,checkBoxes,mins, maxs, contacts,  devices, tele):
 		#print "Mins: ", mins, " \r\nMaxs:", maxs, " \r\nContacts:", contacts
 		# Configure all public variables

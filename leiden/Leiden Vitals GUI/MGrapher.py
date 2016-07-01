@@ -21,6 +21,7 @@ description = Adds graphing functionality
 
 from __future__ import unicode_literals
 import sys
+sys.dont_write_bytecode = True
 import os
 import random
 from matplotlib.backends import qt_compat
