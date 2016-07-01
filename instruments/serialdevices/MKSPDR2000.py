@@ -16,7 +16,7 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Pfeiffer Vacuum MaxiGauge
+name = MKS PDR2000
 version = 1.0.15
 description = Monitors vacuum system
 
@@ -53,13 +53,13 @@ class MKSPDR2000Wrapper(DeviceWrapper):
 		p.stopbits(1L)
 		p.bytesize(8L)
 		p.parity('N')
-		p.timeout(0.1*units.s)
+		p.timeout(0.1 * units.s)
 		# Clear out the Rx buffer. This is necessary for some devices.
 		yield p.send()
 	
 	def packet(self):
 		'''Create a new packet in our private context'''
-		return self.server.packet(context = self.ctx)
+		return self.server.packet(context=self.ctx)
 
 	def shutdown(self):
 		'''Disconnect from teh serial port when we shut down.'''
@@ -72,14 +72,15 @@ class MKSPDR2000Wrapper(DeviceWrapper):
 	@inlineCallbacks
 	def read_line(self):
 		'''Read a data value from the device.'''
-		ans = yield self.server.read(context = self.ctx)
+		ans = yield self.server.read(context=self.ctx)
 		returnValue(ans)
 	@inlineCallbacks
 	def getUnits(self):
 		yield self.write_line('u')
 		ans = yield self.read_line()
 		returnValue(ans)
-		  
+
+
 class MKSPDR2000Server(DeviceServer):
 	deviceName = 'MKS PDR2000 Server'
 	name = 'MKS PDR2000 Server'
@@ -87,19 +88,20 @@ class MKSPDR2000Server(DeviceServer):
 	 
 	@inlineCallbacks
 	def initServer(self):
-		'''Initialize the MKSPDR2000 server'''
+		'''Initialize the MKSPDR2000 server.'''
 		print "Server Initializing"
 		self.reg = self.client.registry()
 		yield self.loadConfigInfo()
 		yield DeviceServer.initServer(self)
 		  
-	@setting(100, 'get_pressure', returns = 'v[torr]')
+	@setting(100, 'get_pressure', returns='v[torr]')
 	def getPressure(self, ctx):
 		self.dev = self.selectedDevice(ctx)
 		yield self.dev.write_line("p")
 		yield time.sleep(1)
 		reading = yield dev.read_line()
-		# Just in case there isi an error an nothing is returned (rs232 is finicky)
+		# Just in case there is an error and nothing is returned 
+        # (RS232 is finicky).
 		if not reading:
 			returnValue(None)
 		else:
@@ -140,17 +142,10 @@ class MKSPDR2000Server(DeviceServer):
 			devs += [(name, (server, port))]
 		returnValue(devs)
 
+
 __server__ = MKSPDR2000Server()
+
 
 if __name__ == '__main__':
 	from labrad import util
 	util.runServer(__server__)
-
-
-
-
-   
-   
-   
-   
-		  
