@@ -20,14 +20,15 @@ description = References a device
 """
 
 # Import nGui tools
-from NFrame import NFrame
-import NPopUp
+from MFrame import MFrame
+import MPopUp
 
 import labrad
 
 import threading
 import sys, traceback
 
+sys.dont_write_bytecode = True
 # The device class handles a labrad device
 
 class Device:
@@ -64,7 +65,7 @@ class Device:
 		self.settingArgs =[]	
 		self.settingResultIndices = []
 		#print name, ":", yLabel
-		self.frame = NFrame()
+		self.frame = MFrame()
 		self.frame.setYLabel(None)
 		# Store the graph
 		#self.plots = []
@@ -188,7 +189,7 @@ class Device:
 			# if the button has a warning message attatched
 			if(self.frame.getButtons()[button][2] is not None):
 				# Create a new popup
-				self.warning = NPopUp.PopUp(self.frame.getButtons()
+				self.warning = MPopUp.PopUp(self.frame.getButtons()
 					[button][2])
 				# Stop the main gui thread and run the popup
 				self.warning.exec_()

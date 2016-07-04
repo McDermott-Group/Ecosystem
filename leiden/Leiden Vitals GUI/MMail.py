@@ -20,11 +20,13 @@
 # version = 1.0.1
 # description = Very simple email client.
 """
+import sys
+sys.dont_write_bytecode = True
 
 import smtplib
 from email.mime.text import MIMEText
 
-class NMail:
+class MMail:
 	def __init__(self, To, From, Subject, Body):
 		msg = MIMEText(Body)
 		print("Mailing")

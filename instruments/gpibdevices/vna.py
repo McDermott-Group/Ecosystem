@@ -18,9 +18,9 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Agilent 8720ET Network Analyzer
+name = Network Analyzers
 version = 1.2.0
-description = Two channel 8720ET network analyzer server
+description = Network analyzer server
 
 [startup]
 cmdline = %PYTHON% %FILE%

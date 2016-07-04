@@ -20,6 +20,8 @@
 version = 2.0.1
 description = Creates a popUp window used for warnings.
 """
+import sys
+sys.dont_write_bytecode = True
 
 from PyQt4 import QtCore, QtGui
 class PopUp(QtGui.QDialog):

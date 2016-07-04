@@ -19,7 +19,11 @@ version = 1.5.1
 description = Organizes information returned by servers
 """
 
-class NFrame:
+
+import sys
+sys.dont_write_bytecode = True
+
+class MFrame:
 	'''This class acts as the interface between the devices and all classes
 	which use the device or any of its parameters'''
 	# Name of device's server

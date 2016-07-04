@@ -415,11 +415,6 @@ class ADRController(object):#Tkinter.Tk):
             elif status[1] == True: color = 'green3'
             else: color = 'gray70'
             self.instrumentStatuses[name].config(bg=color)
-        # enable/disable mag up/reg buttons depending on instrument status
-        # disable if power supply or magnet voltage sensor is down
-        self.lastStateM = self.magUpButton.cget('state')
-        self.lastStateR = self.regulateButton.cget('state')
-        # &&&
         # change compressor button
         if state['get_state_var'] == True:
             self.compressorButton.configure(text='Stop Compressor', command=self.stopCompressor, state=Tkinter.NORMAL)
