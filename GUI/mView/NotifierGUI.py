@@ -23,17 +23,23 @@
 import sys
 sys.dont_write_bytecode = True
 from PyQt4 import QtCore, QtGui
-
+import inspect
 import cPickle as pickle
 import os
 class NotifierGUI(QtGui.QDialog):
+	
 	def __init__(self,devices, parent = None):
 		'''Initialize the Notifier Gui'''
 		super(NotifierGUI, self).__init__(parent)
 		# Create a new tab
 		tabWidget = QtGui.QTabWidget()
+		# Get stack trace
+		stack = inspect.stack()
+		# The location to store config data
+		self.location = os.path.abspath(os.curdir)
+		#print "loc: ", self.location
 		# New SMS widget
-		self.alert = AlertConfig(devices)
+		self.alert = AlertConfig(devices, self.location)
 		# AlDatatxt holds the text contents of all data entered in table
 		self.allDatatxt = [[],[],[],[]]
 		# The settings window has a tab
@@ -59,12 +65,19 @@ class NotifierGUI(QtGui.QDialog):
 		self.setWindowTitle("Notifier Settings")
 		self.devices = devices
 		
+		# Get the location of the main class, and store the info there
+		
+		#print("  I was called by {}".format(str(location)))
 	def saveData(self):
 		'''Save the data upon exit'''
 		#print("Saving Data")
 		# Arrays used to assist in storing data
 		
 		self.allDataDict = {}
+		
+		
+		
+
 		try:
 			for device in self.devices:
 				title = device.getFrame().getTitle()
@@ -95,8 +108,9 @@ class NotifierGUI(QtGui.QDialog):
 				#print(self.allDatatxt)
 				#print "just stored" ,(self.allDatatxt)
 				# Pickle the arrays and store them
-				here = os.path.dirname(os.path.abspath(__file__))
-				pickle.dump(self.allDataDict, open(os.path.join(here, 'NotifierConfig1.nview'), 'wb'))
+				#here = os.path.dirname(os.path.abspath(__file__))
+				#print "here ", here
+				pickle.dump(self.allDataDict, open(os.path.join(self.location, 'NotifierConfig.mview'), 'wb'))
 				#print(here)
 
 				print("Data Saved")
@@ -143,11 +157,13 @@ class NotifierGUI(QtGui.QDialog):
 		return boxs
 		
 class AlertConfig(QtGui.QWidget):
-	def __init__(self,devices, parent = None):
+	def __init__(self,devices, location, parent = None):
 		super(AlertConfig, self).__init__(parent)
 		self.devices = devices
 		# Configure the layout
 		layout = QtGui.QGridLayout()
+		# where to find the notifier data
+		self.location = location
 		# Set the layout
 		self.setLayout(layout)
 		self.mins = {}
@@ -245,14 +261,14 @@ class AlertConfig(QtGui.QWidget):
 		'''Retreive a user's previous settings.'''
 		#print("opening data")
 		#self.allDatatxt = pickle.load(open('NotifierConfig.nview', 'rb'))
-		here = os.path.dirname(os.path.abspath(__file__))
+		#here = os.path.dirname(os.path.abspath(__file__))
 		#print(here)
 		#print(os.path.join(here, 'NotifierConfig1.nview'))
 		#self.allDatatxt = pickle.load(open(os.path.join(here, 'NotifierConfig1.nview'), 'rb'))
 
-		#print(here)
+		#print(self.location)
 		try:
-			self.allDataDict = pickle.load(open(os.path.join(here, 'NotifierConfig1.nview'), 'rb'))
+			self.allDataDict = pickle.load(open(os.path.join(self.location, 'NotifierConfig.mview'), 'rb'))
 			NotifierGUI.allDataDict = self.allDataDict
 			print "Config Data Opened"
 			#print "mins: ", self.allDatatxt
