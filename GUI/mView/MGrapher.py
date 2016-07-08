@@ -24,7 +24,7 @@ import sys
 sys.dont_write_bytecode = True
 import os
 import random
-
+import numpy as np
 from matplotlib.backends import qt_compat
 use_pyside = qt_compat.QT_API == qt_compat.QT_API_PYSIDE
 if use_pyside:
@@ -156,7 +156,13 @@ class DynamicMplCanvas(QtGui.QWidget):
 			
 
 			self.canv.draw()
-
+		else:
+			datalen = len(self.data)-1
+			if(datalen>=0):
+				empty = np.empty(len(self.data[datalen]))
+				empty.fill(np.nan)
+				self.data.append(empty)
+				self.times.append(time.time()-self.startTime)
 # qApp = QtGui.QApplication(sys.argv)
 
 # aw = ApplicationWindow()

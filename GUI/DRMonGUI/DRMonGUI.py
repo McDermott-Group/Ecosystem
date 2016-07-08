@@ -52,7 +52,7 @@ class nViewer:
 			sys.exit(1)
 
 
-		mks_pdr2000 = Device("MKS PDR 2000")
+		mks_pdr2000 = Device("MKS PDR 2000 1")
 		mks_pdr2000.setServerName("mks_pdr2000_server")
 		mks_pdr2000.addParameter("Pressure 1", "get_pressure", None, 0)
 		mks_pdr2000.addParameter("Pressure 2", "get_pressure", None, 1)
@@ -63,7 +63,7 @@ class nViewer:
 		mks_pdr2000.begin()
 		self.devices.append(mks_pdr2000)
 
-		mks_pdr2000v2 = Device("MKS PDR 2000")
+		mks_pdr2000v2 = Device("MKS PDR 2000 2")
 		mks_pdr2000v2.setServerName("mks_pdr2000_server")
 		mks_pdr2000v2.addParameter("Pressure 1", "get_pressure", None, 0)
 		mks_pdr2000v2.addParameter("Pressure 2", "get_pressure", None, 1)
@@ -76,10 +76,11 @@ class nViewer:
 		
 		lake370 = Device("Lakeshore 370")
 		lake370.setServerName("lakeshore_ruox")
-		lake370.addParameter("Temperature", "temperatures", None)
+		for i in range(0,5):
+			lake370.addParameter("Temperature "+str(i+1), "temperatures", None,i)
 		lake370.setYLabel("Temperature")
 		lake370.selectDeviceCommand("select_device", 0)
-		
+		lake370.addPlot()
 		lake370.connection(cxn)
 		lake370.begin()
 		self.devices.append(lake370)

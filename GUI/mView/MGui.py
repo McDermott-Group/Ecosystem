@@ -111,7 +111,7 @@ class MGui(QtGui.QMainWindow):
 			numWidgets = numWidgets+1
 			#Append a new gui frame
 			self.frames.append(QtGui.QFrame(self))
-			self.mainVBox[self.VBoxColumn].addWidget(self.frames[i])
+			
 			#if(1.5*self.frameSize().height()>self.frameSize().width()):
 			#print len(self.mainVBox[self.VBoxColumn].children())
 			if(math.sqrt(len(devices))<numWidgets):
@@ -120,6 +120,7 @@ class MGui(QtGui.QMainWindow):
 				self.mainVBox.append(QtGui.QVBoxLayout())
 				self.mainHBox.addLayout(self.mainVBox[self.VBoxColumn])
 				numWidgets = 0
+			self.mainVBox[self.VBoxColumn].addWidget(self.frames[i])
 			# Add new titles, grids, parameters, 
 			# and lcds for the new parameter
 			self.titles.append(QtGui.QLabel(self.frames[i]))

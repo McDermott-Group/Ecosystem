@@ -8,6 +8,8 @@ start /b python C:\Users\McDermott\Documents\McDermott-group\Servers\buses\seria
 timeout 2
 start /b python C:\Users\McDermott\Documents\McDermott-group\Servers\instruments\gpibdevices\lakeshore218.py
 timeout 2
+start /b python C:\Users\McDermott\Documents\McDermott-group\Servers\instruments\gpibdevices\lakeshore370_simple.py
+timeout 2
 start /b python C:\Users\McDermott\Documents\McDermott-group\Servers\instruments\serialdevices\MKSPDR2000.py
 timeout 2
 start /b python C:\Users\McDermott\Documents\McDermott-group\Servers\telecommServer.py
