@@ -104,6 +104,9 @@ class MGui(QtGui.QMainWindow):
 		self.scrollArea.setWidgetResizable(True)
 
 		self.setCentralWidget(self.scrollArea)
+		frameSizePolicy = QtGui.QSizePolicy()
+		frameSizePolicy.setVerticalPolicy(4)
+		frameSizePolicy.setHorizontalPolicy(QtGui.QSizePolicy.Preferred)
 		for i in range(0,len(self.devices)):
 			numWidgets = numWidgets+1
 			#Append a new gui frame
@@ -132,6 +135,8 @@ class MGui(QtGui.QMainWindow):
 			self.grids[i].setColumnStretch(0,1)
 			# Configure the frame (the box surrounding 
 			# information for each device)
+			self.frames[i].setSizePolicy(frameSizePolicy)
+			
 			self.frames[i].setStyleSheet("background: rgb(52, 73, 94)")
 			self.frames[i].setFrameShape(QtGui.QFrame.Panel)
 			self.frames[i].setFrameShadow(QtGui.QFrame.Plain)
@@ -195,7 +200,7 @@ class MGui(QtGui.QMainWindow):
 				self.lcds[i][y].setMidLineWidth(100)
 				self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n")
 				self.lcds[i][y].setFixedHeight(self.scrnHeight/30)
-				self.lcds[i][y].setMinimumWidth(self.scrnWidth/10)
+				self.lcds[i][y].setMinimumWidth(self.scrnWidth/7)
 
 				# Make the parameters pretty
 				self.parameters[i][y].setWordWrap(True)
@@ -237,9 +242,11 @@ class MGui(QtGui.QMainWindow):
 				# self.axes.plot([0, 1, 2, 3], [1, 2, 0, 4], 'r')
 				self.main_widget = self.frames[i]
 				dc = MGrapher.DynamicMplCanvas(self.devices[i])
+				
 				yPos = len(self.devices[i].getFrame().getNicknames())+3
 				self.grids[i].addWidget(dc, yPos, 0,yPos,3 )
 		self.mainVBox[self.VBoxColumn].addStretch(1)
+		
 		print("Gui initialized")
 		return
 	def openNotifierSettings(self):
