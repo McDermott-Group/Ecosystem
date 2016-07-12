@@ -53,20 +53,23 @@ class MAlert:
 					#print(self.devices[i].getFrame().getNicknames())
 					if(self.devices[i].getFrame().getNicknames()[y] is not None):
 						# Get that specific reading
-						if(len(str(self.mins[z])) is not 0):
-							if(float(self.mins[z])>float(self.devices[i].getFrame().getReadings()[y])):
-							# If a min has been specified
-								if(self.checkBoxes[z]):
-								#print "mins", (self.mins)
-									self.generateMessage(z,y,i)
-									#print(z)
-									self.sendMail(i, y, z)
-								#print(self.mins[z])
-						if(len(str(self.maxs[z])) is not 0):
-							if(float(self.maxs[z])<float(self.devices[i].getFrame().getReadings()[y])):
-								if(self.checkBoxes[z]):
-									self.generateMessage(z,y,i)
-									self.sendMail(i, y, z)
+						#print self.mins
+						if len(self.mins) is not 0:
+							if(len(str(self.mins[z])) is not 0):
+								if(float(self.mins[z])>float(self.devices[i].getFrame().getReadings()[y])):
+								# If a min has been specified
+									if(self.checkBoxes[z]):
+									#print "mins", (self.mins)
+										self.generateMessage(z,y,i)
+										#print(z)
+										self.sendMail(i, y, z)
+									#print(self.mins[z])
+						if len(self.maxs) is not 0:
+							if(len(str(self.maxs[z])) is not 0):
+								if(float(self.maxs[z])<float(self.devices[i].getFrame().getReadings()[y])):
+									if(self.checkBoxes[z]):
+										self.generateMessage(z,y,i)
+										self.sendMail(i, y, z)
 						#print "z",(z)
 						#print "y", y
 						z = z+1
