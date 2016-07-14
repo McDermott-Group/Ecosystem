@@ -39,10 +39,10 @@ ERROR_GRAMMAR = {
     '4':"th"
 }
 
-VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32',
-                    'int64', 'uint8', 'uint16', 'uint32',
-                    'uint64','int_', 'float16', 'float32',
-                    'float64','float_', 'complex64', 'complex128',
+VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32', 'int64',
+                    'uint8', 'uint16', 'uint32', 'uint64',
+                    'int_', 'float16', 'float32', 'float64',
+                    'float_', 'complex64', 'complex128',
                     'complex_', 'utc_datetime','string'
                     ]
 
@@ -71,16 +71,21 @@ class dataChest(dateStamp):
         self.cd(path)
         self.root = self.cwdPath
       else:
-        raise ValueError("Empty strings are invalid paths.")
+        raise ValueError("Empty strings are invalid root paths.")
     elif isinstance(path, list):
       if len(path)>=1:
         for ii in range(0, len(path)):
-          if path[ii] not in self.ls()[1]:
-            self.mkdir(path[ii])
-          self.cd(path[ii])
-          self.root = self.cwdPath
+          if len(path[ii]) > 0:
+            if path[ii] not in self.ls()[1]:
+              self.mkdir(path[ii])
+            self.cd(path[ii])
+            self.root = self.cwdPath
+          else:
+            raise ValueError(
+              "Empty strings are invalid entries in root path lists."
+              )
       else:
-        raise ValueError("Empty lists are invalid paths.")
+        raise ValueError("Empty lists are invalid root path lists.")
     else:
       raise TypeError("String and List type paths only.")
 
@@ -165,6 +170,7 @@ class dataChest(dateStamp):
     self.currentHDF5Filename = None
     self.readOnlyFlag = False
     self.dataCategory = None #treat self.dataCategory consistently
+    
     if datasetName != self._formatFilename(datasetName, " +-."):
       raise self.exception
     elif not self._isVarsListValid("independents", indepVarsList): 
@@ -262,7 +268,10 @@ class dataChest(dateStamp):
         "You must create a dataset before attempting to write.\r\n\t"
         + "Datasets are created using the createDataset().\r\n\t"
         )
-        
+    
+    dateISO = self.dateStamp.utcDateIsoString()
+    self._updateFileDate("Date Accessed", dateISO)
+    self._updateFileDate("Date Modified", dateISO)
     return True
 
   def openDataset(self, filename, modify = None):
@@ -273,12 +282,14 @@ class dataChest(dateStamp):
     if filename in existingFiles:
       if hasattr(self, 'currentFile'):
         self.file.close() #close current file if existent
+      self.file = h5py.File(self.pwd()+"/"+filename,'r+') #read+write
       if modify is True:
         self.readOnlyFlag = False
-        self.file = h5py.File(self.pwd()+"/"+filename,'r+')#read+write
+        #self.file = h5py.File(self.pwd()+"/"+filename,'r+') #read+write
+        self._updateFileDate("Date Accessed")
       else:
         self.readOnlyFlag = True
-        self.file = h5py.File(self.pwd()+"/"+filename,'r') #read only
+        #self.file = h5py.File(self.pwd()+"/"+filename,'r') #read only
       self.currentHDF5Filename = self.pwd() + "/" + filename
 
       for varType in self.varDict.keys(): #copying varDict from file
@@ -332,6 +343,7 @@ class dataChest(dateStamp):
           data.append(dataDict[allVars[ii]])
         data = np.asarray(data)
         data = data.T
+        self._updateFileDate("Date Accessed")
         return data[startIndex:stopIndex]
       else:
         for ii in range(startIndex,stopIndex): #making slicing efficient
@@ -339,6 +351,7 @@ class dataChest(dateStamp):
           for jj in range(0,len(allVars)):
             row.append(dataDict[allVars[jj]][ii])
           data.append(row)
+        self._updateFileDate("Date Accessed")
         return data
     else:
       raise Warning(
@@ -351,6 +364,7 @@ class dataChest(dateStamp):
     if self.currentHDF5Filename is not None:
       indeps = self._varListFromGrp(self.file["independents"])
       deps = self._varListFromGrp(self.file["dependents"])
+      self._updateFileDate("Date Accessed")
       return [indeps, deps]
     else:
       raise Warning(
@@ -361,12 +375,14 @@ class dataChest(dateStamp):
 
   def getDatasetName(self):
     if self.currentHDF5Filename is not None:
+      self._updateFileDate("Date Accessed")
       return self.currentHDF5Filename.split("/")[-1]
     else:
       raise Warning("No dataset is currently open.")
 
   def getNumRows(self):
     if self.currentHDF5Filename is not None:
+      self._updateFileDate("Date Accessed")
       return self.file.attrs["Number Of Rows Added"]
     else:
       raise Warning("No dataset is currently open.")
@@ -384,6 +400,10 @@ class dataChest(dateStamp):
         )
     elif self.currentHDF5Filename is not None:
       if self._isParameterValid(paramName, paramValue, overwrite):
+        dateISO = self.dateStamp.utcDateIsoString()
+        self._updateFileDate("Date Accessed", dateISO)
+        self._updateFileDate("Date Modified", dateISO)
+  
         self.file["parameters"].attrs[paramName] = paramValue
         self.file.flush()
       else:
@@ -397,6 +417,7 @@ class dataChest(dateStamp):
   def getParameter(self, parameterName, byIOError=False):
     if self.currentHDF5Filename is not None:
       if parameterName in self.file["parameters"].attrs.keys():
+        self._updateFileDate("Date Accessed")
         return self.file["parameters"].attrs[parameterName]
       else:
         if not byIOError:
@@ -412,6 +433,7 @@ class dataChest(dateStamp):
 
   def getDataCategory(self):
     if self.currentHDF5Filename is not None:
+        self._updateFileDate("Date Accessed")
         return self.file.attrs["Data Category"]
     else:
       raise Warning(
@@ -423,6 +445,7 @@ class dataChest(dateStamp):
   def getParameterList(self):
     if self.currentHDF5Filename is not None:
       unicodeList = self.file["parameters"].attrs.keys()
+      self._updateFileDate("Date Accessed")
       return [str(x) for x in unicodeList]
     else:
       raise Warning(
@@ -430,6 +453,22 @@ class dataChest(dateStamp):
         + "using either openDataset() to open an existing set or\r\n\t"
         + "with createDataset()."
         )
+    
+  def _updateFileDate(self, dateCategory, dateISO = None):
+    if self.currentHDF5Filename is not None:
+      if dateCategory in ["Date Created", "Date Modified", "Date Accessed"]:
+        if dateISO is None:
+          self.file.attrs[dateCategory] = self.dateStamp.utcDateIsoString()
+        else:
+          self.file.attrs[dateCategory] = dateISO
+      else:
+        raise ValueError("Invalid dateCategory provided.")
+
+    else:
+      raise IOError(
+        "Attempted to update metadata for a file that does not exist."
+        )
+    
 
   def _initDataset(self, varDict, filename):
 
@@ -447,6 +486,12 @@ class dataChest(dateStamp):
 
     self.file.attrs["Data Category"] = self.dataCategory
     self.file.attrs["Number Of Rows Added"] = 0
+    dateISO = self.dateStamp.invertDateStamp(filename.split("_")[0])
+    #date = self.dateStamp.invertDateStamp(filename.split("_")[0])
+    self._updateFileDate("Date Created", dateISO)
+    self._updateFileDate("Date Modified", dateISO)
+    self._updateFileDate("Date Accessed", dateISO)
+    
 
     #varTypes in ['independents', 'dependents']
     #varAttrs in ['shapes','units','names','types']
@@ -1145,13 +1190,13 @@ class dataChest(dateStamp):
     if len(dataShape) != 2:  # (numRows,totalNumVars)
       self.exception = ValueError(
         "1D Scan Data has rows\r\n\t"
-        +"of the form:\r\n\t"
-        +"[indep1,dep1,...,depN]\r\n\t"
-        +"where indep1 is a 1D array of the form\r\n\t"
-        +"indep1 = [t_start, t_stop]\r\n\t"
-        +"and the dependent entries are 1D arrays\r\n\t"
-        +"(all of same length) where we assume\r\n\t"
-        +"dep1 = [dep1(t_start),...,dep1(t_stop)]."
+        + "of the form:\r\n\t"
+        + "[indep1,dep1,...,depN]\r\n\t"
+        + "where indep1 is a 1D array of the form\r\n\t"
+        + "indep1 = [t_start, t_stop]\r\n\t"
+        + "and the dependent entries are 1D arrays\r\n\t"
+        + "(all of same length) where we assume\r\n\t"
+        + "dep1 = [dep1(t_start),...,dep1(t_stop)]."
         )
       return False
     elif dataShape[1] != totalNumVars:
