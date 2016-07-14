@@ -31,11 +31,12 @@ timeout = 20
 """
 import time
 from twisted.internet.defer import inlineCallbacks, returnValue
-
+import numpy as np
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting
 import labrad.units as units
 from labrad import util
+import csv
 
 class goldsteinsPT1000TemperatureMonitorWrapper(DeviceWrapper):
 	@inlineCallbacks
@@ -74,33 +75,80 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
 		self.reg = self.client.registry()
 		yield self.loadConfigInfo()
 		yield DeviceServer.initServer(self)
-	@setting(100, 'Get Temperature', returns = '?')
-	def getTemperature(self, ctx):
+	
+	def resToTemp(self, R):
+		R = R/10 # Because the curve we use is for the PT100
+		f = open('dependencies\PT100Table.csv', 'rb')
+
+		reader = csv.reader(f)
+		
+		curr = [0,0]
+		prevRow = [0]
+		for i, row in enumerate(reader):
+			for y, cell in enumerate(row[1::]):
+				#print cell
+				prev = curr[:]
+				try:
+					curr[0] = float(cell)
+					if(float(prevRow[0])>0):
+						curr[1]=(float(row[0])+y)
+						sign = 1
+					else:
+						curr[1]=(float(row[0])-y)
+						sign = -1
+				except:
+					continue
+				
+				if(float(prev[0]*sign)<=R*sign<float(curr[0]*sign)):
+					print prev, curr
+					fac = (curr[0]-R)/(curr[0]-prev[0])
+					return curr[1]*(1-fac)+prev[1]*fac
+			prevRow = row	
+		return np.nan
+
+	@setting(100, 'Get Temperatures', returns = '*?')
+	def getTemperatures(self, ctx):
+		readings = []
+		#print "HEREA"
 		self.dev = self.selectedDevice(ctx)
-		yield self.dev.write_line('1')
-		yield time.sleep(1)
-		reading = yield self.dev.read_line()
-		print "reading1: ", reading
-		time.sleep(2)
-		if not reading:
-			returnValue(None)
-		else:
-			print("HERE1")
-			reading*units.K
-			print("HERE2")
-			returnValue(reading)
+		#print "HEREB"
+		for i in range(2):
+			#print "HEREC"
+			yield self.dev.write_line(str(i+1))
+			#print "HERED"
+			yield time.sleep(1)
+			#print "HEREE"
+			reading = yield self.dev.read_line()
+			reading = reading.strip()
+			print reading
+			#print "HEREF"
+			if(reading == "OL"):
+				#print "HEREG"
+				#print "nothing connected"
+				readings.append(np.nan)
+				#print "HEREH"
+			elif len(reading) is 0:
+				#print "HEREI"
+				#print "length is 0"
+				readings.append(np.nan)
+			else:
+				# print type(reading)
+				readings.append(self.resToTemp(float(reading)))
+				#print "HEREJ"
+			#print "reading1: ", reading
+		
+		readings*units.K
+		#print readings
+		returnValue(readings)
 			
 	@setting(200, 'Get Device Info', returns = 's')
 	def getInfo(self, ctx):
 		self.dev = self.selectedDevice(ctx)
 		yield self.dev.write_line('?')
-		yield time.sleep(1)
+		yield time.sleep(0.05)
 		reading = yield self.dev.read_line()
-		if not reading:
-			returnValue(None)
-		else:
-			reading*units.K
-			returnValue(reading)
+	
+		returnValue(reading)
 	@inlineCallbacks
 	def loadConfigInfo(self):
 		reg = self.reg
