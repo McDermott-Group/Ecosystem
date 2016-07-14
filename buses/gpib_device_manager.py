@@ -38,6 +38,7 @@ from twisted.internet.reactor import callLater
 
 from labrad.server import LabradServer, setting, inlineCallbacks, returnValue, Signal
 from labrad.units import Unit,Value
+from labrad.types import Error as LRError
 
 UNKNOWN = '<unknown>'
 
@@ -173,6 +174,11 @@ class GPIBDeviceManager(LabradServer):
             print("Sending '%s' to %s" %(idn_cmd, srv_ch))
             try:
                 resp = (yield p.send()).query
+            except LRError as e:
+                if 'VisaIOError' in e.msg:
+                    resp = ''
+                    print("No response to '%s' from %s" %(idn_cmd, srv_ch))
+                    continue
             except Exception:
                 print("No response to '%s' from %s" %(idn_cmd, srv_ch))
                 continue
@@ -312,11 +318,11 @@ class GPIBDeviceManager(LabradServer):
         """Notify all registered servers about a device status change and emit a
         signal saying a device connection has been changed in general."""
         message = (device, server, channel, isConnected)
-        self.connectionChangedEvent(message)
         for s in self.deviceServers[device]:
             rec = s['messageID'], message
             print 'Sending message:', s['target'], s['context'], [rec]
             self.client._sendMessage(s['target'], [rec], context=s['context'])
+        self.connectionChangedEvent(message)
 
     def serverConnected(self, ID, name):
         """New GPIBManagedServer's will register directly with us, before they

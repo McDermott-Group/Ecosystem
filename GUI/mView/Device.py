@@ -239,28 +239,47 @@ class Device:
 					if(self.settingArgs[i] is not None):
 						reading = getattr(self.deviceServer, self
 							.settingNames[i])(self.settingArgs[i])
+						#print type(reading)
 					else:
 						reading = getattr(self.deviceServer, self
 							.settingNames[i])()
 					# If the reading has a value and units
 					if isinstance(reading, labrad.units.Value):
-						readings.append(reading._value)
+						#print "labrad value"
+						#print reading
+						# Some installations like _value, some like value
+						try:
+							readings.append(reading._value)
+						except:
+							readings.append(reading.value)
+						#print(readings)
 						units.append(reading.units)
 					# If the reading is an array of values and units
 					elif(isinstance(reading, labrad.units.ValueArray)):
 						# loop through the array
 						for i in range(0, len(reading)):
 							if isinstance(reading[i], labrad.units.Value):
-								readings.append(reading[i]._value)
+								try:
+									readings.append(reading[i]._value)
+								except:
+									readings.append(reading[i].value)
 								units.append(reading[i].units)
 								
 							else:
 								readings.append(reading[i])
 								units.append("")
 					elif(type(reading) is list):
+						
 						for i in range(0, len(reading)):
-							readings.append(reading[i])
-							units.append("")
+							if(reading[i] is labrad.units.Value):
+								try:
+									readings.append(reading[i]._value)
+								except:
+									readings.append(reading[i].value)
+								units.append(reading[i].units)
+							else:
+								readings.append(reading[i])
+								units.append("")
 					else:
 						try:
 							readings.append(reading)

@@ -333,6 +333,9 @@ class AgilentN5230AServer(GPIBManagedServer):
             # Stop the current sweep and immediately send a trigger. 
             yield dev.write('ABORT;SENS:SWE:MODE SING')
 
+        # Set the units to dB and deg.
+        yield dev.write('MMEM:STOR:TRAC:FORM:SNP DB')
+            
         # Wait for the measurement to finish.
         yield dev.query('*OPC?', timeout=24*units.h)
         ascii_data = yield dev.query("CALC:DATA:SNP:PORT? '%i,%i'"

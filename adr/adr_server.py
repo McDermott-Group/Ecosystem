@@ -49,6 +49,7 @@ from labrad.server import (LabradServer, setting,
 from labrad.devices import DeviceServer
 from labrad import util, units
 from labrad.types import Error as LRError
+from pyvisa.errors import VisaIOError
 from dataChest import dataChest
 from dateStamp import dateStamp
 import sys
@@ -208,47 +209,8 @@ class ADRServer(DeviceServer):
         The power supply is also initialized.
         """
         for instrName in self.instruments:
-            settings = self.ADRSettings[instrName]
-            # save server to instruments dict, leave as None if cannot connect
-            lastInstr = self.instruments[instrName]
-            try:
-                instr = self.client[ settings[0] ]
-                self.instruments[instrName] = instr
-                if lastInstr != self.instruments[instrName]:
-                    self.logMessage('Server running for '+instrName+'.')
-            except KeyError:
-                self.instruments[instrName] = None
-                if lastInstr != self.instruments[instrName]:
-                    message = 'Server not found for '+instrName+'.'
-                    self.logMessage(message, alert=True)
-                continue
-
-            # set adr settings path (if the server has that method)
-            try: yield instr.set_adr_settings_path(self.ADRSettingsPath)
-            except AttributeError: pass # not all instruments have the set_adr_settings_path setting
-
-            # select the device using the address in the registry under the instrument name
-            if hasattr(instr,'connected'): lastStatus = instr.connected
-            else: lastStatus = False
-            try:
-                yield instr.select_device( settings[1] )
-                instr.connected = True
-                if lastStatus != instr.connected:
-                    self.logMessage(instrName+' Connected.')
-            except AttributeError as e: 
-                instr.connected = False # may not have a select_device method (heat switch, for ex)
-            except LRError as e:
-                if 'NoDevicesAvailableError' in e.msg:
-                    message = 'No devices connected for '+instrName+'.'
-                elif 'NoSuchDeviceError' in e.msg:
-                    message = 'No devices found for '+instrName+' at address '+settings[1]+'.'
-                else: message = False
-                instr.connected = False
-                if message and ((lastStatus != instr.connected) or (lastInstr != self.instruments[instrName])): self.logMessage(message, alert=True)
-                continue
-            except Exception as e:
-                instr.connected = False
-                self.logMessage('Could not connect to device for '+instrName+': '+str(e), alert=True)
+            self.connectServer(instrName)
+            self.connectDevice(instrName)
 
         # initialize power supply
         if hasattr(self.instruments['Power Supply'],'connected') and self.instruments['Power Supply'].connected == True:
@@ -265,6 +227,58 @@ class ADRServer(DeviceServer):
         except AttributeError: pass # may not have add_channel methods
 
     @inlineCallbacks
+    def connectServer(self, instrName):
+        settings = self.ADRSettings[instrName]
+        
+        # save server to instruments dict, leave as None if cannot connect
+        lastInstr = self.instruments[instrName]
+        try:
+            instr = self.client[ settings[0] ]
+            self.instruments[instrName] = instr
+            if lastInstr != self.instruments[instrName]:
+                self.logMessage('Server running for '+instrName+'.')
+        except KeyError:
+            self.instruments[instrName] = None
+            if lastInstr != self.instruments[instrName]:
+                message = 'Server not found for '+instrName+'.'
+                self.logMessage(message, alert=True)
+        
+        # set adr settings path (if the server has that method)
+        try: 
+            yield instr.set_adr_settings_path(self.ADRSettingsPath)
+        except AttributeError: 
+            pass # not all instruments have the set_adr_settings_path setting
+        
+    @inlineCallbacks
+    def connectDevice(self, instrName):
+        settings = self.ADRSettings[instrName]
+        
+        # select the device using the address in the registry under the instrument name
+        instr = self.instruments[instrName]
+        if instr == None: return
+        if hasattr(instr,'connected'): lastStatus = instr.connected
+        else: lastStatus = None
+        try:
+            yield instr.select_device( settings[1] )
+            instr.connected = True
+            if lastStatus != instr.connected:
+                self.logMessage(instrName+' Connected.')
+        except AttributeError as e: 
+            instr.connected = False # may not have a select_device method (heat switch, for ex)
+        except LRError as e:
+            if 'NoDevicesAvailableError' in e.msg:
+                message = 'No devices connected for '+instrName+'.'
+            elif 'NoSuchDeviceError' in e.msg:
+                message = 'No devices found for '+instrName+' at address '+settings[1]+'.'
+            else: message = False
+            instr.connected = False
+            if message and lastStatus != instr.connected:
+                self.logMessage(message, alert=True)
+        except Exception as e:
+            instr.connected = False
+            self.logMessage('Could not connect to device for '+instrName+': '+str(e), alert=True)
+        
+    @inlineCallbacks
     def _refreshInstruments(self):
         """We can manually have all gpib buses refresh the list of devices connected to them."""
         self.logMessage('Refreshing Devices...')
@@ -272,9 +286,11 @@ class ADRServer(DeviceServer):
         for serv in [n for s,n in serverList]:#[tuple[1].replace(' ','_').lower() for tuple in serverList]:
             if 'gpib_bus' in serv or 'GPIB Bus' in serv:# or 'sim900_srs_mainframe' in serv:
                 yield self.client[serv].refresh_devices()
+    
+    @inlineCallbacks
     def device_connection_changed(self, device, server, channel, isConnected):
         print '%s connected: %s'%(device, isConnected)
-        # if instrument added, initialize instruments.  if it is removed,
+        # if instrument added, initialize instrument.  if it is removed,
         # mark it as disconnected.
         for instName in self.instruments.keys():
             instAddress = self.ADRSettings[instName][1]
@@ -282,9 +298,13 @@ class ADRServer(DeviceServer):
                 if isConnected == False:
                     self.instruments[instName].connected = False
                 else:
-                    self.initializeInstruments()
+                    yield util.wakeupCall(0.5) # to give the instrument server time to register the device
+                    self.connectDevice(instName)
+                    
     def serversChanged(self,*args):
+        # &&& make this server by server like the device connection
         self.initializeInstruments()
+        
     def logMessage(self, message, alert=False):
         """Applies a time stamp to the message and saves it to a file and an array."""
         dt = datetime.datetime.utcnow()
@@ -317,7 +337,11 @@ class ADRServer(DeviceServer):
                 self.state['T_60K'],self.state['T_3K'] = yield self.instruments['Diode Temperature Monitor'].get_diode_temperatures()
             except Exception as e:
                 self.state['T_60K'],self.state['T_3K'] = nan*units.K, nan*units.K
-                try: self.instruments['Diode Temperature Monitor'].connected = False
+                try: 
+                    lastState = self.instruments['Diode Temperature Monitor'].connected
+                    self.instruments['Diode Temperature Monitor'].connected = False
+                    if lastState != False:
+                        self._refreshInstruments()
                 except AttributeError: pass # in case instrument didn't initialize properly and is None
             # ruox temps
             try:
@@ -327,7 +351,11 @@ class ADRServer(DeviceServer):
                 except: self.state['T_GGG'],self.state['T_FAA'] = nan*units.K, temps
             except Exception as e:
                 self.state['T_GGG'],self.state['T_FAA'] = nan*units.K, nan*units.K
-                try: self.instruments['Ruox Temperature Monitor'].connected = False
+                try: 
+                    lastState = self.instruments['Ruox Temperature Monitor'].connected
+                    self.instruments['Ruox Temperature Monitor'].connected = False
+                    if lastState != False:
+                        self._refreshInstruments()
                 except AttributeError: pass # in case instrument didn't initialize properly and is None
             if self.state['T_GGG']['K'] == 20.0: self.state['T_GGG'] = nan*units.K
             if self.state['T_FAA']['K'] == 45.0: self.state['T_FAA'] = nan*units.K
@@ -335,16 +363,35 @@ class ADRServer(DeviceServer):
             try: self.state['magnetV'] = yield self.instruments['Magnet Voltage Monitor'].get_magnet_voltage()
             except Exception as e:
                 self.state['magnetV'] = nan*units.V
-                try: self.instruments['Magnet Voltage Monitor'].connected = False
+                try:
+                    lastState = self.instruments['Magnet Voltage Monitor'].connected
+                    self.instruments['Magnet Voltage Monitor'].connected = False
+                    if lastState != False:
+                        self._refreshInstruments()
                 except AttributeError: pass # in case instrument didn't initialize properly and is None
             # PS current, voltage
             try:
                 self.state['PSCurrent'] = yield self.instruments['Power Supply'].current()
                 self.state['PSVoltage'] = yield self.instruments['Power Supply'].voltage()
+            # except LRError as e:
+                # if 'VisaIOError' in e.msg:
+                    # self.state['PSCurrent'] = nan*units.A
+                    # self.state['PSVoltage'] = nan*units.V
+                    # try:
+                        # lastState = self.instruments['Power Supply'].connected
+                        # self.instruments['Power Supply'].connected = False
+                        # if lastState != False:
+                            # self._refreshInstruments()
+                    # except AttributeError: pass # in case instrument didn't initialize properly and is None
+                # else: print str(e)
             except Exception as e:
                 self.state['PSCurrent'] = nan*units.A
                 self.state['PSVoltage'] = nan*units.V
-                try: self.instruments['Power Supply'].connected = False
+                try:
+                    lastState = self.instruments['Power Supply'].connected
+                    self.instruments['Power Supply'].connected = False
+                    if lastState != False:
+                        self._refreshInstruments()
                 except AttributeError: pass # in case instrument didn't initialize properly and is None
             # update relevant files
             try:

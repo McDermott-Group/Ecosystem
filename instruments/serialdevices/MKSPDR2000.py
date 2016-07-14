@@ -29,12 +29,12 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
-
+import time
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting
 import labrad.units as units
 from labrad import util
-
+import numpy as np
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 class MKSPDR2000Wrapper(DeviceWrapper):
@@ -77,6 +77,7 @@ class MKSPDR2000Wrapper(DeviceWrapper):
 	@inlineCallbacks
 	def getUnits(self):
 		yield self.write_line('u')
+		time.sleep(0.5)
 		ans = yield self.read_line()
 		returnValue(ans)
 
@@ -94,25 +95,59 @@ class MKSPDR2000Server(DeviceServer):
 		yield self.loadConfigInfo()
 		yield DeviceServer.initServer(self)
 		  
-	@setting(100, 'get_pressure', returns='v[torr]')
+	@setting(100, 'get_pressure', returns='*v[torr]')
 	def getPressure(self, ctx):
+		#print "setting dev"
 		self.dev = self.selectedDevice(ctx)
+		#print "writing"
 		yield self.dev.write_line("p")
-		yield time.sleep(1)
-		reading = yield dev.read_line()
+		#print "sleeping"
+		yield time.sleep(0.5)
+		#print "getting reading"
+		reading = yield self.dev.read_line()
+		#print reading
+		#print "getting units"
+		yield self.dev.write_line('u')
+		#print "sleeping"
+		yield time.sleep(0.5)
+		#print "reading units"
+		unit = yield self.dev.read_line()
+		unit = unit.strip()
+		#print unit
+		#print reading
 		# Just in case there is an error and nothing is returned 
         # (RS232 is finicky).
 		if not reading:
 			returnValue(None)
 		else:
 			# Get last number in string.
-			reading.split(" ")
+			reading = reading.split(" ")
+			reading[0]=reading[0].strip()
+			reading[1]=reading[1].strip()
+			#print reading
+			if reading [0] == 'Off':
+				#print ("0 is off")
+				reading [0] = np.nan
+			if reading [1] == 'Off':
+				#print ("1 is off")
+				reading [1] = np.nan
+			#print reading
+			if unit == 'Torr':
+				#print "units of torr"
+				reading[0] = float(reading[0]) 
+				#print reading [0]
+				reading[1] = float(reading[1])
+				#print reading [1]
+			elif unit == 'mTorr':
+				reading[0] = (float(reading[0])/1000) 
+				reading[1] = (float(reading[1])/1000) 
+			reading = reading * units.torr
+			#print type(reading[1])
+			#print reading[1] is "Off"
+			#print reading
+			#print "done"
 			# Add correct units.
-			output = []
-			units = dev.getUnits()
-			output.append(units.Value(reading [0], units))
-			output.append(units.Value(reading[0], units))
-		returnValue(output)
+		returnValue(reading)
 		
 	@inlineCallbacks
 	def loadConfigInfo(self):
