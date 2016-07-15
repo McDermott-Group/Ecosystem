@@ -238,7 +238,8 @@ class ADRServer(DeviceServer):
             if lastInstr != self.instruments[instrName]:
                 self.logMessage('Server running for '+instrName+'.')
         except KeyError:
-            self.instruments[instrName] = None
+            instr = None
+            self.instruments[instrName] = instr
             if lastInstr != self.instruments[instrName]:
                 message = 'Server not found for '+instrName+'.'
                 self.logMessage(message, alert=True)
