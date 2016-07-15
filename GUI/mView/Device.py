@@ -224,6 +224,7 @@ class Device:
 		'''Ask the device for readings'''
 		# If the device is attatched.
 		#print("Querying")
+		
 		if(not self.isDevice):
 			# Try to connect again, if the value changes, then we know 
 			# that the device has connected.

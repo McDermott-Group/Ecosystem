@@ -200,9 +200,12 @@ class dataChestWrapper:
 						[y] is not None):
 						# If the device has readings
 						#print "readings: ",self.devices[i].getFrame().getReadings()[y]
-						if(self.devices[i].getFrame().getReadings()[y]
-							is not None):
-							readings.append(float(self.devices[i].getFrame().getReadings()[y]))
+						if(self.devices[i].getFrame().getReadings() is not None):
+							if(self.devices[i].getFrame().getReadings()[y]
+								is not None):
+								readings.append(float(self.devices[i].getFrame().getReadings()[y]))
+							else:
+								readings.append(np.nan)
 						else:
 							readings.append(np.nan)
 				dStamp = dateStamp()

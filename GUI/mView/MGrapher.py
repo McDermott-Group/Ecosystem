@@ -32,7 +32,8 @@ class mGraph(QtGui.QWidget):
 	 
 		self.hideButton = QtGui.QPushButton("Show Plot")
 		self.hideButton.clicked.connect(self.togglePlot)
-		
+		self.canvas.hide()
+		self.toolbar.hide()
 		self.hidden = True
 		# self.button1 = QtGui.QPushButton('Zoom')
 		# self.button1.clicked.connect(self.zoom)
@@ -76,6 +77,7 @@ class mGraph(QtGui.QWidget):
 			print "showing"
 			self.canvas.show()
 			self.toolbar.show()
+			self.plot()
 			#self.canvas.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
 			self.timer.start(1000)
 			self.hideButton.setText("Hide Plot")
