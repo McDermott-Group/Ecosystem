@@ -39,10 +39,10 @@ ERROR_GRAMMAR = {
     '4':"th"
 }
 
-VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32',
-                    'int64', 'uint8', 'uint16', 'uint32',
-                    'uint64','int_', 'float16', 'float32',
-                    'float64','float_', 'complex64', 'complex128',
+VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32', 'int64',
+                    'uint8', 'uint16', 'uint32', 'uint64',
+                    'int_', 'float16', 'float32', 'float64',
+                    'float_', 'complex64', 'complex128',
                     'complex_', 'utc_datetime','string'
                     ]
 
@@ -71,18 +71,43 @@ class dataChest(dateStamp):
         self.cd(path)
         self.root = self.cwdPath
       else:
-        raise ValueError("Empty strings are invalid paths.")
+        raise ValueError("Empty strings are invalid root paths.")
     elif isinstance(path, list):
       if len(path)>=1:
         for ii in range(0, len(path)):
-          if path[ii] not in self.ls()[1]:
-            self.mkdir(path[ii])
-          self.cd(path[ii])
-          self.root = self.cwdPath
+          if len(path[ii]) > 0:
+            if path[ii] not in self.ls()[1]:
+              self.mkdir(path[ii])
+            self.cd(path[ii])
+            self.root = self.cwdPath
+          else:
+            raise ValueError(
+              "Empty strings are invalid entries in root path lists."
+              )
       else:
-        raise ValueError("Empty lists are invalid paths.")
+        raise ValueError("Empty lists are invalid root path lists.")
     else:
       raise TypeError("String and List type paths only.")
+
+  def mkdir(self, directoryToMake):
+    """Makes a new directory within the current working directory."""
+    dirContents = self.ls()[1]
+    if self._formatFilename(directoryToMake, " ") == directoryToMake:
+      if directoryToMake not in dirContents:
+        os.mkdir(directoryToMake) #Try except this even though safe guarded
+        return directoryToMake
+      else:
+        raise ValueError(
+          "Directory already exists.\r\n\t"
+          + "Directory name provided: "
+          + directoryToMake
+          )
+    else:
+      raise ValueError(
+        "Invalid directory name provided.\r\n\t"
+        + "Directory name provided: "+ directoryToMake+".\r\n\t"
+        + "Suggested name: "+ self._formatFilename(directoryToMake, " ")
+        ) 
 
   def ls(self):
     """Lists the contents of the current working directory."""
@@ -98,6 +123,9 @@ class dataChest(dateStamp):
     files = sorted(files) #alphabetize for readibility
     folders = sorted(folders)
     return [files, folders]
+
+  def pwd(self):
+    return self.cwdPath
 
   def cd(self, directoryToMove):
     """Changes the current working directory."""
@@ -137,26 +165,6 @@ class dataChest(dateStamp):
       return self.cwdPath
     else:
       raise Warning("Calling cd() on an empty list has no meaning.")
-
-  def mkdir(self, directoryToMake):
-    """Makes a new directory within the current working directory."""
-    dirContents = self.ls()[1]
-    if self._formatFilename(directoryToMake, " ") == directoryToMake:
-      if directoryToMake not in dirContents:
-        os.mkdir(directoryToMake) #Try except this even though safe guarded
-        return directoryToMake
-      else:
-        raise ValueError(
-          "Directory already exists.\r\n\t"
-          + "Directory name provided: "
-          + directoryToMake
-          )
-    else:
-      raise ValueError(
-        "Invalid directory name provided.\r\n\t"
-        + "Directory name provided: "+ directoryToMake+".\r\n\t"
-        + "Suggested name: "+ self._formatFilename(directoryToMake, " ")
-        )    
     
   def createDataset(self, datasetName, indepVarsList,
                     depVarsList, dateStamp = None):
@@ -165,6 +173,7 @@ class dataChest(dateStamp):
     self.currentHDF5Filename = None
     self.readOnlyFlag = False
     self.dataCategory = None #treat self.dataCategory consistently
+    
     if datasetName != self._formatFilename(datasetName, " +-."):
       raise self.exception
     elif not self._isVarsListValid("independents", indepVarsList): 
@@ -184,6 +193,26 @@ class dataChest(dateStamp):
       self._initDataset(self.varDict, filename)
     else:
       raise RuntimeError("Unable to create a unique filename.")
+
+  def getDatasetName(self):
+    if self.currentHDF5Filename is not None:
+      self._updateFileDate("Date Accessed")
+      return self.currentHDF5Filename.split("/")[-1]
+    else:
+      raise Warning("No dataset is currently open.")
+
+  def getVariables(self):
+    if self.currentHDF5Filename is not None:
+      indeps = self._varListFromGrp(self.file["independents"])
+      deps = self._varListFromGrp(self.file["dependents"])
+      self._updateFileDate("Date Accessed")
+      return [indeps, deps]
+    else:
+      raise Warning(
+        "No file is currently selected. First select a file\r\n\t"
+        + "using openDataset() to open an existing set or\r\n\t"
+        + "create one using createDataset()."
+        )
 
   def addData(self, data):
     """Adds data to the latest dataset created with new."""
@@ -262,41 +291,19 @@ class dataChest(dateStamp):
         "You must create a dataset before attempting to write.\r\n\t"
         + "Datasets are created using the createDataset().\r\n\t"
         )
-        
+    
+    dateISO = self.dateStamp.utcDateIsoString()
+    self._updateFileDate("Date Accessed", dateISO)
+    self._updateFileDate("Date Modified", dateISO)
     return True
 
-  def openDataset(self, filename, modify = None):
-    """Opens a dataset in the current working directory if it exists."""
-    if '.hdf5' not in filename: #adds file extension if omitted
-      filename = filename+".hdf5"
-    existingFiles = self.ls()[0]
-    if filename in existingFiles:
-      if hasattr(self, 'currentFile'):
-        self.file.close() #close current file if existent
-      if modify is True:
-        self.readOnlyFlag = False
-        self.file = h5py.File(self.pwd()+"/"+filename,'r+')#read+write
-      else:
-        self.readOnlyFlag = True
-        self.file = h5py.File(self.pwd()+"/"+filename,'r') #read only
-      self.currentHDF5Filename = self.pwd() + "/" + filename
-
-      for varType in self.varDict.keys(): #copying varDict from file
-        varGroupAttributes = self.file[varType].attrs.keys()
-        varGrp = self.file[varType]
-        for item in varGroupAttributes:
-          self.varDict[varType][str(item)] = varGrp.attrs[item].tolist()
-
-      self.dataCategory = self.file.attrs["Data Category"]
-      self.numIndepWrites = self.file.attrs["Number Of Rows Added"]
-      self.numDepWrites = self.numIndepWrites    
+  def getNumRows(self):
+    if self.currentHDF5Filename is not None:
+      self._updateFileDate("Date Accessed")
+      return self.file.attrs["Number Of Rows Added"]
     else:
-      self.currentHDF5Filename = None
-      raise Warning(
-        "File not found, please cd into the directory with\r\n\t"
-        + "the desired dataset."
-        )
-    
+      raise Warning("No dataset is currently open.")
+
   def getData(self, startIndex = np.nan, stopIndex = np.nan):
     """Retrieves data from the current dataset."""
     if self.currentHDF5Filename is not None:
@@ -332,6 +339,7 @@ class dataChest(dateStamp):
           data.append(dataDict[allVars[ii]])
         data = np.asarray(data)
         data = data.T
+        self._updateFileDate("Date Accessed")
         return data[startIndex:stopIndex]
       else:
         for ii in range(startIndex,stopIndex): #making slicing efficient
@@ -339,6 +347,7 @@ class dataChest(dateStamp):
           for jj in range(0,len(allVars)):
             row.append(dataDict[allVars[jj]][ii])
           data.append(row)
+        self._updateFileDate("Date Accessed")
         return data
     else:
       raise Warning(
@@ -347,32 +356,37 @@ class dataChest(dateStamp):
         + "createDataset()."
         )
 
-  def getVariables(self):
-    if self.currentHDF5Filename is not None:
-      indeps = self._varListFromGrp(self.file["independents"])
-      deps = self._varListFromGrp(self.file["dependents"])
-      return [indeps, deps]
+  def openDataset(self, filename, modify = None):
+    """Opens a dataset in the current working directory if it exists."""
+    if '.hdf5' not in filename: #adds file extension if omitted
+      filename = filename+".hdf5"
+    existingFiles = self.ls()[0]
+    if filename in existingFiles:
+      if hasattr(self, 'currentFile'):
+        self.file.close() #close current file if existent
+      self.file = h5py.File(self.pwd()+"/"+filename,'r+') #read+write
+      self.currentHDF5Filename = self.pwd() + "/" + filename
+      if modify is True:
+        self.readOnlyFlag = False
+      else:
+        self.readOnlyFlag = True
+      self._updateFileDate("Date Accessed")
+  
+      for varType in self.varDict.keys(): #copying varDict from file
+        varGroupAttributes = self.file[varType].attrs.keys()
+        varGrp = self.file[varType]
+        for item in varGroupAttributes:
+          self.varDict[varType][str(item)] = varGrp.attrs[item].tolist()
+
+      self.dataCategory = self.file.attrs["Data Category"]
+      self.numIndepWrites = self.file.attrs["Number Of Rows Added"]
+      self.numDepWrites = self.numIndepWrites    
     else:
+      self.currentHDF5Filename = None
       raise Warning(
-        "No file is currently selected. First select a file\r\n\t"
-        + "using openDataset() to open an existing set or\r\n\t"
-        + "create one using createDataset()."
+        "File not found, please cd into the directory with\r\n\t"
+        + "the desired dataset."
         )
-
-  def getDatasetName(self):
-    if self.currentHDF5Filename is not None:
-      return self.currentHDF5Filename.split("/")[-1]
-    else:
-      raise Warning("No dataset is currently open.")
-
-  def getNumRows(self):
-    if self.currentHDF5Filename is not None:
-      return self.file.attrs["Number Of Rows Added"]
-    else:
-      raise Warning("No dataset is currently open.")
-
-  def pwd(self):
-    return self.cwdPath
 
   def addParameter(self, paramName, paramValue, overwrite = None): 
     if self.readOnlyFlag == True:
@@ -384,6 +398,10 @@ class dataChest(dateStamp):
         )
     elif self.currentHDF5Filename is not None:
       if self._isParameterValid(paramName, paramValue, overwrite):
+        dateISO = self.dateStamp.utcDateIsoString()
+        self._updateFileDate("Date Accessed", dateISO)
+        self._updateFileDate("Date Modified", dateISO)
+  
         self.file["parameters"].attrs[paramName] = paramValue
         self.file.flush()
       else:
@@ -397,6 +415,7 @@ class dataChest(dateStamp):
   def getParameter(self, parameterName, byIOError=False):
     if self.currentHDF5Filename is not None:
       if parameterName in self.file["parameters"].attrs.keys():
+        self._updateFileDate("Date Accessed")
         return self.file["parameters"].attrs[parameterName]
       else:
         if not byIOError:
@@ -412,6 +431,7 @@ class dataChest(dateStamp):
 
   def getDataCategory(self):
     if self.currentHDF5Filename is not None:
+        self._updateFileDate("Date Accessed")
         return self.file.attrs["Data Category"]
     else:
       raise Warning(
@@ -423,6 +443,7 @@ class dataChest(dateStamp):
   def getParameterList(self):
     if self.currentHDF5Filename is not None:
       unicodeList = self.file["parameters"].attrs.keys()
+      self._updateFileDate("Date Accessed")
       return [str(x) for x in unicodeList]
     else:
       raise Warning(
@@ -430,6 +451,22 @@ class dataChest(dateStamp):
         + "using either openDataset() to open an existing set or\r\n\t"
         + "with createDataset()."
         )
+    
+  def _updateFileDate(self, dateCategory, dateISO = None):
+    if self.currentHDF5Filename is not None:
+      if dateCategory in ["Date Created", "Date Modified", "Date Accessed"]:
+        if dateISO is None:
+          self.file.attrs[dateCategory] = self.dateStamp.utcDateIsoString()
+        else:
+          self.file.attrs[dateCategory] = dateISO
+      else:
+        raise ValueError("Invalid dateCategory provided.")
+
+    else:
+      raise IOError(
+        "Attempted to update metadata for a file that does not exist."
+        )
+    
 
   def _initDataset(self, varDict, filename):
 
@@ -447,6 +484,12 @@ class dataChest(dateStamp):
 
     self.file.attrs["Data Category"] = self.dataCategory
     self.file.attrs["Number Of Rows Added"] = 0
+    dateISO = self.dateStamp.invertDateStamp(filename.split("_")[0])
+    #date = self.dateStamp.invertDateStamp(filename.split("_")[0])
+    self._updateFileDate("Date Created", dateISO)
+    self._updateFileDate("Date Modified", dateISO)
+    self._updateFileDate("Date Accessed", dateISO)
+    
 
     #varTypes in ['independents', 'dependents']
     #varAttrs in ['shapes','units','names','types']
@@ -1145,13 +1188,13 @@ class dataChest(dateStamp):
     if len(dataShape) != 2:  # (numRows,totalNumVars)
       self.exception = ValueError(
         "1D Scan Data has rows\r\n\t"
-        +"of the form:\r\n\t"
-        +"[indep1,dep1,...,depN]\r\n\t"
-        +"where indep1 is a 1D array of the form\r\n\t"
-        +"indep1 = [t_start, t_stop]\r\n\t"
-        +"and the dependent entries are 1D arrays\r\n\t"
-        +"(all of same length) where we assume\r\n\t"
-        +"dep1 = [dep1(t_start),...,dep1(t_stop)]."
+        + "of the form:\r\n\t"
+        + "[indep1,dep1,...,depN]\r\n\t"
+        + "where indep1 is a 1D array of the form\r\n\t"
+        + "indep1 = [t_start, t_stop]\r\n\t"
+        + "and the dependent entries are 1D arrays\r\n\t"
+        + "(all of same length) where we assume\r\n\t"
+        + "dep1 = [dep1(t_start),...,dep1(t_stop)]."
         )
       return False
     elif dataShape[1] != totalNumVars:

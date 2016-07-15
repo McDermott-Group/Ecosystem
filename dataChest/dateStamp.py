@@ -80,6 +80,11 @@ class dateStamp:
       secsConverted = self._intToAlphabet(t)
       return ymdConverted+hour+minute+secsConverted
 
+  def utcDateIsoString(self):
+    dateISO = datetime.utcnow().isoformat()
+    return dateISO
+    
+
   def invertDateStamp(self, dateStamp):
       ymd = dateStamp[0:3]
       secs = dateStamp[7:10]
