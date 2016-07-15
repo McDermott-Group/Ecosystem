@@ -56,8 +56,10 @@ class MFrame:
 	custUnits = ''
 	# If the length of the graph should be plotted over a fixed interval
 	plotLength = None
-	def __init__(self):
-		print("New Frame")
+	# Hold the datachest object
+	dataSet = None
+	#def __init__(self):
+		#print("New Frame for "+self.serverTitle)
 	def setTitle(self, title):
 		self.serverTitle = title
 	def getTitle(self):
@@ -114,3 +116,7 @@ class MFrame:
 		return self.plot
 	def getPlotLength(self):
 		return self.plotLength
+	def setDataSet(self, dataSet):
+		self.dataSet = dataSet;
+	def getDataSet(self):
+		return self.dataSet

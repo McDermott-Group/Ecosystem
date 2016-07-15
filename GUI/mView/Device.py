@@ -125,11 +125,12 @@ class Device:
 		
 	def setYLabel(self, yLbl, units = ''):
 		self.frame.setYLabel(yLbl, units)
+	
 		
 	def selectDeviceCommand(self, cmd, arg):
 		self.selectedDevice = arg	
 		self.setDeviceCmd = cmd	
-		
+	
 	def begin(self):
 		self.frame.setTitle(self.name)
 		self.frame.setNicknames(self.nicknames)
@@ -165,6 +166,7 @@ class Device:
 		
 			# True means successfully connected
 			self.foundDevice= False
+			print ("Found device: "+self.serverName)
 			return True
 		except labrad.client.NotFoundError, AttributeError:
 			if( not self.foundDevice):

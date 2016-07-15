@@ -141,6 +141,7 @@ class MGui(QtGui.QMainWindow):
 			self.frames[i].setStyleSheet("background: rgb(52, 73, 94)")
 			self.frames[i].setFrameShape(QtGui.QFrame.Panel)
 			self.frames[i].setFrameShadow(QtGui.QFrame.Plain)
+			self.frames[i].setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
 			self.ratio =float(self.scrnWidth)/1800+1
 			#print(self.ratio)
 			self.frames[i].setLineWidth(self.ratio)
@@ -242,8 +243,8 @@ class MGui(QtGui.QMainWindow):
 				# FigureCanvas.updateGeometry(self)
 				# self.axes.plot([0, 1, 2, 3], [1, 2, 0, 4], 'r')
 				self.main_widget = self.frames[i]
-				dc = MGrapher.DynamicMplCanvas(self.devices[i])
-				
+				#dc = MGrapher.DynamicMplCanvas(self.devices[i])
+				dc = MGrapher.mGraph(self.devices[i])
 				yPos = len(self.devices[i].getFrame().getNicknames())+3
 				self.grids[i].addWidget(dc, yPos, 0,yPos,3 )
 		self.mainVBox[self.VBoxColumn].addStretch(1)
