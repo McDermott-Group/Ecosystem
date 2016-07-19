@@ -48,7 +48,7 @@ class goldsteinsPT1000TemperatureMonitorWrapper(DeviceWrapper):
 		p = self.packet()
 		p.open(port)
 		p.baudrate(9600L)
-		p.timeout(0.1*units.s)
+		p.timeout(1*units.s)
 		p.read_line()
 		yield p.send()
 		
@@ -100,7 +100,7 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
 					continue
 				
 				if(float(prev[0]*sign)<=R*sign<float(curr[0]*sign)):
-					print prev, curr
+					#print prev, curr
 					fac = (curr[0]-R)/(curr[0]-prev[0])
 					return curr[1]*(1-fac)+prev[1]*fac
 			prevRow = row	
@@ -116,7 +116,7 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
 			#print "HEREC"
 			yield self.dev.write_line(str(i+1))
 			#print "HERED"
-			yield time.sleep(1)
+			yield time.sleep(0.1)
 			#print "HEREE"
 			reading = yield self.dev.read_line()
 			reading = reading.strip()
@@ -133,11 +133,13 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
 				readings.append(np.nan)
 			else:
 				# print type(reading)
-				readings.append(self.resToTemp(float(reading)))
+				readings.append(self.resToTemp(float(reading))+273.15)
 				#print "HEREJ"
 			#print "reading1: ", reading
 		
-		readings*units.K
+		readings = readings*units.K
+		print "Readings: ",readings
+		print "Type: ",type(readings)
 		#print readings
 		returnValue(readings)
 			

@@ -285,6 +285,7 @@ class Device:
 								units.append("")
 					else:
 						try:
+							#print "Guessing device data type"
 							readings.append(reading)
 							units.append("")
 						except:

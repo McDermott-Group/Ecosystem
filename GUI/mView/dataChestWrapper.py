@@ -201,6 +201,7 @@ class dataChestWrapper:
 						# If the device has readings
 						#print "readings: ",self.devices[i].getFrame().getReadings()[y]
 						if(self.devices[i].getFrame().getReadings() is not None):
+							#print self.devices[i].getFrame().getTitle(),":", self.devices[i].getFrame().getReadings()[y]
 							if(self.devices[i].getFrame().getReadings()[y]
 								is not None):
 								readings.append(float(self.devices[i].getFrame().getReadings()[y]))

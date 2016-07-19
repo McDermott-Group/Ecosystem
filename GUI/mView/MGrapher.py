@@ -38,7 +38,7 @@ class mGraph(QtGui.QWidget):
 		self.hideButton.clicked.connect(self.togglePlot)
 		self.thrtysecButton = QtGui.QPushButton("30 Sec")
 		self.thrtysecButton.clicked.connect(partial(self.plot, 30))
-		self.twoMinButton = QtGui.QPushButton("1 Min")
+		self.twoMinButton = QtGui.QPushButton("2 Min")
 		self.twoMinButton.clicked.connect(partial(self.plot, 120))
 		self.fiveMinButton = QtGui.QPushButton("5 Min")
 		self.fiveMinButton.clicked.connect(partial(self.plot, 300))
@@ -217,7 +217,8 @@ class mGraph(QtGui.QWidget):
 					#print "using units"
 					self.ax.set_ylabel(self.device.getFrame().getYLabel()+" ("+
 							self.device.getFrame().getUnits()[i-1]+")")
-				
+							
+				self.ax.set_xlabel("UTC Time in Seconds")
 			
 				self.ax.hold(True)
 			

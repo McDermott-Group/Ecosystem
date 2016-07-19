@@ -306,7 +306,7 @@ class MGui(QtGui.QMainWindow):
 		# Update the gui every so often. This CAN ONLY be done 
 		# in the main thread.
 		timer.timeout.connect(self.update)
-		timer.start(1000)
+		timer.start(100)
 		self.MAlert.begin()
 		sys.exit(app.exec_())
 
