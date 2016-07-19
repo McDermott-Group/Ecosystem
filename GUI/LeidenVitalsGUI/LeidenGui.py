@@ -87,6 +87,17 @@ class nViewer:
 		#		viewer.__init__()
 		###################################################################
 	
+		PT1000s = Device("PT1000s")
+		PT1000s.connection(cxn)
+		PT1000s.setServerName("goldstein_s_pt1000_temperature_monitor_server")
+		PT1000s.addParameter("3K", "get_temperatures",None, 0)
+		PT1000s.addParameter("50K", "get_temperatures", None, 0)
+		PT1000s.selectDeviceCommand("select_device", 0)
+		PT1000s.addPlot()
+		PT1000s.begin()
+		self.devices.append(PT1000s)
+		
+		
 		LeidenDRTemperature = Device("Leiden DR")
 		LeidenDRTemperature.connection(cxn)
 
@@ -96,6 +107,7 @@ class nViewer:
 		LeidenDRTemperature.addParameter("Still", "still_temperature", None)
 		LeidenDRTemperature.addParameter("Exchange","exchange_temperature", None)
 		LeidenDRTemperature.selectDeviceCommand("select_device", 0)
+		LeidenDRTemperature.addPlot()
 		LeidenDRTemperature.begin()
 		self.devices.append(LeidenDRTemperature)
 
@@ -119,6 +131,7 @@ class nViewer:
 		Flow.setServerName("omega_ratemeter_server")
 		Flow.addParameter("External Water Flow Rate", "get_rate")
 		Flow.selectDeviceCommand("select_device", 0)
+		Flow.addPlot()
 		Flow.begin()
 		self.devices.append(Flow)
 
@@ -135,6 +148,7 @@ class nViewer:
 		Vacuum = Device("Vacuum")
 		Vacuum.setServerName("pfeiffer_vacuum_maxigauge")
 		Vacuum.connection(cxn)
+		vacuum.addPlot()
 		Vacuum.addParameter("OVC Pressure", "get_pressures", None, 3)
 		Vacuum.addParameter("IVC Pressure", "get_pressures", None, 4)
 		Vacuum.addParameter("Still Pressure", "get_pressures", None, 5)

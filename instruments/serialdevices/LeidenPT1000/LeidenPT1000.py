@@ -78,7 +78,7 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
 	
 	def resToTemp(self, R):
 		R = R/10 # Because the curve we use is for the PT100
-		f = open('dependencies\PT100Table.csv', 'rb')
+		f = open('PT100Table.csv', 'rb')
 
 		reader = csv.reader(f)
 		
