@@ -111,9 +111,6 @@ class MGui(QtGui.QMainWindow):
 			numWidgets = numWidgets+1
 			#Append a new gui frame
 			self.frames.append(QtGui.QFrame(self))
-			
-			#if(1.5*self.frameSize().height()>self.frameSize().width()):
-			#print len(self.mainVBox[self.VBoxColumn].children())
 			if(math.sqrt(len(devices))<numWidgets):
 				self.mainVBox[self.VBoxColumn].addStretch(1)
 				self.VBoxColumn = self.VBoxColumn+1;
@@ -150,7 +147,6 @@ class MGui(QtGui.QMainWindow):
 			buttonLayout = QtGui.QHBoxLayout()
 			self.grids[i].addLayout(buttonLayout, 1, 1)
 			# Create all buttons.
-			#print(self.devices[i].getFrame().getButtons()[0])
 			if(len(self.devices[i].getFrame().getButtons()[0])>0):
 				for b in range(0, len(self.devices[i]
 					.getFrame().getButtons())):
@@ -230,20 +226,7 @@ class MGui(QtGui.QMainWindow):
 					self.grids[i].addWidget(self.units[i][y], y+2, 2)
 			# Configure the plots
 			if (self.devices[i].getFrame().getPlot()):
-				
-				# self.plots[i].append(Figure(figsize=(5, 4), dpi=100))
-				 
-				# self.axes = self.plots[i][y].add_subplot(111)
-				# self.axes.hold(False)
-				# FigureCanvas.__init__(self, self.plots[i][y])
-				# self.setParent(parent)
-				# FigureCanvas.setSizePolicy(self,
-                                   # QtGui.QSizePolicy.Expanding,
-                                   # QtGui.QSizePolicy.Expanding)
-				# FigureCanvas.updateGeometry(self)
-				# self.axes.plot([0, 1, 2, 3], [1, 2, 0, 4], 'r')
 				self.main_widget = self.frames[i]
-				#dc = MGrapher.DynamicMplCanvas(self.devices[i])
 				dc = MGrapher.mGraph(self.devices[i])
 				yPos = len(self.devices[i].getFrame().getNicknames())+3
 				self.grids[i].addWidget(dc, yPos, 0,yPos,3 )
@@ -257,7 +240,6 @@ class MGui(QtGui.QMainWindow):
 		# GUI will not be running.
 		self.NotifierGUI = NotifierGUI(self.devices)
 		self.NotifierGUI.exec_()
-		
 		#print "The mins received were", (self.NotifierGUI.getMins())
 		# Start the messenger service
 		try:
@@ -287,20 +269,10 @@ class MGui(QtGui.QMainWindow):
 		screen_resolution = QtGui.QDesktopWidget().screenGeometry()
 		self.scrnWidth = screen_resolution.width()
 		self.scrnHeight = screen_resolution.height()
-
 		# Call the class's init function
 		self.initGui(devices)
-		
-
-		#app = QtGui.QApplication([])
-		
-		# print "width", self.width
-		# print "height", self.height
-		
-		
 		self.setWindowTitle(title)
 		# Show the gui
-		
 		self.show()
 		timer = QtCore.QTimer(self)
 		# Update the gui every so often. This CAN ONLY be done 
@@ -329,8 +301,6 @@ class MGui(QtGui.QMainWindow):
 						self.lcds[i][y].setSegmentStyle(
 							QtGui.QLCDNumber.Flat)
 						z = self.devices[i].getFrame().getReadingIndices()
-						#print(readings)
-						#print(z)
 						try:
 							if(not math.isnan(readings[z[y]])):
 								self.lcds[i][y].display(readings[z[y]])

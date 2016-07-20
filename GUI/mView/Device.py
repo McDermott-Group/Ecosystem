@@ -68,8 +68,7 @@ class Device:
 		self.frame = MFrame()
 		self.frame.setYLabel(None)
 		# Store the graph
-		#self.plots = []
-		#print "Now it is: ", self.frame.getYLabel()
+		# self.plots = []
 		# Determine which buttons get messages
 #		if(buttonMessages is not None):
 		self.buttonMessages = []
@@ -79,25 +78,6 @@ class Device:
 		self.buttonSettings = []
 			#print(buttonArgs)
 		self.buttons = []
-			# # print "buttons before:  ", self.buttons
-			# for i in range(0, len(self.buttonNames)):
-				# # print(self.name)
-				# # print()
-				# # print(i)
-				# # if(i is not 0):
-				# self.buttons.append([])
-				# # print(i)
-				# # print(len(self.buttons))
-				# self.buttons[i].append(self.buttonNames[i])
-				# self.buttons[i].append(self.buttonSettings[i])
-				# self.buttons[i].append(self.buttonMessages[i])
-				# self.buttons[i].append(buttonArgs[i])
-			# self.frame.setButtons(self.buttons)
-			
-			#print "Device: ", self.name
-			
-			#print "buttonNames: ", self.buttonNames
-			#print "buttons: ", self.frame.getButtons()
 		
 	def setServerName(self, name):
 		self.serverName = name
@@ -121,7 +101,6 @@ class Device:
 		self.buttons[i].append(msg)
 		self.buttons[i].append(arg)
 		self.frame.setButtons(self.buttons)
-		#print(self.buttons)
 		
 	def setYLabel(self, yLbl, units = ''):
 		self.frame.setYLabel(yLbl, units)
@@ -154,16 +133,11 @@ class Device:
 		try:
 			# Attempt to connect to the server given the connection 
 			# and the server name.
-			#print(self.cxn)
-		
-			self.deviceServer = getattr(self.cxn, self.serverName)()
-			
+			self.deviceServer = getattr(self.cxn, self.serverName)()	
 			# If the select device command is not none, run it.
-			#print(self.deviceServer)
 			if(self.setDeviceCmd is not None):
 				getattr(self.deviceServer, self.setDeviceCmd)(
 					self.selectedDevice)
-		
 			# True means successfully connected
 			self.foundDevice= False
 			print ("Found device: "+self.serverName)
@@ -173,9 +147,7 @@ class Device:
 				self.foundDevice = True
 				print("Unable to find device: "+self.serverName)
 			self.frame.raiseError("Labrad issue")
-
 		except:
-			#print("error, server not found")
 			# The nFrame class can pass an error along with a message
 			self.frame.raiseError("Labrad issue")
 			
@@ -223,17 +195,13 @@ class Device:
 	def Query(self):
 		'''Ask the device for readings'''
 		# If the device is attatched.
-		#print("Querying")
-		
 		if(not self.isDevice):
 			# Try to connect again, if the value changes, then we know 
 			# that the device has connected.
 			if(self.connect() is not self.isDevice):
-				#print("Connected to "+self.name)
 				self.isDevice = True
 		# Otherwise, if the device is already connected
 		else:
-			#print("Reading")
 			try:
 				readings = []	# Stores the readings
 				units = []		# Stores the units
@@ -242,20 +210,16 @@ class Device:
 					if(self.settingArgs[i] is not None):
 						reading = getattr(self.deviceServer, self
 							.settingNames[i])(self.settingArgs[i])
-						#print type(reading)
 					else:
 						reading = getattr(self.deviceServer, self
 							.settingNames[i])()
 					# If the reading has a value and units
 					if isinstance(reading, labrad.units.Value):
-						#print "labrad value"
-						#print reading
 						# Some installations like _value, some like value
 						try:
 							readings.append(reading._value)
 						except:
 							readings.append(reading.value)
-						#print(readings)
 						units.append(reading.units)
 					# If the reading is an array of values and units
 					elif(isinstance(reading, labrad.units.ValueArray)):
@@ -285,7 +249,6 @@ class Device:
 								units.append("")
 					else:
 						try:
-							#print "Guessing device data type"
 							readings.append(reading)
 							units.append("")
 						except:
@@ -297,9 +260,6 @@ class Device:
 				# If there was an error, retract it.
 				self.frame.retractError()
 			except:
-				#exc_type, exc_value, exc_traceback = sys.exc_info()
-				#traceback.print_tb(exc_traceback)
-				#print("Error")
 				self.frame.raiseError("Problem communicating with "
 					+self.name)
 				self.frame.setReadings(None)

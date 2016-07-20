@@ -14,8 +14,8 @@ class mGraph(QtGui.QWidget):
 
 		self.figure = plt.figure()
 		self.canvas = FigureCanvas(self.figure)
-		self.canvas.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
-		#self.canvas.updateGeometry()
+		self.canvas.setSizePolicy(QtGui.QSizePolicy.Expanding, 
+            QtGui.QSizePolicy.Expanding)
 		self.device = device
 		
 		self.home = NavigationToolbar.home
@@ -25,8 +25,8 @@ class mGraph(QtGui.QWidget):
 		self.setStyleSheet("""QPushButton{
 					color:rgb(189,195, 199); 
 					background:rgb(70, 80, 88)}""")
-		self.toolbar.setStyleSheet("background:rgb(189, 195, 199);")
-		#self.toolbar.hide()
+		self.toolbar.setStyleSheet("""background:rgb(189, 195, 199);""")
+        
 		self.currTimeRange = 120
 		self.plot(self.currTimeRange)
 		
@@ -59,16 +59,6 @@ class mGraph(QtGui.QWidget):
 		self.canvas.hide()
 		self.toolbar.hide()
 		self.hidden = True
-		# self.button1 = QtGui.QPushButton('Zoom')
-		# self.button1.clicked.connect(self.zoom)
-		 
-		# self.button2 = QtGui.QPushButton('Pan')
-		# self.button2.clicked.connect(self.pan)
-		 
-		# self.button3 = QtGui.QPushButton('Home')
-		# self.button3.clicked.connect(self.home)
-
-
 		# set the layout
 		self.ax = self.figure.add_subplot(111)
 		buttonLayout = QtGui.QHBoxLayout()
@@ -112,16 +102,13 @@ class mGraph(QtGui.QWidget):
 
 		self.setLayout(layout)
 	def go_home(self, *args, **kwargs):
-		#print 'new home'
 		self.timer.start(1000)
-		#self.canv.axes.autoscale_view(True,True,True)
 		self.plot(self.currTimeRange)
 	def disableAutoUpdate(self, event):
 		self.timer.stop()
 	def togglePlot(self):
 	
 		if not self.hidden:
-			print "hiding"
 			self.canvas.hide()
 			self.toolbar.hide()
 			self.thrtysecButton.hide()
@@ -137,9 +124,8 @@ class mGraph(QtGui.QWidget):
 			self.timer.stop()
 			self.hideButton.setText("Show Plot")
 			self.hidden = True
-			#self.hideButton.clicked.connect(partial(self.hidePlot, False))
+			
 		elif  self.hidden:
-			print "showing"
 			self.canvas.show()
 			self.toolbar.show()
 			self.thrtysecButton.show()
@@ -153,68 +139,51 @@ class mGraph(QtGui.QWidget):
 			self.twoWkButton.show()
 			self.allButton.show()
 			self.plot(self.currTimeRange)
-			#self.canvas.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
 			self.timer.start(1000)
 			self.hideButton.setText("Hide Plot")
 			self.hidden = False
-			#self.hideButton.clicked.connect(partial(self.hidePlot, True))
+            
 	def plot(self, timeRange):
-			
 		if timeRange != self.currTimeRange:
 			self.timer.stop()
 			self.timer.timeout.disconnect()
 			self.currTimeRange = timeRange
-			#print self.currTimeRange
 			self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
 			self.timer.start(1000)
-		''' plot some random stuff '''
-		#data = [random.random() for i in range(25)]
 		dataSet =  self.device.getFrame().getDataSet()
-		#print data
 		if dataSet is not None:
-			#print self.device.getFrame().getDataSet().getData()[-1]
 			data = dataSet.getData()
-			
-				
-			#print data
 			self.ax.hold(False)
 			for i in range(1, len(data[-1])):
-				#print len(data[-1])
 				column = [row[i] for row in data]
-				
 				times = [row[0] for row in data]
 				if self.currTimeRange is None:
-					
-					self.ax.plot(times,column,label = self.device.getFrame().getNicknames()[i-1])
+					self.ax.plot(times,column,label =
+                        self.device.getFrame().getNicknames()[i-1])
 				else:
 					dstamp = dateStamp()
 					startTime = dstamp.utcNowFloat()-self.currTimeRange
 					if timeRange is not None and startTime<float(data[0][0]):
-						#print "Not enough data, showing all time instead."
 						self.currTimeRange = None
 					for y in range(len(data)):
-						#print data[len(data)-y-1][0]
 						if data[len(data)-y-1][0] < startTime:
-							#print round(data[len(data)-y-1][0])
-							#print startTime
 							index = y
 							times = [row[0] for row in data[-index:]]
 							column = [row[i] for row in data[-index:]]
 							break
-					# print "col", len(column)
-					# print "time", len(times)
-					#print self.device.getFrame().getNicknames()
-					#print len( data)
-					self.ax.plot(times,column,label = self.device.getFrame().getNicknames()[i-1])
+					self.ax.plot(times,column,label = 
+                        self.device.getFrame().getNicknames()[i-1])
 				
 				self.ax.legend(loc='upper left')
 				self.ax.set_title(self.device.getFrame().getTitle())
-				if(self.device.getFrame().getYLabel() is not None and len(self.device.getFrame().getCustomUnits()) is not 0):
-					#print "using cust units"
+				if(self.device.getFrame().getYLabel() is not None 
+                    and len(self.device.getFrame().getCustomUnits()) is not 0):
+                    
 					self.ax.set_ylabel(self.device.getFrame().getYLabel()+" ("+
 							self.device.getFrame().getCustomUnits()+")")
-				elif (self.device.getFrame().getYLabel() is not None and len(self.device.getFrame().getUnits()[i-1]) is not 0):
-					#print "using units"
+				elif (self.device.getFrame().getYLabel() is not None 
+                    and len(self.device.getFrame().getUnits()[i-1]) is not 0):
+                    
 					self.ax.set_ylabel(self.device.getFrame().getYLabel()+" ("+
 							self.device.getFrame().getUnits()[i-1]+")")
 							

@@ -8,11 +8,9 @@ sys.dont_write_bytecode = True
 
 class MAlert:
 	def __init__(self,checkBoxes,mins, maxs, contacts,  devices, tele):
-		#print "Mins: ", mins, " \r\nMaxs:", maxs, " \r\nContacts:", contacts
 		# Configure all public variables
 		self.devices = devices
 		self.mins = mins
-		#print(mins)
 		self.maxs = maxs
 		self.contacts = contacts
 		self.message = []
@@ -61,7 +59,6 @@ class MAlert:
 									if(self.checkBoxes[z]):
 									#print "mins", (self.mins)
 										self.generateMessage(z,y,i)
-										#print(z)
 										self.sendMail(i, y, z)
 									#print(self.mins[z])
 						if len(self.maxs) is not 0:
@@ -70,8 +67,6 @@ class MAlert:
 									if(self.checkBoxes[z]):
 										self.generateMessage(z,y,i)
 										self.sendMail(i, y, z)
-						#print "z",(z)
-						#print "y", y
 						z = z+1
 			else:
 				
@@ -83,23 +78,7 @@ class MAlert:
 		self.keepGoing = False
 		
 	def generateMessage(self,z, y, i):
-		#print "HERE 1 ", z
-		#print(self.mins[z])
-		#print(self.maxs[z])
-		#print(len(self.mailSent))
 		if(not self.mailSent[z]):
-			#print("try")
-			# self.message.append(("On "
-				# +time.asctime( time.localtime(time.time()) )
-				# +", the "+self.devices[i].getFrame().getTitle()+"'s "
-				# + self.devices[i].getFrame().getNicknames()[y] + " was "+
-				# str(self.devices[i].getFrame().getReadings()[y])+
-				# self.devices[i].getFrame().getUnits()[y] +
-				# " which is out of the specified range of "
-				# +str(self.mins[z]) 
-				# + self.devices[i].getFrame().getUnits()[y]+
-				# " - " +str(self.maxs[z])+
-				# self.devices[i].getFrame().getUnits()[y]+"."))
 			self.message.append(("Time: "
 				+time.asctime( time.localtime(time.time()) )
 				+" | "+self.devices[i].getFrame().getTitle()+"->"
@@ -113,16 +92,6 @@ class MAlert:
 				self.devices[i].getFrame().getUnits()[y]+"."))
 			
 			self.mailSent[z] = True
-				
-		# except:
-			# print("except")
-			# self.mailSent.append(False)
-			
-			#print(self.mins)
-			#print(self.mins[z])
-		#print "HERE 2 ",z
-		#print self.message
-			
 	def sendMail(self, i, y, z):
 		'''Send mail if the given amount of time has elapsed.'''
 		HOURS_BETWEEN_EMAILS = 0.0003
@@ -130,11 +99,6 @@ class MAlert:
 		
 		
 		if(HOURS_BETWEEN_EMAILS<elapsedHrs):
-			# NMail.NMail(self.contacts[z],self.devices[i].getFrame()
-				# .getTitle(), self.devices[i].getFrame().getNicknames()[y], str(self.message))
-			#print str(self.devices[i].getFrame().getNicknames()[y])
-			#print str(self.message)
-			#print self.contacts[z].split(',')
 			success, address = self.tele.send_sms(self.devices[i].getFrame().getNicknames()[y], 
 									str(self.message), 
 									self.contacts[z].split(','),
@@ -142,16 +106,11 @@ class MAlert:
 			if (not success):
 				print("Couldn't send email to group: "+str(self.contacts[z].split(','))+ 
 				", someone may be missing from the registry or incorrectly entered.")
-			#print(self.message)
-			#else:
-				#print("Mail sent")
 			self.message = []
 			self.mailSent = []
 			for i in range(0, len(self.devices)):
 				for y in range(0, len(self.devices[i].getFrame().getNicknames())):
 					if(self.devices[i].getFrame().getNicknames()[y] is not None):
 						self.mailSent.append(False)
-						#print(len(self.mailSent))
-			
 			self.t1 = time.time()
 	

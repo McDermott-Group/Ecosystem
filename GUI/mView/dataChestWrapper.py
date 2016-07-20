@@ -48,7 +48,6 @@ class dataChestWrapper:
 		# These arrays will hold all dataChest data sets.
 		self.dataSets = []
 		self.hasData = []
-		#self.hasValue = False
 		# The done function must be called when the GUI exits
 		atexit.register(self.done)
 		# The datalogging is executed on its own thread
@@ -104,9 +103,6 @@ class dataChestWrapper:
 		# If the dataset does not already exist, we must create it.
 		else:
 			print("Creating dataset for "+title)
-			#self.createNewDataset(i)
-
-			
 			# Name of the parameter. This is the name of the parameter
 			# displayed on the gui except without spaces or 
 			# non-alphanumerical characters.
@@ -169,7 +165,8 @@ class dataChestWrapper:
 					vars.append(np.nan)
 				#print(vars)
 				self.dataSets[i].addData([vars])
-
+        #sys.exit(0)
+        
 	def save(self):
 		'''Stores the data'''
 		# For all datasets, check if there are readings
@@ -179,8 +176,6 @@ class dataChestWrapper:
 				# If the device did not have any readings and now it does
 				# then we want to create a dataset.
 				if(not self.hasData[i]):
-					#self.hasValue = True
-				
 					self.configureDataSets(i)
 		# For all datasets		
 		for i in range(0, len(self.dataSets)):
@@ -199,9 +194,7 @@ class dataChestWrapper:
 					if(self.devices[i].getFrame().getNicknames()
 						[y] is not None):
 						# If the device has readings
-						#print "readings: ",self.devices[i].getFrame().getReadings()[y]
 						if(self.devices[i].getFrame().getReadings() is not None):
-							#print self.devices[i].getFrame().getTitle(),":", self.devices[i].getFrame().getReadings()[y]
 							if(self.devices[i].getFrame().getReadings()[y]
 								is not None):
 								readings.append(float(self.devices[i].getFrame().getReadings()[y]))
@@ -216,9 +209,7 @@ class dataChestWrapper:
 					depvars.extend(readings)
 					vars.extend(indepvars)
 					vars.extend(depvars)
-					#print vars
 					varslist = self.dataSets[i].getVariables()
-					#print "varslist: ", varslist
 					try:
 						self.dataSets[i].addData([vars])
 					except:

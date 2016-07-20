@@ -58,8 +58,7 @@ class MFrame:
 	plotLength = None
 	# Hold the datachest object
 	dataSet = None
-	#def __init__(self):
-		#print("New Frame for "+self.serverTitle)
+
 	def setTitle(self, title):
 		self.serverTitle = title
 	def getTitle(self):

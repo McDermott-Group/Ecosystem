@@ -43,10 +43,10 @@ class MMail:
 			# Login
 		#print(msg.as_string())
 		if(len(To) is not 0):
-			print To
+			#print To
 			smtpObj.login('physics.labrad@gmail.com', 'mcdermott')
 			# Send the mail
-			print("To")
+			#print("To")
 			smtpObj.sendmail('physics.labrad@gmail.com',To.split(',') , msg.as_string())         
 			print "Successfully sent mail"
 		smtpObj.quit()
