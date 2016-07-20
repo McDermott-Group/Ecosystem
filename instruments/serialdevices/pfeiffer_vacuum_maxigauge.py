@@ -187,8 +187,6 @@ class PfeifferVacuumControlServer(DeviceServer):
         t1 = time.time()
         self.dev = self.selectedDevice(c)
         yield self.getPressures(self.dev)
-        print(time.time() - t1)
-        #print(self.measurements)
         returnValue(self.measurements)
         
     @inlineCallbacks

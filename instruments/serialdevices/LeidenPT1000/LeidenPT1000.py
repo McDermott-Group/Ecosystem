@@ -94,7 +94,6 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
         prevRow = [0]
         for i, row in enumerate(reader):
             for y, cell in enumerate(row[1::]):
-                #print cell
                 prev = curr[:]
                 try:
                     curr[0] = float(cell)
@@ -106,9 +105,7 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
                         sign = -1
                 except:
                     continue
-                
                 if(float(prev[0]*sign)<=R*sign<float(curr[0]*sign)):
-                    #print prev, curr
                     fac = (curr[0]-R)/(curr[0]-prev[0])
                     return curr[1]*(1-fac)+prev[1]*fac
             prevRow = row    
@@ -117,38 +114,20 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
     @setting(100, 'Get Temperatures', returns = '*?')
     def getTemperatures(self, ctx):
         readings = []
-        #print "HEREA"
         self.dev = self.selectedDevice(ctx)
-        #print "HEREB"
         for i in range(2):
-            #print "HEREC"
             yield self.dev.write_line(str(i+1))
-            #print "HERED"
             yield sleep(0.1)
-            #print "HEREE"
             reading = yield self.dev.read_line()
             reading = reading.strip()
-            print reading
-            #print "HEREF"
             if(reading == "OL"):
-                #print "HEREG"
-                #print "nothing connected"
                 readings.append(np.nan)
-                #print "HEREH"
             elif len(reading) is 0:
-                #print "HEREI"
-                #print "length is 0"
                 readings.append(np.nan)
             else:
-                # print type(reading)
                 readings.append(self.resToTemp(float(reading))+273.15)
-                #print "HEREJ"
-            #print "reading1: ", reading
         
         readings = readings*units.K
-        print "Readings: ",readings
-        print "Type: ",type(readings)
-        #print readings
         returnValue(readings)
             
     @setting(200, 'Get Device Info', returns = 's')
