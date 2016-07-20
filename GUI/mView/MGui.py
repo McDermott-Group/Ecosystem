@@ -69,7 +69,6 @@ class MGui(QtGui.QMainWindow):
 		
 		self.mainHBox.addLayout(self.mainVBox[self.VBoxColumn])
 		
-	
 		menubar = self.menuBar()
 		menubar.setStyleSheet("QMenuBar {background-color: rgb(189, 195, 199)}"
 				"QMenuBar::item {background: transparent} QMenu{background-color:rgb(189, 195, 199)}")
@@ -80,17 +79,12 @@ class MGui(QtGui.QMainWindow):
 		exitAction.setShortcut('Ctrl+Q')
 		exitAction.setStatusTip('Exit application')
 		exitAction.triggered.connect(QtGui.qApp.quit)
-		
-		DCSettingsAction = QtGui.QAction('&Settings...', self)
-		
+				
 		NotifierSettingsAction = QtGui.QAction('&Settings...', self)
 		NotifierSettingsAction.triggered.connect(self.openNotifierSettings)
 		
 		fileMenu = menubar.addMenu('&File')
 		fileMenu.addAction(exitAction)
-		
-		DCMenu = menubar.addMenu('&Data Chest')
-		DCMenu.addAction(DCSettingsAction)
 		
 		NotifierMenu = menubar.addMenu('&Notifier')
 		NotifierMenu.addAction(NotifierSettingsAction)
