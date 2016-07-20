@@ -16,9 +16,9 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Omega Ratemeter Server
-version = 1.0.15
-description = Monitors flow
+name = Omega Ratemeter
+version = 1.0.16
+description = Monitors water flow
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -88,8 +88,8 @@ class OmegaRatemeterWrapper(DeviceWrapper):
 
 
 class OmegaRatemeterServer(DeviceServer):
-    deviceName = 'Omega Ratemeter Server'
-    name = 'Omega Ratemeter Server'
+    deviceName = 'Omega Ratemeter'
+    name = 'Omega Ratemeter'
     deviceWrapper = OmegaRatemeterWrapper
     
     @inlineCallbacks
@@ -166,7 +166,7 @@ class OmegaRatemeterServer(DeviceServer):
         # know that it was the end of the command.
         #print("getting rate")
         yield dev.write_line("@U?V\r")
-        yield time.sleep(0.5)
+        yield sleep(0.5)
         reading = yield dev.read_line()
         # Instrument randomly decides not to return, here's a hack.
         if not reading:
