@@ -43,7 +43,8 @@ class dataChestWrapper:
 		'''Initiallize the dataChest'''
 		# Define the current time
 		now = datetime.datetime.now()
-		# Create a devices reference that can be accessed outside of this scope.
+		# Create a devices reference that can be accessed 
+        # outside of this scope.
 		self.devices = devices
 		# These arrays will hold all dataChest data sets.
 		self.dataSets = []
@@ -99,7 +100,8 @@ class dataChestWrapper:
 					modify = True)
 				foundit = True
 		if(foundit):
-			print("Previously existing data set found for "+title+": "+existingFiles[0][y])
+			print("Previously existing data set found for "+title+": "
+                +existingFiles[0][y])
 		# If the dataset does not already exist, we must create it.
 		else:
 			print("Creating dataset for "+title)
@@ -165,7 +167,6 @@ class dataChestWrapper:
 					vars.append(np.nan)
 				#print(vars)
 				self.dataSets[i].addData([vars])
-        #sys.exit(0)
         
 	def save(self):
 		'''Stores the data'''
@@ -197,7 +198,8 @@ class dataChestWrapper:
 						if(self.devices[i].getFrame().getReadings() is not None):
 							if(self.devices[i].getFrame().getReadings()[y]
 								is not None):
-								readings.append(float(self.devices[i].getFrame().getReadings()[y]))
+								readings.append(float(self.devices[i]
+                                    .getFrame().getReadings()[y]))
 							else:
 								readings.append(np.nan)
 						else:
@@ -213,8 +215,13 @@ class dataChestWrapper:
 					try:
 						self.dataSets[i].addData([vars])
 					except:
-						print self.devices[i].getFrame().getTitle()+" ERROR: could not store data, this might be due to a change made to the parameters of the device,"
-						" if this is the case thene either delete the data set from the current storage directory or move it somewhere else."
+						print self.devices[i].getFrame().getTitle()+( 
+                            "ERROR: could not store data, this might be due "
+                            "to a change made to the parameters of the device, "
+                            "if this is the case thene either delete the " 
+                            "data set from the current storage directory or "
+                            "move it somewhere else."
+                        )    
 		# Keep the thread going. Without this, the thread terminates and
 		# is garbage-collected.
 		threading.Timer(1, self.save).start()

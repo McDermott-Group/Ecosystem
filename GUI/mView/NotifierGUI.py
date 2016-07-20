@@ -77,23 +77,30 @@ class NotifierGUI(QtGui.QDialog):
 					if(nickname is not None):
 						key = title+":"+nickname
 						deviceDataArray = []
-						deviceDataArray.append(self.alert.allWidgetDict[key][0].checkState())
+						deviceDataArray.append(self.alert
+                            .allWidgetDict[key][0].checkState())
 						if len(self.alert.allWidgetDict[key][1].text()) is not 0:
-							deviceDataArray.append(float(self.alert.allWidgetDict[key][1].text()))
+							deviceDataArray.append(float(self.alert
+                                .allWidgetDict[key][1].text()))
 						else:
 							deviceDataArray.append('')
 						if len(self.alert.allWidgetDict[key][2].text()) is not 0:
-							deviceDataArray.append(float(self.alert.allWidgetDict[key][2].text()))
+							deviceDataArray.append(float(self.alert
+                                .allWidgetDict[key][2].text()))
 						else:
 							deviceDataArray.append('')
-						deviceDataArray.append(self.alert.allWidgetDict[key][3].text())
-						if(deviceDataArray[1]>deviceDataArray[2] and deviceDataArray[1] is not None
+						deviceDataArray.append(self.alert
+                            .allWidgetDict[key][3].text())
+						if(deviceDataArray[1]>deviceDataArray[2]
+                            and deviceDataArray[1] is not None
 							and deviceDataArray[2] is not None):
 							#print(deviceDataArray[1])
 							raise
 						self.allDataDict[title+":"+nickname] = deviceDataArray
 				# Pickle the arrays and store them
-				pickle.dump(self.allDataDict, open(os.path.join(self.location, 'NotifierConfig.mview'), 'wb'))
+				pickle.dump(self.allDataDict, open(
+                    os.path.join(self.location, 'NotifierConfig.mview')
+                    , 'wb'))
 				print("Data Saved")
 		except ValueError:
 			
@@ -191,10 +198,14 @@ class AlertConfig(QtGui.QWidget):
 													QtGui.QLineEdit(),
 													QtGui.QLineEdit(),
 													QtGui.QLineEdit()]	
-							self.allWidgetDict[key][0].setChecked(self.allDataDict[key][0])
-							self.allWidgetDict[key][1].setText(str(self.allDataDict[key][1]))
-							self.allWidgetDict[key][2].setText(str(self.allDataDict[key][2]))
-							self.allWidgetDict[key][3].setText(str(self.allDataDict[key][3]))
+							self.allWidgetDict[key][0].setChecked(
+                                self.allDataDict[key][0])
+							self.allWidgetDict[key][1].setText(
+                                str(self.allDataDict[key][1]))
+							self.allWidgetDict[key][2].setText(
+                                str(self.allDataDict[key][2]))
+							self.allWidgetDict[key][3].setText(
+                                str(self.allDataDict[key][3]))
 					else:
 						self.allWidgetDict[key] = [QtGui.QCheckBox(),
 													QtGui.QLineEdit(),
@@ -224,7 +235,8 @@ class AlertConfig(QtGui.QWidget):
 	def openData(self):
 		'''Retreive a user's previous settings.'''
 		try:
-			self.allDataDict = pickle.load(open(os.path.join(self.location, 'NotifierConfig.mview'), 'rb'))
+			self.allDataDict = pickle.load(open(os.path.join(
+                self.location, 'NotifierConfig.mview'), 'rb'))
 			NotifierGUI.allDataDict = self.allDataDict
 			print "Config Data Opened"
 

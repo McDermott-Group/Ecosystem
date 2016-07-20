@@ -54,7 +54,9 @@ class MAlert:
 						#print self.mins
 						if len(self.mins) is not 0:
 							if(len(str(self.mins[z])) is not 0):
-								if(float(self.mins[z])>float(self.devices[i].getFrame().getReadings()[y])):
+								if(float(self.mins[z])>
+                                    float(self.devices[i].getFrame()
+                                    .getReadings()[y])):
 								# If a min has been specified
 									if(self.checkBoxes[z]):
 									#print "mins", (self.mins)
@@ -63,7 +65,9 @@ class MAlert:
 									#print(self.mins[z])
 						if len(self.maxs) is not 0:
 							if(len(str(self.maxs[z])) is not 0):
-								if(float(self.maxs[z])<float(self.devices[i].getFrame().getReadings()[y])):
+								if(float(self.maxs[z])<
+                                    float(self.devices[i].getFrame()
+                                    .getReadings()[y])):
 									if(self.checkBoxes[z]):
 										self.generateMessage(z,y,i)
 										self.sendMail(i, y, z)
@@ -99,13 +103,15 @@ class MAlert:
 		
 		
 		if(HOURS_BETWEEN_EMAILS<elapsedHrs):
-			success, address = self.tele.send_sms(self.devices[i].getFrame().getNicknames()[y], 
+			success, address = self.tele.send_sms(
+                self.devices[i].getFrame().getNicknames()[y], 
 									str(self.message), 
 									self.contacts[z].split(','),
 									"labrad_physics")
 			if (not success):
-				print("Couldn't send email to group: "+str(self.contacts[z].split(','))+ 
-				", someone may be missing from the registry or incorrectly entered.")
+				print("Couldn't send email to group: "+
+                    str(self.contacts[z].split(','))+ 
+                    ", someone may be missing from the registry or incorrectly entered.")
 			self.message = []
 			self.mailSent = []
 			for i in range(0, len(self.devices)):
