@@ -47,51 +47,6 @@ class nViewer:
         except:
             print("Please start the telecomm server")
             sys.exit(1)
-        ################################################################
-        # How to Use nViewer:
-        #    nViewer can be used with any LabRAD server, and given a new 
-        #   device class (it must have a "prompt" function), anything
-        #   else. It is meant to be a tool which allows easier creation
-        #   of straightforward GUIs. To create you own, make a new class
-        #   in which you establish a connection to LabRAD, create new
-        #    device instances, and start the GUI.
-        #
-        # Here are the steps to create your own GUI.
-        # 1. Establish LabRAD connection:
-        #        cxn = labrad.connect()
-        #
-        # 2. Create device:
-        #         ex = Device("NAME OF LABRAD SERVER", 
-        #                    "TITLE TO BE SHOWN ON GUI", 
-        #                     [LIST OF FIELDS TO BE DISPLAYED ON GUI],
-        #                     [LIST OF THOSE FIELDS' CORRESPONDING SERVER
-        #                           SETTINGS], 
-        #                     [ARGUMENTS TO BE PASSED TO THOSE SETTINGS]
-        #                      CONNECTION REFERENCE,
-        #                    ["LIST", "OF", "BUTTONS"], 
-        #                    ["SETTINGS", "ACTIVATED", "BY BUTTONS"], 
-        #                       ["ALERT TO BE DISPLAYED WITH EACH BUTTON
-        #                           PRESS", "NONE IF NO MESSAGE"]
-        #                   ["ARGUMENTS PASSED TO THE SETTINGS TRIGGERED
-        #                           BY THE BUTTONS"]
-        #                    "Y-AXIS LABEL" (OPTIONAL),
-        #                    "SELECT DEVICE COMMAND (OPTIONAL FOR
-        #                           SERVERS THAT DO NOT REQUIRE DEVICE
-        #                           SELECTION)", 
-        #                    "DEVICE NUMBER")
-        #
-        # 3. Start the dataChest datalogger, this line can be commented
-        #    out if no datalogging is required:
-        #        self.chest = dataChestWrapper(self.devices)
-        #    
-        # 4. Start nGui and name the window:
-        #        self.gui = NGui.NGui()
-        #        self.gui.startGui(self.devices, 'Window Title')
-        #
-        # 5. Initialize nViewer OUTSIDE OF THE CLASS:
-        #        viewer = nViewer()    
-        #        viewer.__init__()
-        ################################################################
     
         PT1000s = Device("PT1000s")
         PT1000s.connection(cxn)
@@ -99,6 +54,7 @@ class nViewer:
         PT1000s.addParameter("3K", "get_temperatures", None, 0)
         PT1000s.addParameter("50K", "get_temperatures", None, 1)
         PT1000s.selectDeviceCommand("select_device", 0)
+        PT1000s.setYLabel("Temperature")
         PT1000s.addPlot()
         PT1000s.begin()
         self.devices.append(PT1000s)
@@ -119,6 +75,7 @@ class nViewer:
         LeidenDRTemperature.selectDeviceCommand("select_device", 0)
         LeidenDRTemperature.addPlot()
         LeidenDRTemperature.begin()
+        LeidenDRTemperature.setYLabel("Temperature")
         self.devices.append(LeidenDRTemperature)
 
         Compressor = Device("Compressor")
@@ -149,6 +106,7 @@ class nViewer:
         Flow.setServerName("omega_ratemeter")
         Flow.addParameter("External Water Flow Rate", "get_rate")
         Flow.selectDeviceCommand("select_device", 0)
+        Flow.setYLabel("Flow Rate")
         Flow.addPlot()
         Flow.begin()
         self.devices.append(Flow)
@@ -171,7 +129,7 @@ class nViewer:
         Vacuum.addParameter("OVC Pressure", "get_pressures", None, 3)
         Vacuum.addParameter("IVC Pressure", "get_pressures", None, 4)
         Vacuum.addParameter("Still Pressure", "get_pressures", None, 5)
-
+        Vacuum.setYLabel("Pressure")
         Vacuum.selectDeviceCommand("select_device", 0)
         Vacuum.begin()
         self.devices.append(Vacuum)
