@@ -8,6 +8,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 import random
+import threading
 class mGraph(QtGui.QWidget):
 	def __init__(self, device, parent=None):
 		QtGui.QWidget.__init__( self,parent)
@@ -33,6 +34,7 @@ class mGraph(QtGui.QWidget):
 		self.timer = QtCore.QTimer(self)
 		self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
 		self.timer.start(1000)
+		
 	 
 		self.hideButton = QtGui.QPushButton("Show Plot")
 		self.hideButton.clicked.connect(self.togglePlot)
@@ -102,7 +104,15 @@ class mGraph(QtGui.QWidget):
 
 		self.setLayout(layout)
 	def go_home(self, *args, **kwargs):
-		self.timer.start(1000)
+		# self.timer.start(1000)
+		
+		self.deviceThread = threading.Thread(target = 
+			self.plot, args=[self.currTimeRange])
+		# If the main thread stops, stop the child thread
+		self.deviceThread.daemon = True
+		# Start the thread
+		self.deviceThread.start()
+		
 		self.plot(self.currTimeRange)
 	def disableAutoUpdate(self, event):
 		self.timer.stop()
@@ -150,35 +160,64 @@ class mGraph(QtGui.QWidget):
 			self.currTimeRange = timeRange
 			self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
 			self.timer.start(1000)
+
 		dataSet =  self.device.getFrame().getDataSet()
+		# If the dataset exists
 		if dataSet is not None:
+			# Get all data from the dataset
 			data = dataSet.getData()
 			self.ax.hold(False)
+			# for each entry in the dataset [[time], [[data], [data], [data...]]]
+			#print data
 			for i in range(1, len(data[-1])):
+				# Get colum. aka all values from parameter i over time
 				column = [row[i] for row in data]
+				# Get the corresponding times that the values were recorded
 				times = [row[0] for row in data]
+				# If the there is  no defined a time range
 				if self.currTimeRange is None:
-					self.ax.plot(times,column,label =
-                        self.device.getFrame().getNicknames()[i-1])
+					# Plot all of the data (columns) vs time
+					self.ax.plot(times, column, label =
+                        dataSet.getVariables()[1][i-1][0])
 				else:
+					# Otherwise, if the user PREVIOUSLY defined a time range, 
+					# we need to look for the beginning of it.
+					# Start by getting the current time
 					dstamp = dateStamp()
+					# The dataset should be from now to -timerange
+					# time(now)-time(range)
 					startTime = dstamp.utcNowFloat()-self.currTimeRange
+					# If timeRange is not None, then we know we need
+					# to display only a certain range of values
+					# However, if the starttime defined is less than the lowest time, we
+					# do not have enough data to display the whole thing, so we must 
+					# display all that we have instead. We do this by setting
+					# currTimeRange = 0.
 					if timeRange is not None and startTime<float(data[0][0]):
 						self.currTimeRange = None
+					# For all entries in data
 					for y in range(len(data)):
+						# We are searching backwards through the dataset to find a time 
+						# just before the time range specified
 						if data[len(data)-y-1][0] < startTime:
+							# once we find it, we know the beginning index of the data to be
+							# displayed
 							index = y
+							# Get the times and datafrom the index and columns to the end of the dataset
 							times = [row[0] for row in data[-index:]]
 							column = [row[i] for row in data[-index:]]
+							# Exit the loop
 							break
+					# Plot yo stuff
+					print i
+					print dataSet.getVariables()
 					self.ax.plot(times,column,label = 
-                        self.device.getFrame().getNicknames()[i-1])
-				
+                        dataSet.getVariables()[1][i-1][0])
+				# Add a legend
 				self.ax.legend(loc='upper left')
 				self.ax.set_title(self.device.getFrame().getTitle())
 				if(self.device.getFrame().getYLabel() is not None 
                     and len(self.device.getFrame().getCustomUnits()) is not 0):
-                    
 					self.ax.set_ylabel(self.device.getFrame().getYLabel()+" ("+
 							self.device.getFrame().getCustomUnits()+")")
 				elif (self.device.getFrame().getYLabel() is not None 
@@ -191,5 +230,6 @@ class mGraph(QtGui.QWidget):
 			
 				self.ax.hold(True)
 			
-
+			
 			self.canvas.draw()
+	
