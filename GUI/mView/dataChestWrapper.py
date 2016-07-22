@@ -99,9 +99,11 @@ class dataChestWrapper:
 				self.dataSets[i].openDataset(existingFiles[0][y], 
 					modify = True)
 				foundit = True
+			if(foundit):
+				print("Previously existing data set found for "+title+": "
+					+existingFiles[0][y])
 		if(foundit):
-			print("Previously existing data set found for "+title+": "
-                +existingFiles[0][y])
+			pass
 		# If the dataset does not already exist, we must create it.
 		else:
 			print("Creating dataset for "+title)
@@ -187,6 +189,7 @@ class dataChestWrapper:
 				vars = []
 				readings = []
 				# Get the newest data
+				#print self.devices[i].getFrame().getReadings()
 				for y in range(0, len(self.devices[i].getFrame()
 					.getNicknames())):
 					# This checks if the reading is displayed on the GUI
@@ -199,7 +202,7 @@ class dataChestWrapper:
 							if(self.devices[i].getFrame().getReadings()[y]
 								is not None):
 								readings.append(float(self.devices[i]
-                                    .getFrame().getReadings()[y]))
+                                    .getFrame().getReadings()[self.devices[i].getFrame().getReadingIndices()[y]]))
 							else:
 								readings.append(np.nan)
 						else:

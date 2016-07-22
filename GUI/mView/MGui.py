@@ -67,7 +67,7 @@ class MGui(QtGui.QMainWindow):
 		# Stack the device frames
 		# #self.setLayout(self.mainHBox)
 		
-		self.mainHBox.addLayout(self.mainVBox[self.VBoxColumn])
+		#self.mainHBox.addLayout(self.mainVBox[self.VBoxColumn])
 		
 		menubar = self.menuBar()
 		menubar.setStyleSheet("QMenuBar {background-color: rgb(189, 195, 199)}"
@@ -90,7 +90,7 @@ class MGui(QtGui.QMainWindow):
 		NotifierMenu.addAction(NotifierSettingsAction)
 		# For each device, add a GUI frame for it.
 		numWidgets = 0
-        
+		
 		self.scrollArea = QtGui.QScrollArea()
 		
 		
@@ -101,16 +101,21 @@ class MGui(QtGui.QMainWindow):
 		frameSizePolicy = QtGui.QSizePolicy()
 		frameSizePolicy.setVerticalPolicy(4)
 		frameSizePolicy.setHorizontalPolicy(QtGui.QSizePolicy.Preferred)
+		
+		self.mainVBox.append(QtGui.QVBoxLayout())
+		self.mainVBox.append(QtGui.QVBoxLayout())
+		self.mainHBox.addLayout(self.mainVBox[0])
+		self.mainHBox.addLayout(self.mainVBox[1])
+		self.VBoxColumn = 0
 		for i in range(0,len(self.devices)):
-			numWidgets = numWidgets+1
-			#Append a new gui frame
+			# numWidgets = numWidgets+1
+			# #Append a new gui frame
 			self.frames.append(QtGui.QFrame(self))
-			if(math.sqrt(len(devices))<numWidgets):
-				self.mainVBox[self.VBoxColumn].addStretch(1)
-				self.VBoxColumn = self.VBoxColumn+1;
-				self.mainVBox.append(QtGui.QVBoxLayout())
-				self.mainHBox.addLayout(self.mainVBox[self.VBoxColumn])
-				numWidgets = 0
+
+			if self.VBoxColumn == 0:
+				self.VBoxColumn = 1
+			else:
+				self.VBoxColumn = 0
 			self.mainVBox[self.VBoxColumn].addWidget(self.frames[i])
 			# Add new titles, grids, parameters, 
 			# and lcds for the new parameter
@@ -132,7 +137,7 @@ class MGui(QtGui.QMainWindow):
 			self.frames[i].setStyleSheet("background: rgb(52, 73, 94)")
 			self.frames[i].setFrameShape(QtGui.QFrame.Panel)
 			self.frames[i].setFrameShadow(QtGui.QFrame.Plain)
-			self.frames[i].setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+			self.frames[i].setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
 			self.ratio =float(self.scrnWidth)/1800+1
 			#print(self.ratio)
 			self.frames[i].setLineWidth(self.ratio)
@@ -224,8 +229,9 @@ class MGui(QtGui.QMainWindow):
 				dc = MGrapher.mGraph(self.devices[i])
 				yPos = len(self.devices[i].getFrame().getNicknames())+3
 				self.grids[i].addWidget(dc, yPos, 0,yPos,3 )
-		self.mainVBox[self.VBoxColumn].addStretch(1)
-		
+				
+		self.mainVBox[0].addStretch(0)
+		self.mainVBox[1].addStretch(0)
 		print("Gui initialized")
 		return
 	def openNotifierSettings(self):

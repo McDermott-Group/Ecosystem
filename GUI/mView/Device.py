@@ -215,7 +215,7 @@ class Device:
 							.settingNames[i])()
 					# If the reading has a value and units
 					if isinstance(reading, labrad.units.Value):
-						# Some installations like _value, some like value
+						# Some labrad installations like _value, some like value
 						try:
 							readings.append(reading._value)
 						except:
@@ -224,7 +224,9 @@ class Device:
 					# If the reading is an array of values and units
 					elif(isinstance(reading, labrad.units.ValueArray)):
 						# loop through the array
+						readings = []
 						for i in range(0, len(reading)):
+							
 							if isinstance(reading[i], labrad.units.Value):
 								try:
 									readings.append(reading[i]._value)
@@ -235,8 +237,9 @@ class Device:
 							else:
 								readings.append(reading[i])
 								units.append("")
+						#print readings
 					elif(type(reading) is list):
-						
+						readings = []
 						for i in range(0, len(reading)):
 							if(reading[i] is labrad.units.Value):
 								try:

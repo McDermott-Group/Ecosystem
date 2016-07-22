@@ -100,27 +100,6 @@ class nViewer:
         Compressor.connection(cxn)
         Compressor.begin()
         self.devices.append(Compressor)
-
-        Flow = Device("Flow Meter")
-        Flow.connection(cxn)
-        Flow.setServerName("omega_ratemeter")
-        Flow.addParameter("External Water Flow Rate", "get_rate")
-        Flow.selectDeviceCommand("select_device", 0)
-        Flow.setYLabel("Flow Rate")
-        Flow.addPlot()
-        Flow.begin()
-        self.devices.append(Flow)
-
-        Temperature = Device("Temperature")
-        Temperature.connection(cxn)
-        Temperature.setServerName("omega_temperature_monitor")
-        Temperature.addParameter("Exteranal Water Temperature",
-                "get_temperature")
-        Temperature.selectDeviceCommand("select_device", 0)
-        Temperature.addPlot()
-        Temperature.setYLabel("Temperature")
-        Temperature.begin()
-        self.devices.append(Temperature)
         
         Vacuum = Device("Vacuum")
         Vacuum.setServerName("pfeiffer_vacuum_maxigauge")
@@ -134,6 +113,27 @@ class nViewer:
         Vacuum.begin()
         self.devices.append(Vacuum)
         
+        Temperature = Device("Temperature")
+        Temperature.connection(cxn)
+        Temperature.setServerName("omega_temperature_monitor")
+        Temperature.addParameter("Exteranal Water Temperature",
+                "get_temperature")
+        Temperature.selectDeviceCommand("select_device", 0)
+        Temperature.addPlot()
+        Temperature.setYLabel("Temperature")
+        Temperature.begin()
+        self.devices.append(Temperature)
+
+        Flow = Device("Flow Meter")
+        Flow.connection(cxn)
+        Flow.setServerName("omega_ratemeter")
+        Flow.addParameter("External Water Flow Rate", "get_rate")
+        Flow.selectDeviceCommand("select_device", 0)
+        Flow.setYLabel("Flow Rate")
+        Flow.addPlot()
+        Flow.begin()
+        self.devices.append(Flow)
+
         # Start the datalogger. This line can be commented
         # out if no datalogging is required.
         self.chest = dataChestWrapper(self.devices)
