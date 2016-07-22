@@ -28,8 +28,9 @@ from multiprocessing.pool import ThreadPool
 import threading
 import labrad
 import labrad.units as units
+import time
 from dataChestWrapper import *
-
+from tendo import singleton
 
 class nViewer:
     gui = None
@@ -38,16 +39,25 @@ class nViewer:
     def __init__(self, parent = None):
         # Establish a connection to LabRAD.
         try:
+            me = singleton.SingleInstance() # will sys.exit(-1) if other instance is running
+        except:
+            print("Multiple instances cannot be running")
+            time.sleep(2)
+            sys.exit(1)
+        try:
             cxn = labrad.connect()
         except:
             print("Please start the LabRAD manager")
+            time.sleep(2)
             sys.exit(0)
         try:
             tele = cxn.telecomm_server
         except:
             print("Please start the telecomm server")
+            time.sleep(2)
             sys.exit(1)
     
+        
         PT1000s = Device("PT1000s")
         PT1000s.connection(cxn)
         PT1000s.setServerName("goldstein_s_pt1000_temperature_monitor")
