@@ -8,13 +8,16 @@ from matplotlib.dates import DateFormatter, AutoDateFormatter, AutoDateLocator
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
-
+import logging as l
+LOG_FILENAME = 'mGrapherLog.log'
 import random
 import threading
 class mGraph(QtGui.QWidget):
     def __init__(self, device, parent=None):
         QtGui.QWidget.__init__( self,parent)
         
+        l.basicConfig(filename=LOG_FILENAME,level=l.DEBUG)
+        l.debug('mGrapher.py Log file')
         self.figure = plt.figure()
         
         self.canvas = FigureCanvas(self.figure)
@@ -112,14 +115,14 @@ class mGraph(QtGui.QWidget):
 
         self.setLayout(layout)
     def go_home(self, *args, **kwargs):
-        # self.timer.start(1000)
+        self.timer.start(1000)
         
-        self.deviceThread = threading.Thread(target = 
-            self.plot, args=[self.currTimeRange])
+        # self.deviceThread = threading.Thread(target = 
+            # self.plot, args=[self.currTimeRange])
         # If the main thread stops, stop the child thread
-        self.deviceThread.daemon = True
+        # self.deviceThread.daemon = True
         # Start the thread
-        self.deviceThread.start()
+        # self.deviceThread.start()
         
         self.plot(self.currTimeRange)
     def disableAutoUpdate(self, event):
@@ -175,81 +178,98 @@ class mGraph(QtGui.QWidget):
             # Get all data from the dataset
             data = dataSet.getData()
             self.ax.hold(False)
-            # for each entry in the dataset [[time], [[data], [data], [data...]]]
-            #print data
-            for i in range(1, len(data[-1])):
-                # Get colum. aka all values from parameter i over time
-                column = [row[i] for row in data]
-                # Get the corresponding times that the values were recorded
-                times = [datetime.datetime.fromtimestamp(row[0]) for row in data]
-                #print times
-                # If the there is  no defined a time range
-                if self.currTimeRange is None:
-                    # Plot all of the data (columns) vs time
-                    # self.ax.plot_date(times, column, label =
-                        # dataSet.getVariables()[1][i-1][0])
-                    pass
-                else:
-                    # Otherwise, if the user PREVIOUSLY defined a time range, 
-                    # we need to look for the beginning of it.
-                    # Start by getting the current time
-                    dstamp = dateStamp()
-                    # The dataset should be from now to -timerange
-                    # time(now)-time(range)
-                    startTime = dstamp.utcNowFloat()-self.currTimeRange
-                    # If timeRange is not None, then we know we need
-                    # to display only a certain range of values
-                    # However, if the starttime defined is less than the lowest time, we
-                    # do not have enough data to display the whole thing, so we must 
-                    # display all that we have instead. We do this by setting
-                    # currTimeRange = 0.
-                    if timeRange is not None and startTime<float(data[0][0]):
-                        self.currTimeRange = None
-                    # For all entries in data
-                    for y in range(len(data)):
-                        # We are searching backwards through the dataset to find a time 
-                        # just before the time range specified
-                        if data[len(data)-y-1][0] < startTime:
-                            # once we find it, we know the beginning index of the data to be
-                            # displayed
-                            index = y
-                            # Get the times and datafrom the index and columns to the end of the dataset
-                            times = [datetime.datetime.fromtimestamp(row[0]) for row in data[-index:]]
-                            column = [row[i] for row in data[-index:]]
-                            # Exit the loop
-                            break
-                    # Plot yo stuff
-                print "i: ",i
-                    #print dataSet.getVariables()
-                print  "len(data[-1]): ", len(data[-1])
-                self.ax.plot_date(times,column,'-',label = 
-                    dataSet.getVariables()[1][i-1][0])
-                # Add a legend
-                self.ax.legend(loc='upper left')
-                self.ax.set_title(self.device.getFrame().getTitle())
-                if(self.device.getFrame().getYLabel() is not None 
-                    and len(self.device.getFrame().getCustomUnits()) is not 0):
-                    self.ax.set_ylabel(self.device.getFrame().getYLabel()+" ("+
-                            self.device.getFrame().getCustomUnits()+")")
-                elif (self.device.getFrame().getYLabel() is not None 
-                    and len(self.device.getFrame().getUnits()[i-1]) is not 0):
-                    
-                    self.ax.set_ylabel(self.device.getFrame().getYLabel()+" ("+
-                            self.device.getFrame().getUnits()[i-1]+")")
-                            
-                self.ax.set_xlabel("Time")
-            
-                self.ax.hold(True)
-                locator = AutoDateLocator()
-                #self.ax.fmt_xdata = AutoDateFormatter()
-                #self.ax.xaxis.set_major_locator(locator)
-                self.ax.xaxis.set_major_locator(locator)
-                #self.ax.xaxis.set_major_formatter(DateFormatter('%m/%d'))
-                self.ax.xaxis.set_major_formatter(DateFormatter('%m/%d %H:%M:%S'))
-                self.figure.autofmt_xdate()
-                #self.figure.tight_layout()
-                self.ax.grid(True)
+            try:
+                # for each entry in the dataset [[time], [[data], [data], [data...]]]
+                #print data
+                for i in range(1, len(data[-1])):
+                    # Get colum. aka all values from parameter i over time
+                    column = [row[i] for row in data]
+                    # Get the corresponding times that the values were recorded
+                    times = [datetime.datetime.fromtimestamp(row[0]) for row in data]
+                    #print times
+                    # If the there is  no defined a time range
+                    if self.currTimeRange is None:
+                        # Plot all of the data (columns) vs time
+                        # self.ax.plot_date(times, column, label =
+                            # dataSet.getVariables()[1][i-1][0])
+                        pass
+                    else:
+                        # Otherwise, if the user PREVIOUSLY defined a time range, 
+                        # we need to look for the beginning of it.
+                        # Start by getting the current time
+                        dstamp = dateStamp()
+                        # The dataset should be from now to -timerange
+                        # time(now)-time(range)
+                        startTime = dstamp.utcNowFloat()-self.currTimeRange
+                        # If timeRange is not None, then we know we need
+                        # to display only a certain range of values
+                        # However, if the starttime defined is less than the lowest time, we
+                        # do not have enough data to display the whole thing, so we must 
+                        # display all that we have instead. We do this by setting
+                        # currTimeRange = 0.
+                        if timeRange is not None and startTime<float(data[0][0]):
+                            self.currTimeRange = None
+                        # For all entries in data
+                        for y in range(len(data)):
+                            # We are searching backwards through the dataset to find a time 
+                            # just before the time range specified
+                            if data[len(data)-y-1][0] < startTime:
+                                # once we find it, we know the beginning index of the data to be
+                                # displayed
+                                index = y
+                                # Get the times and datafrom the index and columns to the end of the dataset
+                                times = [datetime.datetime.fromtimestamp(row[0]) for row in data[-index:]]
+                                column = [row[i] for row in data[-index:]]
+                                # Exit the loop
+                                break
+                        # Plot yo stuff
+                    l.debug("")
+                    l.debug("Device: "+self.device.getFrame().getTitle())
+                    l.debug("i: "+ str(i))
+                        #print dataSet.getVariables()
+                    l.debug( "len(data[-1]): "+ str( len(data[-1])))
+                    l.debug("num rows: "+ str(dataSet.getNumRows()))
+                    l.debug( "len(data): "+ str(len(data)))
+                    self.ax.plot_date(times,column,'-',label = 
+                        dataSet.getVariables()[1][i-1][0])
+                    # Add a legend
+                    self.ax.legend(loc='upper left')
+                    self.ax.set_title(self.device.getFrame().getTitle())
+                    if(self.device.getFrame().getYLabel() is not None 
+                        and len(self.device.getFrame().getCustomUnits()) is not 0):
+                        self.ax.set_ylabel(self.device.getFrame().getYLabel()+" ("+
+                                self.device.getFrame().getCustomUnits()+")")
+                    elif (self.device.getFrame().getYLabel() is not None 
+                        and len(self.device.getFrame().getUnits()[i-1]) is not 0):
+                        
+                        self.ax.set_ylabel(self.device.getFrame().getYLabel()+" ("+
+                                self.device.getFrame().getUnits()[i-1]+")")
+                                
+                    self.ax.set_xlabel("Time")
                 
+                    self.ax.hold(True)
+                    locator = AutoDateLocator()
+                    #self.ax.fmt_xdata = AutoDateFormatter()
+                    #self.ax.xaxis.set_major_locator(locator)
+                    self.ax.xaxis.set_major_locator(locator)
+                    #self.ax.xaxis.set_major_formatter(DateFormatter('%m/%d'))
+                    self.ax.xaxis.set_major_formatter(DateFormatter('%m/%d %H:%M:%S'))
+                    self.figure.autofmt_xdate()
+                    #self.figure.tight_layout()
+                    self.ax.grid(True)
+            except Exception as e :
+               print "Error"
+               l.debus("DEVICE: "+self.device.getFrame().getTitle())
+               l.debug("ERROR")
+               l.debug( (type(e)))
+               l.debug( (e))
+               l.debug( "i: " + str(i))
+               l.debug( "len(data[-1]): " + str( len(data[-1])))
+               l.debug( "num rows: " + str(dataSet.getNumRows()))
+               l.debug( "len(data): " + str(len(data)))
+               l.debug( "data[-1]: " + str(data))
+               l.debug( "[row[1] for row in data] " + str([row[1] for row in data]))
+            
 
             self.canvas.draw()
     
