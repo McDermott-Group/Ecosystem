@@ -4,14 +4,17 @@ from functools import partial
 from dateStamp import *
 from dataChest import *
 import datetime
+import matplotlib
 from matplotlib.dates import DateFormatter, AutoDateFormatter, AutoDateLocator
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
+matplotlib.use('TkAgg')
 import logging as l
 LOG_FILENAME = 'mGrapherLog.log'
 import random
 import threading
+import traceback
 class mGraph(QtGui.QWidget):
     def __init__(self, device, parent=None):
         QtGui.QWidget.__init__( self,parent)
@@ -257,11 +260,14 @@ class mGraph(QtGui.QWidget):
                     self.figure.autofmt_xdate()
                     #self.figure.tight_layout()
                     self.ax.grid(True)
+                   
             except Exception as e :
                print "Error"
-               l.debus("DEVICE: "+self.device.getFrame().getTitle())
+               traceback.print_exc()
+               l.debug("DEVICE: "+self.device.getFrame().getTitle())
                l.debug("ERROR")
                l.debug( (type(e)))
+               l.debug(traceback.print_exc())
                l.debug( (e))
                l.debug( "i: " + str(i))
                l.debug( "len(data[-1]): " + str( len(data[-1])))
