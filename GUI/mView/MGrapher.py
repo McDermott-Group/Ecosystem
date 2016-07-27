@@ -230,9 +230,11 @@ class mGraph(QtGui.QWidget):
                     l.debug("Device: "+self.device.getFrame().getTitle())
                     l.debug("i: "+ str(i))
                         #print dataSet.getVariables()
+                    l.debug( "data[-1]: " + str(data[-1]))
                     l.debug( "len(data[-1]): "+ str( len(data[-1])))
                     l.debug("num rows: "+ str(dataSet.getNumRows()))
                     l.debug( "len(data): "+ str(len(data)))
+                    l.debug(str(times[-1]))
                     self.ax.plot_date(times,column,'-',label = 
                         dataSet.getVariables()[1][i-1][0])
                     # Add a legend
@@ -273,7 +275,7 @@ class mGraph(QtGui.QWidget):
                l.debug( "len(data[-1]): " + str( len(data[-1])))
                l.debug( "num rows: " + str(dataSet.getNumRows()))
                l.debug( "len(data): " + str(len(data)))
-               l.debug( "data[-1]: " + str(data))
+               l.debug( "data[-1]: " + str(data[-1]))
                l.debug( "[row[1] for row in data] " + str([row[1] for row in data]))
             
 
