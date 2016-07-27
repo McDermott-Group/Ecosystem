@@ -103,14 +103,14 @@ class ADRServer(DeviceServer):
                         'datetime' : datetime.datetime.utcnow(),
                         'cycle': 0,
                         'magnetV': numpy.NaN * units.V,
-                        'RuOxChan':'FAA',
-                        'RuOxChanSetTime':datetime.datetime.utcnow(),
-                        'PSCurrent':numpy.NaN * units.A,
-                        'PSVoltage':numpy.NaN * units.V,
-                        'maggingUp':False,
-                        'regulating':False,
-                        'regulationTemp':0.1,
-                        'PID_cumulativeError':0}
+                        'RuOxChan': 'FAA',
+                        'RuOxChanSetTime': datetime.datetime.utcnow(),
+                        'PSCurrent': numpy.NaN * units.A,
+                        'PSVoltage': numpy.NaN * units.V,
+                        'maggingUp': False,
+                        'regulating': False,
+                        'regulationTemp': 0.1,
+                        'PID_cumulativeError': 0}
         self.lastState = self.state.copy()
         # these are defaults.  they can be overridden in the registry by
         # including a setting with the same name.
@@ -216,7 +216,7 @@ class ADRServer(DeviceServer):
         if hasattr(self.instruments['Power Supply'],'connected') and self.instruments['Power Supply'].connected == True:
             try:
                 yield self.instruments['Power Supply'].initialize_ps()
-                self.logMessage('Power Supply Initialized.')
+                self.logMessage('Power Supply initialized.')
             except Exception as e:
                 self.logMessage( 'Power Supply could not be initialized.', alert=True)
 
@@ -263,7 +263,7 @@ class ADRServer(DeviceServer):
             yield instr.select_device( settings[1] )
             instr.connected = True
             if lastStatus != instr.connected:
-                self.logMessage(instrName+' Connected.')
+                self.logMessage(instrName+' connected.')
         except AttributeError as e: 
             instr.connected = False # may not have a select_device method (heat switch, for ex)
         except LRError as e:
@@ -277,12 +277,13 @@ class ADRServer(DeviceServer):
                 self.logMessage(message, alert=True)
         except Exception as e:
             instr.connected = False
-            self.logMessage('Could not connect to device for '+instrName+': '+str(e), alert=True)
+            self.logMessage('Could not connect to device for ' +
+                    instrName + ': ' + str(e) + '.', alert=True)
         
     @inlineCallbacks
     def _refreshInstruments(self):
         """We can manually have all gpib buses refresh the list of devices connected to them."""
-        self.logMessage('Refreshing Devices...')
+        self.logMessage('Refreshing devices...')
         serverList = yield self.client.manager.servers()
         for serv in [n for s,n in serverList]:#[tuple[1].replace(' ','_').lower() for tuple in serverList]:
             if 'gpib_bus' in serv or 'GPIB Bus' in serv:# or 'sim900_srs_mainframe' in serv:
@@ -314,9 +315,11 @@ class ADRServer(DeviceServer):
         try:
             with open(self.file_path+self.startDatetime.strftime("\\log_%y%m%d_%H%M.txt"), 'a') as f:
                 f.write( messageWithTimeStamp + '\n' )
-        except Exception as e: self.logMessage("Could not write to log file: " + str(e))
+        except Exception as e:
+            self.logMessage("Could not write to log file: " + str(e) + '.')
         print '[log] '+ message
         self.client.manager.send_named_message('Log Changed', (messageWithTimeStamp,alert))
+
     @inlineCallbacks
     def updateState(self):
         """ This takes care of the real time reading of the instruments.
@@ -332,7 +335,7 @@ class ADRServer(DeviceServer):
             self.state['CompressorStatus'] = None
             if hasattr(self.instruments['Compressor'],'connected') and self.instruments['Compressor'].connected == True:
                 try: self.state['CompressorStatus'] = self.instruments['Compressor'].status()
-                except Exception as e: print 'could not read compressor status',str(e)
+                except Exception as e: print 'could not read compressor status', str(e)
             # diode temps
             try:
                 self.state['T_60K'],self.state['T_3K'] = yield self.instruments['Diode Temperature Monitor'].get_diode_temperatures()
@@ -358,8 +361,10 @@ class ADRServer(DeviceServer):
                     if lastState != False:
                         self._refreshInstruments()
                 except AttributeError: pass # in case instrument didn't initialize properly and is None
-            if self.state['T_GGG']['K'] == 20.0: self.state['T_GGG'] = nan*units.K
-            if self.state['T_FAA']['K'] == 45.0: self.state['T_FAA'] = nan*units.K
+            if self.state['T_GGG']['K'] == 20.0:
+                self.state['T_GGG'] = nan*units.K
+            if self.state['T_FAA']['K'] == 45.0:
+                self.state['T_FAA'] = nan*units.K
             # voltage across magnet
             try: self.state['magnetV'] = yield self.instruments['Magnet Voltage Monitor'].get_magnet_voltage()
             except Exception as e:
@@ -399,7 +404,8 @@ class ADRServer(DeviceServer):
                 newTemps = [self.state[t]['K'] for t in ['T_60K','T_3K','T_GGG','T_FAA']]
                 timestamp = deltaT(self.state['datetime'] - datetime.datetime(1970, 1, 1))
                 self.tempDataChest.addData([[timestamp]+newTemps])
-            except Exception as e: self.logMessage('Recording Temps Failed: '+str(e))
+            except Exception as e: self.logMessage('Temperature recording failed: '
+                    + str(e) + '.')
             cycleLength = deltaT(datetime.datetime.utcnow() - cycleStartTime)
             self.client.manager.send_named_message('State Changed', 'state changed')
             #self.stateChanged('state changed')
@@ -407,7 +413,8 @@ class ADRServer(DeviceServer):
     def _cancelMagUp(self):
         """Cancels the mag up loop."""
         self.state['maggingUp'] = False
-        self.logMessage( 'Magging up stopped at a current of '+str(self.state['PSCurrent'])+'.' )
+        self.logMessage( 'Magging up stopped at a current of ' +
+                str(self.state['PSCurrent']) + '.' )
         #self.magUpStopped('cancel') #signal
         self.client.manager.send_named_message('MagUp Stopped', 'cancel')
     @inlineCallbacks
@@ -433,7 +440,8 @@ class ADRServer(DeviceServer):
             self.logMessage(message, alert=True)
             return
         self.client.manager.send_named_message('MagUp Started', 'start')
-        self.logMessage('Beginning to mag up to '+str(self.ADRSettings['current_limit'])+'.')
+        self.logMessage('Beginning to mag up to ' +
+                str(self.ADRSettings['current_limit']) + ' A.')
         self.state['maggingUp'] = True
         while self.state['maggingUp']:
             startTime = datetime.datetime.utcnow()
@@ -459,7 +467,8 @@ class ADRServer(DeviceServer):
     def _cancelRegulate(self):
         """Cancels the PID regulation loop."""
         self.state['regulating'] = False
-        self.logMessage( 'PID Control stopped at a current of '+str(self.state['PSCurrent'])+'.' )
+        self.logMessage( 'PID Control stopped at a current of ' +
+                str(self.state['PSCurrent']) + '.' )
         #self.regulationStopped('cancel')
         self.client.manager.send_named_message('Regulation Stopped', 'cancel')
     @inlineCallbacks
@@ -548,19 +557,23 @@ class ADRServer(DeviceServer):
     @setting(101, 'Get Settings Path', returns=['*s'])
     def getSettingsPath(self,c):
         return self.ADRSettingsPath
+    
     @setting(102, 'Get Start Datetime', returns=['t'])
     def getStartDatetime(self,c):
         return self.startDatetime
+    
     @setting(103, 'Get Log', n=['v'], returns=['*(s,b)'])
     def getLog(self,c, n=0):
         """Get an array of the last n logs."""
         if n==0: n = len(self.logMessages)
         n = int(min(n, len(self.logMessages)))
         return [messageAndAlert for messageAndAlert in self.logMessages[-n:]]
+    
     @setting(104, 'Get State Var', var=['s'], returns=['?'])
     def getStateVar(self,c, var):
         """You can get any arbitrary value stored in the state variable by passing its name to this function."""
         return self.state[var]
+    
     @setting(105, 'Get Instrument State', instrNames=['*s'], returns=['?'])
     def getInstrumentState(self,c, instrNames=None):
         """Get the status of instruments in the form [('instrument name',(server connected?, device selected?))].  If no instruments are passed in, returns an array of all iinstrument statuses"""
@@ -577,23 +590,28 @@ class ADRServer(DeviceServer):
     def pscurrent(self,c):
         """Get the current of the power supply."""
         return self.state['PSCurrent']
+    
     @setting(111, 'PSVoltage', returns=['v'])
     def psvoltage(self,c):
         """Get the voltage of the power supply."""
         return self.state['PSVoltage']
+    
     @setting(112, 'MagnetV', returns=['v'])
     def magnetv(self,c):
         """Get the voltage across the magnet (at the magnet leads)."""
         #print 'getting magnet voltage',self.state['magnetV']
         return self.state['magnetV']
+    
     @setting(113, 'cycle', returns=['v'])
     def cycle(self,c):
         """How many measurement cycles have been run?"""
         return self.state['cycle']
+    
     @setting(114, 'time', returns=['t'])
     def time(self,c):
         """Returns the (UTC) time at which the last measurement cycle was run."""
         return self.state['datetime']
+    
     @setting(115, 'Temperatures', returns=['*v'])
     def temperatures(self,c):
         """Returns the measured temperatures in an array: [60K,3K,GGG,FAA]"""
@@ -603,57 +621,66 @@ class ADRServer(DeviceServer):
     def regulate(self,c, temp=0.1):
         """Starts the PID Temperature control loop."""
         self._regulate(temp)
+    
     @setting(121, 'Mag Up')
     def magUp(self,c):
         """Slowly increases the current through the magnet to the current limit."""
         self._magUp()
+    
     @setting(122, 'Cancel Regulation')
     def cancelRegulation(self,c):
         """Stop PID regulation cycle."""
         self._cancelRegulate()
+    
     @setting(123, 'Cancel Mag Up')
     def cancelMagUp(self,c):
         """Stop mag up process."""
         self._cancelMagUp()
+    
     @setting(124, 'Refresh Instruments')
     def refreshInstruments(self,c):
         """Manually tell all gpib buses to refresh their list of connected devices."""
         self._refreshInstruments()
+    
     @setting(125, 'Add To Log', message=['s'])
     def addToLog(self,c,message=None):
         """Add message to log."""
         if message is not None:
             self.logMessage(message)
+    
     @setting(126, 'Close Heat Switch')
     def closeHeatSwitch(self,c):
         """Close Heat Switch."""
         try:
             yield self.client.heat_switch.close()
-            self.logMessage('Closing heat switch.')
+            self.logMessage('Closing Heat Switch.')
         except Exception as e:
-            self.logMessage('Closing heat switch failed.',alert=True)
+            self.logMessage('Closing Heat Switch failed.',alert=True)
+    
     @setting(127, 'Open Heat Switch')
     def openHeatSwitch(self,c):
         """Open Heat Switch."""
         try:
             yield self.client.heat_switch.open()
-            self.logMessage('Opening heat switch.')
+            self.logMessage('Opening Heat Switch.')
         except Exception as e:
-            self.logMessage('Opening heat switch failed.',alert=True)
+            self.logMessage('Opening Heat Switch failed.',alert=True)
+    
     @setting(128, 'Start Compressor')
     def startCompressor(self,c):
         """Start Compressor."""
         try:
             yield self.client['CP2800 Compressor'].start()
-            self.logMessage('Compressor Started.')
+            self.logMessage('Compressor started.')
         except Exception as e:
             self.logMessage('Starting Compressor failed.',alert=True)
+    
     @setting(129, 'Stop Compressor')
     def stopCompressor(self,c):
         """Stop Compressor."""
         try:
             yield self.client['CP2800 Compressor'].stop()
-            self.logMessage('Compressor Stopped.')
+            self.logMessage('Compressor stopped.')
         except Exception as e:
             self.logMessage('Stopping Compressor failed.',alert=True)
 
@@ -662,16 +689,19 @@ class ADRServer(DeviceServer):
         """Set PID Proportional Constant."""
         self.ADRSettings['PID_KP'] = k
         self.logMessage('PID_KP has been set to '+str(k))
+    
     @setting(131, 'Set PID KI',k=['v'])
     def setPIDKI(self,c,k):
         """Set PID Integral Constant."""
         self.ADRSettings['PID_KI'] = k
         self.logMessage('PID_KI has been set to '+str(k))
+    
     @setting(132, 'Set PID KD',k=['v'])
     def setPIDKD(self,c,k):
         """Set PID Derivative Constant."""
         self.ADRSettings['PID_KD'] = k
         self.logMessage('PID_KD has been set to '+str(k))
+    
     @setting(133, 'Set PID Max I',max=['v'])
     def setPIDMaxI(self,c,max):
         """Set PID Max Integral Value."""
