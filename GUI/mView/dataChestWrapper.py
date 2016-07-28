@@ -89,8 +89,8 @@ class dataChestWrapper:
         try:
             self.dataSets[i].cd(str(now.day%7))
         except:
-            self.dataSets[i].mkdir(str(now.day%7))
-            self.dataSets[i].cd(str(now.day%7))
+            self.dataSets[i].mkdir(str(int(now.day/7)))
+            self.dataSets[i].cd(str(int(now.day/7)))
 
         # Look at the names of all existing datasets and check if the 
         # name contains the title of the current device. 
