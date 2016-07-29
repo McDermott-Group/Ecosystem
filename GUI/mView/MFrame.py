@@ -63,6 +63,8 @@ class MFrame:
     plot = None
     # Refresh rate of plot
     plotRefreshRate = 1
+    # Holds teh GUI tiles
+    tile = None
     def setTitle(self, title):
         self.serverTitle = title
     def getTitle(self):
@@ -135,3 +137,7 @@ class MFrame:
         self.logData = b
     def isDataLogging(self):
         return self.logData
+    def setTile(self, tile):
+        self.tile = tile
+    def getTile(self):
+        return self.tile
