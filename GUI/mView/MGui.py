@@ -31,7 +31,7 @@ import math
 import MAlert
 import numpy as np
 import MGrapher
-
+import MNodeEditor
 
 class MGui(QtGui.QMainWindow):
     
@@ -84,11 +84,17 @@ class MGui(QtGui.QMainWindow):
         NotifierSettingsAction = QtGui.QAction('&Settings...', self)
         NotifierSettingsAction.triggered.connect(self.openNotifierSettings)
         
+        NodeEditorAction = QtGui.QAction('&Node Editor', self)
+        NodeEditorAction.triggered.connect(self.openNodeEditor)
+        
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(exitAction)
         
         NotifierMenu = menubar.addMenu('&Notifier')
         NotifierMenu.addAction(NotifierSettingsAction)
+        
+        NodeEditorMenu = menubar.addMenu('&Logic Editor')
+        NodeEditorMenu.addAction(NodeEditorAction)
         # For each device, add a GUI frame for it.
         numWidgets = 0
         
@@ -143,6 +149,8 @@ class MGui(QtGui.QMainWindow):
             #print(self.ratio)
             self.frames[i].setLineWidth(self.ratio)
             self.frames[i].setLayout(self.grids[i])
+            
+            self.devices[i].getFrame().setTile(self.frames[i])
             # Configure the layout of the buttons within the grid
             buttonLayout = QtGui.QHBoxLayout()
             self.grids[i].addLayout(buttonLayout, 1, 1)
@@ -256,6 +264,9 @@ class MGui(QtGui.QMainWindow):
                                             self.NotifierGUI.getContacts(),
                                             self.devices,
                                             self.tele)
+    def openNodeEditor(self):
+        self.nodeEditor = MNodeEditor.nodeGui(self.devices)
+        self.nodeEditor.exec_()
     def setRefreshRate(self, period):
         self.refreshRateSec = period
     def startGui(self, devices, title, dataTitle, tele):
