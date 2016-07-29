@@ -1,19 +1,20 @@
 from labrad.server import LabradServer, setting
 from twisted.internet.defer import inlineCallbacks, returnValue
 import random
+import numpy as np
+import time as t
 class MyServer(LabradServer):
     name = "My Server"    # Will be labrad name of server
-    lastRandom=100;
-    deltaRandom = 5;
 
-    @setting(10, returns='w')
+    start = t.time() 
+    @setting(10, returns='v')
     def Temperature(self, c):
-        return random.randrange(self.lastRandom-self.deltaRandom, self.lastRandom+self.deltaRandom);
-    
-    @setting(11, returns = 'w')
+        
+        return np.sin((t.time()-self.start)/2)
+       # return 0.5
+    @setting(11, returns = 'v')
     def Pressure(self, c, data):
-         return random.randrange(self.lastRandom-self.deltaRandom, self.lastRandom+self.deltaRandom);
-    
+          return np.sin((t.time()-self.start)/1.5)
     def somethingElse(self):
         print("something Else")
         

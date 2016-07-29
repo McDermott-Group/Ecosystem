@@ -19,6 +19,7 @@ class mGraph(QtGui.QWidget):
     def __init__(self, device, parent=None):
         QtGui.QWidget.__init__( self,parent)
         
+       
         l.basicConfig(filename=LOG_FILENAME,level=l.DEBUG)
         l.debug('mGrapher.py Log file')
         self.figure = plt.figure()
@@ -45,11 +46,12 @@ class mGraph(QtGui.QWidget):
         self.currTimeRange = 120
         self.plot(self.currTimeRange)
         
+        self.refreshRateSec = device.getFrame().getPlotRefreshRate()
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
-        self.timer.start(1000)
-        
-     
+        self.timer.start(self.refreshRateSec*1000)
+        #did it store data?
+        self.dataOk = True
         self.hideButton = QtGui.QPushButton("Show Plot")
         self.hideButton.clicked.connect(self.togglePlot)
         self.thrtysecButton = QtGui.QPushButton("30 Sec")
@@ -118,7 +120,7 @@ class mGraph(QtGui.QWidget):
 
         self.setLayout(layout)
     def go_home(self, *args, **kwargs):
-        self.timer.start(1000)
+        self.timer.start(self.refreshRateSec*1000)
         
         # self.deviceThread = threading.Thread(target = 
             # self.plot, args=[self.currTimeRange])
@@ -163,7 +165,7 @@ class mGraph(QtGui.QWidget):
             self.twoWkButton.show()
             self.allButton.show()
             self.plot(self.currTimeRange)
-            self.timer.start(1000)
+            self.timer.start(self.refreshRateSec*1000)
             self.hideButton.setText("Hide Plot")
             self.hidden = False
             
@@ -173,7 +175,7 @@ class mGraph(QtGui.QWidget):
             self.timer.timeout.disconnect()
             self.currTimeRange = timeRange
             self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
-            self.timer.start(1000)
+            self.timer.start(self.refreshRateSec*1000)
 
         dataSet =  self.device.getFrame().getDataSet()
         # If the dataset exists
@@ -235,8 +237,15 @@ class mGraph(QtGui.QWidget):
                     l.debug("num rows: "+ str(dataSet.getNumRows()))
                     l.debug( "len(data): "+ str(len(data)))
                     l.debug(str(times[-1]))
-                    self.ax.plot_date(times,column,'-',label = 
-                        dataSet.getVariables()[1][i-1][0])
+                    try:
+                        self.ax.plot_date(times,column,'-',label = 
+                            dataSet.getVariables()[1][i-1][0])
+                        self.dataOk = True
+                    except:
+                        if(self.dataOk != False): 
+                            traceback.print_exc()                        
+                            self.dataOk = False
+                            print "Failed to log data"
                     # Add a legend
                     self.ax.legend(loc='upper left')
                     self.ax.set_title(self.device.getFrame().getTitle())
