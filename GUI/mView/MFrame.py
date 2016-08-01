@@ -65,6 +65,8 @@ class MFrame:
     plotRefreshRate = 1
     # Holds teh GUI tiles
     tile = None
+    #Holds the logic Node
+    node = None
     def setTitle(self, title):
         self.serverTitle = title
     def getTitle(self):
@@ -141,3 +143,8 @@ class MFrame:
         self.tile = tile
     def getTile(self):
         return self.tile
+    def setNode(self, node):
+        self.node = node
+    def getNode(self):
+        return self.node
+      

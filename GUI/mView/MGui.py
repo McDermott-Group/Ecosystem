@@ -32,7 +32,7 @@ import MAlert
 import numpy as np
 import MGrapher
 import MNodeEditor
-
+from MNodeEditorHandler import MNodeEditorHandler
 class MGui(QtGui.QMainWindow):
     
     dialog = None
@@ -49,6 +49,8 @@ class MGui(QtGui.QMainWindow):
     buttons = [[]]
     plots = [[]]
     font = QtGui.QFont()
+    #nodeTree = None
+    
     #font.setPointSize(12)
     font.setBold(False)
     font.setWeight(50)
@@ -69,6 +71,7 @@ class MGui(QtGui.QMainWindow):
         # #self.setLayout(self.mainHBox)
         
         #self.mainHBox.addLayout(self.mainVBox[self.VBoxColumn])
+
         
         menubar = self.menuBar()
         menubar.setStyleSheet("QMenuBar {background-color: rgb(189, 195, 199)}"
@@ -98,6 +101,7 @@ class MGui(QtGui.QMainWindow):
         # For each device, add a GUI frame for it.
         numWidgets = 0
         
+      
         self.scrollArea = QtGui.QScrollArea()
         
         
@@ -239,7 +243,7 @@ class MGui(QtGui.QMainWindow):
                 yPos = len(self.devices[i].getFrame().getNicknames())+3
                 self.devices[i].getFrame().setPlot(dc)
                 self.grids[i].addWidget(dc, yPos, 0,yPos,3 )
-                
+        self.neh = MNodeEditorHandler(self)
         self.mainVBox[0].addStretch(0)
         self.mainVBox[1].addStretch(0)
         print("Gui initialized")
@@ -265,8 +269,9 @@ class MGui(QtGui.QMainWindow):
                                             self.devices,
                                             self.tele)
     def openNodeEditor(self):
-        self.nodeEditor = MNodeEditor.nodeGui(self.devices)
-        self.nodeEditor.exec_()
+    
+        self.neh.showEditor()
+        
     def setRefreshRate(self, period):
         self.refreshRateSec = period
     def startGui(self, devices, title, dataTitle, tele):

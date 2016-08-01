@@ -76,7 +76,7 @@ class nViewer:
         #LeidenDRTemperature.selectDeviceCommand("select_device", 0)
         LeidenDRTemperature.addPlot()
         LeidenDRTemperature.setPlotRefreshRate(1)
-        LeidenDRTemperature.setRefreshRate(1)
+        LeidenDRTemperature.setRefreshRate(0.1)
         LeidenDRTemperature.setYLabel("Hi", "Custom Units")
         LeidenDRTemperature.begin()
         self.devices.append(LeidenDRTemperature)
