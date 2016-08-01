@@ -17,4 +17,3 @@ class MNodeEditorHandler:
             
     def showEditor(self):
         self.nodeEditor.exec_()
-    

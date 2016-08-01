@@ -190,8 +190,13 @@ class mGraph(QtGui.QWidget):
                     # Get colum. aka all values from parameter i over time
                     column = [row[i] for row in data]
                     # Get the corresponding times that the values were recorded
-                    times = [datetime.datetime.fromtimestamp(row[0]) for row in data]
-                    #print times
+                    try:
+                        times = [datetime.datetime.fromtimestamp(row[0]) for row in data]
+                    except  Exception as e :
+                        print e
+                        traceback.print_exc()
+                        print "Bad row: ", row
+                    #print times[-1]
                     # If the there is  no defined a time range
                     if self.currTimeRange is None:
                         # Plot all of the data (columns) vs time

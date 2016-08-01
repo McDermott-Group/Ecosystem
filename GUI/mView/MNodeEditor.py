@@ -1,7 +1,7 @@
 from PyQt4 import QtGui, QtCore
 import sys
 import time
-
+import gc
 app = QtGui.QApplication([])
 
 
@@ -43,6 +43,15 @@ class NodeTree:
         return self.pipes
     def addPipe(self,pipe):
         self.pipes.append(pipe)
+        return self.pipes[-1]
+    def deletePipe(self, pipeToDel):
+        for i,pipe in enumerate(self.pipes):
+            if pipe is pipeToDel:
+                pipe.destruct()
+                del pipe
+                self.pipes[i] = None
+                del self.pipes[i]
+                 
     def setScene(self, scene):
         self.scene = scene
     def getScene(self):
@@ -95,6 +104,11 @@ class MPipe(QtGui.QGraphicsPathItem, NodeGui):
         #print "Updated"
     def isUnconnected(self):
         return self.endAnchor == None
+    def destruct(self):
+        '''Perhaps the most depressing line of code in the entire program'''
+        #del self
+        self.scene.removeItem(self)
+       # sys.getrefcount(self)
     def paint(self, painter, option, widget):
         #print "painting pipe"
         #painter.drawText(5, 30, "test")
@@ -242,7 +256,7 @@ class anchor(QtGui.QGraphicsItem):
         # self.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QtGui.QGraphicsItem.ItemIsFocusable, True)
-        self.pipes = []
+        #self.pipes = []
         self.setAcceptsHoverEvents(True)
         self.index = index
         self.scene  = scene
@@ -282,37 +296,17 @@ class anchor(QtGui.QGraphicsItem):
     def getType(self):
         return self.type
     def mousePressEvent(self, event):
-        # select object
-        # set item as topmost in stack
-        #self.setZValue(self.parent.scene.items()[0].zValue() + 1)
-      #  print len(self.NodeTree.getPipes)
-        #if(self.contains(event.pos())):
-        self.setColor(QtGui.QColor(255, 73, 94))
-        if(len(self.NodeTree.getPipes()) == 0 ):
-            #print "No pipes exist, adding pipe"
-            self.NodeTree.addPipe(MPipe(self, self.scene))
+        if self.isConnected:
             
-        elif self.NodeTree.getPipes()[-1].isUnconnected():
-            #print "pipe is unconnected, using existing pipe"
-            self.NodeTree.getPipes()[-1].connect(self)
-            
+            self.disconnect()
+           
         else:
-            #print "new unconnected pipe"
-            self.NodeTree.addPipe(MPipe(self, self.scene))
-        #print self.type
-        # if self.type == 'input':
-            # #print "its an imput"
-            # self.label = self.NodeTree.getPipes()[-1].getLabel()
-            
-        # elif self.type == 'output':
-            # #print "its and outptu"
-            # self.NodeTree.getPipes()[-1].setLabel(self.getLabel())
-            #print "self.getLabel ", self.getLabel()
-            #print "self.NodeTree.getPipes[-1].getLabel() ", self.NodeTree.getPipes[-1].getLabel()
-        self.pipe = self.NodeTree.getPipes()[-1]
-        # else:
-            # anchor.setColor(QtGui.QColor(52, 73, 94))
-        #print self.label
+            if self.NodeTree.getPipes[-1].isUnconnected():
+                self.NodeTree.getPipes[-1].connect(self)
+                self.pipe =  self.NodeTree.getPipes[-1]
+            else:
+                self.pipe = self.NodeTree.addPipe(MPipe(self, self.scene))
+            self.pipe = self.NodeTree.getPipes()[-1]
         self.update
         self.setSelected(True)
         QtGui.QGraphicsItem.mousePressEvent(self, event)
@@ -332,11 +326,15 @@ class anchor(QtGui.QGraphicsItem):
             painter.drawText(150-self.width, 55+40*self.index, str(self.pipe.getLabel()))
         else:
             painter.drawText(150-self.width, 55+40*self.index, self.label)
-        #painter.drawRect(self.rect)
-        #if self.type == 'input':
         self.e = painter.drawEllipse(self.getLocalLocation(), 10, 10)
-        # elif self.type == 'output':
-            # self.e = painter.drawEllipse(QtCore.QPoint(0,50+40*self.index), 10, 10)
+    def disconnect(self):
+   
+        self.NodeTree.deletePipe(self.pipe)
+        self.pipe = None
+       # print gc.get_referrers(self.pipe)
+      #  print "refcount"
+        
+    
     def getGlobalLocation(self):
         if self.type == 'output':
             loc =  QtCore.QPoint(self.getLocalLocation().x()+self.scenePos().x(),self.getLocalLocation().y()+self.scenePos().y())
