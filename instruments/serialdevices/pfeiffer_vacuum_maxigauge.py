@@ -187,8 +187,6 @@ class PfeifferVacuumControlServer(DeviceServer):
         t1 = time.time()
         self.dev = self.selectedDevice(c)
         yield self.getPressures(self.dev)
-        print(time.time()-t1)
-        #print(self.measurements)
         returnValue(self.measurements)
         
     @inlineCallbacks
@@ -200,14 +198,14 @@ class PfeifferVacuumControlServer(DeviceServer):
             # talking about sensor x.
             yield self.dev.write("PR{0}\r\n".format(i))
             # Give the device time to receive and process the request.
-            time.sleep(0.05)
+            yield sleep(0.1)
             # The device responds with an acknowledge, discard it.
             yield self.dev.read()
-            yield sleep(0.05)
+            yield sleep(0.1)
             # Write the 'enquire' code to the serial bus. This tells the
             # device that we want a reading.
             yield self.dev.write("\x05\r\n")
-            yield sleep(0.05)
+            yield sleep(0.1)
             response = yield self.dev.read()
             # The reading is formatted in the following way:
             # 'status,measurement.'

@@ -16,7 +16,7 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Lakeshore RuOx
+name = Lakeshore RuOx Simple
 version = 2.6.1
 description = 
 [startup]

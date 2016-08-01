@@ -16,7 +16,7 @@ def _parse_arguments():
             help='LabRAD password')
     return parser.parse_args()
 
-def bringup_board(fpga, board, optimizeSD=False, sdVal=None):
+def bringup_board(fpga, board, optimizeSD=False, sdVal=None, ignoreLVDS=False):
     """Bringup a single board connected to the given FPGA Server.
     
     Returns:
@@ -45,10 +45,15 @@ def bringup_board(fpga, board, optimizeSD=False, sdVal=None):
             okay.append(dacdict['fifoSuccess'])
             okay.append(dacdict['bistSuccess'])
             
+        if ignoreLVDS:
+            lvds = True
+        else:
+            lvds = all(lvdsOkay)
+            
         return ('DAC', results, {'bistFIFO': all(okay),
                                  'lvds': all(lvdsOkay)})
     
-def bringup_boards(fpga, boards):
+def bringup_boards(fpga, boards, ignoreLVDS=False):
     """
     Bringup a list of boards and return the Bist/FIFO and lvds
     success for each one.
@@ -69,7 +74,8 @@ def bringup_boards(fpga, boards):
         while k < NUM_TRIES and not all(successDict.values()):
             k += 1
             tries[board] = k
-            boardType, result, successDict = bringup_board(fpga, board)
+            boardType, result, successDict = \
+                    bringup_board(fpga, board, ignoreLVDS)
             successes[board] = successDict
 
     failures = [board for board in boards
@@ -77,7 +83,7 @@ def bringup_boards(fpga, boards):
 
     return successes, failures, tries
 
-def auto_bringup(fpga):
+def auto_bringup(fpga, ignoreLVDS=False):
     """
     Bringup all boards.
     
@@ -89,10 +95,10 @@ def auto_bringup(fpga):
     """
     boards = fpga.list_devices()
     successes, failures, tries = bringup_boards(fpga,
-            [board[1] for board in boards])
+            [board[1] for board in boards], ignoreLVDS)
     return successes, failures, tries
 
-def main():
+def main(ignoreLVDS=False):
     if 'LabRADPassword' in os.environ:
         password = os.environ['LabRADPassword']
     elif self.args.password is not None:
@@ -110,7 +116,7 @@ def main():
         fpga = cxn['ghz_fpgas']
         no_success = True
         while no_success:
-            successes, failures, tries = auto_bringup(fpga)
+            successes, failures, tries = auto_bringup(fpga, ignoreLVDS)
             successes = [board for board in successes.keys()
                       if board not in failures]
             if successes:

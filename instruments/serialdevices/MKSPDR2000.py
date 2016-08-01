@@ -97,24 +97,24 @@ class MKSPDR2000Server(DeviceServer):
 		  
 	@setting(100, 'get_pressure', returns='*v[torr]')
 	def getPressure(self, ctx):
-		#print "setting dev"
+		print "setting dev"
 		self.dev = self.selectedDevice(ctx)
-		#print "writing"
+		print "writing"
 		yield self.dev.write_line("p")
-		#print "sleeping"
-		yield time.sleep(0.5)
-		#print "getting reading"
+		print "sleeping"
+		time.sleep(1)
+		print "getting reading"
 		reading = yield self.dev.read_line()
-		#print reading
-		#print "getting units"
+		print reading
+		print "getting units"
 		yield self.dev.write_line('u')
-		#print "sleeping"
-		yield time.sleep(0.5)
-		#print "reading units"
+		print "sleeping"
+		time.sleep(1)
+		print "reading units"
 		unit = yield self.dev.read_line()
 		unit = unit.strip()
-		#print unit
-		#print reading
+		print unit
+		print reading
 		# Just in case there is an error and nothing is returned 
         # (RS232 is finicky).
 		if not reading:
@@ -144,7 +144,7 @@ class MKSPDR2000Server(DeviceServer):
 			reading = reading * units.torr
 			#print type(reading[1])
 			#print reading[1] is "Off"
-			#print reading
+		print reading
 			#print "done"
 			# Add correct units.
 		returnValue(reading)

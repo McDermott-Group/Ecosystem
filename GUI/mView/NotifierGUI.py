@@ -64,58 +64,44 @@ class NotifierGUI(QtGui.QDialog):
 		cancelButton.clicked.connect(self.close)
 		self.setWindowTitle("Notifier Settings")
 		self.devices = devices
-		
 		# Get the location of the main class, and store the info there
-		
-		#print("  I was called by {}".format(str(location)))
+		# print("  I was called by {}".format(str(location)))
 	def saveData(self):
 		'''Save the data upon exit'''
-		#print("Saving Data")
 		# Arrays used to assist in storing data
-		
 		self.allDataDict = {}
-		
-		
-		
-
 		try:
 			for device in self.devices:
 				title = device.getFrame().getTitle()
 				for nickname in device.getFrame().getNicknames():
 					if(nickname is not None):
-					
 						key = title+":"+nickname
 						deviceDataArray = []
-						deviceDataArray.append(self.alert.allWidgetDict[key][0].checkState())
+						deviceDataArray.append(self.alert
+                            .allWidgetDict[key][0].checkState())
 						if len(self.alert.allWidgetDict[key][1].text()) is not 0:
-							deviceDataArray.append(float(self.alert.allWidgetDict[key][1].text()))
+							deviceDataArray.append(float(self.alert
+                                .allWidgetDict[key][1].text()))
 						else:
 							deviceDataArray.append('')
 						if len(self.alert.allWidgetDict[key][2].text()) is not 0:
-							deviceDataArray.append(float(self.alert.allWidgetDict[key][2].text()))
+							deviceDataArray.append(float(self.alert
+                                .allWidgetDict[key][2].text()))
 						else:
 							deviceDataArray.append('')
-						
-						deviceDataArray.append(self.alert.allWidgetDict[key][3].text())
-						
-						if(deviceDataArray[1]>deviceDataArray[2] and deviceDataArray[1] is not None
+						deviceDataArray.append(self.alert
+                            .allWidgetDict[key][3].text())
+						if(deviceDataArray[1]>deviceDataArray[2]
+                            and deviceDataArray[1] is not None
 							and deviceDataArray[2] is not None):
 							#print(deviceDataArray[1])
 							raise
 						self.allDataDict[title+":"+nickname] = deviceDataArray
-						
-				#print boolChecked
-				#print(self.allDatatxt)
-				#print "just stored" ,(self.allDatatxt)
 				# Pickle the arrays and store them
-				#here = os.path.dirname(os.path.abspath(__file__))
-				#print "here ", here
-				pickle.dump(self.allDataDict, open(os.path.join(self.location, 'NotifierConfig.mview'), 'wb'))
-				#print(here)
-
+				pickle.dump(self.allDataDict, open(
+                    os.path.join(self.location, 'NotifierConfig.mview')
+                    , 'wb'))
 				print("Data Saved")
-		
-		#except:
 		except ValueError:
 			
 			print("Enter only numbers into 'Minimum' and 'Maximum' fields.")
@@ -124,19 +110,12 @@ class NotifierGUI(QtGui.QDialog):
 		except:
 			print("Minimum values cannot be greater than maximum values.")
 			print("Data Not Saved")
-
-	
-				#print("Data not saved, make sure you enter numbers. ")
-			# here = os.path.dirname(os.path.abspath(__file__))
-			# pickle.dump(self.allDataDict, open(os.path.join(here, 'NotifierConfig1.nview'), 'wb'))
-			# "Exponents can be written '4e5'.")
 		# Close the window
 		self.close()
 	def getMins(self):
 		mins = []
 		for key in self.alert.allDataDict.keys():
 			mins.append(self.alert.allDataDict[key][1])
-		#print mins
 		return mins
 	def getMaxs(self):
 		maxs = []
@@ -146,9 +125,7 @@ class NotifierGUI(QtGui.QDialog):
 	def getContacts(self):
 		contacts = []
 		for key in self.alert.allDataDict.keys():
-			
 			contacts.append(str(self.alert.allDataDict[key][3]))
-		#print contacts
 		return contacts
 	def getCheckboxes(self):
 		boxs = []
@@ -207,9 +184,6 @@ class AlertConfig(QtGui.QWidget):
 			z=z+1
 			# Create all of the information fields and put the saved data in
 			# them.
-			
-			
-			
 			for y in range(1, len(self.devices[j].getFrame().getNicknames())+1):
 				paramName = self.devices[j].getFrame().getNicknames()[y-1]
 				u = y-1
@@ -224,17 +198,19 @@ class AlertConfig(QtGui.QWidget):
 													QtGui.QLineEdit(),
 													QtGui.QLineEdit(),
 													QtGui.QLineEdit()]	
-							self.allWidgetDict[key][0].setChecked(self.allDataDict[key][0])
-							self.allWidgetDict[key][1].setText(str(self.allDataDict[key][1]))
-							self.allWidgetDict[key][2].setText(str(self.allDataDict[key][2]))
-							self.allWidgetDict[key][3].setText(str(self.allDataDict[key][3]))
+							self.allWidgetDict[key][0].setChecked(
+                                self.allDataDict[key][0])
+							self.allWidgetDict[key][1].setText(
+                                str(self.allDataDict[key][1]))
+							self.allWidgetDict[key][2].setText(
+                                str(self.allDataDict[key][2]))
+							self.allWidgetDict[key][3].setText(
+                                str(self.allDataDict[key][3]))
 					else:
 						self.allWidgetDict[key] = [QtGui.QCheckBox(),
 													QtGui.QLineEdit(),
 													QtGui.QLineEdit(),
 													QtGui.QLineEdit()]	
-					#self.maxs.append(QtGui.QLineEdit())
-					#self.contacts.append(QtGui.QLineEdit())
 					label = QtGui.QLabel()
 					# Add the new widgets
 					label.setText(paramName)
@@ -243,7 +219,6 @@ class AlertConfig(QtGui.QWidget):
 					layout.addWidget(self.allWidgetDict[key][2],z, 5)
 					layout.addWidget(self.allWidgetDict[key][3],z, 7)
 					layout.addWidget(self.allWidgetDict[key][0],z, 2)
-					
 					if(len(self.devices[j].getFrame().getUnits())>(y-1)):
 						unitLabel = QtGui.QLabel()
 						unitLabel.setText(self.devices[j].getFrame()
@@ -259,26 +234,13 @@ class AlertConfig(QtGui.QWidget):
 	
 	def openData(self):
 		'''Retreive a user's previous settings.'''
-		#print("opening data")
-		#self.allDatatxt = pickle.load(open('NotifierConfig.nview', 'rb'))
-		#here = os.path.dirname(os.path.abspath(__file__))
-		#print(here)
-		#print(os.path.join(here, 'NotifierConfig1.nview'))
-		#self.allDatatxt = pickle.load(open(os.path.join(here, 'NotifierConfig1.nview'), 'rb'))
-
-		#print(self.location)
 		try:
-			self.allDataDict = pickle.load(open(os.path.join(self.location, 'NotifierConfig.mview'), 'rb'))
+			self.allDataDict = pickle.load(open(os.path.join(
+                self.location, 'NotifierConfig.mview'), 'rb'))
 			NotifierGUI.allDataDict = self.allDataDict
 			print "Config Data Opened"
-			#print "mins: ", self.allDatatxt
+
 		except:
 			self.allDataDict = {}
 			print("No config file found")
 		return self.allDataDict
-	
-# if __name__ == '__main__':
-	# app = QtGui.QApplication(sys.argv)
-	# # dialog = NotifierGUI()
-	
-	# sys.exit(dialog.exec_())

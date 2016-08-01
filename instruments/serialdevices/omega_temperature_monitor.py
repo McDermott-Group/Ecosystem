@@ -16,9 +16,9 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Omega Temperature Monitor Server
-version = 1.0.15
-description = Monitors temperature
+name = Omega Temperature Monitor
+version = 1.0.16
+description = Monitors water temperature
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -87,8 +87,8 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
    
             
 class OmegaTempMonitorServer(DeviceServer):
-    deviceName = 'Omega Temp Monitor Server'
-    name = 'Omega Temp Monitor Server'
+    deviceName = 'Omega Temperature Monitor'
+    name = 'Omega Temperature Monitor'
     deviceWrapper = OmegaTempMonitorWrapper
             
     @inlineCallbacks
