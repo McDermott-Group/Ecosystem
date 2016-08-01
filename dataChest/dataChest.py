@@ -329,6 +329,8 @@ class dataChest(dateStamp):
               chunk = np.reshape(chunk, tuple(originalShape))
               dataDict[variables].append(chunk.tolist())
           else:
+            if len(dataset) != numRows:
+              dataset = dataset[0:numRows]
             dataDict[variables] = dataset
 
       data = []
