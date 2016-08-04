@@ -175,7 +175,7 @@ class OmegaTempMonitorServer(DeviceServer):
             # Strip the 'X01' off the returned string.
             reading = float(reading.lstrip("X01").strip())
             # Add correct units.
-            output = reading * units.degC
+            output = (reading-32)*(5/9) * units.degC
             returnValue(output)
 
     @inlineCallbacks
