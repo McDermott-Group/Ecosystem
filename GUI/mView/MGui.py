@@ -308,18 +308,27 @@ class MGui(QtGui.QMainWindow):
         '''Update the GUI'''
         readings = []
         error = False
+        self.tree = self.neh.getTree()
         # loop through all devices
-        for i in range(0, len(self.devices)):
-            # If there is no error with the device
-            if(not self.devices[i].getFrame().isError()):
+        #for i in range(0, len(self.devices)):
+        for i,node in enumerate(self.tree.getGuiNodes()):
+            print i
+            if(node.getType()=='output'):
+                # If there is no error with the device
+                #if(not self.devices[i].getFrame().isError()):
                 # Get the readings from the frame
-                readings = self.devices[i].getFrame().getReadings();
+                #readings = self.devices[i].getFrame().getReadings();
+                readings = [anchor.getPipe().getData() for  anchor in node.getAnchors() if not anchor.getPipe() is None]
+                print readings
                 if(readings is not None):
                     # Holds an array containing the new data for use 
                     # when adding data to the current dataset
                     newData = []
+             
                     # Update all QLcds with the reading
-                    for y in range(0, len(self.devices[i].getFrame().getNicknames())):
+                    for y,anchor in enumerate(node.getAnchors()):
+                        #print i, y
+                        data = anchor.getPipe().getData()
                         self.lcds[i][y].setSegmentStyle(
                             QtGui.QLCDNumber.Flat)
                         z = self.devices[i].getFrame().getReadingIndices()
@@ -332,6 +341,7 @@ class MGui(QtGui.QMainWindow):
                             pass
                         # If there are units, put them next to the number
                         if(len(self.devices[i].getFrame().getUnits())>0):
+                            #print self.units
                             self.units[i][y].setText(self.devices[i]
                                 .getFrame().getUnits()[y])
                             self.font.setPointSize(18)
@@ -339,13 +349,13 @@ class MGui(QtGui.QMainWindow):
                             self.font.setPointSize(12)
                             self.units[i][y].setStyleSheet(
                                 "color:rgb(189, 195, 199);")
-            else:
-                # Otherwise if there is an error, show that on 
-                # the gui through outlined lcd numbers
-                for y in range(0, len(self.lcds[i])):
-                    self.lcds[i][y].setSegmentStyle(QtGui
-                        .QLCDNumber.Outline)
-                    self.lcds[i][y].display("-")
+                else:
+                    # Otherwise if there is an error, show that on 
+                    # the gui through outlined lcd numbers
+                    for y in range(0, len(self.lcds[i])):
+                        self.lcds[i][y].setSegmentStyle(QtGui
+                            .QLCDNumber.Outline)
+                        self.lcds[i][y].display("-")
         return
             
 

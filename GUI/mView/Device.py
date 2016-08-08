@@ -129,6 +129,7 @@ class Device:
         self.deviceThread.start()
     def setRefreshRate(self, period):
         self.refreshRateSec = period
+        self.frame.setRefreshRate(period)
     def setPlotRefreshRate(self, period):
         self.frame.setPlotRefreshRate(period)
     def addPlot(self, length = None):

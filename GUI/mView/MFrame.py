@@ -67,6 +67,8 @@ class MFrame:
     tile = None
     #Holds the logic Node
     node = None
+    # Refresh rate
+    refreshRate = None
     def setTitle(self, title):
         self.serverTitle = title
     def getTitle(self):
@@ -147,4 +149,7 @@ class MFrame:
         self.node = node
     def getNode(self):
         return self.node
-      
+    def setRefreshRate(self, rate):
+        self.refreshRate = rate
+    def getRefreshRate(self):
+        return self.refreshRate
