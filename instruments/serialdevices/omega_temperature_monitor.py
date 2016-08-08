@@ -149,7 +149,7 @@ class OmegaTempMonitorServer(DeviceServer):
         self.alertInterval = interval['s']
     
     @setting(12, 'Get Temperature', returns='v[degC]')
-    def rateSetting(self, ctx):
+    def temperatureSetting(self, ctx):
         """Setting that returns rate"""
         self.dev = self.selectedDevice(ctx)
         temperature = yield self.getTemperature(self.dev)
@@ -175,6 +175,7 @@ class OmegaTempMonitorServer(DeviceServer):
             # Strip the 'X01' off the returned string.
             reading = float(reading.lstrip("X01").strip())
             # Add correct units.
+            reading = (reading - 32)*(5.0/9.0) 
             output = reading * units.degC
             returnValue(output)
 
