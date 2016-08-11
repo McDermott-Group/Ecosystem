@@ -30,6 +30,8 @@ class mGraph(QtGui.QWidget):
         self.device = device
         self.ax = self.figure.add_subplot(111)
         self.figure.patch.set_alpha(1.0)
+        #self.figure.tight_layout()
+        
         #plt.style.use('dark_background')
         self.home = NavigationToolbar.home
         NavigationToolbar.home = self.go_home
@@ -186,11 +188,12 @@ class mGraph(QtGui.QWidget):
             try:
                 # for each entry in the dataset [[time], [[data], [data], [data...]]]
                 #print data
+                # Get the corresponding times that the values were recorded
+                times = [datetime.datetime.fromtimestamp(row[0]) for row in data]
                 for i in range(1, len(data[-1])):
                     # Get colum. aka all values from parameter i over time
                     column = [row[i] for row in data]
-                    # Get the corresponding times that the values were recorded
-                    times = [datetime.datetime.fromtimestamp(row[0]) for row in data]
+                   
                     #print times
                     # If the there is  no defined a time range
                     if self.currTimeRange is None:
@@ -224,6 +227,7 @@ class mGraph(QtGui.QWidget):
                                 index = y
                                 # Get the times and datafrom the index and columns to the end of the dataset
                                 times = [datetime.datetime.fromtimestamp(row[0]) for row in data[-index:]]
+                                #print times[0]
                                 column = [row[i] for row in data[-index:]]
                                 # Exit the loop
                                 break
@@ -238,6 +242,7 @@ class mGraph(QtGui.QWidget):
                     l.debug( "len(data): "+ str(len(data)))
                     l.debug(str(times[-1]))
                     try:
+                        
                         self.ax.plot_date(times,column,'-',label = 
                             dataSet.getVariables()[1][i-1][0])
                         self.dataOk = True
@@ -262,19 +267,23 @@ class mGraph(QtGui.QWidget):
                     self.ax.set_xlabel("Time")
                 
                     self.ax.hold(True)
-                    locator = AutoDateLocator()
+                    # locator = AutoDateLocator()
                     #self.ax.fmt_xdata = AutoDateFormatter()
                     #self.ax.xaxis.set_major_locator(locator)
-                    self.ax.xaxis.set_major_locator(locator)
+                    #self.ax.xaxis.set_major_locator(locator)
                     #self.ax.xaxis.set_major_formatter(DateFormatter('%m/%d'))
-                    self.ax.xaxis.set_major_formatter(DateFormatter('%m/%d %H:%M:%S'))
-                    self.figure.autofmt_xdate()
+                    
+                    #self.ax.fmt_xdata = mdates.DateFormatter('%m/%d %H:%M:%S')
+                    # print "type: ", type(times[-1])
+                    # print "time[-1]: ",times[-1]
+                    # self.ax.set_ylim(bottom = 733681, top = 733682)
+                    
                     #self.figure.tight_layout()
                     self.ax.grid(True)
                    
             except Exception as e :
                print "Error"
-               traceback.print_exc()
+              # traceback.print_exc()
                l.debug("DEVICE: "+self.device.getFrame().getTitle())
                l.debug("ERROR")
                l.debug( (type(e)))
@@ -286,7 +295,13 @@ class mGraph(QtGui.QWidget):
                l.debug( "len(data): " + str(len(data)))
                l.debug( "data[-1]: " + str(data[-1]))
                l.debug( "[row[1] for row in data] " + str([row[1] for row in data]))
+            try:
+                locator = AutoDateLocator()
+                self.ax.xaxis.set_major_locator(locator)
+                self.ax.xaxis.set_major_formatter(DateFormatter('%m/%d %H:%M:%S'))
+                self.figure.autofmt_xdate()
+                self.canvas.draw()
+            except:
+                pass
             
-
-            self.canvas.draw()
     
