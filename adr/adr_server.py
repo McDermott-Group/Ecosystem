@@ -270,7 +270,7 @@ class ADRServer(DeviceServer):
             if 'NoDevicesAvailableError' in e.msg:
                 message = 'No devices connected for '+instrName+'.'
             elif 'NoSuchDeviceError' in e.msg:
-                message = 'No devices found for '+instrName+' at address '+settings[1]+'.'
+                message = 'No devices found for '+instrName+' at address '+str(settings[1])+'.'
             else: message = False
             instr.connected = False
             if message and lastStatus != instr.connected:
