@@ -349,9 +349,11 @@ class ADRServer(DeviceServer):
                 except AttributeError: pass # in case instrument didn't initialize properly and is None
             # ruox temps
             try:
+                FAAChan = self.ADRSettings['FAA MP Chan']
+                GGGChan = self.ADRSettings['GGG MP Chan']
                 temps = yield self.instruments['Ruox Temperature Monitor'].get_ruox_temperature()
                 # if there are two returned temps, maps them to GGG and FAA.  if only one is returned, assumes it is for the FAA
-                try: self.state['T_GGG'],self.state['T_FAA'] = temps
+                try: self.state['T_GGG'],self.state['T_FAA'] = dict(temps)[GGGChan],dict(temps)[FAAChan]
                 except: self.state['T_GGG'],self.state['T_FAA'] = nan*units.K, temps
             except Exception as e:
                 self.state['T_GGG'],self.state['T_FAA'] = nan*units.K, nan*units.K
