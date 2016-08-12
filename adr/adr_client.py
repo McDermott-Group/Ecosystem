@@ -58,9 +58,12 @@ class LogBox(Tkinter.Text):
         Tkinter.Text.__init__(self,*args,**kwargs)
         self.tag_config("redAlert", background="red")
         self.configure(state=Tkinter.DISABLED)
-    def log(self, message, alert=False):
+    def log(self, dt, message, alert=False):
+        utc = dt.replace(tzinfo=tz.tzutc())
+        local = utc.astimezone(tz.tzlocal())
+        messageWithTimeStamp = local.strftime("[%m/%d/%y %H:%M:%S] ") + message
         self.configure(state=Tkinter.NORMAL)
-        self.insert(1.0,message+'\n')
+        self.insert(1.0,messageWithTimeStamp+'\n')
         if alert: self.tag_add("redAlert", '1.0', '1.end')
         self.configure(state=Tkinter.DISABLED)
     def clear(self):
@@ -114,7 +117,7 @@ class ADRController(object):#Tkinter.Tk):
         self.cxn._cxn.addListener(update_state, source=mgr.ID, ID=101)
         yield mgr.subscribe_to_named_message('State Changed', 101, True)
         # log update
-        update_log = lambda c, (s,(m,a)): self.updateLog(m,a) \
+        update_log = lambda c, (s,(t,m,a)): self.updateLog(t,m,a) \
                 if self.correctServer(s) else -1
         self.cxn._cxn.addListener(update_log, source=mgr.ID, ID=102)
         yield mgr.subscribe_to_named_message('Log Changed', 102, True)
@@ -363,8 +366,8 @@ class ADRController(object):#Tkinter.Tk):
         # clear and reload log
         self.log.clear()
         logMessages = yield self.cxn[self.selectedADR].get_log(20) #only load last 20 messages
-        for (m,a) in logMessages:
-            self.updateLog(m,a)
+        for (t,m,a) in logMessages:
+            self.updateLog(t,m,a)
         # update instrument status stuff: delete old, create new
         for widget in self.instrumentStatusFrame.winfo_children():
             widget.destroy()
@@ -494,9 +497,9 @@ class ADRController(object):#Tkinter.Tk):
                 self.fig.tight_layout()
         #draw
         self.canvas.draw()
-    def updateLog(self,message=None,alert=False):
+    def updateLog(self,time=None,message=None,alert=False):
         if message:
-            self.log.log(message,alert)
+            self.log.log(time,message,alert)
     def addToLog(self):
         text = str( self.addToLogField.get(1.0, Tkinter.END) )
         try:
