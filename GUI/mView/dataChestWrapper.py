@@ -106,8 +106,8 @@ class dataChestWrapper:
                 self.dataSet.openDataset(existingFiles[0][y], 
                     modify = True)
                 foundit = True
-            if(foundit):
-                print("Previously existing data set found for "+title+": "
+            # if(foundit):
+                print("Existing data set found for "+title+": "
                     +existingFiles[0][y])
         if(foundit):
             pass

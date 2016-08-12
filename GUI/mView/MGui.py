@@ -248,14 +248,17 @@ class MGui(QtGui.QMainWindow):
         # Start the messenger service
         try:
             self.MAlert.stop()
+            self.MAlert = None
         except:
             print("Starting MAlert for first time")
+            
         self.MAlert = MAlert.MAlert(self.NotifierGUI.getCheckboxes(),
                                             self.NotifierGUI.getMins(),
                                             self.NotifierGUI.getMaxs(),
                                             self.NotifierGUI.getContacts(),
                                             self.devices,
                                             self.tele)
+        self.MAlert.begin()
     def setRefreshRate(self, period):
         self.refreshRateSec = period
     def startGui(self, devices, title, dataTitle, tele):
