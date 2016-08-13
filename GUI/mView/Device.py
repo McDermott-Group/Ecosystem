@@ -83,7 +83,7 @@ class Device:
         # new datachest wrapper
         self.datachest = dataChestWrapper(self)
     def setServerName(self, name):
-        print name
+        #print name
         self.serverName = name
         
     def addParameter(self, parameter, setting, arg=None, index = None):
@@ -169,7 +169,7 @@ class Device:
             print ("Found device: "+self.serverName)
             return True
         except labrad.client.NotFoundError, AttributeError:
-            traceback.print_exc()
+            #traceback.print_exc()
             if( not self.foundDevice):
                 self.foundDevice = True
                 print("Unable to find device: "+self.serverName)
@@ -309,6 +309,9 @@ class Device:
                 print "Device not found:", self.name
                 self.isDevice = False
         # Query calls itself again, this keeps the thread alive.
-        threading.Timer(self.refreshRateSec, self.Query).start()
+        try:
+            threading.Timer(self.refreshRateSec, self.Query).start()
+        except:
+            print "Fatal error"
         #self.Query()
         return 
