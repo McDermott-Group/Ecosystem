@@ -252,12 +252,10 @@ class MGui(QtGui.QMainWindow):
         except:
             print("Starting MAlert for first time")
             
-        self.MAlert = MAlert.MAlert(self.NotifierGUI.getCheckboxes(),
-                                            self.NotifierGUI.getMins(),
-                                            self.NotifierGUI.getMaxs(),
-                                            self.NotifierGUI.getContacts(),
+        self.MAlert = MAlert.MAlert(self.NotifierGUI.getDict(),
                                             self.devices,
-                                            self.tele)
+                                            self.tele,
+                                            self.refreshRateSec)
         self.MAlert.begin()
     def setRefreshRate(self, period):
         self.refreshRateSec = period
@@ -269,12 +267,10 @@ class MGui(QtGui.QMainWindow):
         self.tele = tele
         self.devices = devices
         self.NotifierGUI = NotifierGUI(self.devices)
-        self.MAlert = MAlert.MAlert(self.NotifierGUI.getCheckboxes(),
-                                            self.NotifierGUI.getMins(),
-                                            self.NotifierGUI.getMaxs(),
-                                            self.NotifierGUI.getContacts(),
+        self.MAlert = MAlert.MAlert(self.NotifierGUI.getDict(),
                                             self.devices,
-                                            self.tele)
+                                            self.tele,
+                                            self.refreshRateSec)
         screen_resolution = QtGui.QDesktopWidget().screenGeometry()
         self.scrnWidth = screen_resolution.width()
         self.scrnHeight = screen_resolution.height()
@@ -306,6 +302,31 @@ class MGui(QtGui.QMainWindow):
                     # when adding data to the current dataset
                     newData = []
                     # Update all QLcds with the reading
+                    #status = self.devices[i].getFrame().getOutOfRangeStatus()
+                    # for device in self.devices:
+                    #print self.devices[i].getFrame().getTitle(), self.devices[i].getFrame().getOutOfRangeStatus()
+                    # print status
+        
+                    for y, outOfRange in enumerate(self.devices[i].getFrame().getOutOfRangeStatus()):
+                        
+                        #print y
+                        #print self.lcds[i]
+                       # try:
+                       
+                        if outOfRange:
+                            self.lcds[i][y].setStyleSheet("color:rgb(200, 89, 50);\n")
+                        else:
+                            self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
+                        # except:
+                            # pass
+                        # for lcd in self.lcds[i]:
+                        # lcd.setStyleSheet("color:rgb(189, 195, 199);\n") 
+                    # #self.lcds[i].setStyleSheet("color:rgb(255, 195, 199);\n")
+                    # #print status
+                    # if(status[0] and status[1] != None):
+                        # #self.lcds[i][status[1]].setColor(QtGui.QColor(255, 0, 0))
+                        # self.lcds[i][status[1]].setStyleSheet("color:rgb(150, 89, 50);\n")
+                       
                     for y in range(0, len(self.devices[i].getFrame().getNicknames())):
                         self.lcds[i][y].setSegmentStyle(
                             QtGui.QLCDNumber.Flat)
@@ -317,6 +338,7 @@ class MGui(QtGui.QMainWindow):
                                 self.lcds[i][y].display("-")
                         except TypeError:
                             pass
+                    
                         # If there are units, put them next to the number
                         if(len(self.devices[i].getFrame().getUnits())>0):
                             self.units[i][y].setText(self.devices[i]
