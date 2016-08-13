@@ -301,7 +301,7 @@ class Device:
                 pass
             except Exception as e:
                # print e
-                traceback.print_exc()
+                #traceback.print_exc()
                 
                 self.frame.raiseError("Problem communicating with "
                     +self.name)

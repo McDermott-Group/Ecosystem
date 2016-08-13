@@ -41,7 +41,7 @@ class NotifierGUI(QtGui.QDialog):
         # The location to store config data
         #self.location = os.path.abspath(os.curdir)
         self.location = os.path.dirname(traceback.extract_stack()[0][0])
-        
+        self.allDataDict = {}
         print "Looking for config file in: ", self.location
         # New SMS widget
         self.alert = AlertConfig(devices, self.location)
