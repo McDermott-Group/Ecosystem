@@ -63,6 +63,8 @@ class MFrame:
     plot = None
     # Refresh rate of plot
     plotRefreshRate = 1
+    # RefreshRate for the device
+    refreshRate = 1
     def setTitle(self, title):
         self.serverTitle = title
     def getTitle(self):
@@ -125,6 +127,10 @@ class MFrame:
         self.plotRefreshRate = period
     def getPlotRefreshRate(self):
         return self.plotRefreshRate
+    def setRefreshRate(self, period):
+        self.refreshRate = period
+    def getRefreshRate(self):
+        return self.refreshRate
     def getPlotLength(self):
         return self.plotLength
     def setDataSet(self, dataSet):

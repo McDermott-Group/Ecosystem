@@ -22,11 +22,13 @@ import sys
 sys.dont_write_bytecode = True
 from PyQt4 import QtCore, QtGui
 from multiprocessing.pool import ThreadPool
+from twisted.internet import reactor
 import threading
 import ctypes
 from functools import partial
 import os
 from NotifierGUI import NotifierGUI
+from MConfigGui import ConfigGui
 import math
 import MAlert
 import numpy as np
@@ -84,11 +86,17 @@ class MGui(QtGui.QMainWindow):
         NotifierSettingsAction = QtGui.QAction('&Settings...', self)
         NotifierSettingsAction.triggered.connect(self.openNotifierSettings)
         
+        deviceSettingsAction = QtGui.QAction('&Configure...', self)
+        deviceSettingsAction.triggered.connect(self.openConfig)
+        
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(exitAction)
         
         NotifierMenu = menubar.addMenu('&Notifier')
         NotifierMenu.addAction(NotifierSettingsAction)
+        
+        DeviceMenu = menubar.addMenu('&Devices')
+        DeviceMenu.addAction(deviceSettingsAction)
         # For each device, add a GUI frame for it.
         numWidgets = 0
         
@@ -256,6 +264,9 @@ class MGui(QtGui.QMainWindow):
                                             self.NotifierGUI.getContacts(),
                                             self.devices,
                                             self.tele)
+    def openConfig(self):
+        self.Config = ConfigGui(self)
+        self.Config.exec_()
     def setRefreshRate(self, period):
         self.refreshRateSec = period
     def startGui(self, devices, title, dataTitle, tele):

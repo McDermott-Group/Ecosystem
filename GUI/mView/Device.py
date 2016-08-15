@@ -78,8 +78,6 @@ class Device:
         self.buttonSettings = []
             #print(buttonArgs)
         self.buttons = []
-        # The refresh rate for the device
-        self.refreshRateSec = 1
         # new datachest wrapper
         self.datachest = dataChestWrapper(self)
     def setServerName(self, name):
@@ -128,7 +126,8 @@ class Device:
         # Start the thread
         self.deviceThread.start()
     def setRefreshRate(self, period):
-        self.refreshRateSec = period
+        #self.refreshRateSec = period
+        self.frame.setRefreshRate(period)
     def setPlotRefreshRate(self, period):
         self.frame.setPlotRefreshRate(period)
     def addPlot(self, length = None):
@@ -283,5 +282,5 @@ class Device:
                 self.frame.setReadings(None)
                 self.isDevice = False
         # Query calls itself again, this keeps the thread alive.
-        threading.Timer(self.refreshRateSec, self.Query).start()
+        threading.Timer(self.frame.getRefreshRate(), self.Query).start()
         return 
