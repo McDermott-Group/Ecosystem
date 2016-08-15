@@ -120,7 +120,8 @@ class NotifierGUI(QtGui.QDialog):
         self.close()
         
     def getDict(self):
-        return self.allDataDict
+        print self.allDataDict
+        return self.alert.allDataDict
         
 class AlertConfig(QtGui.QWidget):
     def __init__(self,devices, location, parent = None):
