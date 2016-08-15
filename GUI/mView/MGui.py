@@ -271,6 +271,7 @@ class MGui(QtGui.QMainWindow):
                                             self.devices,
                                             self.tele,
                                             self.refreshRateSec)
+        self.MAlert.begin()
         screen_resolution = QtGui.QDesktopWidget().screenGeometry()
         self.scrnWidth = screen_resolution.width()
         self.scrnHeight = screen_resolution.height()
