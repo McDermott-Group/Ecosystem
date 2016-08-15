@@ -38,9 +38,15 @@ class mGraph(QtGui.QWidget):
         self.canvas.draw()
         #plt.style.use('dark_background')
         self.home = NavigationToolbar.home
-        NavigationToolbar.home = self.go_home
+        #self.zoom = NavigationToolbar.Zoom-to-rectangle
+        NavigationToolbar.home = self.enableAutoScaling
+        #NavigationToolbar.Zoom-to-rectangle = self.disableAutoScaling
         self.toolbar = NavigationToolbar(self.canvas, self)
-        self.canvas.mpl_connect('button_press_event', self.disableAutoUpdate)
+        #self.toolbar.set_message("HELLO")
+        #self.cidp = self.canvas.mpl_connect('pick_event', self.onPick)
+        self.cid = self.canvas.mpl_connect('button_press_event', self.disableAutoScaling)
+       
+        #self.cid = plt.get_current_fig_manager().toolbar.events()[3].triggered.connect(self.disableAutoScaling)
         self.setStyleSheet("""QPushButton{
                     color:rgb(189,195, 199); 
                     background:rgb(70, 80, 88)}""")
@@ -48,7 +54,16 @@ class mGraph(QtGui.QWidget):
                     color:rgb(0,0,0); 
                     background:rgb(200, 200, 200);""")
         #self.ax.xaxis.label.set_color('rgb(189,195, 199)')
+        self.matPlotInfo = QtGui.QLabel()
+        self.alertFont = QtGui.QFont()
+        self.alertFont.setPointSize(12)
+        self.matPlotInfo.setStyleSheet(
+                                "color:rgb(200, 69, 50);")
+        self.matPlotInfo.setText("Auto refresh disabled, click HOME button to enable.")
+        self.matPlotInfo.setFont(self.alertFont)
+        
         self.hidden = True
+        self.home = True
         self.currTimeRange = 120
         self.plot(self.currTimeRange)
         
@@ -114,12 +129,14 @@ class mGraph(QtGui.QWidget):
         self.oneWkButton.hide()
         self.twoWkButton.hide()
         self.allButton.hide()
-            
+        
+        self.matPlotInfo.hide()
+        
         layout = QtGui.QVBoxLayout()
         layout.addLayout(buttonLayout)
         layout.addLayout(buttonLayout2)
         layout.addLayout(buttonLayout3)
-
+        layout.addWidget(self.matPlotInfo)
         layout.addWidget(self.canvas)
         layout.addWidget(self.toolbar)
         
@@ -142,9 +159,13 @@ class mGraph(QtGui.QWidget):
             # except:
                 # traceback.print_exc()
                 # time.sleep(0.1)
-    def go_home(self, *args, **kwargs):
+
+    def enableAutoScaling(self):
         self.timer.start(self.refreshRateSec*1000)
-        
+        #self.canvas.mpl_disconnect(self.cid)
+        #self.cid = self.canvas.mpl_connect('button_press_event', self.disableAutoScaling)
+        self.home = True
+        self.matPlotInfo.hide()
         # self.deviceThread = threading.Thread(target = 
             # self.plot, args=[self.currTimeRange])
         # If the main thread stops, stop the child thread
@@ -153,8 +174,16 @@ class mGraph(QtGui.QWidget):
         # self.deviceThread.start()
         
         self.plot(self.currTimeRange)
-    def disableAutoUpdate(self, event):
+    def disableAutoScaling(self, event):
+        self.home = False
+        self.matPlotInfo.show()
+        self.canvas.update()
+        #plt.show()
+        #print event.name
+        #self.canvas.mpl_disconnect(self.cid)
+        #self.cid = self.canvas.mpl_connect('button_press_event', self.enableAutoScaling)
         self.timer.stop()
+        #self.zoom(self.toolbar)
     def togglePlot(self):
     
         if not self.hidden:
@@ -170,8 +199,10 @@ class mGraph(QtGui.QWidget):
             self.oneWkButton.hide()
             self.twoWkButton.hide()
             self.allButton.hide()
+            self.matPlotInfo.hide()
             self.timer.stop()
             self.hideButton.setText("Show Plot")
+            self.disableAutoScaling()
             self.hidden = True
             
         elif  self.hidden:
@@ -190,6 +221,7 @@ class mGraph(QtGui.QWidget):
             self.plot(self.currTimeRange)
             self.timer.start(self.refreshRateSec*1000)
             self.hideButton.setText("Hide Plot")
+            self.enableAutoScaling()
             self.hidden = False
             
     def plot(self, timeRange):
@@ -254,7 +286,7 @@ class mGraph(QtGui.QWidget):
                                     column = [row[i] for row in data[-index:]]
                                     # Exit the loop
                                     break
-                            # Plot yo stuff
+                           
                         l.debug("")
                         l.debug("Device: "+self.device.getFrame().getTitle())
                         l.debug("i: "+ str(i))
@@ -264,9 +296,7 @@ class mGraph(QtGui.QWidget):
                         l.debug("num rows: "+ str(dataSet.getNumRows()))
                         l.debug( "len(data): "+ str(len(data)))
                         l.debug(str(times[-1]))
-                        #
-                        #dataSet.getVariables()
-                        #print dataSet.getVariables()[1][i-1]
+                        
                         try:
                             while(len(self.line)<=i):
                                 self.line.append(self.ax.plot(1,1, label =dataSet.getVariables()[1][i-1][0])[0])
@@ -345,7 +375,16 @@ class mGraph(QtGui.QWidget):
                     self.ax.grid(True)
                     #self.ax.clear(self.ax.yaxis)
                     #self.ax.cla()
-                    self.ax.set_xlim(min(times), max(times))
+             
+
+                        
+                    if self.home:
+                        self.ax.set_xlim(times[0], times[-1])
+                        self.ax.relim()
+                        self.ax.autoscale()
+                    
+                
+    
                     #print self.ax.get_data_interval()
                     self.ax.draw_artist(self.figure)
                     self.ax.draw_artist(self.ax.patch)
@@ -359,22 +398,27 @@ class mGraph(QtGui.QWidget):
                     self.ax.draw_artist(self.ax.yaxis)
                     self.ax.draw_artist(self.ax.xaxis)
                     
+                    
                     for line in self.line:
                         self.ax.draw_artist(line)
-                    self.ax.relim()
-                    self.ax.autoscale()
+                   
                     
                     #self.ax.axis('off')
                     
                     
                     
                     self.ax.draw_artist(legend)
+                   
                     self.canvas.update()
                     
                     self.canvas.flush_events()
                 
                 except:
+                    
                     traceback.print_exc()
+                    self.ax.set_xlim(times[0], times[-1])
+                    self.ax.relim()
+                    self.ax.autoscale()
                     #print self.ax.get_data_interval()
                     pass
             

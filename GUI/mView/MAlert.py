@@ -37,46 +37,6 @@ class MAlert:
         # Start the thread
         self.deviceThread.start()
     
-    def monitorReadings2(self):
-        '''Monitor the readings for issues'''
-        # Z keeps track of which index we are on for arrays which are not 2D.
-        z = 0
-        # For all devices
-        for i in range(0, len(self.devices)):
-            # If it has readings
-            if(self.devices[i].getFrame().getReadings() is not None):
-                # Loop through all readings
-                for y in range(0, len(self.devices[i].getFrame().getNicknames())):
-                    # If the reading is displayed on the GUI
-                    #print(self.devices[i].getFrame().getNicknames())
-                    if(self.devices[i].getFrame().getNicknames()[y] is not None):
-                        # Get that specific reading
-                        #print self.mins
-                        if len(self.mins) is not 0:
-                            if(len(str(self.mins[z])) is not 0):
-                                if(float(self.mins[z])>
-                                    float(self.devices[i].getFrame()
-                                    .getReadings()[y])):
-                                # If a min has been specified
-                                    if(self.checkBoxes[z]):
-                                    #print "mins", (self.mins)
-                                        self.generateMessage(z,y,i)
-                                        self.sendMail(i, y, z)
-                                    #print(self.mins[z])
-                        if len(self.maxs) is not 0:
-                            if(len(str(self.maxs[z])) is not 0):
-                                if(float(self.maxs[z])<
-                                    float(self.devices[i].getFrame()
-                                    .getReadings()[y])):
-                                    if(self.checkBoxes[z]):
-                                        self.generateMessage(z,y,i)
-                                        self.sendMail(i, y, z)
-                        z = z+1
-            else:
-                
-                z=z+len(self.devices[i].getFrame().getNicknames())
-        if(self.keepGoing):
-            threading.Timer(1, self.monitorReadings).start()
     def monitorReadings(self):
         # The dictionary keys are in the format 'devicename:parametername' : '
         # for entry in self.dict:
