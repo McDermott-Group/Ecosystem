@@ -315,9 +315,13 @@ class MGui(QtGui.QMainWindow):
                        # try:
                        
                         if outOfRange:
-                            self.lcds[i][y].setStyleSheet("color:rgb(200, 89, 50);\n")
+                            self.lcds[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
+                            self.units[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
+                            self.parameters[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
                         else:
                             self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
+                            self.units[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
+                            self.parameters[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
                         # except:
                             # pass
                         # for lcd in self.lcds[i]:
