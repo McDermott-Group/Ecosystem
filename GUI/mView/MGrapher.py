@@ -202,7 +202,6 @@ class mGraph(QtGui.QWidget):
             self.matPlotInfo.hide()
             self.timer.stop()
             self.hideButton.setText("Show Plot")
-            self.disableAutoScaling()
             self.hidden = True
             
         elif  self.hidden:
