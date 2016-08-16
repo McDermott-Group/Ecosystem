@@ -11,7 +11,15 @@ class ConfigGui(QtGui.QDialog):
         mainTabWidget.addTab(refreshRateContents(mainGui), "Refresh Rates")
         mainLayout = QtGui.QVBoxLayout()
         mainLayout.addWidget(mainTabWidget)
+        buttonLayout = QtGui.QHBoxLayout()
+        okButton = QtGui.QPushButton(self)
+        okButton.setText("Ok")
+        buttonLayout.addStretch(0)
+        buttonLayout.addWidget(okButton)
+        mainLayout.addLayout(buttonLayout)
         self.setLayout(mainLayout)
+        self.setWindowTitle("Device Config")
+        okButton.clicked.connect(self.close)
         
 class refreshRateContents(QtGui.QWidget):
     def __init__(self, mainGui, parent = None):

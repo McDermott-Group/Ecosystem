@@ -62,15 +62,17 @@ class mGraph(QtGui.QWidget):
         self.matPlotInfo.setText("Auto refresh disabled, click HOME button to enable.")
         self.matPlotInfo.setFont(self.alertFont)
         
+        self.refreshRateSec = device.getFrame().getPlotRefreshRate()
+        self.timer = QtCore.QTimer(self)
+        
         self.hidden = True
         self.home = True
         self.currTimeRange = 120
         self.plot(self.currTimeRange)
         
-        self.refreshRateSec = device.getFrame().getPlotRefreshRate()
-        self.timer = QtCore.QTimer(self)
-        self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
-        self.timer.start(self.refreshRateSec*1000)
+       
+        #self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
+        #self.timer.start(self.refreshRateSec*1000)
         #did it store data?
         self.dataOk = True
         self.hideButton = QtGui.QPushButton("Show Plot")
@@ -202,7 +204,6 @@ class mGraph(QtGui.QWidget):
             self.matPlotInfo.hide()
             self.timer.stop()
             self.hideButton.setText("Show Plot")
-            self.disableAutoScaling()
             self.hidden = True
             
         elif  self.hidden:
@@ -227,11 +228,11 @@ class mGraph(QtGui.QWidget):
     def plot(self, timeRange):
         if not self.hidden:
             if timeRange != self.currTimeRange:
-                self.timer.stop()
-                self.timer.timeout.disconnect()
+                #self.timer.stop()
+                #self.timer.timeout.disconnect()
                 self.currTimeRange = timeRange
-                self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
-                self.timer.start(self.refreshRateSec*1000)
+                #self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
+                #self.timer.start(self.refreshRateSec*1000)
 
             dataSet =  self.device.getFrame().getDataSet()
             # If the dataset exists
@@ -243,7 +244,7 @@ class mGraph(QtGui.QWidget):
                     # for each entry in the dataset [[time], [[data], [data], [data...]]]
                     #print data
                     # Get the corresponding times that the values were recorded
-                    times = [datetime.datetime.fromtimestamp(row[0]) for row in data]
+
              
                     for i in range(1, len(data[-1])):
                         # Get colum. aka all values from parameter i over time
@@ -252,6 +253,7 @@ class mGraph(QtGui.QWidget):
                         #print times
                         # If the there is  no defined a time range
                         if self.currTimeRange is None:
+                            times = [datetime.datetime.fromtimestamp(row[0]) for row in data]
                             # Plot all of the data (columns) vs time
                             # self.ax.plot_date(times, column, label =
                                 # dataSet.getVariables()[1][i-1][0])
@@ -422,4 +424,4 @@ class mGraph(QtGui.QWidget):
                     #print self.ax.get_data_interval()
                     pass
             
-    
+        self.timer.singleShot(self.device.getFrame().getPlotRefreshRate()*1000, partial(self.plot, self.currTimeRange))

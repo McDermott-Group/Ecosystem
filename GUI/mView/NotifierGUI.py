@@ -103,9 +103,11 @@ class NotifierGUI(QtGui.QDialog):
                             raise
                         self.allDataDict[title+":"+nickname] = deviceDataArray
                 # Pickle the arrays and store them
-                pickle.dump(self.allDataDict, open(
-                    os.path.join(self.location, 'NotifierConfig.mview')
-                    , 'wb'))
+            pickle.dump(self.allDataDict, open(
+                os.path.join(self.location, 'NotifierConfig.mview')
+                , 'wb'))
+            self.alert.allDataDict = self.allDataDict
+            print self.alert.allDataDict
                 #print("Data Saved")
         except ValueError:
             
@@ -120,7 +122,7 @@ class NotifierGUI(QtGui.QDialog):
         self.close()
         
     def getDict(self):
-        return self.allDataDict
+        return self.alert.allDataDict
         
 class AlertConfig(QtGui.QWidget):
     def __init__(self,devices, location, parent = None):

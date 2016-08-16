@@ -63,15 +63,14 @@ class MFrame:
     plot = None
     # Refresh rate of plot
     plotRefreshRate = 1
-<<<<<<< HEAD
+
     # RefreshRate for the device
     refreshRate = 1
-=======
+
     # Is there a reading out of range?
     def __init__(self):
-        self.outOfRange = []
-    
->>>>>>> ed9f2dd2e15875a5180a419000222a530648ad5e
+        self.outOfRange = {}
+
     def setTitle(self, title):
         self.serverTitle = title
     def getTitle(self):
@@ -150,15 +149,15 @@ class MFrame:
         return self.logData
     def getOutOfRangeStatus(self): 
         return self.outOfRange        
-    def setOutOfRange(self, y):
+    def setOutOfRange(self, key):
         #print "length of outofrange: ", len(self.outOfRange)
-        while (len(self.outOfRange)<=y):
-            #print "length of outofrange: ", len(self.outOfRange)
-            self.outOfRange.append(False)
-        self.outOfRange[y] = True
-    def setInRange(self, y):
-        while (len(self.outOfRange)<=y):
-            self.outOfRange.append(False)
-        self.outOfRange[y] = False
+        print "FRAME: setting out of range"
+
+        self.outOfRange[key] = True
+        print "FRAME: ", self.outOfRange
+    def setInRange(self, key):
+
+        self.outOfRange[key] = False
     def disableRange(self):
-       self.outOfRange = [False for elem in self.outOfRange]
+      self.outOfRange = {key:False for key in self.outOfRange}
+      

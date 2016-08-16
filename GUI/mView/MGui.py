@@ -259,7 +259,7 @@ class MGui(QtGui.QMainWindow):
             self.MAlert = None
         except:
             print("Starting MAlert for first time")
-            
+        print "WHAT GUI SEES:", self.NotifierGUI.getDict()
         self.MAlert = MAlert.MAlert(self.NotifierGUI.getDict(),
                                             self.devices,
                                             self.tele,
@@ -267,6 +267,9 @@ class MGui(QtGui.QMainWindow):
         self.MAlert.begin()
     def setRefreshRate(self, period):
         self.refreshRateSec = period
+    def openConfig(self):
+        self.Config = ConfigGui(self)
+        self.Config.exec_()
     def startGui(self, devices, title, dataTitle, tele):
         '''Start the GUI'''
         # Used as the name of the dataChest data title
@@ -288,11 +291,14 @@ class MGui(QtGui.QMainWindow):
         self.setWindowTitle(title)
         # Show the gui
         self.show()
-        timer = QtCore.QTimer(self)
+        self.timer = QtCore.QTimer(self)
         # Update the gui every so often. This CAN ONLY be done 
         # in the main thread.
-        timer.timeout.connect(self.update)
-        timer.start(self.refreshRateSec*1000)
+        self.timer.timeout.connect(self.update)
+        #self.timer.start(self.refreshRateSec*1000)
+        self.timer.singleShot(self.refreshRateSec*1000, self.update)
+        #timer.timeout.connect(self.update)
+        #self.update()
         self.MAlert.begin()
         sys.exit(app.exec_())
 
@@ -315,17 +321,24 @@ class MGui(QtGui.QMainWindow):
                     # for device in self.devices:
                     #print self.devices[i].getFrame().getTitle(), self.devices[i].getFrame().getOutOfRangeStatus()
                     # print status
-        
-                    for y, outOfRange in enumerate(self.devices[i].getFrame().getOutOfRangeStatus()):
-                        
-                        #print y
+                    print self.devices[i].getFrame().getOutOfRangeStatus()
+                    
+                    for y in range(len(self.devices[i].getFrame().getOutOfRangeStatus())):
+                        outOfRange = self.devices[i].getFrame().getOutOfRangeStatus()
+                        key = self.devices[i].getFrame().getTitle()+":"+self.devices[i].getFrame().getNicknames()[y] 
+                        print "out of range" ,outOfRange
                         #print self.lcds[i]
                        # try:
-                       
-                        if outOfRange:
-                            self.lcds[i][y].setStyleSheet("color:rgb(200, 89, 50);\n")
+                        
+                        if outOfRange[key]:
+                            #print "OUT OF RANGE"
+                            self.lcds[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
+                            self.units[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
+                            self.parameters[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
                         else:
                             self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
+                            self.units[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
+                            self.parameters[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
                         # except:
                             # pass
                         # for lcd in self.lcds[i]:
@@ -364,6 +377,9 @@ class MGui(QtGui.QMainWindow):
                     self.lcds[i][y].setSegmentStyle(QtGui
                         .QLCDNumber.Outline)
                     self.lcds[i][y].display("-")
+                    
+       
+        self.timer.singleShot(self.refreshRateSec*1000, self.update)
         return
             
 
