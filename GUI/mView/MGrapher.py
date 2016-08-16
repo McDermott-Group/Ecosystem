@@ -71,8 +71,8 @@ class mGraph(QtGui.QWidget):
         self.plot(self.currTimeRange)
         
        
-        #self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
-        #self.timer.start(self.refreshRateSec*1000)
+        self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
+        self.timer.start(self.refreshRateSec*1000)
         #did it store data?
         self.dataOk = True
         self.hideButton = QtGui.QPushButton("Show Plot")
@@ -228,12 +228,19 @@ class mGraph(QtGui.QWidget):
     def plot(self, timeRange):
         if not self.hidden:
             if timeRange != self.currTimeRange:
-                #self.timer.stop()
-                #self.timer.timeout.disconnect()
+                self.timer.stop()
+                self.timer.timeout.disconnect()
                 self.currTimeRange = timeRange
-                #self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
-                #self.timer.start(self.refreshRateSec*1000)
-
+                self.timer.timeout.connect(lambda: self.plot( self.currTimeRange))
+                self.timer.start(self.refreshRateSec*1000)
+            if self.refreshRateSec != self.device.getFrame().getPlotRefreshRate():
+                #print "New plot refresh rate: ", self.device.getFrame().getPlotRefreshRate()
+                self.refreshRateSec = self.device.getFrame().getPlotRefreshRate()
+                self.timer.stop()
+                self.timer.timeout.disconnect()
+                self.currTimeRange = timeRange
+                self.timer.timeout.connect(lambda: self.plot( self.currTimeRange))
+                self.timer.start(self.refreshRateSec*1000)
             dataSet =  self.device.getFrame().getDataSet()
             # If the dataset exists
             if dataSet is not None:
@@ -424,4 +431,4 @@ class mGraph(QtGui.QWidget):
                     #print self.ax.get_data_interval()
                     pass
             
-        self.timer.singleShot(self.device.getFrame().getPlotRefreshRate()*1000, partial(self.plot, self.currTimeRange))
+        #self.timer.singleShot(self.device.getFrame().getPlotRefreshRate()*1000, partial(self.plot, timeRange))

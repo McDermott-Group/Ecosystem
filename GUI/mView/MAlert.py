@@ -54,22 +54,22 @@ class MAlert:
                     if(enabled):
                         #print key,self.dict[key]
                         if(min != None and min>reading):
-                            print "MALERT reading below min ", min
+                            #print "MALERT reading below min ", min
                             self.devices[i].getFrame().setOutOfRange(key)
                             self.sendMail(self.devices[i], y, reading, people, min, max)
                             
                            # device.getFrame().setOutOfRange((True, y))
                         elif(max != None and max<reading):
                             #print max
-                            print "MALERT reading above max", max
+                            #print "MALERT reading above max", max
                             self.devices[i].getFrame().setOutOfRange(key)
                             self.sendMail(self.devices[i], y, reading, people, min, max) 
                             
                         else:
-                            print key, "MALERT reading within range"
+                            #print key, "MALERT reading within range"
                             self.devices[i].getFrame().setInRange(key)    
                     else:
-                        print key, "MALERT reading within disabled"
+                        #print key, "MALERT reading within disabled"
                         self.devices[i].getFrame().setInRange(key)
         if(self.keepGoing):
             threading.Timer(self.refreshRateSec, self.monitorReadings).start()

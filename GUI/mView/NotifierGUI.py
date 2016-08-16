@@ -71,6 +71,8 @@ class NotifierGUI(QtGui.QDialog):
         self.devices = devices
         # Get the location of the main class, and store the info there
         # print("  I was called by {}".format(str(location)))
+        # Ensures that a dict exists
+        self.saveData()
     def saveData(self):
         '''Save the data upon exit'''
         # Arrays used to assist in storing data
@@ -107,7 +109,7 @@ class NotifierGUI(QtGui.QDialog):
                 os.path.join(self.location, 'NotifierConfig.mview')
                 , 'wb'))
             self.alert.allDataDict = self.allDataDict
-            print self.alert.allDataDict
+            #print self.alert.allDataDict
                 #print("Data Saved")
         except ValueError:
             

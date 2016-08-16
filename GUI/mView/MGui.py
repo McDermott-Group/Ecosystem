@@ -33,10 +33,10 @@ import math
 import MAlert
 import numpy as np
 import MGrapher
-
-
+import atexit
+import traceback
 class MGui(QtGui.QMainWindow):
-    
+    print "Starting mView (C) Noah Meltzer 2016\r\n"
     dialog = None
     parameters = [[]]
     frames = []
@@ -57,9 +57,16 @@ class MGui(QtGui.QMainWindow):
     font.setKerning(True)
     refreshRateSec = 1
     VBoxColumn = 0
+    keepGoing = True
+    
     def initGui(self, devices, parent = None):
         '''Create a base gui to start from'''
         QtGui.QWidget.__init__(self, parent)
+        
+        MainWindow = self
+        app.setActiveWindow(MainWindow) 
+        
+        atexit.register(self.stop)
         # Make pretty
         self.central_widget = QtGui.QWidget()
         self.setCentralWidget(self.central_widget)
@@ -246,6 +253,13 @@ class MGui(QtGui.QMainWindow):
         return
     # def getPlot():
         # return  self.devices[i].getFrame().getPlot(dc)
+    def stop(self):
+        print "Closing mView"
+        self.keepGoing = False
+        exit()
+        
+
+        #self.close()
     def openNotifierSettings(self):
         # Start the notifier gui
         # NOTE, this is run on the main thread, so while it is open the main
@@ -259,7 +273,7 @@ class MGui(QtGui.QMainWindow):
             self.MAlert = None
         except:
             print("Starting MAlert for first time")
-        print "WHAT GUI SEES:", self.NotifierGUI.getDict()
+        #print "WHAT GUI SEES:", self.NotifierGUI.getDict()
         self.MAlert = MAlert.MAlert(self.NotifierGUI.getDict(),
                                             self.devices,
                                             self.tele,
@@ -321,12 +335,12 @@ class MGui(QtGui.QMainWindow):
                     # for device in self.devices:
                     #print self.devices[i].getFrame().getTitle(), self.devices[i].getFrame().getOutOfRangeStatus()
                     # print status
-                    print self.devices[i].getFrame().getOutOfRangeStatus()
+                    #print self.devices[i].getFrame().getOutOfRangeStatus()
                     
                     for y in range(len(self.devices[i].getFrame().getOutOfRangeStatus())):
                         outOfRange = self.devices[i].getFrame().getOutOfRangeStatus()
                         key = self.devices[i].getFrame().getTitle()+":"+self.devices[i].getFrame().getNicknames()[y] 
-                        print "out of range" ,outOfRange
+                        #print "out of range" ,outOfRange
                         #print self.lcds[i]
                        # try:
                         
@@ -354,11 +368,12 @@ class MGui(QtGui.QMainWindow):
                             QtGui.QLCDNumber.Flat)
                         z = self.devices[i].getFrame().getReadingIndices()
                         try:
-                            if(not math.isnan(readings[z[y]])):
-                                self.lcds[i][y].display(readings[z[y]])
+                            if(not math.isnan(readings[y])):
+                                self.lcds[i][y].display(readings[y])
                             else:
                                 self.lcds[i][y].display("-")
                         except TypeError:
+                            traceback.print_exc()
                             pass
                     
                         # If there are units, put them next to the number
@@ -378,12 +393,14 @@ class MGui(QtGui.QMainWindow):
                         .QLCDNumber.Outline)
                     self.lcds[i][y].display("-")
                     
-       
-        self.timer.singleShot(self.refreshRateSec*1000, self.update)
+        if self.keepGoing:
+            self.timer.singleShot(self.refreshRateSec*1000, self.update)
         return
             
 
 
 app=QtGui.QApplication(sys.argv)
+
+#The main window
 
 
