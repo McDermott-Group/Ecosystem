@@ -164,10 +164,10 @@ class MGui(QtGui.QMainWindow):
             self.tiles[i].setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
             # Used for dpi scaling (works pretty well but not amazing)
             if self.scrnWidth>self.scrnHeight:
-                self.ratio =float(self.scrnWidth)/1800+1
+                web.ratio =float(self.scrnWidth)/1800+1
             else:
-                self.ratio =float(self.scrnHeight)/1800+1
-            self.tiles[i].setLineWidth(self.ratio)
+                web.ratio =float(self.scrnHeight)/1800+1
+            self.tiles[i].setLineWidth(web.ratio)
             self.tiles[i].setLayout(self.grids[i])
             # Configure the layout of the buttons within the grid
             buttonLayout = QtGui.QHBoxLayout()
@@ -220,7 +220,7 @@ class MGui(QtGui.QMainWindow):
                 self.lcds[i][y].display("-")
                 self.lcds[i][y].setFrameShape(QtGui.QFrame.Panel)
                 self.lcds[i][y].setFrameShadow(QtGui.QFrame.Plain)
-                self.lcds[i][y].setLineWidth(self.ratio)
+                self.lcds[i][y].setLineWidth(web.ratio)
                 self.lcds[i][y].setMidLineWidth(100)
                 self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n")
                 self.lcds[i][y].setFixedHeight(self.scrnHeight/30)

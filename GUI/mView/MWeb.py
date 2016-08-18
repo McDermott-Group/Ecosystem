@@ -33,5 +33,6 @@ class web:
     guiRefreshRate = 1
     # Holds reference to the telecomm server
     telecomm = None
-
+    # DPI scaling ratio
+    ratio = 1
     
