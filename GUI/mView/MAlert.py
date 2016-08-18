@@ -1,21 +1,45 @@
+# Copyright (C) 2016 Noah Meltzer
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+__author__ = "Noah Meltzer"
+__copyright__ = "Copyright 2016, McDermott Group"
+__license__ = "GPL"
+__version__ = "2.0.0"
+__maintainer__ = "Noah Meltzer"
+__status__ = "Beta"
+
+"""
+version = 2.0.0
+description = Handles all data error checking
+"""
+
 import smtplib
 import MMail
 import threading
 import time
 import sys
+from MWeb import web
 sys.dont_write_bytecode = True
-#from email.mime.text import MIMEText
 
 class MAlert:
-    def __init__(self, dict,  devices, tele, refrate):
+    def __init__(self):
         # Configure all public variables
-        self.dict = dict
-        #print self.dict
-        self.tele = tele
-        self.devices = devices
+        self.tele = web.telecomm
+        self.devices = web.devices
         self.t1 = 0
         self.message = []
-        self.refreshRateSec = refrate
         # Have the specified people been notified about the specific device?
         self.mailSent ={}
         # Keep running, this is false when settings are changed and a 
@@ -39,13 +63,10 @@ class MAlert:
         self.keepGoing = True
     def monitorReadings(self):
         # The dictionary keys are in the format 'devicename:parametername' : '
-        # for entry in self.dict:
-            # print entry,":", self.dict[entry] 
-       # print "MALERT dict", self.dict
         for i in range(len(self.devices)):
             for y, param in enumerate(self.devices[i].getFrame().getNicknames()):
                 key = self.devices[i].getFrame().getTitle()+":"+param
-                enabled, min, max, people = self.dict[key]
+                enabled, min, max, people = web.limitDict[key]
                 min = self.toFloat(min)
                 max = self.toFloat(max)
                 if self.devices[i].getFrame().getReadings() != None:
@@ -57,22 +78,15 @@ class MAlert:
                             #print "MALERT reading below min ", min
                             self.devices[i].getFrame().setOutOfRange(key)
                             self.sendMail(self.devices[i], y, reading, people, min, max)
-                            
-                           # device.getFrame().setOutOfRange((True, y))
                         elif(max != None and max<reading):
-                            #print max
-                            #print "MALERT reading above max", max
                             self.devices[i].getFrame().setOutOfRange(key)
-                            self.sendMail(self.devices[i], y, reading, people, min, max) 
-                            
+                            self.sendMail(self.devices[i], y, reading, people, min, max)      
                         else:
-                            #print key, "MALERT reading within range"
                             self.devices[i].getFrame().setInRange(key)    
                     else:
-                        #print key, "MALERT reading within disabled"
                         self.devices[i].getFrame().setInRange(key)
         if(self.keepGoing):
-            threading.Timer(self.refreshRateSec, self.monitorReadings).start()
+            threading.Timer(web.guiRefreshRate, self.monitorReadings).start()
     def toFloat(self, val):
         try:
             return float(val)
@@ -84,7 +98,6 @@ class MAlert:
 
     def sendMail(self, device, y, reading, people, min, max):
         '''Send mail if the given amount of time has elapsed.'''
-        
         HOURS_BETWEEN_EMAILS = 3
         elapsedHrs = (time.time()-self.t1)/3600
         key = device.getFrame().getTitle()+":"+device.getFrame().getNicknames()[y] 
@@ -105,9 +118,7 @@ class MAlert:
                 
                 self.mailSent[key] = True
 
-            
             if(HOURS_BETWEEN_EMAILS<elapsedHrs):
-                #print len([str(person).strip() for person in people.split(',')][0])
                 if not len([str(person).strip() for person in people.split(',')][0]) == 0:
                     print "sending mail"
                     print self.message
@@ -121,7 +132,6 @@ class MAlert:
                         print("Couldn't send email to group: "+
                            str([str(person).strip() for person in people.split(',')])+" | "+str(success)+" "+str(address))
                     self.message = []
-                    #self.mailSent = {}
                     for key in self.mailSent:
                         self.mailSent[key] = False
                     self.t1 = time.time()

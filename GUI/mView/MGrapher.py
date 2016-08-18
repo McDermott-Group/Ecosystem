@@ -1,29 +1,59 @@
+# Copyright (C) 2016 Noah Meltzer
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+__author__ = "Noah Meltzer"
+__copyright__ = "Copyright 2016, McDermott Group"
+__license__ = "GPL"
+__version__ = "2.0.1"
+__maintainer__ = "Noah Meltzer"
+__status__ = "Beta"
+
+"""
+description = Creates the plots seen on GUI.
+"""
+
 import sys
+sys.dont_write_bytecode = True
+
 from PyQt4 import QtGui, QtCore
+
 from functools import partial
+
 from dateStamp import *
 from dataChest import *
+
 import datetime
+import time
 import matplotlib
+
 from matplotlib.dates import DateFormatter, AutoDateFormatter, AutoDateLocator
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
-import logging as l
-LOG_FILENAME = 'mGrapherLog.log'
-import random
+
 import threading
 import traceback
-import time
+
 import numpy as np
+
 class mGraph(QtGui.QWidget):
     def __init__(self, device, parent=None):
         QtGui.QWidget.__init__( self,parent)
         
        
-        l.basicConfig(filename=LOG_FILENAME,level=l.DEBUG)
-        l.debug('mGrapher.py Log file')
+       
         self.figure = plt.figure()
         
         self.canvas = FigureCanvas(self.figure)
@@ -295,17 +325,7 @@ class mGraph(QtGui.QWidget):
                                     column = [row[i] for row in data[-index:]]
                                     # Exit the loop
                                     break
-                           
-                        l.debug("")
-                        l.debug("Device: "+self.device.getFrame().getTitle())
-                        l.debug("i: "+ str(i))
-                            #print dataSet.getVariables()
-                        l.debug( "data[-1]: " + str(data[-1]))
-                        l.debug( "len(data[-1]): "+ str( len(data[-1])))
-                        l.debug("num rows: "+ str(dataSet.getNumRows()))
-                        l.debug( "len(data): "+ str(len(data)))
-                        l.debug(str(times[-1]))
-                        
+
                         try:
                             while(len(self.line)<=i):
                                 self.line.append(self.ax.plot(1,1, label =dataSet.getVariables()[1][i-1][0])[0])
@@ -365,22 +385,10 @@ class mGraph(QtGui.QWidget):
                        
                 except Exception as e :
                    print "Error"
-                  # traceback.print_exc()
-                   l.debug("DEVICE: "+self.device.getFrame().getTitle())
-                   l.debug("ERROR")
-                   l.debug( (type(e)))
-                   l.debug(traceback.print_exc())
-                   l.debug( (e))
-                   l.debug( "i: " + str(i))
-                   l.debug( "len(data[-1]): " + str( len(data[-1])))
-                   l.debug( "num rows: " + str(dataSet.getNumRows()))
-                   l.debug( "len(data): " + str(len(data)))
-                   l.debug( "data[-1]: " + str(data[-1]))
-                   l.debug( "[row[1] for row in data] " + str([row[1] for row in data]))
                 try:
               
                     
-                    #self.line.set_data(range(20),np.random.rand(20))
+                   
                     self.ax.grid(True)
                     #self.ax.clear(self.ax.yaxis)
                     #self.ax.cla()
@@ -423,7 +431,7 @@ class mGraph(QtGui.QWidget):
                     self.canvas.flush_events()
                 
                 except:
-                    
+                    times = [datetime.datetime.fromtimestamp(row[0]) for row in data]
                     traceback.print_exc()
                     self.ax.set_xlim(times[0], times[-1])
                     self.ax.relim()

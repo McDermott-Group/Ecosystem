@@ -14,15 +14,20 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Utilities libraries.
-
+__author__ = "Noah Meltzer"
+__copyright__ = "Copyright 2016, McDermott Group"
+__license__ = "GPL"
+__version__ = "2.0.0"
+__maintainer__ = "Noah Meltzer"
+__status__ = "Beta"
 
 """
-# version = 1.0.5
 # description = Allows user to configure notifications
 """
 import sys
 sys.dont_write_bytecode = True
 from PyQt4 import QtCore, QtGui
+from MWeb import web
 import inspect
 import cPickle as pickle
 import os
@@ -31,20 +36,18 @@ import traceback
 
 class NotifierGUI(QtGui.QDialog):
     
-    def __init__(self,devices, parent = None):
+    def __init__(self, parent = None):
         '''Initialize the Notifier Gui'''
         super(NotifierGUI, self).__init__(parent)
         # Create a new tab
         tabWidget = QtGui.QTabWidget()
-        # Get stack trace
-        stack = inspect.stack()
-        # The location to store config data
-        #self.location = os.path.abspath(os.curdir)
+        # The the config data should be stored with the the main class
         self.location = os.path.dirname(traceback.extract_stack()[0][0])
+        # Dictionary that will store all data
         self.allDataDict = {}
         print "Looking for config file in: ", self.location
-        # New SMS widget
-        self.alert = AlertConfig(devices, self.location)
+        # New widget
+        self.alert = AlertConfig(self.location)
         # AlDatatxt holds the text contents of all data entered in table
         self.allDatatxt = [[],[],[],[]]
         # The settings window has a tab
@@ -68,28 +71,32 @@ class NotifierGUI(QtGui.QDialog):
         okButton.clicked.connect(self.saveData)
         cancelButton.clicked.connect(self.close)
         self.setWindowTitle("Notifier Settings")
-        self.devices = devices
-        # Get the location of the main class, and store the info there
-        # print("  I was called by {}".format(str(location)))
-        # Ensures that a dict exists
+        # Store all data
         self.saveData()
     def saveData(self):
         '''Save the data upon exit'''
-        # Arrays used to assist in storing data
-        self.allDataDict = {}
         try:
-            for device in self.devices:
+            # For each device
+            for device in web.devices:
+                # Get the title
                 title = device.getFrame().getTitle()
+                # For each nickname (parameter)
                 for nickname in device.getFrame().getNicknames():
+                    # If the nickname is not none, then we can store the data
                     if(nickname is not None):
+                        # The key is in the format device:paramName
                         key = title+":"+nickname
+                        # Temporary array used for assembling the data on each line
                         deviceDataArray = []
+                        # Store the state of the checkbox
                         deviceDataArray.append(self.alert
                             .allWidgetDict[key][0].isChecked())
                         if len(self.alert.allWidgetDict[key][1].text()) is not 0:
+                            # Store the text if there is any
                             deviceDataArray.append(float(self.alert
                                 .allWidgetDict[key][1].text()))
                         else:
+                            # Otherwise store a blank string
                             deviceDataArray.append('')
                         if len(self.alert.allWidgetDict[key][2].text()) is not 0:
                             deviceDataArray.append(float(self.alert
@@ -101,7 +108,6 @@ class NotifierGUI(QtGui.QDialog):
                         if(deviceDataArray[1]>deviceDataArray[2]
                             and deviceDataArray[1] is not None
                             and deviceDataArray[2] is not None):
-                            #print(deviceDataArray[1])
                             raise
                         self.allDataDict[title+":"+nickname] = deviceDataArray
                 # Pickle the arrays and store them
@@ -109,27 +115,24 @@ class NotifierGUI(QtGui.QDialog):
                 os.path.join(self.location, 'NotifierConfig.mview')
                 , 'wb'))
             self.alert.allDataDict = self.allDataDict
-            #print self.alert.allDataDict
-                #print("Data Saved")
+            web.limitDict = self.allDataDict
         except ValueError:
-            
             print("Enter only numbers into 'Minimum' and 'Maximum' fields.")
             print("Data Not Saved")
-            
+        except IOError as e:
+            print "Unable to save notifier config data:"
+            print e
         except:
-            #traceback.print_exc()
             print("Minimum values cannot be greater than maximum values.")
             print("Data Not Saved")
-        # Close the window
         self.close()
         
     def getDict(self):
         return self.alert.allDataDict
         
 class AlertConfig(QtGui.QWidget):
-    def __init__(self,devices, location, parent = None):
+    def __init__(self, location, parent = None):
         super(AlertConfig, self).__init__(parent)
-        self.devices = devices
         # Configure the layout
         layout = QtGui.QGridLayout()
         # where to find the notifier data
@@ -166,23 +169,23 @@ class AlertConfig(QtGui.QWidget):
         z = 1
         x = 0
         # Go through and add all of the devices and their parameters to the gui.
-        for i in range(1, len(devices)+1):
+        for i in range(1, len(web.devices)+1):
             # j is also used for indexing
             j = i-1
             # Create the labels for all parameters
             label = QtGui.QLabel()
-            label.setText(self.devices[j].getFrame().getTitle())
+            label.setText(web.devices[j].getFrame().getTitle())
             label.setFont(font)
             layout.addWidget(label, z, 1)
             z=z+1
             # Create all of the information fields and put the saved data in
             # them.
-            for y in range(1, len(self.devices[j].getFrame().getNicknames())+1):
-                paramName = self.devices[j].getFrame().getNicknames()[y-1]
+            for y in range(1, len(web.devices[j].getFrame().getNicknames())+1):
+                paramName = web.devices[j].getFrame().getNicknames()[y-1]
                 u = y-1
                 if(paramName is not None):
-                    title = self.devices[j].getFrame().getTitle()
-                    nickname = self.devices[j].getFrame().getNicknames()[u]
+                    title = web.devices[j].getFrame().getTitle()
+                    nickname = web.devices[j].getFrame().getNicknames()[u]
                     key = (title+":"+nickname)
                     if(key in self.allDataDict):
                         for data in self.allDataDict[key]:
@@ -213,13 +216,13 @@ class AlertConfig(QtGui.QWidget):
                     layout.addWidget(self.allWidgetDict[key][3],z, 7)
                     layout.addWidget(self.allWidgetDict[key][0],z, 2)
                     
-                    if(len(self.devices[j].getFrame().getUnits())>(y-1)):
+                    if(len(web.devices[j].getFrame().getUnits())>(y-1)):
                         unitLabel = QtGui.QLabel()
-                        unitLabel.setText(self.devices[j].getFrame()
+                        unitLabel.setText(web.devices[j].getFrame()
                             .getUnits()[y-1])
                         layout.addWidget(unitLabel,z,4)
                         unitLabel = QtGui.QLabel()
-                        unitLabel.setText(self.devices[j].getFrame()
+                        unitLabel.setText(web.devices[j].getFrame()
                             .getUnits()[y-1])
                         layout.addWidget(unitLabel,z,6)
                     # These are used for indexing
