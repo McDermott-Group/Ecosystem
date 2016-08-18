@@ -13,7 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-
+__author__ = "Noah Meltzer"
+__copyright__ = "Copyright 2016, McDermott Group"
+__license__ = "GPL"
+__version__ = "2.0.1"
+__maintainer__ = "Noah Meltzer"
+__status__ = "Beta"
 """
 version = 2.0.1
 description = References a device
@@ -209,6 +214,7 @@ class Device:
                         [button][1])
         except:
             #print("Device not connected.")
+            traceback.print_exc()
             return
     def Query(self):
         '''Ask the device for readings'''
