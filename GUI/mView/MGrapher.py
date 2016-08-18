@@ -1,58 +1,125 @@
+# Copyright (C) 2016 Noah Meltzer
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+__author__ = "Noah Meltzer"
+__copyright__ = "Copyright 2016, McDermott Group"
+__license__ = "GPL"
+__version__ = "2.0.1"
+__maintainer__ = "Noah Meltzer"
+__status__ = "Beta"
+
+"""
+description = Creates the plots seen on GUI.
+"""
+
 import sys
+sys.dont_write_bytecode = True
+
 from PyQt4 import QtGui, QtCore
+
 from functools import partial
+
 from dateStamp import *
 from dataChest import *
+
 import datetime
+import time
 import matplotlib
+
 from matplotlib.dates import DateFormatter, AutoDateFormatter, AutoDateLocator
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
-import logging as l
-LOG_FILENAME = 'mGrapherLog.log'
-import random
+
 import threading
 import traceback
-import time
+
 import numpy as np
+
+from MWeb import web
 class mGraph(QtGui.QWidget):
     def __init__(self, device, parent=None):
         QtGui.QWidget.__init__( self,parent)
-        
-       
-        l.basicConfig(filename=LOG_FILENAME,level=l.DEBUG)
-        l.debug('mGrapher.py Log file')
+        # Create a matplotlib figure
         self.figure = plt.figure()
-        
+        self.figure.set_facecolor('r')
+        # Create a QFrame to house the plot. This is not necessary, just makes it look nice
+        self.matframe = QtGui.QFrame(self)
+        self.matLayout = QtGui.QVBoxLayout()
+        self.matLayout.setSpacing(0)
+        self.matframe.setLayout(self.matLayout)
+        self.matframe.setFrameShape(QtGui.QFrame.Panel)
+        self.matframe.setFrameShadow(QtGui.QFrame.Plain)
+        self.matframe.setStyleSheet("background-color: rgb(70,80,88); margin:0px; border:2px solid rgb(0, 0, 0); ")
         self.canvas = FigureCanvas(self.figure)
         self.canvas.setSizePolicy(QtGui.QSizePolicy.Preferred, 
             QtGui.QSizePolicy.Preferred)
+        # This is the device we want to use
         self.device = device
-        self.ax = self.figure.add_subplot(111)
-        self.figure.patch.set_alpha(1.0)
-        #self.figure.tight_layout()
+        # This sets up axis on which to plot
+        self.ax = self.figure.add_subplot(111, axisbg = (189.0/255, 195.0/255, 199.0/255))
+        # Add the matplotlib canvas to the QFrame
+        self.matLayout.addWidget(self.canvas)
+        # The following lines set up all the colors, makes it look nice. The code to do it is
+        # far from pretty and I am planning on cleaning this up a bit.
+        self.figure.patch.set_color((70.0/255, 80.0/255, 88.0/255))
+        self.figure.patch.set_edgecolor((70.0/255, 80.0/255, 88.0/255))
+        self.ax.spines['bottom'].set_color((189.0/255, 195.0/255, 199.0/255))
+        self.ax.spines['top'].set_color((189.0/255, 195.0/255, 199.0/255)) 
+        self.ax.spines['right'].set_color((189.0/255, 195.0/255, 199.0/255))
+        self.ax.spines['left'].set_color((189.0/255, 195.0/255, 199.0/255))
+        self.ax.tick_params(axis='x', colors=(189.0/255, 195.0/255, 199.0/255))
+        self.ax.tick_params(axis='y', colors=(189.0/255, 195.0/255, 199.0/255))
+        self.ax.title.set_color((189.0/255, 195.0/255, 199.0/255))
+        self.ax.yaxis.label.set_color((189.0/255, 195.0/255, 199.0/255))
+        self.ax.xaxis.label.set_color((189.0/255, 195.0/255, 199.0/255))
+        self.ax.title.set_color('red')
+        self.ax.xaxis.get_offset_text().set_color((189.0/255, 195.0/255, 199.0/255))
+        self.ax.yaxis.get_offset_text().set_color((189.0/255, 195.0/255, 199.0/255))
+        # This is an array of all the lines on the plot. A line for every parameter
         self.line = []
+        # Each element of line holds a plot, to be combined onto the same graph
         self.line.append(self.ax.plot(1,1, label = "Getting Data...")[0])
+        # This is the ONLY time canvas.draw is called. It should NOT be called anywhere else if
+        # the graphing speed is to be fast.
         self.canvas.draw()
-        #plt.style.use('dark_background')
+        # In order to handle interactivity, I had to do some odd stuff with the
+        # toolbar buttons. Self.home holds the original function called when the home button on the toolbar
+        # is clicked.
         self.home = NavigationToolbar.home
-        #self.zoom = NavigationToolbar.Zoom-to-rectangle
+        # We now change the function that is called when the toolbar is clicked.
         NavigationToolbar.home = self.enableAutoScaling
-        #NavigationToolbar.Zoom-to-rectangle = self.disableAutoScaling
         self.toolbar = NavigationToolbar(self.canvas, self)
-        #self.toolbar.set_message("HELLO")
-        #self.cidp = self.canvas.mpl_connect('pick_event', self.onPick)
         self.cid = self.canvas.mpl_connect('button_press_event', self.disableAutoScaling)
-       
-        #self.cid = plt.get_current_fig_manager().toolbar.events()[3].triggered.connect(self.disableAutoScaling)
         self.setStyleSheet("""QPushButton{
                     color:rgb(189,195, 199); 
                     background:rgb(70, 80, 88)}""")
+        self.toolbarFrame = QtGui.QFrame(self)
+        toolbarFrameLayout = QtGui.QVBoxLayout()
+        toolbarFrameLayout.addWidget(self.toolbar)
+        self.toolbarFrame.setLayout(toolbarFrameLayout)
+        self.toolbarFrame.setStyleSheet("""
+                    border:2px solid rgb(0,0,0);
+                    color:rgb(189,195,199); 
+                    background:rgb(70, 80, 88);
+                    """)
         self.toolbar.setStyleSheet("""
-                    color:rgb(0,0,0); 
-                    background:rgb(200, 200, 200);""")
+                    border:0px solid rgb(0,0,0);
+                    color:rgb(189,195,199); 
+                    background:rgb(70, 80, 88); 
+                   """)
         #self.ax.xaxis.label.set_color('rgb(189,195, 199)')
         self.matPlotInfo = QtGui.QLabel()
         self.alertFont = QtGui.QFont()
@@ -131,36 +198,20 @@ class mGraph(QtGui.QWidget):
         self.oneWkButton.hide()
         self.twoWkButton.hide()
         self.allButton.hide()
-        
+        self.matframe.hide()
         self.matPlotInfo.hide()
+        self.toolbarFrame.hide()
         
         layout = QtGui.QVBoxLayout()
         layout.addLayout(buttonLayout)
         layout.addLayout(buttonLayout2)
         layout.addLayout(buttonLayout3)
         layout.addWidget(self.matPlotInfo)
-        layout.addWidget(self.canvas)
-        layout.addWidget(self.toolbar)
+        layout.addWidget(self.matframe)
+        layout.addWidget(self.toolbarFrame)
         
 
         self.setLayout(layout)
-
-#self.canvas.show()
-        # keepTrying = True
-        # dataSet =  self.device.getFrame().getDataSet()
-        # while dataSet != None:
-            # try:
-                # dataSet =  self.device.getFrame().getDataSet()
-                # data = dataSet.getData()
-                # for i in range(1, len(data[-1])):
-                    
-                    # times = [datetime.datetime.fromtimestamp(row[0]) for row in data]
-                    # column = [row[i] for row in data]
-
-                # #print "Drew Graphs"
-            # except:
-                # traceback.print_exc()
-                # time.sleep(0.1)
 
     def enableAutoScaling(self):
         self.timer.start(self.refreshRateSec*1000)
@@ -202,6 +253,8 @@ class mGraph(QtGui.QWidget):
             self.twoWkButton.hide()
             self.allButton.hide()
             self.matPlotInfo.hide()
+            self.matframe.hide()
+            self.toolbarFrame.hide()
             self.timer.stop()
             self.hideButton.setText("Show Plot")
             self.hidden = True
@@ -220,6 +273,8 @@ class mGraph(QtGui.QWidget):
             self.twoWkButton.show()
             self.allButton.show()
             self.plot(self.currTimeRange)
+            self.matframe.show()
+            self.toolbarFrame.show()
             self.timer.start(self.refreshRateSec*1000)
             self.hideButton.setText("Hide Plot")
             self.enableAutoScaling()
@@ -295,17 +350,7 @@ class mGraph(QtGui.QWidget):
                                     column = [row[i] for row in data[-index:]]
                                     # Exit the loop
                                     break
-                           
-                        l.debug("")
-                        l.debug("Device: "+self.device.getFrame().getTitle())
-                        l.debug("i: "+ str(i))
-                            #print dataSet.getVariables()
-                        l.debug( "data[-1]: " + str(data[-1]))
-                        l.debug( "len(data[-1]): "+ str( len(data[-1])))
-                        l.debug("num rows: "+ str(dataSet.getNumRows()))
-                        l.debug( "len(data): "+ str(len(data)))
-                        l.debug(str(times[-1]))
-                        
+
                         try:
                             while(len(self.line)<=i):
                                 self.line.append(self.ax.plot(1,1, label =dataSet.getVariables()[1][i-1][0])[0])
@@ -334,7 +379,7 @@ class mGraph(QtGui.QWidget):
                             #print "Failed to log data"
                         # Add a legend
                         legend = self.ax.legend(loc='upper left')
-                        self.ax.set_title(self.device.getFrame().getTitle())
+                        self.ax.set_title(self.device.getFrame().getTitle(), color = (189.0/255, 195.0/255, 199.0/255))
                         
                         if(self.device.getFrame().getYLabel() is not None 
                             and len(self.device.getFrame().getCustomUnits()) is not 0):
@@ -365,22 +410,10 @@ class mGraph(QtGui.QWidget):
                        
                 except Exception as e :
                    print "Error"
-                  # traceback.print_exc()
-                   l.debug("DEVICE: "+self.device.getFrame().getTitle())
-                   l.debug("ERROR")
-                   l.debug( (type(e)))
-                   l.debug(traceback.print_exc())
-                   l.debug( (e))
-                   l.debug( "i: " + str(i))
-                   l.debug( "len(data[-1]): " + str( len(data[-1])))
-                   l.debug( "num rows: " + str(dataSet.getNumRows()))
-                   l.debug( "len(data): " + str(len(data)))
-                   l.debug( "data[-1]: " + str(data[-1]))
-                   l.debug( "[row[1] for row in data] " + str([row[1] for row in data]))
                 try:
               
                     
-                    #self.line.set_data(range(20),np.random.rand(20))
+                   
                     self.ax.grid(True)
                     #self.ax.clear(self.ax.yaxis)
                     #self.ax.cla()
@@ -423,7 +456,7 @@ class mGraph(QtGui.QWidget):
                     self.canvas.flush_events()
                 
                 except:
-                    
+                    times = [datetime.datetime.fromtimestamp(row[0]) for row in data]
                     traceback.print_exc()
                     self.ax.set_xlim(times[0], times[-1])
                     self.ax.relim()

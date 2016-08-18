@@ -2,13 +2,14 @@ import sys
 sys.dont_write_bytecode = True
 from PyQt4 import QtCore, QtGui
 from functools import partial
+from MWeb import web
 import traceback
 class ConfigGui(QtGui.QDialog):
-    def __init__(self, mainGui, parent = None):
+    def __init__(self, parent = None):
         super(ConfigGui, self).__init__(parent)
         # Create a tab for update speed settings
         mainTabWidget = QtGui.QTabWidget()
-        mainTabWidget.addTab(refreshRateContents(mainGui), "Refresh Rates")
+        mainTabWidget.addTab(refreshRateContents(), "Refresh Rates")
         mainLayout = QtGui.QVBoxLayout()
         mainLayout.addWidget(mainTabWidget)
         buttonLayout = QtGui.QHBoxLayout()
@@ -22,9 +23,9 @@ class ConfigGui(QtGui.QDialog):
         okButton.clicked.connect(self.close)
         
 class refreshRateContents(QtGui.QWidget):
-    def __init__(self, mainGui, parent = None):
+    def __init__(self, parent = None):
         super(refreshRateContents, self).__init__(parent)
-        self.mainGui = mainGui
+        #self.mainGui = mainGui
         mainLayout = QtGui.QVBoxLayout()
         
         self.setLayout(mainLayout) 
@@ -33,7 +34,7 @@ class refreshRateContents(QtGui.QWidget):
         mainLayout.addWidget(self.refreshTabWidget)
         self.refreshTabWidget.addTab(self.guiRefreshConfig(), "Gui")
         
-        for device in mainGui.devices:
+        for device in web.devices:
             self.refreshTabWidget.addTab(devRefRateConfig(device), device.getFrame().getTitle())
             
     def guiRefreshConfig(self):
@@ -43,7 +44,7 @@ class refreshRateContents(QtGui.QWidget):
         guiRefLayoutH.addWidget(QtGui.QLabel("Gui Refresh period: "))
         guiRefLayoutH.addStretch(0)
         self.refRateEdit = QtGui.QLineEdit()
-        self.refRateEdit.setText(str(self.mainGui.refreshRateSec))
+        self.refRateEdit.setText(str(web.guiRefreshRate))
         guiRefLayoutH.addWidget(self.refRateEdit)
         guiRefLayoutH.addWidget(QtGui.QLabel('s'))
         self.refRateEdit.editingFinished.connect(self.updateMainGuiRefRate)
@@ -54,7 +55,7 @@ class refreshRateContents(QtGui.QWidget):
         
     def updateMainGuiRefRate(self):
        try:
-            self.mainGui.refreshRateSec = float(self.refRateEdit.text())
+            web.guiRefreshRate = float(self.refRateEdit.text())
        except Exception as e:
             print e
             

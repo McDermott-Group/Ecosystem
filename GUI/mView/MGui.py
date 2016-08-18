@@ -12,79 +12,95 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-
+__author__ = "Noah Meltzer"
+__copyright__ = "Copyright 2016, McDermott Group"
+__license__ = "GPL"
+__version__ = "2.0.0"
+__maintainer__ = "Noah Meltzer"
+__status__ = "Beta"
 
 """
-version = 1.0.1
-description = Handles easy construction of GUI
+description = Handles construction of GUI using mView framework.
 """
 import sys
 sys.dont_write_bytecode = True
+
 from PyQt4 import QtCore, QtGui
-from multiprocessing.pool import ThreadPool
-from twisted.internet import reactor
+
 import threading
-import ctypes
+
 from functools import partial
-import os
+
 from NotifierGUI import NotifierGUI
 from MConfigGui import ConfigGui
-import math
-import MAlert
-import numpy as np
 import MGrapher
+import MAlert
+from MWeb import web
+
+import math
+
+import numpy as np
+
 import atexit
 import traceback
+
 class MGui(QtGui.QMainWindow):
     print "Starting mView (C) Noah Meltzer 2016\r\n"
-    dialog = None
+    # Holds the Qlabels that label the parameters
     parameters = [[]]
-    frames = []
+    # Each tile on the gui is called a frame, this is the list of them
+    tiles = []
+    # All layouts for each device
     grids = []
+    # All devices connected and not connected to gui
     devices = None
+    # The main vertical box layout for the gui.
     mainVBox = [QtGui.QVBoxLayout()]
+    # The main horizontal box layout for the gui
     mainHBox = QtGui.QHBoxLayout()
+    # The titles of all devices
     titles = []
+    # The dataset for each device
     dataSets = []
+    # Holds all lcds for all devices
     lcds = [[]]
+    # Holds all units for all devices
     units = [[]]
+    # Holds all buttons for all devices
     buttons = [[]]
-    plots = [[]]
+    # This is the main font used for text in the GUI
     font = QtGui.QFont()
-    #font.setPointSize(12)
     font.setBold(False)
     font.setWeight(50)
     font.setKerning(True)
-    refreshRateSec = 1
+    # This is the default refresh rate
+    #refreshRateSec = 1
+    # The staring column to put tiles in
     VBoxColumn = 0
+    # Used to allow Query to keep calling itself.
     keepGoing = True
     
     def initGui(self, devices, parent = None):
-        '''Create a base gui to start from'''
+        '''Configure all gui elements.'''
         QtGui.QWidget.__init__(self, parent)
-        
-        MainWindow = self
-        app.setActiveWindow(MainWindow) 
-        
+        app.setActiveWindow(self) 
+        # On GUI exit, run stop function
         atexit.register(self.stop)
-        # Make pretty
-        self.central_widget = QtGui.QWidget()
-        self.setCentralWidget(self.central_widget)
-        self.central_widget.setLayout(self.mainHBox)
-        self.setStyleSheet("background:rgb(70, 80, 88)")
-        # # Get list of devices
-        # self.devices = devices
-        # Stack the device frames
-        # #self.setLayout(self.mainHBox)
-        
-        #self.mainHBox.addLayout(self.mainVBox[self.VBoxColumn])
-        
+        web.devices = devices
+        # Make gui area scrollable
+        self.main_widget = QtGui.QWidget()
+        self.main_widget.setLayout(self.mainHBox)
+        self.scrollArea = QtGui.QScrollArea()
+        self.scrollArea.setWidget(self.main_widget)
+        self.scrollArea.setWidgetResizable(True)
+        self.setCentralWidget(self.scrollArea)
+        # Setup stylesheet
+        self.scrollArea.setStyleSheet("background:rgb(70, 80, 88)")
+        # Configure the menu bar
         menubar = self.menuBar()
         menubar.setStyleSheet("QMenuBar {background-color: rgb(189, 195, 199)}"
                 "QMenuBar::item {background: transparent} QMenu{background-color:rgb(189, 195, 199)}")
-        #self.statusBar()
-        #self.statusBar().setStyleSheet("background-color: rgb(189, 195, 199)")
-
+        # Menu bar menus
         exitAction = QtGui.QAction('&Exit', self)        
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
@@ -104,80 +120,75 @@ class MGui(QtGui.QMainWindow):
         
         DeviceMenu = menubar.addMenu('&Devices')
         DeviceMenu.addAction(deviceSettingsAction)
-        # For each device, add a GUI frame for it.
+        # Keeps track of the number of widgets, used for placing tiles into the correct column
         numWidgets = 0
-        
-        self.scrollArea = QtGui.QScrollArea()
-        
-        
-        self.scrollArea.setWidget(self.central_widget)
-        self.scrollArea.setWidgetResizable(True)
-
-        self.setCentralWidget(self.scrollArea)
+        # Configure the size policy of all tiles
         frameSizePolicy = QtGui.QSizePolicy()
         frameSizePolicy.setVerticalPolicy(4)
         frameSizePolicy.setHorizontalPolicy(QtGui.QSizePolicy.Preferred)
-        
+        # Configure the layouts
         self.mainVBox.append(QtGui.QVBoxLayout())
         self.mainVBox.append(QtGui.QVBoxLayout())
         self.mainHBox.addLayout(self.mainVBox[0])
         self.mainHBox.addLayout(self.mainVBox[1])
+        # Which column are we adding a tile to next
         self.VBoxColumn = 0
-        for i in range(0,len(self.devices)):
-            # numWidgets = numWidgets+1
-            # #Append a new gui frame
-            self.frames.append(QtGui.QFrame(self))
-
+        # For each device
+        for i in range(len(web.devices)):
+            # Add a QFrame, this is the border, and the parent of all gui elements that go inside.
+            self.tiles.append(QtGui.QFrame(self))
+            # Switch off adding tiles to columns
             if self.VBoxColumn == 0:
                 self.VBoxColumn = 1
             else:
                 self.VBoxColumn = 0
-            self.mainVBox[self.VBoxColumn].addWidget(self.frames[i])
+            self.mainVBox[self.VBoxColumn].addWidget(self.tiles[i])
             # Add new titles, grids, parameters, 
             # and lcds for the new parameter
-            self.titles.append(QtGui.QLabel(self.frames[i]))
+            self.titles.append(QtGui.QLabel(self.tiles[i]))
             self.grids.append(QtGui.QGridLayout())
             self.parameters.append([])
             self.lcds.append([])
             self.units.append([])
             self.buttons.append([])
-            self.plots.append([])
             # Configure grid layout
             self.grids[i].setSpacing(10)
             self.grids[i].addWidget(self.titles[i], 1, 0)
             self.grids[i].setColumnStretch(0,1)
-            # Configure the frame (the box surrounding 
+            # Configure the tile (the box surrounding 
             # information for each device)
-            self.frames[i].setSizePolicy(frameSizePolicy)
-            
-            self.frames[i].setStyleSheet("background: rgb(52, 73, 94)")
-            self.frames[i].setFrameShape(QtGui.QFrame.Panel)
-            self.frames[i].setFrameShadow(QtGui.QFrame.Plain)
-            self.frames[i].setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
-            self.ratio =float(self.scrnWidth)/1800+1
-            #print(self.ratio)
-            self.frames[i].setLineWidth(self.ratio)
-            self.frames[i].setLayout(self.grids[i])
+            self.tiles[i].setSizePolicy(frameSizePolicy)
+            self.tiles[i].setStyleSheet("background: rgb(52, 73, 94)")
+            self.tiles[i].setFrameShape(QtGui.QFrame.Panel)
+            self.tiles[i].setFrameShadow(QtGui.QFrame.Plain)
+            self.tiles[i].setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+            # Used for dpi scaling (works pretty well but not amazing)
+            if self.scrnWidth>self.scrnHeight:
+                web.ratio =float(self.scrnWidth)/1800+1
+            else:
+                web.ratio =float(self.scrnHeight)/1800+1
+            self.tiles[i].setLineWidth(web.ratio)
+            self.tiles[i].setLayout(self.grids[i])
             # Configure the layout of the buttons within the grid
             buttonLayout = QtGui.QHBoxLayout()
             self.grids[i].addLayout(buttonLayout, 1, 1)
             # Create all buttons.
-            if(len(self.devices[i].getFrame().getButtons()[0])>0):
-                for b in range(0, len(self.devices[i]
+            if(len(web.devices[i].getFrame().getButtons()[0])>0):
+                for b in range(0, len(web.devices[i]
                     .getFrame().getButtons())):
                     # Append a new button to the array of buttons and 
                     # set the parent as the current frame
                     self.buttons[i].append(QtGui
-                        .QPushButton(self.frames[i]))
+                        .QPushButton(self.tiles[i]))
                     # Set the text of the button to the name specified 
                     # when the device was initialized                   
-                    self.buttons[i][b].setText(self.devices[i]
+                    self.buttons[i][b].setText(web.devices[i]
                         .getFrame().getButtons()[b][0])
                     # Add the button to the screen.
                     buttonLayout.addWidget(self.buttons[i][b])
                     # Connect the button to function, 
                     # passing the number of the button that was clicked
-                    self.buttons[i][b].clicked.connect(partial(self
+                    self.buttons[i][b].clicked.connect(partial(web
                         .devices[i].prompt, b))
                     # Make the button pretty
                     self.buttons[i][b].setStyleSheet("color:rgb(189," 
@@ -189,14 +200,14 @@ class MGui(QtGui.QMainWindow):
             self.titles[i].setFont(self.font)
             self.font.setPointSize(12)
             # Get the title of the device
-            self.titles[i].setText(self.devices[i].getFrame().getTitle())
+            self.titles[i].setText(web.devices[i].getFrame().getTitle())
             self.titles[i].setGeometry(QtCore.QRect(10,10,self.titles[i]
                 .fontMetrics().boundingRect(self.titles[i]
                     .text()).width(),40))
-            for y in range(0, len(self.devices[i].getFrame().getNicknames())):
+            for y in range(0, len(web.devices[i].getFrame().getNicknames())):
                 # Add a new parameter to the current device
-                self.parameters[i].append(QtGui.QLabel(self.frames[i]))
-                self.units[i].append(QtGui.QLabel(self.frames[i]))
+                self.parameters[i].append(QtGui.QLabel(self.tiles[i]))
+                self.units[i].append(QtGui.QLabel(self.tiles[i]))
                 #Get the width of the text
                 self.parameters[i][y].setFont(self.font)
                 self.parameters[i][y].setAlignment(QtCore.Qt.AlignLeft)
@@ -209,16 +220,14 @@ class MGui(QtGui.QMainWindow):
                 self.lcds[i][y].display("-")
                 self.lcds[i][y].setFrameShape(QtGui.QFrame.Panel)
                 self.lcds[i][y].setFrameShadow(QtGui.QFrame.Plain)
-                self.lcds[i][y].setLineWidth(self.ratio)
+                self.lcds[i][y].setLineWidth(web.ratio)
                 self.lcds[i][y].setMidLineWidth(100)
                 self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n")
                 self.lcds[i][y].setFixedHeight(self.scrnHeight/30)
                 self.lcds[i][y].setMinimumWidth(self.scrnWidth/7)
-
                 # Make the parameters pretty
                 self.parameters[i][y].setWordWrap(True)
-                self.parameters[i][y].setStyleSheet(
-                    "color:rgb(189, 195, 199);")    
+                self.parameters[i][y].setStyleSheet("color:rgb(189, 195, 199);")    
                 # Hide everything until we know that it should be displayed.
                 # This is essential to be able to handle arrays
                 self.parameters[i][y].hide()
@@ -226,7 +235,7 @@ class MGui(QtGui.QMainWindow):
                 self.units[i][y].hide()
                 # If a nickname for the setting has been defined, 
                 # go ahead and display whatever is necessary
-                if(self.devices[i].getFrame().getNicknames()[y] is not None):
+                if(web.devices[i].getFrame().getNicknames()[y] is not None):
                     self.parameters[i][y].show()
                     self.lcds[i][y].show()
                     self.units[i][y].show()
@@ -240,47 +249,31 @@ class MGui(QtGui.QMainWindow):
                     self.grids[i].addLayout(lcdHBoxLayout, y+2, 1)
                     self.grids[i].addWidget(self.units[i][y], y+2, 2)
             # Configure the plots
-            if (self.devices[i].getFrame().isPlot()):
-                self.main_widget = self.frames[i]
-                dc = MGrapher.mGraph(self.devices[i])
-                yPos = len(self.devices[i].getFrame().getNicknames())+3
-                self.devices[i].getFrame().setPlot(dc)
+            if (web.devices[i].getFrame().isPlot()):
+                dc = MGrapher.mGraph(web.devices[i])
+                yPos = len(web.devices[i].getFrame().getNicknames())+3
+                web.devices[i].getFrame().setPlot(dc)
                 self.grids[i].addWidget(dc, yPos, 0,yPos,3 )
                 
         self.mainVBox[0].addStretch(0)
         self.mainVBox[1].addStretch(0)
         print("Gui initialized")
-        return
-    # def getPlot():
-        # return  self.devices[i].getFrame().getPlot(dc)
+   
     def stop(self):
+        '''Stop and close mView cleanly'''
         print "Closing mView"
         self.keepGoing = False
         exit()
         
-
-        #self.close()
     def openNotifierSettings(self):
-        # Start the notifier gui
+        '''Open the notifier settings gui'''
         # NOTE, this is run on the main thread, so while it is open the main
         # GUI will not be running.
-        self.NotifierGUI = NotifierGUI(self.devices)
+        self.NotifierGUI = NotifierGUI()
         self.NotifierGUI.exec_()
-        #print "The mins received were", (self.NotifierGUI.getMins())
-        # Start the messenger service
-        try:
-            self.MAlert.stop()
-            self.MAlert = None
-        except:
-            print("Starting MAlert for first time")
-        #print "WHAT GUI SEES:", self.NotifierGUI.getDict()
-        self.MAlert = MAlert.MAlert(self.NotifierGUI.getDict(),
-                                            self.devices,
-                                            self.tele,
-                                            self.refreshRateSec)
-        self.MAlert.begin()
+
     def setRefreshRate(self, period):
-        self.refreshRateSec = period
+        web.guiRefreshRate = period
     def openConfig(self):
         self.Config = ConfigGui(self)
         self.Config.exec_()
@@ -288,15 +281,13 @@ class MGui(QtGui.QMainWindow):
         '''Start the GUI'''
         # Used as the name of the dataChest data title
         self.dataTitle = dataTitle
+        web.devices = devices
         # Start the notifier
-        self.tele = tele
-        self.devices = devices
-        self.NotifierGUI = NotifierGUI(self.devices)
-        self.MAlert = MAlert.MAlert(self.NotifierGUI.getDict(),
-                                            self.devices,
-                                            self.tele,
-                                            self.refreshRateSec)
+        web.telecomm = tele
+        self.NotifierGUI = NotifierGUI()
+        self.MAlert = MAlert.MAlert()
         self.MAlert.begin()
+        
         screen_resolution = QtGui.QDesktopWidget().screenGeometry()
         self.scrnWidth = screen_resolution.width()
         self.scrnHeight = screen_resolution.height()
@@ -308,11 +299,7 @@ class MGui(QtGui.QMainWindow):
         self.timer = QtCore.QTimer(self)
         # Update the gui every so often. This CAN ONLY be done 
         # in the main thread.
-        self.timer.timeout.connect(self.update)
-        #self.timer.start(self.refreshRateSec*1000)
-        self.timer.singleShot(self.refreshRateSec*1000, self.update)
-        #timer.timeout.connect(self.update)
-        #self.update()
+        self.timer.singleShot(web.guiRefreshRate*1000, self.update)
         self.MAlert.begin()
         sys.exit(app.exec_())
 
@@ -321,70 +308,49 @@ class MGui(QtGui.QMainWindow):
         readings = []
         error = False
         # loop through all devices
-        for i in range(0, len(self.devices)):
+        for i in range(0, len(web.devices)):
             # If there is no error with the device
-            if(not self.devices[i].getFrame().isError()):
+            if(not web.devices[i].getFrame().isError()):
                 # Get the readings from the frame
-                readings = self.devices[i].getFrame().getReadings();
+                readings = web.devices[i].getFrame().getReadings();
                 if(readings is not None):
-                    # Holds an array containing the new data for use 
-                    # when adding data to the current dataset
-                    newData = []
-                    # Update all QLcds with the reading
-                    #status = self.devices[i].getFrame().getOutOfRangeStatus()
-                    # for device in self.devices:
-                    #print self.devices[i].getFrame().getTitle(), self.devices[i].getFrame().getOutOfRangeStatus()
-                    # print status
-                    #print self.devices[i].getFrame().getOutOfRangeStatus()
-                    
-                    for y in range(len(self.devices[i].getFrame().getOutOfRangeStatus())):
-                        outOfRange = self.devices[i].getFrame().getOutOfRangeStatus()
-                        key = self.devices[i].getFrame().getTitle()+":"+self.devices[i].getFrame().getNicknames()[y] 
-                        #print "out of range" ,outOfRange
-                        #print self.lcds[i]
-                       # try:
-                        
+                    # Update all QLcds with the reading                    
+                    for y in range(len(web.devices[i].getFrame().getOutOfRangeStatus())):
+                        # Check if the reading is out of range
+                        outOfRange = web.devices[i].getFrame().getOutOfRangeStatus()
+                        # The key for a reading is "device:param"
+                        key = web.devices[i].getFrame().getTitle()+":"+web.devices[i].getFrame().getNicknames()[y] 
+                        # Check if the specific reading is out of range
                         if outOfRange[key]:
-                            #print "OUT OF RANGE"
+                            # If the reading is out of range, make everything orange
                             self.lcds[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
                             self.units[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
                             self.parameters[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
                         else:
+                            # Otherwise, things should be white
                             self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
                             self.units[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
                             self.parameters[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
-                        # except:
-                            # pass
-                        # for lcd in self.lcds[i]:
-                        # lcd.setStyleSheet("color:rgb(189, 195, 199);\n") 
-                    # #self.lcds[i].setStyleSheet("color:rgb(255, 195, 199);\n")
-                    # #print status
-                    # if(status[0] and status[1] != None):
-                        # #self.lcds[i][status[1]].setColor(QtGui.QColor(255, 0, 0))
-                        # self.lcds[i][status[1]].setStyleSheet("color:rgb(150, 89, 50);\n")
-                       
-                    for y in range(0, len(self.devices[i].getFrame().getNicknames())):
-                        self.lcds[i][y].setSegmentStyle(
-                            QtGui.QLCDNumber.Flat)
-                        z = self.devices[i].getFrame().getReadingIndices()
+                    for y in range(0, len(web.devices[i].getFrame().getNicknames())):
+                        # Segments should be flat
+                        self.lcds[i][y].setSegmentStyle(QtGui.QLCDNumber.Flat)
                         try:
+                            # If the readings are not nan, then display a reading
                             if(not math.isnan(readings[y])):
                                 self.lcds[i][y].display(readings[y])
+                            # If the reading is nan, or there is none, it is denoted by ---
                             else:
-                                self.lcds[i][y].display("-")
+                                self.lcds[i][y].display("---")
                         except TypeError:
                             traceback.print_exc()
                             pass
-                    
                         # If there are units, put them next to the number
-                        if(len(self.devices[i].getFrame().getUnits())>0):
-                            self.units[i][y].setText(self.devices[i]
+                        if(len(web.devices[i].getFrame().getUnits())>0):
+                            self.units[i][y].setText(web.devices[i]
                                 .getFrame().getUnits()[y])
                             self.font.setPointSize(18)
                             self.units[i][y].setFont(self.font)
                             self.font.setPointSize(12)
-                            self.units[i][y].setStyleSheet(
-                                "color:rgb(189, 195, 199);")
             else:
                 # Otherwise if there is an error, show that on 
                 # the gui through outlined lcd numbers
@@ -394,13 +360,10 @@ class MGui(QtGui.QMainWindow):
                     self.lcds[i][y].display("-")
                     
         if self.keepGoing:
-            self.timer.singleShot(self.refreshRateSec*1000, self.update)
+            self.timer.singleShot(web.guiRefreshRate*1000, self.update)
         return
             
-
-
 app=QtGui.QApplication(sys.argv)
 
-#The main window
 
 
