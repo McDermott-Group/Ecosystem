@@ -101,7 +101,7 @@ class MAlert:
         HOURS_BETWEEN_EMAILS = 3
         elapsedHrs = (time.time()-self.t1)/3600
         key = device.getFrame().getTitle()+":"+device.getFrame().getNicknames()[y] 
-        print people == ''
+        #print people == ''
         if people != '':
             if(not self.mailSent[key]):
                 self.message.append(("Time: "
@@ -121,7 +121,7 @@ class MAlert:
             if(HOURS_BETWEEN_EMAILS<elapsedHrs):
                 if not len([str(person).strip() for person in people.split(',')][0]) == 0:
                     print "sending mail"
-                    print self.message
+                    #print self.message
                     success, address = self.tele.send_sms(
                         device.getFrame().getNicknames()[y], 
                                             str(self.message), 

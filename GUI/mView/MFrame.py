@@ -156,10 +156,10 @@ class MFrame:
         return self.outOfRange        
     def setOutOfRange(self, key):
         #print "length of outofrange: ", len(self.outOfRange)
-        print "FRAME: setting out of range"
+        #print "FRAME: setting out of range"
 
         self.outOfRange[key] = True
-        print "FRAME: ", self.outOfRange
+        #print "FRAME: ", self.outOfRange
     def setInRange(self, key):
 
         self.outOfRange[key] = False

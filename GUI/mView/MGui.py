@@ -45,7 +45,9 @@ import atexit
 import traceback
 
 class MGui(QtGui.QMainWindow):
-    print "Starting mView (C) Noah Meltzer 2016\r\n"
+    print "##########################################"
+    print "## Starting mView (C) Noah Meltzer 2016 ##"
+    print "##########################################"
     # Holds the Qlabels that label the parameters
     parameters = [[]]
     # Each tile on the gui is called a frame, this is the list of them
