@@ -56,7 +56,7 @@ class mGraph(QtGui.QWidget):
         self.figure = plt.figure()
         self.figure.set_facecolor('r')
         # Create a QFrame to house the plot. This is not necessary, just makes it look nice
-        self.matframe = QtGui.QFrame(self)
+        self.matframe = QtGui.QFrame()
         self.matLayout = QtGui.QVBoxLayout()
         self.matLayout.setSpacing(0)
         self.matframe.setLayout(self.matLayout)
@@ -85,7 +85,6 @@ class mGraph(QtGui.QWidget):
         self.ax.title.set_color((189.0/255, 195.0/255, 199.0/255))
         self.ax.yaxis.label.set_color((189.0/255, 195.0/255, 199.0/255))
         self.ax.xaxis.label.set_color((189.0/255, 195.0/255, 199.0/255))
-        self.ax.title.set_color('red')
         self.ax.xaxis.get_offset_text().set_color((189.0/255, 195.0/255, 199.0/255))
         self.ax.yaxis.get_offset_text().set_color((189.0/255, 195.0/255, 199.0/255))
         # This is an array of all the lines on the plot. A line for every parameter
@@ -102,25 +101,28 @@ class mGraph(QtGui.QWidget):
         # We now change the function that is called when the toolbar is clicked.
         NavigationToolbar.home = self.enableAutoScaling
         self.toolbar = NavigationToolbar(self.canvas, self)
+        #print [item for item in dir(self.toolbar) if type(item) == QtGui.QDialog]
         self.cid = self.canvas.mpl_connect('button_press_event', self.disableAutoScaling)
-        self.setStyleSheet("""QPushButton{
-                    color:rgb(189,195, 199); 
-                    background:rgb(70, 80, 88)}""")
-        self.toolbarFrame = QtGui.QFrame(self)
+        self.setStyleSheet("QPushButton{\
+                    color:rgb(189,195, 199); \
+                    background:rgb(70, 80, 88)}")
+        self.toolbarFrame = QtGui.QFrame()
         toolbarFrameLayout = QtGui.QVBoxLayout()
         toolbarFrameLayout.addWidget(self.toolbar)
+        self.toolbar.setParent(None)
         self.toolbarFrame.setLayout(toolbarFrameLayout)
-        self.toolbarFrame.setStyleSheet("""
-                    border:2px solid rgb(0,0,0);
-                    color:rgb(189,195,199); 
-                    background:rgb(70, 80, 88);
-                    """)
-        self.toolbar.setStyleSheet("""
-                    border:0px solid rgb(0,0,0);
-                    color:rgb(189,195,199); 
-                    background:rgb(70, 80, 88); 
-                   """)
-        #self.ax.xaxis.label.set_color('rgb(189,195, 199)')
+        self.toolbarFrame.setStyleSheet("\
+                    border:2px solid rgb(0,0,0);\
+                    color:rgb(189,195,199); \
+                    background:rgb(70, 80, 88);\
+                    ")
+        self.toolbar.setStyleSheet("\
+                    border:0px solid rgb(0,0,0);\
+                    QDialog{background:rgb(250, 80, 88)}\
+                    ")
+        #print dir(self.toolbar)
+        #print self.toolbar.children()
+       # print self.toolbar.setPalette
         self.matPlotInfo = QtGui.QLabel()
         self.alertFont = QtGui.QFont()
         self.alertFont.setPointSize(12)
