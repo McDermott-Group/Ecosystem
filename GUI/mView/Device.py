@@ -13,7 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-
+__author__ = "Noah Meltzer"
+__copyright__ = "Copyright 2016, McDermott Group"
+__license__ = "GPL"
+__version__ = "2.0.1"
+__maintainer__ = "Noah Meltzer"
+__status__ = "Beta"
 """
 version = 2.0.1
 description = References a device
@@ -24,7 +29,7 @@ from MFrame import MFrame
 import MPopUp
 
 import labrad
-
+import atexit
 import threading
 import sys, traceback
 from dataChestWrapper import dataChestWrapper
@@ -78,26 +83,30 @@ class Device:
         self.buttonSettings = []
             #print(buttonArgs)
         self.buttons = []
-        # The refresh rate for the device
-        self.refreshRateSec = 1
         # new datachest wrapper
         self.datachest = dataChestWrapper(self)
+        # Tells thread to keep going
+        self.keepGoing = True
+        atexit.register(self.stop)
+    def stop(self):
+       
+        keepGoing = False
+        
     def setServerName(self, name):
-        print name
         self.serverName = name
         
-    def addParameter(self, parameter, setting, arg=None, index = None):
-        if(index is None):
-            index = len(self.nicknames)
+    def addParameter(self, parameter, setting, arg = None, index = None):
+        #if(index is None):
+            #index = len(self.nicknames)
         self.settingNames.append(setting)
         self.settingResultIndices.append(index)
         self.nicknames.append(parameter)
         self.settingArgs.append(arg)
+        #print self.settingResultIndices
         
     def connection(self, cxn):
         self.cxn = cxn
-        self.ctx = self.cxn.context()
-        # "Context: ", self.ctx
+        self.ctx = cxn.context()
     def addButton(self, name, msg, setting, arg=None):
         self.buttons.append([])
         i = len(self.buttons)-1
@@ -112,7 +121,7 @@ class Device:
     
         
     def selectDeviceCommand(self, cmd, arg):
-        self.selectedDevice = arg
+        self.selectedDevice = arg   
         self.setDeviceCmd = cmd 
     
     def begin(self):
@@ -128,12 +137,10 @@ class Device:
         # If the main thread stops, stop the child thread
         self.deviceThread.daemon = True
         # Start the thread
-        #self.Query()
         self.deviceThread.start()
-        self.deviceThread.join()
-        #
     def setRefreshRate(self, period):
-        self.refreshRateSec = period
+        #self.refreshRateSec = period
+        self.frame.setRefreshRate(period)
     def setPlotRefreshRate(self, period):
         self.frame.setPlotRefreshRate(period)
     def addPlot(self, length = None):
@@ -144,39 +151,26 @@ class Device:
         return self.frame.getPlot()
     def connect(self):  
         '''Connect to the device'''
-        #print "connecting to ", self.serverName
         #self.deviceServer = getattr(self.cxn, self.serverName)()
         try:
             # Attempt to connect to the server given the connection 
             # and the server name.
-            # self.cxn[self.serverName]
-            self.deviceServer = getattr(self.cxn, self.serverName)()   
-          
-            #print self.deviceServer
-            #print "Server Name: ", self.serverName
-            
-            #print "Device Server: ", self.deviceServer
+            self.deviceServer = getattr(self.cxn, self.serverName)()    
             # If the select device command is not none, run it.
-
             if(self.setDeviceCmd is not None):
                 getattr(self.deviceServer, self.setDeviceCmd)(
                     self.selectedDevice, context = self.ctx)
-            #print "Uno= ", self.ctx
-            #print "Dos=", self.selectedDevice
-            
             # True means successfully connected
             self.foundDevice= False
             print ("Found device: "+self.serverName)
             return True
         except labrad.client.NotFoundError, AttributeError:
-            traceback.print_exc()
             if( not self.foundDevice):
                 self.foundDevice = True
                 print("Unable to find device: "+self.serverName)
             self.frame.raiseError("Labrad issue")
         except:
             # The nFrame class can pass an error along with a message
-            traceback.print_exc()
             self.frame.raiseError("Labrad issue")
             
             return False
@@ -203,28 +197,29 @@ class Device:
                     if(self.frame.getButtons()[button][3] is not None):
                         getattr(self.deviceServer, self.frame.getButtons()
                             [button][1])(self.frame.getButtons()
-                            [button][4], context = self.ctx)
+                            [button][4])
                     # If just the setting needs to be run
                     else:
                         getattr(self.deviceServer, self.frame.getButtons()
-                            [button][1])(context = self.ctx)
+                            [button][1])
             # Otherwise if there is no warning message, do not make a popup
             else:
                 # If there is an argument that must be passed to the setting
                 if(self.frame.getButtons()[button][3] is not None):
                     getattr(self.deviceServer, self.frame.getButtons()
-                        [button][1])(self.frame.getButtons()[button][4], context = self.ctx)
+                        [button][1])(self.frame.getButtons()[button][4])
                 # If not.
                 else:
                     getattr(self.deviceServer, self.frame.getButtons()
-                        [button][1])(context = self.ctx)
+                        [button][1])
         except:
             #print("Device not connected.")
+            traceback.print_exc()
             return
     def Query(self):
         '''Ask the device for readings'''
         # If the device is attatched.
-        
+       
         if(not self.isDevice):
             # Try to connect again, if the value changes, then we know 
             # that the device has connected.
@@ -235,16 +230,17 @@ class Device:
             try:
                 readings = []   # Stores the readings
                 units = []      # Stores the units
+               
                 for i in range(0, len(self.settingNames)):
                     # If the setting needs to be passed arguments
                     if(self.settingArgs[i] is not None):
                         reading = getattr(self.deviceServer, self
                             .settingNames[i])(self.settingArgs[i], context = self.ctx)
+
                     else:
                         reading = getattr(self.deviceServer, self
                             .settingNames[i])(context = self.ctx)
-                        #print self.name+str(self.ctx)+": "+str(reading)
-                       # print self.ctx
+                    #print reading
                     # If the reading has a value and units
                     if isinstance(reading, labrad.units.Value):
                         # Some labrad installations like _value, some like value
@@ -256,21 +252,32 @@ class Device:
                     # If the reading is an array of values and units
                     elif(isinstance(reading, labrad.units.ValueArray)):
                         # loop through the array
-                        readings = []
-                        for i in range(0, len(reading)):
+                        #print "it's a value array"
+                        #readings = []
+                        #for i in range(0, len(reading)):
+                        #print self.settingResultIndices
+                        if self.settingResultIndices != None and isinstance(reading[self.settingResultIndices[i]], labrad.units.Value):
+                            try:
+                                readings.append(reading[i]._value)
+                            except:
+                                readings.append(reading[i].value)
+                            units.append(reading[i].units)
                             
-                            if isinstance(reading[i], labrad.units.Value):
-                                try:
-                                    readings.append(reading[i]._value)
-                                except:
-                                    readings.append(reading[i].value)
-                                units.append(reading[i].units)
-                                
-                            else:
-                                readings.append(reading[i])
-                                units.append("")
+                        
+                            
+                        elif len(reading) == 1:
+                            try:
+                                readings.append(reading[0]._value)
+                            except:
+                                readings.append(reading[0].value)
+                            units.append(reading[0].units)
+                        else:
+                            readings.append(reading[i])
+                            units.append("")
+                        #print readings
                     elif(type(reading) is list):
-                        readings = []
+                        #print "it's a list "
+                        #readings = []
                         for i in range(0, len(reading)):
                             if(reading[i] is labrad.units.Value):
                                 try:
@@ -286,29 +293,31 @@ class Device:
                             readings.append(reading)
                             units.append("")
                         except:
-                            #print "its nothing I recognize"
                             print("Problem with readings, type '"
                                 +type(reading)+"' cannot be displayed")
-                #print readings
                 # Pass the readings and units to the frame
+                #print readings
+                #print units
                 self.frame.setReadings(readings)
                 self.frame.setUnits(units)
                 # Save the data
                 self.datachest.save()
                 # If there was an error, retract it.
                 self.frame.retractError()
-            except AttributeError as e:
-                pass
-            except Exception as e:
-               # print e
+            except IndexError as e:
                 traceback.print_exc()
+                print ("["+self.frame.getTitle()+"]"), "Something appears to be wrong with what the labrad server is returning:"
+                print "\tReading:", readings
+                print "\tUnits:", units
+                print "\t", e
+            except:
+                #traceback.print_exc()
                 
                 self.frame.raiseError("Problem communicating with "
                     +self.name)
                 self.frame.setReadings(None)
-                print "Device not found:", self.name
                 self.isDevice = False
         # Query calls itself again, this keeps the thread alive.
-        threading.Timer(self.refreshRateSec, self.Query).start()
-        #self.Query()
+        if self.keepGoing:
+            threading.Timer(self.frame.getRefreshRate(), self.Query).start()
         return 

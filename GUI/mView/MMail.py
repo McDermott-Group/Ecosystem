@@ -15,9 +15,13 @@
 
 # Utilities libraries.
 
-
+__author__ = "Noah Meltzer"
+__copyright__ = "Copyright 2016, McDermott Group"
+__license__ = "GPL"
+__version__ = "1.0.1"
+__maintainer__ = "Noah Meltzer"
+__status__ = "Beta"
 """
-# version = 1.0.1
 # description = Very simple email client.
 """
 import sys

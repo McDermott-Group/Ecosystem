@@ -32,11 +32,10 @@ timeout = 20
 import time
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting
-import labrad.units as units
+import labrad.units as u
 from labrad import util
 import numpy as np
-from twisted.internet.defer import inlineCallbacks, returnValue
-from twisted.internet.defer import DeferredLock
+from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
 from functools import partial
 class MKSPDR2000Wrapper(DeviceWrapper):
     @inlineCallbacks
@@ -54,7 +53,7 @@ class MKSPDR2000Wrapper(DeviceWrapper):
         p.stopbits(1L)
         p.bytesize(8L)
         p.parity('N')
-        p.timeout(0.1 * units.s)
+        p.timeout(0.1 * u.s)
         # Clear out the Rx buffer. This is necessary for some devices.
         yield p.send()
     
@@ -65,12 +64,14 @@ class MKSPDR2000Wrapper(DeviceWrapper):
     def shutdown(self):
         '''Disconnect from teh serial port when we shut down.'''
         return self.packet().close().send()
-        
+
     def rw_line(self, code):
         # Don't allow two concurrent read/write calls.
-        self._lock = DeferredLock()
-        return self._lock.run(partial(self._rw_line, code))
         
+        self._lock = DeferredLock()
+
+        return self._lock.run(partial(self._rw_line, code))
+
     @inlineCallbacks
     def _rw_line(self, code):
         '''Write data to the device.'''
@@ -80,17 +81,18 @@ class MKSPDR2000Wrapper(DeviceWrapper):
         returnValue(ans)
         
     @inlineCallbacks
-    def read_line(self):
-        '''Read a data value from the device.'''
-        ans = yield self.server.read(context=self.ctx)
-        returnValue(ans)
-    @inlineCallbacks
     def getUnits(self):
         yield self.write_line('u')
-        time.sleep(0.1)
+        time.sleep(0.5)
         ans = yield self.read_line()
         returnValue(ans)
-
+    def toFloat(self, val):
+        try:
+            if val == 'Off' or val == 'Low':
+                return np.nan
+            return float(val)
+        except:
+            return None
 
 class MKSPDR2000Server(DeviceServer):
     deviceName = 'MKS PDR2000 Server'
@@ -104,51 +106,38 @@ class MKSPDR2000Server(DeviceServer):
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
-          
+    
     @setting(100, 'get_pressure', returns='*v[torr]')
     def getPressure(self, ctx):
+        
         self.dev = self.selectedDevice(ctx)
-        reading = yield self.dev.rw_line('p')
-        unit = yield self.dev.rw_line('u')
-        #unit = 'Torr'
-       
-        # Just in case there is an error and nothing is returned 
-        # (RS232 is finicky).
-        if not reading:
-            returnValue([np.nan, np.nan]*units.torr)
-        else:
-            # Get last number in string.
-            reading = reading.replace("\r", " ")
-            reading = reading.replace("\n", " ")
-            reading = reading.split(" ")
+
+        reading = yield self.dev.rw_line("p")
+        #print reading
+        reading = reading.strip()
+        #print reading
+        
+        reading = reading.split(' ')
+        #print reading
+        #print self.dev.toFloat('Off')
+        #print reading
+        reading = [self.dev.toFloat(val) for val in reading if self.dev.toFloat(val) != None]
+        #print reading
+        units = yield self.dev.rw_line('u')
+        #print units
+        if len(reading) != 2:
+            ans = [np.nan, np.nan]*u.torr
+            returnValue(ans)
+        if units == 'mTorr':
+            reading[0] = (float(reading[0])/1000) 
+            reading[1] = (float(reading[1])/1000) 
             
-            reading[0]=reading[0].strip()
-            reading[1]=reading[1].strip()
-            #print reading
-            if reading [0] == 'Off':
-                #print ("0 is off")
-                reading [0] = np.nan
-            if reading [1] == 'Off':
-                #print ("1 is off")
-                reading [1] = np.nan
-            #print reading
-            try:
-                reading[0] = float(reading[0]) 
-            except:
-                reading[0] = np.nan
-           # print "2 ",reading [1]
-            try:
-                reading[1] = float(reading[1]) 
-            except:
-                reading[1] = np.nan
-            if unit == 'mTorr':
-                reading[0] = (float(reading[0])/1000) 
-                reading[1] = (float(reading[1])/1000) 
-                
-            # reading [0] = float(reading[0])
-            # reading[1] = float(reading[1])
-            
-            reading = reading[0:2] * units.torr
+        reading = reading * u.torr
+            #print type(reading[1])
+            #print reading[1] is "Off"
+        #print reading
+            #print "done"
+            # Add correct units.
         returnValue(reading)
         
     @inlineCallbacks

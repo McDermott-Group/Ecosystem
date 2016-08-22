@@ -198,7 +198,6 @@ class ADRServer(DeviceServer):
         except Exception as e:
             print str(e)
         self.updateState()
-        
     @inlineCallbacks
     def loadDefaults(self):
         reg = self.client.registry
@@ -206,7 +205,6 @@ class ADRServer(DeviceServer):
         _,settingsList = yield reg.dir()
         for setting in settingsList:
             self.ADRSettings[setting] = yield reg.get(setting)
-            
     @inlineCallbacks
     def initializeInstruments(self):
         """
@@ -221,8 +219,7 @@ class ADRServer(DeviceServer):
             self.connectDevice(instrName)
 
         # initialize power supply
-        if hasattr(self.instruments['Power Supply'],'connected') \
-               and self.instruments['Power Supply'].connected == True:
+        if hasattr(self.instruments['Power Supply'],'connected') and self.instruments['Power Supply'].connected == True:
             try:
                 yield self.instruments['Power Supply'].initialize_ps()
                 self.logMessage('Power Supply initialized.')
@@ -263,8 +260,7 @@ class ADRServer(DeviceServer):
     def connectDevice(self, instrName):
         settings = self.ADRSettings[instrName]
         
-        # select the device using the address in the registry under the 
-        # instrument name
+        # select the device using the address in the registry under the instrument name
         instr = self.instruments[instrName]
         if instr == None: return
         if hasattr(instr,'connected'): lastStatus = instr.connected
@@ -292,13 +288,11 @@ class ADRServer(DeviceServer):
         
     @inlineCallbacks
     def _refreshInstruments(self):
-        """We can manually have all gpib buses refresh the list of 
-        devices connected to them."""
+        """We can manually have all gpib buses refresh the list of devices connected to them."""
         self.logMessage('Refreshing devices...')
         serverList = yield self.client.manager.servers()
-        for serv in [n for s,n in serverList]:
-            if 'gpib_bus' in serv \
-            or 'GPIB Bus' in serv:# or 'sim900_srs_mainframe' in serv:
+        for serv in [n for s,n in serverList]:#[tuple[1].replace(' ','_').lower() for tuple in serverList]:
+            if 'gpib_bus' in serv or 'GPIB Bus' in serv:# or 'sim900_srs_mainframe' in serv:
                 yield self.client[serv].refresh_devices()
     
     @inlineCallbacks
@@ -323,15 +317,15 @@ class ADRServer(DeviceServer):
     def logMessage(self, message, alert=False):
         """Applies a time stamp to the message and saves it to a file and an array."""
         dt = datetime.datetime.utcnow()
-        self.logMessages.append( (dt,message,alert) )
         messageWithTimeStamp = dt.strftime("[%m/%d/%y %H:%M:%S] ") + message
+        self.logMessages.append( (messageWithTimeStamp,alert) )
         try:
             with open(self.file_path+self.startDatetime.strftime("\\log_%y%m%d_%H%M.txt"), 'a') as f:
                 f.write( messageWithTimeStamp + '\n' )
         except Exception as e:
             self.logMessage("Could not write to log file: " + str(e) + '.')
         print '[log] '+ message
-        self.client.manager.send_named_message('Log Changed', (dt,message,alert))
+        self.client.manager.send_named_message('Log Changed', (messageWithTimeStamp,alert))
 
     @inlineCallbacks
     def updateState(self):
@@ -362,11 +356,9 @@ class ADRServer(DeviceServer):
                 except AttributeError: pass # in case instrument didn't initialize properly and is None
             # ruox temps
             try:
-                FAAChan = self.ADRSettings['FAA MP Chan']
-                GGGChan = self.ADRSettings['GGG MP Chan']
                 temps = yield self.instruments['Ruox Temperature Monitor'].get_ruox_temperature()
                 # if there are two returned temps, maps them to GGG and FAA.  if only one is returned, assumes it is for the FAA
-                try: self.state['T_GGG'],self.state['T_FAA'] = dict(temps)[GGGChan],dict(temps)[FAAChan]
+                try: self.state['T_GGG'],self.state['T_FAA'] = temps
                 except: self.state['T_GGG'],self.state['T_FAA'] = nan*units.K, temps
             except Exception as e:
                 self.state['T_GGG'],self.state['T_FAA'] = nan*units.K, nan*units.K
@@ -425,7 +417,6 @@ class ADRServer(DeviceServer):
             self.client.manager.send_named_message('State Changed', 'state changed')
             #self.stateChanged('state changed')
             yield util.wakeupCall( max(0,self.ADRSettings['step_length']-cycleLength) )
-            
     def _cancelMagUp(self):
         """Cancels the mag up loop."""
         self.state['maggingUp'] = False
@@ -433,7 +424,6 @@ class ADRServer(DeviceServer):
                 str(self.state['PSCurrent']) + '.' )
         #self.magUpStopped('cancel') #signal
         self.client.manager.send_named_message('MagUp Stopped', 'cancel')
-        
     @inlineCallbacks
     def _magUp(self):
         """ The magging up method, as per the HPD Manual, involves 
@@ -488,7 +478,6 @@ class ADRServer(DeviceServer):
                 self.logMessage( 'Finished magging up. '+str(self.state['PSCurrent'])+' reached.' )
                 self.state['maggingUp'] = False
                 self.client.manager.send_named_message('MagUp Stopped', 'done')
-                
     def _cancelRegulate(self):
         """Cancels the PID regulation loop."""
         self.state['regulating'] = False
@@ -496,7 +485,6 @@ class ADRServer(DeviceServer):
                 str(self.state['PSCurrent']) + '.' )
         #self.regulationStopped('cancel')
         self.client.manager.send_named_message('Regulation Stopped', 'cancel')
-        
     @inlineCallbacks
     def _regulate(self,temp):
         """ This function starts a PID loop to control the temperature.  
@@ -600,7 +588,7 @@ class ADRServer(DeviceServer):
     def getStartDatetime(self,c):
         return self.startDatetime
     
-    @setting(103, 'Get Log', n=['v'], returns=['*(t,s,b)'])
+    @setting(103, 'Get Log', n=['v'], returns=['*(s,b)'])
     def getLog(self,c, n=0):
         """Get an array of the last n logs."""
         if n==0: n = len(self.logMessages)

@@ -13,9 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+__author__ = "Noah Meltzer"
+__copyright__ = "Copyright 2016, McDermott Group"
+__license__ = "GPL"
+__version__ = "1.5.1"
+__maintainer__ = "Noah Meltzer"
+__status__ = "Beta"
 
 """
-version = 1.5.1
 description = Organizes information returned by servers
 """
 
@@ -63,6 +68,14 @@ class MFrame:
     plot = None
     # Refresh rate of plot
     plotRefreshRate = 1
+
+    # RefreshRate for the device
+    refreshRate = 1
+
+    # Is there a reading out of range?
+    def __init__(self):
+        self.outOfRange = {}
+
     def setTitle(self, title):
         self.serverTitle = title
     def getTitle(self):
@@ -125,6 +138,10 @@ class MFrame:
         self.plotRefreshRate = period
     def getPlotRefreshRate(self):
         return self.plotRefreshRate
+    def setRefreshRate(self, period):
+        self.refreshRate = period
+    def getRefreshRate(self):
+        return self.refreshRate
     def getPlotLength(self):
         return self.plotLength
     def setDataSet(self, dataSet):
@@ -135,3 +152,17 @@ class MFrame:
         self.logData = b
     def isDataLogging(self):
         return self.logData
+    def getOutOfRangeStatus(self): 
+        return self.outOfRange        
+    def setOutOfRange(self, key):
+        #print "length of outofrange: ", len(self.outOfRange)
+        #print "FRAME: setting out of range"
+
+        self.outOfRange[key] = True
+        #print "FRAME: ", self.outOfRange
+    def setInRange(self, key):
+
+        self.outOfRange[key] = False
+    def disableRange(self):
+      self.outOfRange = {key:False for key in self.outOfRange}
+      

@@ -1,5 +1,5 @@
 (dp1
-S'Leiden DR:Still'
+S'Still:Pressure 1'
 p2
 (lp3
 I00
@@ -13,18 +13,18 @@ p5
 S'QString'
 (V
 ttRp6
-asS'Vacuum:IVC Pressure'
+asS'Lakeshore 370:Temperature 1'
 p7
 (lp8
 I00
-aS''
+aF1
 aS''
 ag4
 (g5
 S'QString'
 (V
 ttRp9
-asS'Compressor:Output Water Temperature'
+asS'Lakeshore 370:Temperature 3'
 p10
 (lp11
 I00
@@ -35,7 +35,7 @@ ag4
 S'QString'
 (V
 ttRp12
-asS'Compressor:Oil Temperature'
+asS'Still:Pressure 2'
 p13
 (lp14
 I00
@@ -46,7 +46,7 @@ ag4
 S'QString'
 (V
 ttRp15
-asS'Leiden DR:Exchange'
+asS'Lakeshore 370:Temperature 5'
 p16
 (lp17
 I00
@@ -57,7 +57,7 @@ ag4
 S'QString'
 (V
 ttRp18
-asS'Vacuum:Still Pressure'
+asS'Return:Pressure 1'
 p19
 (lp20
 I00
@@ -68,18 +68,18 @@ ag4
 S'QString'
 (V
 ttRp21
-asS'PT1000s:3K'
+asS'Return:Pressure 2'
 p22
 (lp23
 I00
-aF300
+aS''
 aS''
 ag4
 (g5
 S'QString'
 (V
 ttRp24
-asS'Temperature:Exteranal Water Temperature'
+asS'Lakeshore 218:Sensor 2'
 p25
 (lp26
 I00
@@ -90,18 +90,18 @@ ag4
 S'QString'
 (V
 ttRp27
-asS'Compressor:Helium Temperature'
+asS'Lakeshore 218:Sensor 6'
 p28
 (lp29
 I00
-aF285
-aF290
+aS''
+aS''
 ag4
 (g5
 S'QString'
 (V
 ttRp30
-asS'Leiden DR:Mix (PT-1000)'
+asS'Lakeshore 218:Sensor 7'
 p31
 (lp32
 I00
@@ -112,7 +112,7 @@ ag4
 S'QString'
 (V
 ttRp33
-asS'Vacuum:OVC Pressure'
+asS'Lakeshore 218:Sensor 3'
 p34
 (lp35
 I00
@@ -123,7 +123,7 @@ ag4
 S'QString'
 (V
 ttRp36
-asS'Leiden DR:Mix (TT)'
+asS'Keg:Pressure 1'
 p37
 (lp38
 I00
@@ -134,7 +134,7 @@ ag4
 S'QString'
 (V
 ttRp39
-asS'Flow Meter:External Water Flow Rate'
+asS'Keg:Pressure 2'
 p40
 (lp41
 I00
@@ -145,26 +145,70 @@ ag4
 S'QString'
 (V
 ttRp42
-asS'Compressor:Input Water Temperature'
+asS'Lakeshore 218:Sensor 4'
 p43
 (lp44
 I00
-aF290
+aS''
 aS''
 ag4
 (g5
 S'QString'
 (V
 ttRp45
-asS'PT1000s:50K'
+asS'Lakeshore 218:Sensor 5'
 p46
 (lp47
 I00
-aF300
+aS''
 aS''
 ag4
 (g5
 S'QString'
 (V
 ttRp48
+asS'Lakeshore 370:Temperature 2'
+p49
+(lp50
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp51
+asS'Lakeshore 218:Sensor 8'
+p52
+(lp53
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp54
+asS'Lakeshore 218:Sensor 1'
+p55
+(lp56
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp57
+asS'Lakeshore 370:Temperature 4'
+p58
+(lp59
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp60
 as.

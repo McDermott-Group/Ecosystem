@@ -125,6 +125,25 @@ class VarianControllerServer(DeviceServer):
             
         returnValue(ans)
         
+    @setting(100, 'emission_on', sensor = 's')
+    def emissionOn(self, c, sensor):
+        '''Turns emmissionOn for given sensor
+    args:
+    sensor  The name of the sensor to be turned off.'''
+        print sensor
+        dev = self.selectedDevice(c)
+        yield dev.rw_line('#0031U'+sensor+'\r')
+        #returnValue(None)
+    @setting(200, 'emission_off', sensor = 's')
+    def emissionOff(self, c, sensor):
+        '''Turns emmissionOn for given sensor
+        args:
+        sensor  The name of the sensor to be turned on.'''
+        print sensor
+        dev = self.selectedDevice(c)
+        yield dev.rw_line('#0030U'+sensor+'\r')
+        #returnValue(None)
+        
     @inlineCallbacks
     def getPressures(self, dev):
         
