@@ -351,11 +351,12 @@ class ADRController(object):#Tkinter.Tk):
             tempDataChest.openDataset(dset)
             
             n = tempDataChest.getNumRows()
-            pastTempData = tempDataChest.getData(max(0,n-6*60*60),None ) # load approximately the last 6 hours of data
+            # load approximately the last 6 hours of data
+            pastTempData = tempDataChest.getData(max(0,n-6*60*60),None )
             for newRow in pastTempData:
                 # change utc time to local
-                utc = newRow[0]
-                utc = datetime.datetime.utcfromtimestamp(utc) # for float
+                utc = newRow[0] # (float)
+                utc = datetime.datetime.utcfromtimestamp(utc)
                 utc = utc.replace(tzinfo=tz.tzutc())
                 newRow[0] = mpl.dates.date2num(utc)
                 # add old data from file into plot
@@ -367,7 +368,8 @@ class ADRController(object):#Tkinter.Tk):
                 self.stageGGG.set_ydata(numpy.append(self.stageGGG.get_ydata(),newRow[3]))
                 self.stageFAA.set_xdata(numpy.append(self.stageFAA.get_xdata(),newRow[0]))
                 self.stageFAA.set_ydata(numpy.append(self.stageFAA.get_ydata(),newRow[4]))
-        except IOError: print 'temp file not created yet?' # file not created yet if first time opened
+        except IOError:
+            print( 'temp file not created yet?' ) # file not created yet if adr server just opened
         self.updatePlot()
         # clear and reload log
         self.log.clear()
