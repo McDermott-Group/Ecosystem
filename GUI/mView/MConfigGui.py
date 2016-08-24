@@ -94,7 +94,7 @@ class devRefRateConfig(QtGui.QWidget):
         self.setLayout(devRefLayout)
         
     def updateDevPlotRate(self):
-        print self.plotRefRateEdit.text()
+        #print self.plotRefRateEdit.text()
         try:
             self.device.getFrame().setPlotRefreshRate(float(self.plotRefRateEdit.text()))
            # print self.self.device.getFrame().getPlotRefreshRate()

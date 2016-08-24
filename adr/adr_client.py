@@ -52,15 +52,19 @@ class EntryWithAlert(Tkinter.Entry):
                 self.configure(disabledbackground=self.naturalBGColor)
 
 class LogBox(Tkinter.Text):
-    """This class inherits a Tkinter Text widget to make a simple log box.  It will log an entry,
-    and set the color to red if alert is set to True.  A time stamp is automatically added."""
+    """This class inherits a Tkinter Text widget to make a simple log 
+    box.  It will log an entry, and set the color to red if alert is set
+    to True.  A time stamp is automatically added."""
     def __init__(self, *args, **kwargs):
         Tkinter.Text.__init__(self,*args,**kwargs)
         self.tag_config("redAlert", background="red")
         self.configure(state=Tkinter.DISABLED)
-    def log(self, message, alert=False):
+    def log(self, dt, message, alert=False):
+        utc = dt.replace(tzinfo=tz.tzutc())
+        local = utc.astimezone(tz.tzlocal())
+        messageWithTimeStamp = local.strftime("[%m/%d/%y %H:%M:%S] ") + message
         self.configure(state=Tkinter.NORMAL)
-        self.insert(1.0,message+'\n')
+        self.insert(1.0,messageWithTimeStamp+'\n')
         if alert: self.tag_add("redAlert", '1.0', '1.end')
         self.configure(state=Tkinter.DISABLED)
     def clear(self):
@@ -114,7 +118,7 @@ class ADRController(object):#Tkinter.Tk):
         self.cxn._cxn.addListener(update_state, source=mgr.ID, ID=101)
         yield mgr.subscribe_to_named_message('State Changed', 101, True)
         # log update
-        update_log = lambda c, (s,(m,a)): self.updateLog(m,a) \
+        update_log = lambda c, (s,(t,m,a)): self.updateLog(t,m,a) \
                 if self.correctServer(s) else -1
         self.cxn._cxn.addListener(update_log, source=mgr.ID, ID=102)
         yield mgr.subscribe_to_named_message('Log Changed', 102, True)
@@ -139,8 +143,8 @@ class ADRController(object):#Tkinter.Tk):
         self.cxn._cxn.addListener(reg_start, source=mgr.ID, ID=106)
         yield mgr.subscribe_to_named_message('Regulation Started', 106, True)
         # servers starting and stopping
-        serv_conn_func = lambda c, (s, payload): self.populateADRSelectMenu()
-        serv_disconn_func = lambda c, (s, payload): self.populateADRSelectMenu()
+        serv_conn_func = lambda c, (sID, sName): self.serverChanged(sName)
+        serv_disconn_func = lambda c, (sID, sName): self.serverChanged(sName)
         self.cxn._cxn.addListener(serv_conn_func, source=mgr.ID, ID=107)
         self.cxn._cxn.addListener(serv_disconn_func, source=mgr.ID, ID=108)
         yield mgr.subscribe_to_named_message('Server Connect', 107, True)
@@ -290,6 +294,10 @@ class ADRController(object):#Tkinter.Tk):
         self.cxn[self.selectedADR].close_heat_switch()
     def openHeatSwitch(self):
         self.cxn[self.selectedADR].open_heat_switch()
+    def serverChanged(self,serverName):
+        print 'server changed',serverName
+        if 'ADR' in serverName and len(serverName)==4:
+            self.populateADRSelectMenu()
     @inlineCallbacks
     def populateADRSelectMenu(self):
         """This should be called by listeners for servers (dis)connecting.
@@ -316,7 +324,8 @@ class ADRController(object):#Tkinter.Tk):
         self.compressorButton.configure(state=Tkinter.DISABLED)
     @inlineCallbacks
     def changeFridge(self,*args):
-        """Select which ADR you want to operate on.  Called when select ADR menu is changed."""
+        """Select which ADR you want to operate on.  Called when select 
+        ADR menu is changed."""
         self.selectedADR = self.adrSelect.get()
         # clear temps plot
         self.stage60K.set_xdata([])
@@ -342,29 +351,31 @@ class ADRController(object):#Tkinter.Tk):
             tempDataChest.openDataset(dset)
             
             n = tempDataChest.getNumRows()
-            pastTempData = tempDataChest.getData(max(0,n-6*60*60), ) # load approximately the last 6 hours of data
+            # load approximately the last 6 hours of data
+            pastTempData = tempDataChest.getData(max(0,n-6*60*60),None )
             for newRow in pastTempData:
                 # change utc time to local
-                utc = newRow[0]
-                utc = datetime.datetime.utcfromtimestamp(utc) # for float
+                utc = newRow[0] # (float)
+                utc = datetime.datetime.utcfromtimestamp(utc)
                 utc = utc.replace(tzinfo=tz.tzutc())
                 newRow[0] = mpl.dates.date2num(utc)
                 # add old data from file into plot
-                self.stage60K.set_xdata(numpy.append(newRow[0],self.stage60K.get_xdata()))
-                self.stage60K.set_ydata(numpy.append(newRow[1],self.stage60K.get_ydata()))
-                self.stage03K.set_xdata(numpy.append(newRow[0],self.stage03K.get_xdata()))
-                self.stage03K.set_ydata(numpy.append(newRow[2],self.stage03K.get_ydata()))
-                self.stageGGG.set_xdata(numpy.append(newRow[0],self.stageGGG.get_xdata()))
-                self.stageGGG.set_ydata(numpy.append(newRow[3],self.stageGGG.get_ydata()))
-                self.stageFAA.set_xdata(numpy.append(newRow[0],self.stageFAA.get_xdata()))
-                self.stageFAA.set_ydata(numpy.append(newRow[4],self.stageFAA.get_ydata()))
-        except IOError: print 'temp file not created yet?' # file not created yet if first time opened
+                self.stage60K.set_xdata(numpy.append(self.stage60K.get_xdata(),newRow[0]))
+                self.stage60K.set_ydata(numpy.append(self.stage60K.get_ydata(),newRow[1]))
+                self.stage03K.set_xdata(numpy.append(self.stage03K.get_xdata(),newRow[0]))
+                self.stage03K.set_ydata(numpy.append(self.stage03K.get_ydata(),newRow[2]))
+                self.stageGGG.set_xdata(numpy.append(self.stageGGG.get_xdata(),newRow[0]))
+                self.stageGGG.set_ydata(numpy.append(self.stageGGG.get_ydata(),newRow[3]))
+                self.stageFAA.set_xdata(numpy.append(self.stageFAA.get_xdata(),newRow[0]))
+                self.stageFAA.set_ydata(numpy.append(self.stageFAA.get_ydata(),newRow[4]))
+        except IOError:
+            print( 'temp file not created yet?' ) # file not created yet if adr server just opened
         self.updatePlot()
         # clear and reload log
         self.log.clear()
         logMessages = yield self.cxn[self.selectedADR].get_log(20) #only load last 20 messages
-        for (m,a) in logMessages:
-            self.updateLog(m,a)
+        for (t,m,a) in logMessages:
+            self.updateLog(t,m,a)
         # update instrument status stuff: delete old, create new
         for widget in self.instrumentStatusFrame.winfo_children():
             widget.destroy()
@@ -494,9 +505,9 @@ class ADRController(object):#Tkinter.Tk):
                 self.fig.tight_layout()
         #draw
         self.canvas.draw()
-    def updateLog(self,message=None,alert=False):
+    def updateLog(self,time=None,message=None,alert=False):
         if message:
-            self.log.log(message,alert)
+            self.log.log(time,message,alert)
     def addToLog(self):
         text = str( self.addToLogField.get(1.0, Tkinter.END) )
         try:

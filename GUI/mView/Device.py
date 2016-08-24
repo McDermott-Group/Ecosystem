@@ -129,7 +129,7 @@ class Device:
         self.frame.setNicknames(self.nicknames)
         self.frame.setReadingIndices(self.settingResultIndices)
         # Connect to the device's server
-        self.connect()
+        #self.connect()
         # Each device NEEDS to run on a different thread 
         # than the main thread (which ALWAYS runs the gui)
         # This thread is responsible for querying the devices
@@ -147,7 +147,7 @@ class Device:
         self.frame.addPlot(length)
         # Datalogging must be enabled if we want to plot data
         self.frame.enableDataLogging(True)
-        print self.frame.getPlot()
+        #print self.frame.getPlot()
         return self.frame.getPlot()
     def connect(self):  
         '''Connect to the device'''
@@ -311,7 +311,7 @@ class Device:
                 print "\tUnits:", units
                 print "\t", e
             except:
-                traceback.print_exc()
+                #traceback.print_exc()
                 
                 self.frame.raiseError("Problem communicating with "
                     +self.name)
