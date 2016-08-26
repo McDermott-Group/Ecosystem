@@ -292,6 +292,7 @@ class Main(QtGui.QWidget):
         if varsToIgnore == [depVars[ii][0] for ii in range(0,len(depVars))]:
             return fig
         dataset = np.asarray(dataset)
+        print dataset[0]
         xlabel = self.dataChest.getParameter("X Label", True)
         if xlabel is None:
             xlabel = indepVars[0][0]
@@ -309,11 +310,12 @@ class Main(QtGui.QWidget):
             imageType ="Scatter"
             print "Scatter"
             for ii in range(0, len(depVars)):
-                x = dataset[::,0][0]
-                y = dataset[::,1][0]
-                z = dataset[::,2][0]
+                x = dataset[::,0]
+                y = dataset[::,1]
+                z = dataset[::,2]
                 im = ax.tricontourf(x,y,z, 100, cmap=cm.gist_rainbow, antialiased=True)
                 fig.colorbar(im, fraction = 0.15)
+                break
         elif imageType == "Pixel":
             xGridRes = self.dataChest.getParameter("X Resolution", True)
             xIncrement = self.dataChest.getParameter("X Increment", True)
