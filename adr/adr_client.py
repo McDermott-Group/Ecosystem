@@ -47,10 +47,9 @@ class EntryWithAlert(Tkinter.Entry):
     def callback(self,*dummy):
         if self.upper_limit != False or self.lower_limit != False:
             x = self.variable.get()
-            if x == ''
-              or x == 'PS OFF'
-              or float(x) > float(self.upper_limit)
-              or float(x) < float(self.lower_limit):
+            if x == '' or x == 'PS OFF' or \
+                    float(x) > float(self.upper_limit) or \
+                    float(x) < float(self.lower_limit):
                 self.configure(disabledbackground='red')
             else:
                 self.configure(disabledbackground=self.naturalBGColor)
