@@ -263,6 +263,7 @@ class Main(QtGui.QWidget):
         indepVars = variables[0]
         depVars = variables[1]
         dataset = np.asarray(dataset)
+        print dataset[0]
         xlabel = self.dataChest.getParameter("X Label", True)
         if xlabel is None:
             xlabel = indepVars[0][0]
@@ -280,11 +281,12 @@ class Main(QtGui.QWidget):
             imageType ="Scatter"
             print "Scatter"
             for ii in range(0, len(depVars)):
-                x = dataset[::,0][0]
-                y = dataset[::,1][0]
-                z = dataset[::,2][0]
+                x = dataset[::,0]
+                y = dataset[::,1]
+                z = dataset[::,2]
                 im = ax.tricontourf(x,y,z, 100, cmap=cm.gist_rainbow, antialiased=True)
                 fig.colorbar(im, fraction = 0.15)
+                break
         elif imageType == "Pixel":
             xGridRes = self.dataChest.getParameter("X Resolution", True)
             xIncrement = self.dataChest.getParameter("X Increment", True)
@@ -388,10 +390,6 @@ class Main(QtGui.QWidget):
         variables = self.dataChest.getVariables()
         dataCategory = self.categorizeDataset(variables)
         #otherwise refer to dataset name needs to be implemented
-        print "fileName=", fileName
-        print "self.dataChest.getDatasetName()=", self.dataChest.getDatasetName()
-        print "self.dataChest.pwd()=", self.dataChest.pwd()
-        print "filePath=", filePath
         dataset = self.dataChest.getData()
         if dataCategory == "1D":
             fig = self.plot1D(dataset, variables, selectedPlotType, None, varsToIgnore = varsToIgnore) #plot1D(self, dataset, variables, plotType, dataClass, varsToIgnore = [])
