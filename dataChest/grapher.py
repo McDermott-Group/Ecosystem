@@ -19,7 +19,7 @@ class Main(QtGui.QWidget):
         self.setWindowTitle('Data Chest Image Browser')
         self.setWindowIcon(QtGui.QIcon('rabi.jpg')) #add in rabi plot
         
-        self.root = os.environ["DATA_CHEST_ROOT"] #'Z:/mcdermott-group/DataChest'
+        self.root = os.environ["DATA_CHEST_ROOT"]
         self.pathRoot=QtCore.QString(self.root)
 
         self.filters =QtCore.QStringList()
@@ -96,10 +96,10 @@ class Main(QtGui.QWidget):
             self.plotType = plotType
             self.varsToIgnore = [] ##when is best time to do this??
 
-    def updatePlotTypeOptions(self, plotType): #updates area below plotType  selection drop down (add/remove variables)
+    def updatePlotTypeOptions(self, plotType, depVarName = None): #updates area below plotType  selection drop down (add/remove variables)
         
         self.clearLayout(self.scrollLayout)
-        if plotType == "1D" or "Histogram":
+        if plotType == "1D" or plotType == "Histogram":
             headerList = ["Dep Var:", "Status:"]
             widgetTypeList = ["QLabel", "QCheckBox"]
             depVarList = [row[0] for row in self.dataChest.getVariables()[1]]
@@ -121,6 +121,34 @@ class Main(QtGui.QWidget):
                 optionsSlice.addStretch(1)
                 self.scrollLayout.addLayout(optionsSlice)
             self.scrollLayout.addStretch(1)
+        elif plotType == '2D Image':
+            headerList = ["Dep Var:", "Status:"]
+            widgetTypeList = ["QLabel", "QCheckBox"]
+            depVarList = [row[0] for row in self.dataChest.getVariables()[1]]
+            if depVarName is None:
+                depVarName = depVarList[0]
+            for ii in range(0,len(headerList)):
+                optionsSlice = QtGui.QVBoxLayout()
+                label = QtGui.QLabel(self) #widget to log
+                label.setText(headerList[ii])
+                optionsSlice.addWidget(label)
+                for depVar in depVarList:
+                    if widgetTypeList[ii] =="QLabel":
+                        label = QtGui.QLabel(self) #widget to log
+                        label.setText(depVar)
+                        optionsSlice.addWidget(label)
+                    elif widgetTypeList[ii] =="QCheckBox":
+                        checkBox = QtGui.QCheckBox('', self)  #widget to log
+                        print "depVarName=", depVarName
+                        if depVar == depVarName:
+                            checkBox.setCheckState(QtCore.Qt.Checked)
+                        checkBox.stateChanged.connect(partial(self.varStateChanged, depVar))
+                        optionsSlice.addWidget(checkBox)
+                optionsSlice.addStretch(1)
+                self.scrollLayout.addLayout(optionsSlice)
+            self.scrollLayout.addStretch(1)
+                
+            
             
     def clearLayout(self, layout):#clears the plotType options layout and all widgets therein
         for i in reversed(range(layout.count())):
@@ -150,6 +178,7 @@ class Main(QtGui.QWidget):
                                                    self.fileName,
                                                    selectedPlotType=self.plotType,
                                                    varsToIgnore =self.varsToIgnore)
+            self.updatePlotTypeOptions(self.plotType, '')
             self.addFigureToCanvas(self.currentFig)
 
     def convertPathToArray(self, path):
@@ -180,9 +209,7 @@ class Main(QtGui.QWidget):
     def dirTreeSelectionMade(self, index): #called when a directory tree selection is made
         indexItem = self.model.index(index.row(), 0, index.parent())
         fileName = str(self.model.fileName(indexItem))
-        print "fileName=", fileName
         filePath = str(self.model.filePath(indexItem))
-        print "filePath=", filePath
 
         if ".hdf5" in filePath: #removes fileName from path if file is chosen
             filePath = filePath[:-(len(fileName)+1)]
@@ -224,7 +251,7 @@ class Main(QtGui.QWidget):
         if dimensionality == "1D":
             plotTypes = ["1D", "Histogram"]
         elif dimensionality == "2D":
-            plotTypes = ["2D"]
+            plotTypes = ["2D Image"]
         else:
             plotTypes = []
         return plotTypes
@@ -251,7 +278,7 @@ class Main(QtGui.QWidget):
         elif plotType not in self.supportedPlotTypes("2D"):
             print "Unrecognized plot type was provided"
             #return bum fig with something cool, maybe a gif
-        if plotType =="2D":
+        if plotType =="2D Image":
             fig = self.basic2DImage(dataset, variables, varsToIgnore)
         #elif plotType == "Histogram": #adjust bin size
         #    fig = self.basic1DHistogram(dataset, variables, varsToIgnore)
@@ -262,7 +289,10 @@ class Main(QtGui.QWidget):
         ax = fig.add_subplot(111)
         indepVars = variables[0]
         depVars = variables[1]
+        if varsToIgnore == [depVars[ii][0] for ii in range(0,len(depVars))]:
+            return fig
         dataset = np.asarray(dataset)
+        print dataset[0]
         xlabel = self.dataChest.getParameter("X Label", True)
         if xlabel is None:
             xlabel = indepVars[0][0]
@@ -280,11 +310,12 @@ class Main(QtGui.QWidget):
             imageType ="Scatter"
             print "Scatter"
             for ii in range(0, len(depVars)):
-                x = dataset[::,0][0]
-                y = dataset[::,1][0]
-                z = dataset[::,2][0]
+                x = dataset[::,0]
+                y = dataset[::,1]
+                z = dataset[::,2]
                 im = ax.tricontourf(x,y,z, 100, cmap=cm.gist_rainbow, antialiased=True)
                 fig.colorbar(im, fraction = 0.15)
+                break
         elif imageType == "Pixel":
             xGridRes = self.dataChest.getParameter("X Resolution", True)
             xIncrement = self.dataChest.getParameter("X Increment", True)
@@ -317,6 +348,13 @@ class Main(QtGui.QWidget):
         ax = fig.add_subplot(111)
         indepVars = variables[0]
         depVars = variables[1]
+        containsDatetime = False
+        for ii in range(0, len(indepVars)):
+            if 'utc_datetime' in indepVars[ii]:
+                containsDatetime = True
+
+        
+                
         scanType = self.dataChest.getParameter("Scan Type", True)
         xlabel = self.dataChest.getParameter("X Label", True)
         if xlabel is None:
@@ -336,6 +374,17 @@ class Main(QtGui.QWidget):
                 if scanType is None:
                     x = dataset[::,0].flatten() #only works when all dims are same ==> perform checks *************
                     y = dataset[::,1+ii].flatten()
+                    if containsDatetime:
+                        months = MonthLocator(range(1, 13), bymonthday=1, interval=3)
+                        monthsFmt = DateFormatter("%b %d %Y %H:%M:%S")
+                        mondays = WeekdayLocator(MONDAY)
+                        ax.plot_date(x, y)
+                        ax.xaxis.set_major_locator(months)
+                        ax.xaxis.set_major_formatter(monthsFmt)
+                        ax.grid(True)
+                        ax.xaxis.set_minor_locator(mondays)
+                        ax.autoscale_view()
+                        fig.autofmt_xdate()
                 elif scanType == "Lin":
                     y = np.asarray(dataset[0][1+ii])  #only one row of data for this and log type supported
                     x = np.linspace(dataset[0][0][0], dataset[0][0][1], num = len(y))
@@ -343,8 +392,9 @@ class Main(QtGui.QWidget):
                     y = dataset[0][1+ii]
                     x = np.logspace(np.log10(dataset[0][0][0]), np.log10(dataset[0][0][1]), num = len(y))
                     ax.set_xscale('log')
-                ax.plot(x, y, label = depVars[ii][0])
-        ax.legend()
+                ax.plot(x, y, "o", label = depVars[ii][0])
+                #ax.plot(x, y, label = depVars[ii][0])
+        ax.legend(fontsize = 10)
         return fig
 
     def basic1DHistogram(self, dataset, variables, varsToIgnore):
@@ -354,8 +404,6 @@ class Main(QtGui.QWidget):
         depVars = variables[1]
         scanType = self.dataChest.getParameter("Scan Type", True)
         xlabel = self.dataChest.getParameter("X Label", True)
-##        if xlabel is None:
-##            xlabel = indepVars[0][0]
         ylabel = self.dataChest.getParameter("Y Label", True) 
         if ylabel is None:
             ylabel = depVars[0][0] #for data with more than one dep, recommend ylabel
@@ -388,10 +436,6 @@ class Main(QtGui.QWidget):
         variables = self.dataChest.getVariables()
         dataCategory = self.categorizeDataset(variables)
         #otherwise refer to dataset name needs to be implemented
-        print "fileName=", fileName
-        print "self.dataChest.getDatasetName()=", self.dataChest.getDatasetName()
-        print "self.dataChest.pwd()=", self.dataChest.pwd()
-        print "filePath=", filePath
         dataset = self.dataChest.getData()
         if dataCategory == "1D":
             fig = self.plot1D(dataset, variables, selectedPlotType, None, varsToIgnore = varsToIgnore) #plot1D(self, dataset, variables, plotType, dataClass, varsToIgnore = [])
@@ -428,7 +472,6 @@ class Main(QtGui.QWidget):
                 npyRemainder = np.array([])
                 npzRemainder = np.array([])
 
-            print x[0]
             npx = np.concatenate([x[0:yGridRes*numFullYslices], npxRemainder])
             npy = np.concatenate([y[0:yGridRes*numFullYslices], npyRemainder])
             npz = np.concatenate([z[0:yGridRes*numFullYslices], npzRemainder])

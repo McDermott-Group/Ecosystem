@@ -45,6 +45,8 @@ class nViewer:
         laser.selectDeviceCommand("select_device", 0)
 
         laser.addPlot()
+        laser.setPlotRefreshRate(0.02)
+        laser.setRefreshRate(0.02)
         laser.setYLabel("Strength")
         laser.begin()
         self.devices.append(laser)
@@ -56,6 +58,7 @@ class nViewer:
         
         # Create the gui
         self.gui = MGui.MGui()
+        self.gui.setRefreshRate(0.02)
         self.gui.startGui(self.devices, 'Laser Endpoint System Gui', 'Laser Endpoint Data', tele)
         
         

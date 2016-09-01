@@ -12,6 +12,7 @@ More advanced features include
 #### How to use mView
 Configuring a new GUI using mView is straightforward.
 
+<<<<<<< HEAD
 ## Before you start
 
 ##### Add mView to PYTHONPATH. 
@@ -21,6 +22,18 @@ Add the folder containing mView classes to the pythonpath.
 ##### Set up all dependencies
 * _**Please refer to the DataChest manual for DataChest setup.**_
 * _**Please refer to the comments in telecomm.py for telecomm server setup.**_
+#### Step 1: Importing necessary libraries
+First, we need to import the `Device` class, it is responsible for communicating with our devices.
+```python
+from Device import Device
+```
+Next, we import `threading`.
+```python
+=======
+**Before you start**
+* _**Please refer to the DataChest manual for DataChest setup.**_
+* _**Please refer to the comments in telecomm.py for telecomm server setup.**_
+
 #### Step 1: Importing necessary libraries
 First, we need to import the `Device` class, it is responsible for communicating with our devices.
 ```python
@@ -45,11 +58,32 @@ from dataChestWrapper import *
 Finally, we have something that looks like this. This is it for the imports.
 ```python
 from Device import Device
+>>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
+import threading
+```
+If we want to use labrad, we must import the `labrad` module.
+```python
+import labrad
+```
+We also need a way to handle units. This is done with the `labrad.units` module.
+```python
+import labrad.units as units
+```
+For datalogging to work, we must import the mView-compatible `dataChestWrapper` class.
+```python
+from dataChestWrapper import *
+```
+<<<<<<< HEAD
+Finally, we have something that looks like this. This is it for the imports.
+```python
+from Device import Device
 import threading
 import labrad
 import labrad.units as units
 from dataChestWrapper import *
 ```
+=======
+>>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
 
 #### Step 2: Configuring the custom main class
 First, we must create the class that will hold our code. Let's call it 'labOne'.
@@ -216,4 +250,4 @@ These lines should go at the botton, again they **must** be **outside** the main
 
 \\TODO add descriptions of classes and in depth use of writing custom device classes
 ### Version
-1.0.1
+1.1.1

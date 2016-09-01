@@ -106,8 +106,8 @@ class dataChestWrapper:
                 self.dataSet.openDataset(existingFiles[0][y], 
                     modify = True)
                 foundit = True
-            if(foundit):
-                print("Previously existing data set found for "+title+": "
+            # if(foundit):
+                print("Existing data set found for "+title+": "
                     +existingFiles[0][y])
         if(foundit):
             pass
@@ -198,8 +198,10 @@ class dataChestWrapper:
             readings = []
             # Get the newest data
             #print self.devices[i].getFrame().getReadings()
+
             for y in range(0, len(self.device.getFrame()
                 .getNicknames())):
+                
                 # This checks if the reading is displayed on the GUI
                 # if it is not, then it does not include it in the 
                 # dataset.
@@ -210,7 +212,7 @@ class dataChestWrapper:
                         if(self.device.getFrame().getReadings()[y]
                             is not None):
                             readings.append(float(self.device
-                                .getFrame().getReadings()[self.device.getFrame().getReadingIndices()[y]]))
+                                .getFrame().getReadings()[y]))
                         else:
                             readings.append(np.nan)
                     else:

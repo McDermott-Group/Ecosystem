@@ -36,8 +36,13 @@ class nViewer:
         LeidenDRTemperature.addParameter("Temperature", "temperature")
         #LeidenDRTemperature.selectDeviceCommand("select_device", 0)
         LeidenDRTemperature.addPlot()
+<<<<<<< HEAD
         LeidenDRTemperature.setPlotRefreshRate(0.5)
         LeidenDRTemperature.setRefreshRate(1)
+=======
+        LeidenDRTemperature.setPlotRefreshRate(3)
+        LeidenDRTemperature.setRefreshRate(3)
+>>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
         LeidenDRTemperature.setYLabel("Hi", "Custom Units")
         LeidenDRTemperature.begin()
         self.devices.append(LeidenDRTemperature)
@@ -49,7 +54,11 @@ class nViewer:
         
         # Create the gui
         self.gui = MGui.MGui()
+<<<<<<< HEAD
         self.gui.setRefreshRate(1)
+=======
+        self.gui.setRefreshRate(3)
+>>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
         self.gui.startGui(self.devices, 'Leiden Gui', 'Leiden Data', tele)
         
         

@@ -13,7 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-
+__author__ = "Noah Meltzer"
+__copyright__ = "Copyright 2016, McDermott Group"
+__license__ = "GPL"
+__version__ = "2.0.1"
+__maintainer__ = "Noah Meltzer"
+__status__ = "Beta"
 """
 version = 2.0.1
 description = References a device
@@ -24,7 +29,7 @@ from MFrame import MFrame
 import MPopUp
 
 import labrad
-
+import atexit
 import threading
 import sys, traceback
 from dataChestWrapper import dataChestWrapper
@@ -78,24 +83,30 @@ class Device:
         self.buttonSettings = []
             #print(buttonArgs)
         self.buttons = []
-        # The refresh rate for the device
-        self.refreshRateSec = 1
         # new datachest wrapper
         self.datachest = dataChestWrapper(self)
+        # Tells thread to keep going
+        self.keepGoing = True
+        atexit.register(self.stop)
+    def stop(self):
+       
+        keepGoing = False
+        
     def setServerName(self, name):
         self.serverName = name
         
-    def addParameter(self, parameter, setting, arg=None, index = None):
-        if(index is None):
-            index = len(self.nicknames)
+    def addParameter(self, parameter, setting, arg = None, index = None):
+        #if(index is None):
+            #index = len(self.nicknames)
         self.settingNames.append(setting)
         self.settingResultIndices.append(index)
         self.nicknames.append(parameter)
         self.settingArgs.append(arg)
+        #print self.settingResultIndices
         
     def connection(self, cxn):
         self.cxn = cxn
-        
+        self.ctx = cxn.context()
     def addButton(self, name, msg, setting, arg=None):
         self.buttons.append([])
         i = len(self.buttons)-1
@@ -118,7 +129,7 @@ class Device:
         self.frame.setNicknames(self.nicknames)
         self.frame.setReadingIndices(self.settingResultIndices)
         # Connect to the device's server
-        self.connect()
+        #self.connect()
         # Each device NEEDS to run on a different thread 
         # than the main thread (which ALWAYS runs the gui)
         # This thread is responsible for querying the devices
@@ -128,7 +139,11 @@ class Device:
         # Start the thread
         self.deviceThread.start()
     def setRefreshRate(self, period):
+<<<<<<< HEAD
         self.refreshRateSec = period
+=======
+        #self.refreshRateSec = period
+>>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
         self.frame.setRefreshRate(period)
     def setPlotRefreshRate(self, period):
         self.frame.setPlotRefreshRate(period)
@@ -136,7 +151,7 @@ class Device:
         self.frame.addPlot(length)
         # Datalogging must be enabled if we want to plot data
         self.frame.enableDataLogging(True)
-        print self.frame.getPlot()
+        #print self.frame.getPlot()
         return self.frame.getPlot()
     def connect(self):  
         '''Connect to the device'''
@@ -148,7 +163,7 @@ class Device:
             # If the select device command is not none, run it.
             if(self.setDeviceCmd is not None):
                 getattr(self.deviceServer, self.setDeviceCmd)(
-                    self.selectedDevice)
+                    self.selectedDevice, context = self.ctx)
             # True means successfully connected
             self.foundDevice= False
             print ("Found device: "+self.serverName)
@@ -203,10 +218,12 @@ class Device:
                         [button][1])
         except:
             #print("Device not connected.")
+            traceback.print_exc()
             return
     def Query(self):
         '''Ask the device for readings'''
         # If the device is attatched.
+       
         if(not self.isDevice):
             # Try to connect again, if the value changes, then we know 
             # that the device has connected.
@@ -217,14 +234,17 @@ class Device:
             try:
                 readings = []   # Stores the readings
                 units = []      # Stores the units
+               
                 for i in range(0, len(self.settingNames)):
                     # If the setting needs to be passed arguments
                     if(self.settingArgs[i] is not None):
                         reading = getattr(self.deviceServer, self
-                            .settingNames[i])(self.settingArgs[i])
+                            .settingNames[i])(self.settingArgs[i], context = self.ctx)
+
                     else:
                         reading = getattr(self.deviceServer, self
-                            .settingNames[i])()
+                            .settingNames[i])(context = self.ctx)
+                    #print reading
                     # If the reading has a value and units
                     if isinstance(reading, labrad.units.Value):
                         # Some labrad installations like _value, some like value
@@ -236,22 +256,32 @@ class Device:
                     # If the reading is an array of values and units
                     elif(isinstance(reading, labrad.units.ValueArray)):
                         # loop through the array
-                        readings = []
-                        for i in range(0, len(reading)):
+                        #print "it's a value array"
+                        #readings = []
+                        #for i in range(0, len(reading)):
+                        #print self.settingResultIndices
+                        if self.settingResultIndices != None and isinstance(reading[self.settingResultIndices[i]], labrad.units.Value):
+                            try:
+                                readings.append(reading[i]._value)
+                            except:
+                                readings.append(reading[i].value)
+                            units.append(reading[i].units)
                             
-                            if isinstance(reading[i], labrad.units.Value):
-                                try:
-                                    readings.append(reading[i]._value)
-                                except:
-                                    readings.append(reading[i].value)
-                                units.append(reading[i].units)
-                                
-                            else:
-                                readings.append(reading[i])
-                                units.append("")
+                        
+                            
+                        elif len(reading) == 1:
+                            try:
+                                readings.append(reading[0]._value)
+                            except:
+                                readings.append(reading[0].value)
+                            units.append(reading[0].units)
+                        else:
+                            readings.append(reading[i])
+                            units.append("")
                         #print readings
                     elif(type(reading) is list):
-                        readings = []
+                        #print "it's a list "
+                        #readings = []
                         for i in range(0, len(reading)):
                             if(reading[i] is labrad.units.Value):
                                 try:
@@ -270,19 +300,28 @@ class Device:
                             print("Problem with readings, type '"
                                 +type(reading)+"' cannot be displayed")
                 # Pass the readings and units to the frame
+                #print readings
+                #print units
                 self.frame.setReadings(readings)
                 self.frame.setUnits(units)
                 # Save the data
                 self.datachest.save()
                 # If there was an error, retract it.
                 self.frame.retractError()
-            except:
+            except IndexError as e:
                 traceback.print_exc()
+                print ("["+self.frame.getTitle()+"]"), "Something appears to be wrong with what the labrad server is returning:"
+                print "\tReading:", readings
+                print "\tUnits:", units
+                print "\t", e
+            except:
+                #traceback.print_exc()
                 
                 self.frame.raiseError("Problem communicating with "
                     +self.name)
                 self.frame.setReadings(None)
                 self.isDevice = False
         # Query calls itself again, this keeps the thread alive.
-        threading.Timer(self.refreshRateSec, self.Query).start()
+        if self.keepGoing:
+            threading.Timer(self.frame.getRefreshRate(), self.Query).start()
         return 
