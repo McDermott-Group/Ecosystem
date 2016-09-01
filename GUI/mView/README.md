@@ -15,6 +15,7 @@ Configuring a new GUI using mView is straightforward.
 **Before you start**
 * _**Please refer to the DataChest manual for DataChest setup.**_
 * _**Please refer to the comments in telecomm.py for telecomm server setup.**_
+
 #### Step 1: Importing necessary libraries
 First, we need to import the `Device` class, it is responsible for communicating with our devices.
 ```python
