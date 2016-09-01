@@ -68,23 +68,19 @@ class MFrame:
     plot = None
     # Refresh rate of plot
     plotRefreshRate = 1
-<<<<<<< HEAD
     # Holds teh GUI tiles
     tile = None
-    #Holds the logic Node
-    node = None
+    
     # Refresh rate
     refreshRate = None
-=======
-
     # RefreshRate for the device
     refreshRate = 1
 
     # Is there a reading out of range?
     def __init__(self):
         self.outOfRange = {}
-
->>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
+        #Holds the logic Node
+        node = None
     def setTitle(self, title):
         self.serverTitle = title
     def getTitle(self):
@@ -161,7 +157,6 @@ class MFrame:
         self.logData = b
     def isDataLogging(self):
         return self.logData
-<<<<<<< HEAD
     def setTile(self, tile):
         self.tile = tile
     def getTile(self):
@@ -174,7 +169,6 @@ class MFrame:
         self.refreshRate = rate
     def getRefreshRate(self):
         return self.refreshRate
-=======
     def getOutOfRangeStatus(self): 
         return self.outOfRange        
     def setOutOfRange(self, key):
@@ -188,5 +182,3 @@ class MFrame:
         self.outOfRange[key] = False
     def disableRange(self):
       self.outOfRange = {key:False for key in self.outOfRange}
-      
->>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7

@@ -308,66 +308,6 @@ class mGraph(QtGui.QWidget):
                     # for each entry in the dataset [[time], [[data], [data], [data...]]]
                     #print data
                     # Get the corresponding times that the values were recorded
-<<<<<<< HEAD
-                    try:
-                        times = [datetime.datetime.fromtimestamp(row[0]) for row in data]
-                    except  Exception as e :
-                        print e
-                        traceback.print_exc()
-                        print "Bad row: ", row
-                    #print times[-1]
-                    # If the there is  no defined a time range
-                    if self.currTimeRange is None:
-                        # Plot all of the data (columns) vs time
-                        # self.ax.plot_date(times, column, label =
-                            # dataSet.getVariables()[1][i-1][0])
-                        pass
-                    else:
-                        # Otherwise, if the user PREVIOUSLY defined a time range, 
-                        # we need to look for the beginning of it.
-                        # Start by getting the current time
-                        dstamp = dateStamp()
-                        # The dataset should be from now to -timerange
-                        # time(now)-time(range)
-                        startTime = dstamp.utcNowFloat()-self.currTimeRange
-                        # If timeRange is not None, then we know we need
-                        # to display only a certain range of values
-                        # However, if the starttime defined is less than the lowest time, we
-                        # do not have enough data to display the whole thing, so we must 
-                        # display all that we have instead. We do this by setting
-                        # currTimeRange = 0.
-                        if timeRange is not None and startTime<float(data[0][0]):
-                            self.currTimeRange = None
-                        # For all entries in data
-                        for y in range(len(data)):
-                            # We are searching backwards through the dataset to find a time 
-                            # just before the time range specified
-                            if data[len(data)-y-1][0] < startTime:
-                                # once we find it, we know the beginning index of the data to be
-                                # displayed
-                                index = y
-                                # Get the times and datafrom the index and columns to the end of the dataset
-                                times = [datetime.datetime.fromtimestamp(row[0]) for row in data[-index:]]
-                                column = [row[i] for row in data[-index:]]
-                                # Exit the loop
-                                break
-                        # Plot yo stuff
-                    l.debug("")
-                    l.debug("Device: "+self.device.getFrame().getTitle())
-                    l.debug("i: "+ str(i))
-                        #print dataSet.getVariables()
-                    l.debug( "data[-1]: " + str(data[-1]))
-                    l.debug( "len(data[-1]): "+ str( len(data[-1])))
-                    l.debug("num rows: "+ str(dataSet.getNumRows()))
-                    l.debug( "len(data): "+ str(len(data)))
-                    l.debug(str(times[-1]))
-                    try:
-                        self.ax.plot_date(times,column,'-',label = 
-                            dataSet.getVariables()[1][i-1][0])
-                        self.dataOk = True
-                    except:
-                        if(self.dataOk != False): 
-=======
 
              
                     for i in range(1, len(data[-1])):
@@ -436,7 +376,7 @@ class mGraph(QtGui.QWidget):
                             #self.ax.draw_artist(self.line[i])
                         except:
 
->>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
+
                             traceback.print_exc()                        
 
                             #print "Failed to log data"

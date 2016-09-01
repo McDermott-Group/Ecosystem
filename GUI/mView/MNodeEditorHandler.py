@@ -1,6 +1,7 @@
 import MNodeEditor
 import MAnchor
 import MNodeTree
+from MWeb import web
 
 class MNodeEditorHandler:
     def __init__(self, mainGui):
@@ -9,9 +10,9 @@ class MNodeEditorHandler:
         # Create a nodeEditor GUI window
         self.nodeEditor = MNodeEditor.NodeGui(mainGui.devices, self.nodeTree)
         # We need a reference to the main gui that allows us to manipulate mView
-        self.mainGui = mainGui
+        #self.mainGui = mainGui
         # Create a new node to represent each device in the node tree
-        for device in mainGui.devices:
+        for device in web.devices:
             devnode = self.nodeTree.newNode(self.nodeTree, device = device,   mode = 'labrad_device')
             # Tell the device's frame what it's node is
             device.getFrame().setNode(devnode)

@@ -3,6 +3,7 @@ from MNode import MNode
 class NodeTree:
     scene = None
     pipes = []
+    #def __init__(self):
     nodes = []
     def getPipes(self):
         return self.pipes
@@ -54,8 +55,10 @@ class NodeTree:
      
     def newNode(self,  tree, **kwargs):
         newNode = MNode(self.scene, tree, **kwargs)
+       # print newNode
         self.scene.addItem(newNode)
         self.nodes.append(newNode)
+       # print self.nodes[-1]
         return newNode
         
     def getNodes(self):

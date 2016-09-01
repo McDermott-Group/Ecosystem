@@ -40,16 +40,14 @@ from MWeb import web
 import math
 
 import numpy as np
-<<<<<<< HEAD
-import MGrapher
+
 import MNodeEditor
 from MNodeEditorHandler import MNodeEditorHandler
-=======
+
 
 import atexit
 import traceback
 
->>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
 class MGui(QtGui.QMainWindow):
     print "##########################################"
     print "## Starting mView (C) Noah Meltzer 2016 ##"
@@ -78,12 +76,7 @@ class MGui(QtGui.QMainWindow):
     buttons = [[]]
     # This is the main font used for text in the GUI
     font = QtGui.QFont()
-<<<<<<< HEAD
-    #nodeTree = None
-    
-    #font.setPointSize(12)
-=======
->>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
+
     font.setBold(False)
     font.setWeight(50)
     font.setKerning(True)
@@ -97,21 +90,6 @@ class MGui(QtGui.QMainWindow):
     def initGui(self, devices, parent = None):
         '''Configure all gui elements.'''
         QtGui.QWidget.__init__(self, parent)
-<<<<<<< HEAD
-        # Make pretty
-        self.central_widget = QtGui.QWidget()
-        self.setCentralWidget(self.central_widget)
-        self.central_widget.setLayout(self.mainHBox)
-        self.setStyleSheet("background:rgb(70, 80, 88)")
-        # # Get list of devices
-        # self.devices = devices
-        # Stack the device frames
-        # #self.setLayout(self.mainHBox)
-        
-        #self.mainHBox.addLayout(self.mainVBox[self.VBoxColumn])
-
-        
-=======
         app.setActiveWindow(self) 
         # On GUI exit, run stop function
         atexit.register(self.stop)
@@ -124,9 +102,8 @@ class MGui(QtGui.QMainWindow):
         self.scrollArea.setWidgetResizable(True)
         self.setCentralWidget(self.scrollArea)
         # Setup stylesheet
-        self.scrollArea.setStyleSheet("background:rgb(70, 80, 88)")
-        # Configure the menu bar
->>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
+        self.setStyleSheet("background:rgb(70, 80, 88)")
+        
         menubar = self.menuBar()
         menubar.setStyleSheet("QMenuBar {background-color: rgb(189, 195, 199)}"
                 "QMenuBar::item {background: transparent} QMenu{background-color:rgb(189, 195, 199)}")
@@ -138,43 +115,29 @@ class MGui(QtGui.QMainWindow):
                 
         NotifierSettingsAction = QtGui.QAction('&Settings...', self)
         NotifierSettingsAction.triggered.connect(self.openNotifierSettings)
-        
-<<<<<<< HEAD
+
         NodeEditorAction = QtGui.QAction('&Node Editor', self)
         NodeEditorAction.triggered.connect(self.openNodeEditor)
-=======
+
         deviceSettingsAction = QtGui.QAction('&Configure...', self)
         deviceSettingsAction.triggered.connect(self.openConfig)
->>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
         
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(exitAction)
         
         NotifierMenu = menubar.addMenu('&Notifier')
         NotifierMenu.addAction(NotifierSettingsAction)
-<<<<<<< HEAD
+
         
         NodeEditorMenu = menubar.addMenu('&Logic Editor')
         NodeEditorMenu.addAction(NodeEditorAction)
         # For each device, add a GUI frame for it.
-        numWidgets = 0
-        
-      
-        self.scrollArea = QtGui.QScrollArea()
-        
-        
-        self.scrollArea.setWidget(self.central_widget)
-        self.scrollArea.setWidgetResizable(True)
-
-        self.setCentralWidget(self.scrollArea)
-=======
-        
         DeviceMenu = menubar.addMenu('&Devices')
         DeviceMenu.addAction(deviceSettingsAction)
         # Keeps track of the number of widgets, used for placing tiles into the correct column
         numWidgets = 0
         # Configure the size policy of all tiles
->>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
+
         frameSizePolicy = QtGui.QSizePolicy()
         frameSizePolicy.setVerticalPolicy(4)
         frameSizePolicy.setHorizontalPolicy(QtGui.QSizePolicy.Preferred)
@@ -209,20 +172,7 @@ class MGui(QtGui.QMainWindow):
             self.grids[i].setColumnStretch(0,1)
             # Configure the tile (the box surrounding 
             # information for each device)
-<<<<<<< HEAD
-            self.frames[i].setSizePolicy(frameSizePolicy)
-            
-            self.frames[i].setStyleSheet("background: rgb(52, 73, 94)")
-            self.frames[i].setFrameShape(QtGui.QFrame.Panel)
-            self.frames[i].setFrameShadow(QtGui.QFrame.Plain)
-            self.frames[i].setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
-            self.ratio =float(self.scrnWidth)/1800+1
-            #print(self.ratio)
-            self.frames[i].setLineWidth(self.ratio)
-            self.frames[i].setLayout(self.grids[i])
-            
-            self.devices[i].getFrame().setTile(self.frames[i])
-=======
+
             self.tiles[i].setSizePolicy(frameSizePolicy)
             self.tiles[i].setStyleSheet("background: rgb(52, 73, 94)")
             self.tiles[i].setFrameShape(QtGui.QFrame.Panel)
@@ -235,7 +185,6 @@ class MGui(QtGui.QMainWindow):
                 web.ratio =float(self.scrnHeight)/1800+1
             self.tiles[i].setLineWidth(web.ratio)
             self.tiles[i].setLayout(self.grids[i])
->>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
             # Configure the layout of the buttons within the grid
             buttonLayout = QtGui.QHBoxLayout()
             self.grids[i].addLayout(buttonLayout, 1, 1)
@@ -338,26 +287,9 @@ class MGui(QtGui.QMainWindow):
         # GUI will not be running.
         self.NotifierGUI = NotifierGUI()
         self.NotifierGUI.exec_()
-<<<<<<< HEAD
-        #print "The mins received were", (self.NotifierGUI.getMins())
-        # Start the messenger service
-        try:
-            self.MAlert.stop()
-        except:
-            print("Starting MAlert for first time")
-        self.MAlert = MAlert.MAlert(self.NotifierGUI.getCheckboxes(),
-                                            self.NotifierGUI.getMins(),
-                                            self.NotifierGUI.getMaxs(),
-                                            self.NotifierGUI.getContacts(),
-                                            self.devices,
-                                            self.tele)
     def openNodeEditor(self):
     
         self.neh.showEditor()
-        
-=======
-
->>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
     def setRefreshRate(self, period):
         web.guiRefreshRate = period
     def openConfig(self):
@@ -395,17 +327,20 @@ class MGui(QtGui.QMainWindow):
         error = False
         self.tree = self.neh.getTree()
         # loop through all devices
-<<<<<<< HEAD
+#<<<<<<< HEAD
         #for i in range(0, len(self.devices)):
+        print self.tree.getGuiNodes()
+        
         for i,node in enumerate(self.tree.getGuiNodes()):
-            print i
+            print web.devices[i].getFrame().getNode()
+           # print i
             if(node.getType()=='output'):
                 # If there is no error with the device
                 #if(not self.devices[i].getFrame().isError()):
                 # Get the readings from the frame
                 #readings = self.devices[i].getFrame().getReadings();
-                readings = [anchor.getPipe().getData() for  anchor in node.getAnchors() if not anchor.getPipe() is None]
-                print readings
+                readings = [(anchor.getPipe().getData(), anchor.getLabel()) for  anchor in node.getAnchors() if not anchor.getPipe() is None]
+               # print readings
                 if(readings is not None):
                     # Holds an array containing the new data for use 
                     # when adding data to the current dataset
@@ -414,16 +349,33 @@ class MGui(QtGui.QMainWindow):
                     # Update all QLcds with the reading
                     for y,anchor in enumerate(node.getAnchors()):
                         #print i, y
-                        data = anchor.getPipe().getData()
-                        self.lcds[i][y].setSegmentStyle(
-                            QtGui.QLCDNumber.Flat)
-                        z = self.devices[i].getFrame().getReadingIndices()
-=======
+                        try:
+                            data = anchor.getPipe().getData()
+                        except:
+                            pass
+                       # self.lcds[i][y].setSegmentStyle(
+                         #   QtGui.QLCDNumber.Flat)
+                       # z = self.devices[i].getFrame().getReadingIndices()
+#=======
+        #print node
+        for i,node in enumerate(self.tree.getGuiNodes()):
+            for y,anchor in enumerate(node.getAnchors()):
+                self.parameters[i][y].setText(anchor.getLabel())
+            
         for i in range(0, len(web.devices)):
             # If there is no error with the device
             if(not web.devices[i].getFrame().isError()):
                 # Get the readings from the frame
-                readings = web.devices[i].getFrame().getReadings();
+                #readings = web.devices[i].getFrame().getReadings();
+                #anchors = [anchor for anchor in web.devices[i].getFrame().getNode().getAnchors()]
+                #print node
+                readings = [anchor.getPipe().getData() if not anchor.getPipe() is None else np.nan for  anchor in node.getAnchors() ]
+                #print readings
+                #print [anchor.getLabel() for anchor in anchors]
+                #print "\n"
+               # print [anchor.getLabel() for anchor in web.devices[i].getFrame().getNode().getAnchors()]
+                
+                
                 if(readings is not None):
                     # Update all QLcds with the reading                    
                     for y in range(len(web.devices[i].getFrame().getOutOfRangeStatus())):
@@ -445,7 +397,10 @@ class MGui(QtGui.QMainWindow):
                     for y in range(0, len(web.devices[i].getFrame().getNicknames())):
                         # Segments should be flat
                         self.lcds[i][y].setSegmentStyle(QtGui.QLCDNumber.Flat)
->>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
+                        
+                        #print anchors[y].getLabel()
+                        #self.parameters[i][y].setText("HI")
+#>>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
                         try:
                             # If the readings are not nan, then display a reading
                             if(not math.isnan(readings[y])):
@@ -454,32 +409,20 @@ class MGui(QtGui.QMainWindow):
                             else:
                                 self.lcds[i][y].display("---")
                         except TypeError:
+                        
+                            print "printing traceback"
                             traceback.print_exc()
                             pass
+                        except IndexError:
+                            pass
                         # If there are units, put them next to the number
-<<<<<<< HEAD
-                        if(len(self.devices[i].getFrame().getUnits())>0):
-                            #print self.units
-                            self.units[i][y].setText(self.devices[i]
-=======
+
                         if(len(web.devices[i].getFrame().getUnits())>0):
                             self.units[i][y].setText(web.devices[i]
->>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
                                 .getFrame().getUnits()[y])
                             self.font.setPointSize(18)
                             self.units[i][y].setFont(self.font)
                             self.font.setPointSize(12)
-<<<<<<< HEAD
-                            self.units[i][y].setStyleSheet(
-                                "color:rgb(189, 195, 199);")
-                else:
-                    # Otherwise if there is an error, show that on 
-                    # the gui through outlined lcd numbers
-                    for y in range(0, len(self.lcds[i])):
-                        self.lcds[i][y].setSegmentStyle(QtGui
-                            .QLCDNumber.Outline)
-                        self.lcds[i][y].display("-")
-=======
             else:
                 # Otherwise if there is an error, show that on 
                 # the gui through outlined lcd numbers
@@ -490,7 +433,6 @@ class MGui(QtGui.QMainWindow):
                     
         if self.keepGoing:
             self.timer.singleShot(web.guiRefreshRate*1000, self.update)
->>>>>>> ab3ed114c0f6967ef568eb1eae94d7644cbafcf7
         return
             
 app=QtGui.QApplication(sys.argv)

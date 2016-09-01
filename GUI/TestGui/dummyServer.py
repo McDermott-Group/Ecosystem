@@ -11,11 +11,12 @@ class MyServer(LabradServer):
     @setting(10, returns='v')
     def Temperature(self, c):
         
-        return np.sin((t.time()-self.start)/2)
-       # return 0.5
+        #return np.sin((t.time()-self.start)/2)
+        return 1 + random.random()
     @setting(11, returns = 'v')
     def Pressure(self, c, data):
-          return np.sin((t.time()-self.start)/1.5)
+          #return np.sin((t.time()-self.start)/1.5)
+          return 2+ random.random()
     def somethingElse(self):
         print("something Else")
         
