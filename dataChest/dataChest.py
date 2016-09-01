@@ -94,7 +94,7 @@ class dataChest(dateStamp):
     dirContents = self.ls()[1]
     if self._formatFilename(directoryToMake, " ") == directoryToMake:
       if directoryToMake not in dirContents:
-        os.mkdir(directoryToMake) #Try except this even though safe guarded
+        os.mkdir(self.cwdPath+"/"+directoryToMake) #Try except this even though safe guarded
         return directoryToMake
       else:
         raise ValueError(
@@ -324,7 +324,7 @@ class dataChest(dateStamp):
           numChunks = totalLen/chunkSize
           dataDict[variables]=[]
           if len(originalShape)>1 or originalShape!=[1]:           
-            for ii in range(0, numChunks):
+            for ii in range(0, numRows):
               chunk = np.asarray(dataset[ii*chunkSize:(ii+1)*chunkSize])
               chunk = np.reshape(chunk, tuple(originalShape))
               dataDict[variables].append(chunk.tolist())
