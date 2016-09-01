@@ -10,17 +10,41 @@ More advanced features include
 - Email and Text Notifications
 
 #### How to use mView
-Configuring a new GUI using mView is easy.
+Configuring a new GUI using mView is straightforward.
+
+**Before you start**
+* _**Please refer to the DataChest manual for DataChest setup.**_
+* _**Please refer to the comments in telecomm.py for telecomm server setup.**_
 #### Step 1: Importing necessary libraries
+First, we need to import the `Device` class, it is responsible for communicating with our devices.
 ```python
 from Device import Device
-from multiprocessing.pool import ThreadPool
+```
+Next, we import `threading`.
+```python
+import threading
+```
+If we want to use labrad, we must import the `labrad` module.
+```python
+import labrad
+```
+We also need a way to handle units. This is done with the `labrad.units` module.
+```python
+import labrad.units as units
+```
+For datalogging to work, we must import the mView-compatible `dataChestWrapper` class.
+```python
+from dataChestWrapper import *
+```
+Finally, we have something that looks like this. This is it for the imports.
+```python
+from Device import Device
 import threading
 import labrad
 import labrad.units as units
 from dataChestWrapper import *
 ```
-If you are not using labrad, do not import the labrad libraries.
+
 #### Step 2: Configuring the custom main class
 First, we must create the class that will hold our code. Let's call it 'labOne'.
 ```python
@@ -42,27 +66,28 @@ class labOne:
 	...
 ```
 #### Step 3: Configuring devices
-It is time now to add devices to your gui. Each device you attatch to your GUI shown up in it's own section of the gui along with all of its attributes.
+It is time now to add devices to your gui. Each device you attatch to your GUI shows up in it's own section of the gui (called a **tile**) along with all of its attributes.
 We configure all of our devices inside of the main class we created in step 2.
 
-In our lab, we have a helium compressor.
+Lets say that in our lab, we have a helium compressor.
 We need to be able to do three things.
 1. Read temperature values from the compressor.
-2. Tell the compressor to turn on and off.
-3. Plot the temperature values.
+2. Turn the compressor on and off.
+3. Plot the temperatures over time.
 
-Let's now create our device.
+We start by creating a new device to represent our compressor.
 ```python
 Compressor = Device("Compressor")
 ```
-What we have done here is instantiate a new labrad Device object named "Compressor" this is the name that will show up in the GUI.
->Note that this device class is specifically for use with labrad server, but a new device class can easily be written.
+What we have done here is instantiate a new labrad Device object named "Compressor" this is the name that will show up on the GUI tile.
+>Note that this device class is specifically for use with labrad server, but a new device class can easily be written for **direct** use with interfaces such as RS232, GPIB, etc.
 
 For labrad devices, we must specify a server name. This is the name of the device's server.
 ```python
 Compressor.setServerName("cp2800_compressor")
 ```
-Now, mView knows where it can find the device.  
+Now, the device class knows where to direct reading queries.  
+
 As mentioned, we need a way to turn the compressor on or off, we add this functionality using buttons, which show up as clickable buttons on the GUI.  
 
 First let's create a button that turns the compressor on.
@@ -110,22 +135,14 @@ Compressor.selectDeviceCommand("select_device", 0)
 ```
 
 #### Step 4: Configuring The GUI
-There are a few otherthings that we can do include on the GUI. These are optional, but useful tools.
+There are a few other things that we can do include on the GUI. These are optional, but useful tools.
 ##### The integrated grapher
 If desired, we may add a graphing window to any GUI device. To do this, use the `mView.addPlot()` method.
-There are two types of plots that can be displayed, one is a scrolling plot that shows a fixed number of datapoints, the second is a plot to show the entire dataset.  
 
-The following code will add a plot which shows the entire dataset.
+The following code will add a plot to the tile.
 ```python
 Compressor.addPlot()
 ```
-In order to only show a certain number of points, we specify a number of data point
-```python
-Compressor.addPlot(1000)
-```
-This will tell the grapher to show only the most recent 1000 points of data.
-
->WARNING: This implementation will soon change to allow for a more interactive on-screen plotter.
 
 #### Step 5: Enabling Our Device
 In order for our device to show up on the gui, we must do two things.
@@ -193,4 +210,4 @@ These lines should go at the botton, again they **must** be **outside** the main
 
 \\TODO add descriptions of classes and in depth use of writing custom device classes
 ### Version
-1.0.1
+1.1.1
