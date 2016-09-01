@@ -3,6 +3,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 import random
 import numpy as np
 import time as t
+
 class MyServer(LabradServer):
     name = "My Server"    # Will be labrad name of server
 
