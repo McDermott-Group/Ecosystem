@@ -92,7 +92,7 @@ class dataChest(dateStamp):
   def mkdir(self, directoryToMake):
     """Makes a new directory within the current working directory."""
     dirContents = self.ls()[1]
-    if self._formatFilename(directoryToMake, " ") == directoryToMake:
+    if self._formatFilename(directoryToMake, " +-.") == directoryToMake:
       if directoryToMake not in dirContents:
         os.mkdir(self.cwdPath+"/"+directoryToMake) #Try except this even though safe guarded
         return directoryToMake
@@ -106,7 +106,7 @@ class dataChest(dateStamp):
       raise ValueError(
         "Invalid directory name provided.\r\n\t"
         + "Directory name provided: "+ directoryToMake+".\r\n\t"
-        + "Suggested name: "+ self._formatFilename(directoryToMake, " ")
+        + "Suggested name: "+ self._formatFilename(directoryToMake, " +-.")
         ) 
 
   def ls(self):
@@ -687,7 +687,7 @@ class dataChest(dateStamp):
           "Invalid variable name provided.\r\n\t"
           + "Name provided: "+varName+
           + ".\r\n\t"+"Suggested alternative: "
-          + self._formatFilename(varName)
+          + self._formatFilename(varName, " +-.")
           )
         return []
     if len(varNames) != len(set(varNames)):
