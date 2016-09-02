@@ -19,7 +19,7 @@ for ii in range(0, numWrites): #will take about ~13 hours since it takes finite 
         d = dataChestObjArray[objIndex]
         d.addData([[float(ii),1.0]])
     time.sleep(1.0)
-
+    print ii
 #Check for corrupted files
 
 for objIndex in range(0,numObjs):
