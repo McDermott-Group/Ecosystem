@@ -55,8 +55,11 @@ class nViewer:
         self.gui.setRefreshRate(1)
 
         self.gui.startGui(self.devices, 'Leiden Gui', 'Leiden Data', tele)
-        
-        
+
+            
 # In phython, the main class's __init__() IS NOT automatically called
-viewer = nViewer()  
-viewer.__init__()
+try:
+    viewer = nViewer()  
+    viewer.__init__()
+except:
+    pass

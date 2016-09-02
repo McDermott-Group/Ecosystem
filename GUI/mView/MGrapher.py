@@ -412,6 +412,7 @@ class mGraph(QtGui.QWidget):
                         self.ax.grid(True)
                        
                 except Exception as e :
+                   traceback.print_exc()
                    print "Error"
                 try:
               

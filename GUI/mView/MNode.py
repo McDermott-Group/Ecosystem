@@ -1,6 +1,8 @@
 from PyQt4 import QtGui, QtCore
 from MAnchor import MAnchor
 import threading
+import traceback
+from MWeb import web
 class MNode(QtGui.QGraphicsItem):
     def __init__(self,  scene, tree, parent = None,  **kwargs):
         ''' Create a new node'''
@@ -55,14 +57,18 @@ class MNode(QtGui.QGraphicsItem):
         self.nodeThread.start()
     def refreshData(self):
         index = 0
-        
-        if self.getType() == 'labrad_device':
-            for i, anchor in enumerate(self.getAnchors()):
-                if(anchor.getType() == 'output' and anchor.getPipe() is not None):
-                    anchor.getPipe().setData(self.device.getFrame().getReadings()[i] )
-                    print anchor.getPipe().getData()
-                    index = index + 1
-        threading.Timer(1, self.refreshData).start()
+        try:
+            if self.getType() == 'labrad_device':
+                for i, anchor in enumerate(self.getAnchors()):
+                    if(anchor.getType() == 'output' and anchor.getPipe() is not None):
+                        anchor.getPipe().setData(self.device.getFrame().getReadings()[i] )
+                        #print anchor.getPipe().getData()
+                        index = index + 1
+            if web.keepGoing:
+                pass
+                threading.Timer(1, self.refreshData).start()
+        except:
+            traceback.print_exc()
     def getAnchors(self):
         return self.anchors
         

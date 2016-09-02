@@ -117,12 +117,15 @@ class NotifierGUI(QtGui.QDialog):
             self.alert.allDataDict = self.allDataDict
             web.limitDict = self.allDataDict
         except ValueError:
+            traceback.print_exc()
             print("Enter only numbers into 'Minimum' and 'Maximum' fields.")
             print("Data Not Saved")
         except IOError as e:
+            traceback.print_exc()
             print "Unable to save notifier config data:"
             print e
         except:
+            traceback.print_exc()
             print("Minimum values cannot be greater than maximum values.")
             print("Data Not Saved")
         self.close()
@@ -238,7 +241,7 @@ class AlertConfig(QtGui.QWidget):
             print "Config Data Opened"
 
         except:
-            #traceback.print_exc()
+            traceback.print_exc()
             self.allDataDict = {}
             print("No config file found")
         return self.allDataDict

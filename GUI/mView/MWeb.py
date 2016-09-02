@@ -35,4 +35,5 @@ class web:
     telecomm = None
     # DPI scaling ratio
     ratio = 1
-    
+    # Continue
+    keepGoing = True

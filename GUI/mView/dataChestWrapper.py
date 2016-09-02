@@ -89,6 +89,7 @@ class dataChestWrapper:
         try:
             self.dataSet.cd(str(int(now.day/7)))
         except:
+            traceback.print_exc()
             self.dataSet.mkdir(str(int(now.day/7)))
             self.dataSet.cd(str(int(now.day/7)))
 
@@ -228,6 +229,7 @@ class dataChestWrapper:
                 try:
                     self.dataSet.addData([vars])
                 except:
+                    traceback.print_exc()
                     print self.device.getFrame().getTitle()+( 
                         "ERROR: could not store data, this might be due "
                         "to a change made to the parameters of the device, "

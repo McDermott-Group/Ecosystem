@@ -1,6 +1,7 @@
 import MNodeEditor
 import MAnchor
 import MNodeTree
+import atexit
 from MWeb import web
 
 class MNodeEditorHandler:
@@ -11,6 +12,7 @@ class MNodeEditorHandler:
         self.nodeEditor = MNodeEditor.NodeGui(mainGui.devices, self.nodeTree)
         # We need a reference to the main gui that allows us to manipulate mView
         #self.mainGui = mainGui
+        atexit.register(self.stop)
         # Create a new node to represent each device in the node tree
         for device in web.devices:
             devnode = self.nodeTree.newNode(self.nodeTree, device = device,   mode = 'labrad_device')
@@ -32,4 +34,7 @@ class MNodeEditorHandler:
         self.nodeEditor.exec_()
     def getTree(self):
         return self.nodeTree
-        
+    def stop(self):
+        print "stopping handler"
+        web.keepGoing = False
+        exit()

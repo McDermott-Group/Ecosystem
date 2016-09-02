@@ -60,33 +60,36 @@ class MAlert:
         self.deviceThread.daemon = True
         # Start the thread
         self.deviceThread.start()
-        self.keepGoing = True
+        #self.keepGoing = True
     def monitorReadings(self):
         # The dictionary keys are in the format 'devicename:parametername' : '
-        for i in range(len(self.devices)):
-            for y, param in enumerate(self.devices[i].getFrame().getNicknames()):
-                key = self.devices[i].getFrame().getTitle()+":"+param
-                enabled, min, max, people = web.limitDict[key]
-                min = self.toFloat(min)
-                max = self.toFloat(max)
-                if self.devices[i].getFrame().getReadings() != None:
-                    reading = self.devices[i].getFrame().getReadings()[y]
-                    #print "enabled: ", enabled
-                    if(enabled):
-                        #print key,self.dict[key]
-                        if(min != None and min>reading):
-                            #print "MALERT reading below min ", min
-                            self.devices[i].getFrame().setOutOfRange(key)
-                            self.sendMail(self.devices[i], y, reading, people, min, max)
-                        elif(max != None and max<reading):
-                            self.devices[i].getFrame().setOutOfRange(key)
-                            self.sendMail(self.devices[i], y, reading, people, min, max)      
+        if web.keepGoing:
+            for i in range(len(self.devices)):
+                for y, param in enumerate(self.devices[i].getFrame().getNicknames()):
+                    key = self.devices[i].getFrame().getTitle()+":"+param
+                    enabled, min, max, people = web.limitDict[key]
+                    min = self.toFloat(min)
+                    max = self.toFloat(max)
+                    if self.devices[i].getFrame().getReadings() != None:
+                        reading = self.devices[i].getFrame().getReadings()[y]
+                        #print "enabled: ", enabled
+                        if(enabled):
+                            #print key,self.dict[key]
+                            if(min != None and min>reading):
+                                #print "MALERT reading below min ", min
+                                self.devices[i].getFrame().setOutOfRange(key)
+                                self.sendMail(self.devices[i], y, reading, people, min, max)
+                            elif(max != None and max<reading):
+                                self.devices[i].getFrame().setOutOfRange(key)
+                                self.sendMail(self.devices[i], y, reading, people, min, max)      
+                            else:
+                                self.devices[i].getFrame().setInRange(key)    
                         else:
-                            self.devices[i].getFrame().setInRange(key)    
-                    else:
-                        self.devices[i].getFrame().setInRange(key)
-        if(self.keepGoing):
-            threading.Timer(web.guiRefreshRate, self.monitorReadings).start()
+                            self.devices[i].getFrame().setInRange(key)
+    
+                threading.Timer(web.guiRefreshRate, self.monitorReadings).start()
+        else:
+            print "Stopping MAlert"
     def toFloat(self, val):
         try:
             return float(val)

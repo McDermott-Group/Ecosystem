@@ -90,6 +90,7 @@ class refreshRateContents(QtGui.QWidget):
        try:
             web.guiRefreshRate = float(self.refRateEdit.text())
        except Exception as e:
+            traceback.print_exc()
             print e
             
 class devRefRateConfig(QtGui.QWidget):

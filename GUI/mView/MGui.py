@@ -44,14 +44,15 @@ import numpy as np
 import MNodeEditor
 from MNodeEditorHandler import MNodeEditorHandler
 
+import os
 
 import atexit
 import traceback
 
 class MGui(QtGui.QMainWindow):
-    print "##########################################"
-    print "## Starting mView (C) Noah Meltzer 2016 ##"
-    print "##########################################"
+    print "########################################"
+    print "# Starting mView (C) Noah Meltzer 2016 #"
+    print "########################################"
     # Holds the Qlabels that label the parameters
     parameters = [[]]
     # Each tile on the gui is called a frame, this is the list of them
@@ -102,7 +103,7 @@ class MGui(QtGui.QMainWindow):
         self.scrollArea.setWidgetResizable(True)
         self.setCentralWidget(self.scrollArea)
         # Setup stylesheet
-        self.setStyleSheet("background:rgb(70, 80, 88)")
+        self.scrollArea.setStyleSheet("background:rgb(70, 80, 88)")
         
         menubar = self.menuBar()
         menubar.setStyleSheet("QMenuBar {background-color: rgb(189, 195, 199)}"
@@ -277,9 +278,12 @@ class MGui(QtGui.QMainWindow):
    
     def stop(self):
         '''Stop and close mView cleanly'''
+
         print "Closing mView"
         self.keepGoing = False
+        print "exiting"
         exit()
+
         
     def openNotifierSettings(self):
         '''Open the notifier settings gui'''
@@ -329,10 +333,10 @@ class MGui(QtGui.QMainWindow):
         # loop through all devices
 #<<<<<<< HEAD
         #for i in range(0, len(self.devices)):
-        print self.tree.getGuiNodes()
+       # print self.tree.getGuiNodes()
         
         for i,node in enumerate(self.tree.getGuiNodes()):
-            print web.devices[i].getFrame().getNode()
+            #print web.devices[i].getFrame().getNode()
            # print i
             if(node.getType()=='output'):
                 # If there is no error with the device
@@ -352,6 +356,8 @@ class MGui(QtGui.QMainWindow):
                         try:
                             data = anchor.getPipe().getData()
                         except:
+                            traceback.print_exc()
+
                             pass
                        # self.lcds[i][y].setSegmentStyle(
                          #   QtGui.QLCDNumber.Flat)
@@ -410,10 +416,11 @@ class MGui(QtGui.QMainWindow):
                                 self.lcds[i][y].display("---")
                         except TypeError:
                         
-                            print "printing traceback"
+                            #print "printing traceback"
                             traceback.print_exc()
                             pass
                         except IndexError:
+                            traceback.print_exc()
                             pass
                         # If there are units, put them next to the number
 

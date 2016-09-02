@@ -165,11 +165,13 @@ class Device:
             print ("Found device: "+self.serverName)
             return True
         except labrad.client.NotFoundError, AttributeError:
+            traceback.print_exc()
             if( not self.foundDevice):
                 self.foundDevice = True
                 print("Unable to find device: "+self.serverName)
             self.frame.raiseError("Labrad issue")
         except:
+            traceback.print_exc()
             # The nFrame class can pass an error along with a message
             self.frame.raiseError("Labrad issue")
             
@@ -247,6 +249,7 @@ class Device:
                         try:
                             readings.append(reading._value)
                         except:
+                            traceback.print_exc()
                             readings.append(reading.value)
                         units.append(reading.units)
                     # If the reading is an array of values and units
@@ -260,6 +263,7 @@ class Device:
                             try:
                                 readings.append(reading[i]._value)
                             except:
+                                traceback.print_exc()
                                 readings.append(reading[i].value)
                             units.append(reading[i].units)
                             
@@ -269,6 +273,7 @@ class Device:
                             try:
                                 readings.append(reading[0]._value)
                             except:
+                                traceback.print_exc()
                                 readings.append(reading[0].value)
                             units.append(reading[0].units)
                         else:
@@ -283,6 +288,7 @@ class Device:
                                 try:
                                     readings.append(reading[i]._value)
                                 except:
+                                    traceback.print_exc()
                                     readings.append(reading[i].value)
                                 units.append(reading[i].units)
                             else:
@@ -293,6 +299,7 @@ class Device:
                             readings.append(reading)
                             units.append("")
                         except:
+                            traceback.print_exc()
                             print("Problem with readings, type '"
                                 +type(reading)+"' cannot be displayed")
                 # Pass the readings and units to the frame
@@ -319,5 +326,9 @@ class Device:
                 self.isDevice = False
         # Query calls itself again, this keeps the thread alive.
         if self.keepGoing:
-            threading.Timer(self.frame.getRefreshRate(), self.Query).start()
+            try:
+                threading.Timer(self.frame.getRefreshRate(), self.Query).start()
+                pass
+            except:
+                pass
         return 
