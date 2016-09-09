@@ -28,16 +28,17 @@ asS'Compressor:Output Water Temperature'
 p10
 (lp11
 I00
-aS''
+aF400
 aS''
 ag4
 (g5
 S'QString'
-(V
-ttRp12
+(VNOAH_CELL, NOAH, NATE_EMAIL, NATE_CELL
+p12
+ttRp13
 asS'Compressor:Oil Temperature'
-p13
-(lp14
+p14
+(lp15
 I00
 aS''
 aS''
@@ -45,10 +46,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp15
+ttRp16
 asS'Leiden DR:Exchange'
-p16
-(lp17
+p17
+(lp18
 I00
 aS''
 aS''
@@ -56,10 +57,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp18
+ttRp19
 asS'Vacuum:Still Pressure'
-p19
-(lp20
+p20
+(lp21
 I00
 aS''
 aS''
@@ -67,21 +68,22 @@ ag4
 (g5
 S'QString'
 (V
-ttRp21
+ttRp22
 asS'PT1000s:3K'
-p22
-(lp23
+p23
+(lp24
 I00
 aF300
-aS''
+aF400
 ag4
 (g5
 S'QString'
-(V
-ttRp24
-asS'Temperature:Exteranal Water Temperature'
+(VNOAH_CELL, NOAH
 p25
-(lp26
+ttRp26
+asS'Temperature:Exteranal Water Temperature'
+p27
+(lp28
 I00
 aS''
 aS''
@@ -89,10 +91,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp27
+ttRp29
 asS'Compressor:Helium Temperature'
-p28
-(lp29
+p30
+(lp31
 I00
 aF285
 aF290
@@ -100,10 +102,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp30
+ttRp32
 asS'Leiden DR:Mix (PT-1000)'
-p31
-(lp32
+p33
+(lp34
 I00
 aS''
 aS''
@@ -111,10 +113,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp33
+ttRp35
 asS'Vacuum:OVC Pressure'
-p34
-(lp35
+p36
+(lp37
 I00
 aS''
 aS''
@@ -122,10 +124,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp36
+ttRp38
 asS'Leiden DR:Mix (TT)'
-p37
-(lp38
+p39
+(lp40
 I00
 aS''
 aS''
@@ -133,32 +135,34 @@ ag4
 (g5
 S'QString'
 (V
-ttRp39
+ttRp41
 asS'Flow Meter:External Water Flow Rate'
-p40
-(lp41
-I00
-aS''
-aS''
+p42
+(lp43
+I01
+aF0.40000000000000002
+aF3
 ag4
 (g5
 S'QString'
-(V
-ttRp42
-asS'Compressor:Input Water Temperature'
-p43
-(lp44
-I00
-aF290
-aS''
-ag4
-(g5
-S'QString'
-(V
+(VNOAH_CELL, NOAH, ALEX, ED_EMAIL, CHRIS_CELL, CHRIS_EMAIL, NATE_EMAIL, NATE_CELL, RYAN_CELL, RYAN_EMAIL, JOHN_CELL, JOHN_EMAIL, MATT_CELL, MATT_EMAIL, IVAN_EMAIL
+p44
 ttRp45
-asS'PT1000s:50K'
+asS'Compressor:Input Water Temperature'
 p46
 (lp47
+I01
+aF278
+aF295
+ag4
+(g5
+S'QString'
+(VNOAH_CELL, NOAH, ALEX, ED_EMAIL, CHRIS_CELL, CHRIS_EMAIL, NATE_EMAIL, NATE_CELL, RYAN_CELL, RYAN_EMAIL, JOHN_CELL, JOHN_EMAIL, MATT_CELL, MATT_EMAIL, IVAN_EMAIL
+p48
+ttRp49
+asS'PT1000s:50K'
+p50
+(lp51
 I00
 aF300
 aS''
@@ -166,5 +170,5 @@ ag4
 (g5
 S'QString'
 (V
-ttRp48
+ttRp52
 as.

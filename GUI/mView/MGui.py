@@ -302,7 +302,7 @@ class MGui(QtGui.QMainWindow):
         # Update the gui every so often. This CAN ONLY be done 
         # in the main thread.
         self.timer.singleShot(web.guiRefreshRate*1000, self.update)
-        self.MAlert.begin()
+        #self.MAlert.begin()
         sys.exit(app.exec_())
 
     def update(self):
