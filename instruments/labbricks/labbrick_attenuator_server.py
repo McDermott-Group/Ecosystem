@@ -18,7 +18,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Lab Brick Attenuators
-version = 2.0.0
+version = 2.0.1
 description =  Gives access to Lab Brick attenuators.
 instancename = %LABRADNODE% Lab Brick Attenuators
 
@@ -42,6 +42,7 @@ from twisted.internet.task import LoopingCall
 from labrad.server import LabradServer, setting
 from labrad.errors import DeviceNotSelectedError
 from labrad.units import dB, s
+from labrad import util
 
 MAX_NUM_ATTEN = 64      # Maximum number of connected attenuators.
 MAX_MODEL_NAME = 32     # Maximum length of Lab Brick model name.
@@ -50,7 +51,6 @@ MAX_MODEL_NAME = 32     # Maximum length of Lab Brick model name.
 class LBAttenuatorServer(LabradServer):
     name='%LABRADNODE% Lab Brick Attenuators'
     refreshInterval = 60 * s
-    defaultTimeout = 0.1 * s
     
     @inlineCallbacks
     def getRegistryKeys(self):
@@ -74,13 +74,6 @@ class LBAttenuatorServer(LabradServer):
                     "Path' is not specified.")  
         print("Lab Brick Attenuator DLL Path is set to %s"
                 %self.DLL_path)
-        if 'Lab Brick Attenuator Timeout' not in keys:
-            self.waitTime = self.defaultTimeout
-        else:
-            self.waitTime = yield reg.get('Lab Brick Attenuator '
-                    'Timeout')
-        print("Lab Brick Attenuator Timeout is set to %s"
-                %self.waitTime)
         if 'Lab Brick Attenuator Server Autorefresh' not in keys:
             self.autoRefresh = False
         else:
@@ -104,11 +97,12 @@ class LBAttenuatorServer(LabradServer):
         # Number of the currently connected devices.
         self._num_devs = 0
         # Create a dictionary that maps serial numbers to device IDs.
-        self.SerialNumberDict = dict()
+        self._SN2DID = {}
         # Create a dictionary that keeps track of last set attenuation.
-        self.LastAttenuation = dict()   
+        self._last_attn = {}   
         # Dictionary to keep track of min/max attenuations.
-        self.MinMaxAttenuation = dict()
+        self._min_attn = {}
+        self._max_attn = {}
 
         # Create a context for the server.
         self._pseudo_ctx = {}
@@ -138,7 +132,7 @@ class LBAttenuatorServer(LabradServer):
         self.killAttenuatorConnections()
             
     def killAttenuatorConnections(self):
-        for DID in self.SerialNumberDict.values():
+        for DID in self._SN2DID.values():
             try:
                 yield self.VNXdll.fnLDA_CloseDevice(ctypes.c_uint(DID))
             except Exception:
@@ -153,9 +147,10 @@ class LBAttenuatorServer(LabradServer):
         elif n == 0:
             print('Lab Brick attenuators disconnected')
             self._num_devs = n
-            self.SerialNumberDict.clear()
-            self.LastAttenuation.clear()
-            self.MinMaxAttenuation.clear()
+            self._SN2DID.clear()
+            self._last_attn.clear()
+            self._min_atten.clear()
+            self._max_atten.clear()
         else:
             self._num_devs = n
             DIDs = (ctypes.c_uint * MAX_NUM_ATTEN)()
@@ -163,26 +158,27 @@ class LBAttenuatorServer(LabradServer):
             yield self.VNXdll.fnLDA_GetDevInfo(DIDs_ptr)
             for idx in range(n):
                 SN = yield self.VNXdll.fnLDA_GetSerialNumber(DIDs_ptr[idx])
-                self.SerialNumberDict.update({SN: DIDs_ptr[idx]})
+                self._SN2DID.update({SN: DIDs_ptr[idx]})
                 self.select_device(self._pseudo_ctx, SN)
                 model = yield self.model(self._pseudo_ctx)
                 attn = yield self.attenuation(self._pseudo_ctx)
                 min_attn = yield self.min_attenuation(self._pseudo_ctx)
                 max_attn = yield self.max_attenuation(self._pseudo_ctx)
-                self.LastAttenuation.update({SN: attn})
-                self.MinMaxAttenuation.update({SN: (min_attn, max_attn)})
+                self._last_attn.update({SN: attn})
+                self._min_attn.update({SN: min_attn})
+                self._max_attn.update({SN: max_attn})
                 print('Found a %s Lab Brick Attenuator, serial '
                         'number: %d, current attenuation: %s'
-                        %(model, SN, self.LastAttenuation[SN]))
+                        %(model, SN, self._last_attn[SN]))
 
     def getDeviceDID(self, c):
         if 'SN' not in c:
             raise DeviceNotSelectedError('No Lab Brick Attenuator '
                     'serial number is selected')
-        if c['SN'] not in self.SerialNumberDict.keys():
+        if c['SN'] not in self._SN2DID.keys():
             raise Exception('Cannot find Lab Brick Attenuator with '
                     'serial number %s' %c['SN'])
-        return self.SerialNumberDict[c['SN']]       
+        return self._SN2DID[c['SN']]       
                 
     @setting(1, 'Refresh Device List')
     def refresh_device_list(self, c):
@@ -192,7 +188,7 @@ class LBAttenuatorServer(LabradServer):
     @setting(2, 'List Devices', returns='*w')
     def list_devices(self, c):
         """Return list of attenuator serial numbers."""
-        return sorted(self.SerialNumberDict.keys())
+        return sorted(self._SN2DID.keys())
         
     @setting(5, 'Select Device', SN='w', returns='')
     def select_device(self, c, SN):
@@ -209,27 +205,28 @@ class LBAttenuatorServer(LabradServer):
         if 'SN' in c:
             del c['SN']
      
-    @setting(10, 'Attenuation', atten='v[dB]', returns='v[dB]')
-    def attenuation(self, c, atten=None):
+    @setting(10, 'Attenuation', attn='v[dB]', returns='v[dB]')
+    def attenuation(self, c, attn=None):
         """Get or set attenuation."""
-        if atten is not None:
-            if atten['dB'] < self.MinMaxAttenuation[c['SN']][0]['dB']:
-                atten = self.MinMaxAttenuation[c['SN']][0]
-            elif atten['dB'] > self.MinMaxAttenuation[c['SN']][1]['dB']:
-                atten = self.MinMaxAttenuation[c['SN']][1]
-            # Check to make sure it needs to be changed.
-            if self.LastAttenuation[c['SN']] == atten:
-                returnValue(atten)
-
+        if attn is not None:
+            if attn['dB'] < self._min_attn[c['SN']]['dB']:
+                attn = self._min_attn[c['SN']]
+            elif attn['dB'] > self._max_attn[c['SN']]['dB']:
+                attn = self._max_attn[c['SN']]
+            # Check whether the attenuation needs to be changed.
+            if self._last_attn[c['SN']] == attn:
+                returnValue(attn)
+        
+        # Set the attenuation (if requested) and read it back.
         DID = ctypes.c_uint(self.getDeviceDID(c))
         yield self.VNXdll.fnLDA_InitDevice(DID)
-        if atten is not None:
-            atten_value = ctypes.c_int(int(4. * atten['dB']))
-            yield self.VNXdll.fnLDA_SetAttenuation(DID, atten_value)
-        atten = .25 * (yield self.VNXdll.fnLDA_GetAttenuation(DID)) * dB
-        self.LastAttenuation[c['SN']] = atten
+        if attn is not None:
+            attn_value = ctypes.c_int(int(4. * attn['dB']))
+            yield self.VNXdll.fnLDA_SetAttenuation(DID, attn_value)
+        attn = .25 * (yield self.VNXdll.fnLDA_GetAttenuation(DID)) * dB
+        self._last_attn[c['SN']] = attn
         yield self.VNXdll.fnLDA_CloseDevice(DID)
-        returnValue(atten)
+        returnValue(attn)
         
     @setting(21, 'Max Attenuation', returns='v[dB]')
     def max_attenuation(self, c):
@@ -237,7 +234,7 @@ class LBAttenuatorServer(LabradServer):
         DID = ctypes.c_uint(self.getDeviceDID(c))
         yield self.VNXdll.fnLDA_InitDevice(DID)
         max_attn = yield self.VNXdll.fnLDA_GetMaxAttenuation(DID)
-        max_attn = 0.25 * max_attn * dB
+        max_attn = .25 * max_attn * dB
         yield self.VNXdll.fnLDA_CloseDevice(DID)
         returnValue(max_attn)
 
@@ -247,7 +244,7 @@ class LBAttenuatorServer(LabradServer):
         DID = ctypes.c_uint(self.getDeviceDID(c))
         yield self.VNXdll.fnLDA_InitDevice(DID)
         min_attn = yield self.VNXdll.fnLDA_GetMinAttenuation(DID)
-        min_attn = 0.25 * min_attn * dB
+        min_attn = .25 * min_attn * dB
         yield self.VNXdll.fnLDA_CloseDevice(DID)
         returnValue(min_attn)
         
@@ -264,5 +261,4 @@ __server__ = LBAttenuatorServer()
 
 
 if __name__ == '__main__':
-    from labrad import util
     util.runServer(__server__)
