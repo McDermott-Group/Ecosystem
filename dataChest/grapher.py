@@ -4,6 +4,8 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
+from matplotlib.dates import (MonthLocator, DateFormatter,
+                              WeekdayLocator, MONDAY)
 import matplotlib.cm as cm
 import matplotlib as mpl
 from dataChest import *
