@@ -31,7 +31,7 @@ message = 987654321
 timeout = 5
 ### END NODE INFO
 """
-
+""" ABOVE THIS LINE HAS ALREADY BEEN CHECKED FOR COMMAND COMPLIANCE """
 import numpy
 from twisted.internet.defer import inlineCallbacks, returnValue
 
@@ -42,7 +42,7 @@ import labrad.units as units
 from utilities import sleep
 
 
-class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
+class KeysightN5242ADeviceWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def initialize(self):
         p = self._packet()
@@ -51,10 +51,14 @@ class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
         yield sleep(0.1)
 
 
-class AgilentN5230AServer(GPIBManagedServer):
-    name = 'Agilent N5230A Network Analyzer'
-    deviceName = 'AGILENT TECHNOLOGIES N5230A'
-    deviceWrapper = AgilentN5230ADeviceWrapper
+class KeysightN5242AServer(GPIBManagedServer):
+    name = 'Keysight N5242A Network Analyzer'
+    
+    # Note: while this device is from Keysight, *IDN? returns Agilent as
+    # the manufacturer, hence the change between Keysight and Agilent in
+    # name and deviceName.
+    deviceName = 'AGILENT TECHNOLOGIES N5242A'
+    deviceWrapper = KeysightN5242ADeviceWrapper
     
     @setting(598, 'Clear Status')
     def clear_status(self, c):
@@ -227,9 +231,7 @@ class AgilentN5230AServer(GPIBManagedServer):
         Set the measurement parameters. Use a string of the form Sxx
         (S21, S11...) for the measurement type.
     	"""
-    	if meas not in ('S11', 'S12', 'S13', 'S14', 'S21', 'S22', 'S23', 
-                'S24', 'S31', 'S32', 'S33', 'S34', 'S41', 'S42', 'S43',
-                'S44'):
+    	if meas not in ('S11', 'S12', 'S21', 'S22'):
     		raise ValueError('Illegal measurment definition: %s.'
                     %str(meas))
 
@@ -282,7 +284,7 @@ class AgilentN5230AServer(GPIBManagedServer):
         Get the scattering parameters from the network analyzer
         in the S2P format. The input parameter should be a tuple that
         specifies two network analyzer ports, e.g. (1, 2).
-        Available ports are 1, 2, 3, and 4. The data are returned as 
+        Available ports are 1 and 2 The data are returned as 
         a list of tuples in the following format:
             *(frequency,
             S[ports[0], ports[0]], Phase[ports[0], ports[0]],
@@ -294,9 +296,8 @@ class AgilentN5230AServer(GPIBManagedServer):
             raise Exception("Two and only two ports should be "
                     "specified.")
         for port in ports:
-            if port < 1 or port > 4:
-                raise Exception("Port number could be only '1', '2', "
-                        "'3', or '4'.")
+            if port < 1 or port > 2:
+                raise Exception("Port number could be only '1' or '2'.")
         if ports[0] == ports[1]:
             raise Exception("Port numbers should not be equal.")
         
@@ -354,12 +355,12 @@ class AgilentN5230AServer(GPIBManagedServer):
     	returnValue(data)
 
     @setting(617, 'Get S Parameters', S='*s', returns='*(*v[], *v[])')
-    def get_s_parameters(self, c, S=['S43']):
+    def get_s_parameters(self, c, S=['S21']):
     	"""
         Get a set of scattering parameters from the network analyzer. 
 		The input parameter should be a list of strings in the format 
-		['S21','S43','S34',...] where Smn is the S-parameter connecting 
-		port n to port m. Available ports are 1, 2, 3, and 4. The data
+		['S21','S12','S11',...] where Smn is the S-parameter connecting 
+		port n to port m. Available ports are 1 and 2. The data
 		is returned as a list *[*Re(Sxy), *Im(Sxy)]. The values are
         unitless. To obtain the magnitude in dB use the following
         equation: 20 * log10(Re(Sxy)^2 + Im(Sxy)^2).
@@ -370,9 +371,7 @@ class AgilentN5230AServer(GPIBManagedServer):
 
         # Match to strings of format "Sxy" only.
         for Sp in S:
-            if Sp not in ('S11', 'S12', 'S13', 'S14', 'S21', 'S22', 
-                    'S23', 'S24', 'S31', 'S32', 'S33', 'S34', 'S41',
-                    'S42', 'S43', 'S44'):
+            if Sp not in ('S11', 'S12', 'S21', 'S22'):
                 raise ValueError('Illegal measurment definition: %s.'
                         %str(Sp))
                         
@@ -434,7 +433,7 @@ class AgilentN5230AServer(GPIBManagedServer):
         returnValue(data)		
 
 
-__server__ = AgilentN5230AServer()
+__server__ = KeysightN5242AServer()
 
 
 if __name__ == '__main__':
