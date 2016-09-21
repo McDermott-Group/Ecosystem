@@ -31,7 +31,7 @@ message = 987654321
 timeout = 5
 ### END NODE INFO
 """
-""" ABOVE THIS LINE HAS ALREADY BEEN CHECKED FOR COMMAND COMPLIANCE """
+
 import numpy
 from twisted.internet.defer import inlineCallbacks, returnValue
 
