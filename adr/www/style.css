@@ -1,0 +1,58 @@
+
+  body {
+    /* Note the below properties for body are illustrative only.
+       Not needed for responsiveness */
+    font-size:30px;
+    text-align: center;
+    /* line-height: 50px; */
+    vertical-align: middle;
+  }
+  #header
+  {
+    /* Note the below properties for body are illustrative only.
+       Not needed for responsiveness */
+    height: 150px;
+    border: solid 1px blue;
+  }
+  #mainContent {
+    width: 70%;
+    height: 100%;
+    min-width: 300px;
+    float: left;
+    display: inline-block;
+    /*This way the mainContent div is always 60% of the width of its
+        parent container, which in this case is the  tag that defaults to
+        100% page width anyway */
+    background: #999999;
+    }
+#sideContentWrapper {
+  width: 30%;
+  min-width: 300px;
+  float: right;
+  display: inline-block;
+}
+#sideContent {
+  margin-right: 20px;
+  /* sideContent always keeps 20px of right margin, relative to its
+      parent container, namely #sideContentWrapper. Otherwise it grows
+      proportionally. */
+  background: #cccccc;
+  min-height: 200px;
+  }
+.button {
+    width: 100%;
+    display: inline-block;
+    min-height: 50px;
+    padding: 0px;
+}
+.button:hover {
+    background: #888888;
+}
+select {
+    font-size: 30px;
+    background: #5c5c5c;
+}
+#tempPlot {
+    height:100%;
+    width: 100%;
+}
