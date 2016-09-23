@@ -53,6 +53,48 @@ from pyvisa.errors import VisaIOError
 from dataChest import dataChest
 from dateStamp import dateStamp
 import sys
+import json
+from twisted.web.static import File
+from twisted.python import log
+from twisted.web.server import Site
+from twisted.internet import reactor
+
+from autobahn.twisted.websocket import WebSocketServerFactory, \
+    WebSocketServerProtocol
+
+from autobahn.twisted.resource import WebSocketResource
+
+
+class MyServerProtocol(WebSocketServerProtocol):
+    def onOpen(self):
+        self.adrServer = self.factory.register(self)
+        print('new connection')
+
+    def connectionLost(self, reason):
+        self.factory.unregister(self)
+        print('connection lost')
+
+    def onMessage(self, payload, isBinary):
+        print(json.loads(payload))
+
+
+class MyFactory(WebSocketServerFactory):
+    def __init__(self, *args, **kwargs):
+        super(MyFactory, self).__init__(*args, **kwargs)
+        self.clients = {}
+        self.adrServer = kwargs['adrServer']
+
+    def register(self, client):
+        self.clients[client.peer] = client
+        return self.adrServer
+
+    def unregister(self, client):
+        self.clients.pop(client.peer)
+
+    def sendMessageToAll(self, message):
+        for c in self.clients:
+            c.sendMessage(message)
+
 
 def deltaT(dT):
     """
@@ -199,6 +241,22 @@ class ADRServer(DeviceServer):
                                          ID = self.ID)
         except Exception as e:
             print str(e)
+
+        # Web Socket Update Stuff:
+        log.startLogging(sys.stdout)
+
+        # static file server seving index.html as root
+        root = File(".")
+
+        self.factory = MyFactory(u"ws://127.0.0.1:9876/", adrServer=self)
+        factory.protocol = MyServerProtocol
+        resource = WebSocketResource(factory)
+        # websockets resource on "/ws" path
+        root.putChild(u"ws", resource)
+
+        site = Site(root)
+        reactor.listenTCP(9876, site)
+
         self.updateState()
 
     @inlineCallbacks
@@ -449,6 +507,15 @@ class ADRServer(DeviceServer):
                 self.logMessage('Temperature recording failed: %s.' %str(e) )
             cycleLength = deltaT(datetime.datetime.utcnow() - cycleStartTime)
             self.client.manager.send_named_message('State Changed', 'state changed')
+            self.factory.sendMessageToAll({
+                'temps': {
+                    'timeStamps':[(self.state['datetime']-datetime(1970,1,1)).total_seconds()],
+                    't60K': [self.state['T_60K']['K']],
+                    't03K': [self.state['T_03K']['K']],
+                    'tGGG': [self.state['T_GGG']['K']],
+                    'tFAA': [self.state['T_FAA']['K']]
+                }
+            })
             #self.stateChanged('state changed')
             yield util.wakeupCall( max(0,self.ADRSettings['step_length']-cycleLength) )
 

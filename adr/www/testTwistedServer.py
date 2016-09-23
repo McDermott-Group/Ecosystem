@@ -26,6 +26,23 @@ class MyServerProtocol(WebSocketServerProtocol):
                     }
                 } )
         self.sendMessage(message)
+        """
+        from random import random
+        from datetime import datetime
+        for _ in range(1000):
+            sleep(2)
+            print('adding temps')
+            message = json.dumps( {
+                'temps': {
+                    'timeStamps':[(datetime.now()-datetime(1970,1,1)).total_seconds()],
+                    't60K': [20.+random()],
+                    't03K': [15.+random()],
+                    'tGGG': [10.+random()],
+                    'tFAA': [5.+random()]
+                }
+            })
+            self.sendMessage(message)
+        """
 
     def connectionLost(self, reason):
         self.factory.unregister(self)

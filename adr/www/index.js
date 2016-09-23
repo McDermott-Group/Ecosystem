@@ -27,7 +27,8 @@ make log component
 write actions to send back commands to server
 get real data from server
 make different levels for plot times (1hr, 6hrs, 24hrs, etc)
-put in temp to regulate at part
+put in temp to regulate at part/make it change when user changes it
+make buttons unclickable when grey
 **************/
 
 /********** ACTIONS ***********/
@@ -83,7 +84,7 @@ const stateReducer = (state={
         return Object.assign({},state,action.newState);
         case UPDATE_TEMPS:
         return Object.assign( {}, state, {temps: {
-            timeStamps:[...state.temps.timeStamps, ...action.newState.timeStamps],
+            timeStamps:[...state.temps.timeStamps, ...action.newState.timeStamps.map(Date)],
             t60K:[...state.temps.t60K, ...action.newState.t60K],
             t03K:[...state.temps.t03K, ...action.newState.t03K],
             tGGG:[...state.temps.tGGG, ...action.newState.tGGG],
@@ -224,10 +225,11 @@ const mapStateToCompressorProps = (storeState,props) => {
 const OpenHSButton = connect(mapStateToOpenHSProps)( ({instruments}) => {
     if (instruments['Heat Switch'].server == true) {
         var buttonStyle = {width:'45%'};
+        var buttonClick = (e) => ws.send(JSON.stringify({command:'Open Heat Switch'}));
     } else {
         var buttonStyle = {width:'45%', color: 'grey'};
+        var buttonClick = (e) => (null);
     }
-    var buttonClick = (e) => ws.send(JSON.stringify({command:'Open Heat Switch'}));
     return(
         <div className='button' style={buttonStyle} onClick={(e) => buttonClick(e)}> Open Heat Switch </div>
     )
@@ -235,10 +237,11 @@ const OpenHSButton = connect(mapStateToOpenHSProps)( ({instruments}) => {
 const CloseHSButton = connect(mapStateToCloseHSProps)( ({instruments}) => {
     if (instruments['Heat Switch'].server == true) {
         var buttonStyle = {width:'45%'};
+        var buttonClick = (e) => ws.send(JSON.stringify({command:'Close Heat Switch'}));
     } else {
         var buttonStyle = {width:'45%', color: 'grey'};
+        var buttonClick = (e) => (null);
     }
-    var buttonClick = (e) => ws.send(JSON.stringify({command:'Close Heat Switch'}));
     return(
         <div className='button' style={buttonStyle} onClick={(e) => buttonClick(e)}> Close Heat Switch </div>
     )
@@ -247,16 +250,18 @@ const MagUpButton = connect(mapStateToMagUpProps)( ({isMaggingUp,isRegulating}) 
     if (isMaggingUp) {
         var buttonStyle = {};
         var text = 'Stop Magging Up';
+        var buttonClick = (e) => ws.send(JSON.stringify({command:'Stop Magging Up'}));
     }
     else if (isRegulating) {
         var buttonStyle = {color: 'grey'};
         var text = 'Mag Up';
+        var buttonClick = (e) => (null);
     }
     else {
         var buttonStyle = {};
         var text = 'Mag Up';
+        var buttonClick = (e) => ws.send(JSON.stringify({command:'Mag Up'}));
     }
-    var buttonClick = (e) => ws.send(JSON.stringify({command:'Mag Up'}));
     return(
         <div className='button' style={buttonStyle} onClick={(e) => buttonClick(e)}> {text} </div>
     )
@@ -265,16 +270,18 @@ const RegulateButton = connect(mapStateToRegulateProps)( ({isMaggingUp,isRegulat
     if (isRegulating) {
         var buttonStyle = {};
         var text = 'Stop Regulating';
+        var buttonClick = (e) => ws.send(JSON.stringify({command:'Stop Regulating'}));
     }
     else if (isMaggingUp) {
         var buttonStyle = {color: 'grey'};
         var text = 'Regulate';
+        var buttonClick = (e) => (null);
     }
     else {
         var buttonStyle = {};
         var text = 'Regulate';
+        var buttonClick = (e) => ws.send(JSON.stringify({command:'Regulate',temp:0}));
     }
-    var buttonClick = (e) => ws.send(JSON.stringify({command:'Regulate',temp:0}));
     return(
         <div className='button' style={buttonStyle} onClick={(e) => buttonClick(e)}> {text} </div>
     )
@@ -283,12 +290,13 @@ const CompressorButton = connect(mapStateToCompressorProps)( ({instruments,compr
     if (instruments['Compressor'].connected) {
         var buttonStyle = {};
         var text = compressorOn ? 'Stop Compressor' : 'Start Compressor'
+        var buttonClick = (e) => ws.send(JSON.stringify({command:'Set Compressor State',on:false}));
     }
     else {
         var buttonStyle = {color: 'grey'};
         var text = 'Start/Stop Compressor';
+        var buttonClick = (e) => (null);
     }
-    var buttonClick = (e) => ws.send(JSON.stringify({command:'Set Compressor State',on:false}));
     return(
         <div className='button' style={buttonStyle} onClick={(e) => buttonClick(e)}> {text} </div>
     )
@@ -326,6 +334,7 @@ window.onload = function(){
     ws.onclose = function(e) { console.log("socket closed"); }
     ws.onmessage = function(e) {
         const newState = JSON.parse(e.data);
+        console.log(newState);
         if (newState.hasOwnProperty('temps')) {
             dispatch(updateTemps(newState.temps));
             delete newState.temps;

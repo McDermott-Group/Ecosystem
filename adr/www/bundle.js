@@ -32,7 +32,8 @@ make log component
 write actions to send back commands to server
 get real data from server
 make different levels for plot times (1hr, 6hrs, 24hrs, etc)
-put in temp to regulate at part
+put in temp to regulate at part/make it change when user changes it
+make buttons unclickable when grey
 **************/
 
 /********** ACTIONS ***********/
@@ -103,7 +104,7 @@ var stateReducer = function stateReducer() {
             return Object.assign({}, state, action.newState);
         case UPDATE_TEMPS:
             return Object.assign({}, state, { temps: {
-                    timeStamps: [].concat(_toConsumableArray(state.temps.timeStamps), _toConsumableArray(action.newState.timeStamps)),
+                    timeStamps: [].concat(_toConsumableArray(state.temps.timeStamps), _toConsumableArray(action.newState.timeStamps.map(Date))),
                     t60K: [].concat(_toConsumableArray(state.temps.t60K), _toConsumableArray(action.newState.t60K)),
                     t03K: [].concat(_toConsumableArray(state.temps.t03K), _toConsumableArray(action.newState.t03K)),
                     tGGG: [].concat(_toConsumableArray(state.temps.tGGG), _toConsumableArray(action.newState.tGGG)),
@@ -292,12 +293,15 @@ var OpenHSButton = connect(mapStateToOpenHSProps)(function (_ref3) {
 
     if (instruments['Heat Switch'].server == true) {
         var buttonStyle = { width: '45%' };
+        var buttonClick = function buttonClick(e) {
+            return ws.send(JSON.stringify({ command: 'Open Heat Switch' }));
+        };
     } else {
         var buttonStyle = { width: '45%', color: 'grey' };
+        var buttonClick = function buttonClick(e) {
+            return null;
+        };
     }
-    var buttonClick = function buttonClick(e) {
-        return ws.send(JSON.stringify({ command: 'Open Heat Switch' }));
-    };
     return React.createElement(
         'div',
         { className: 'button', style: buttonStyle, onClick: function onClick(e) {
@@ -311,12 +315,15 @@ var CloseHSButton = connect(mapStateToCloseHSProps)(function (_ref4) {
 
     if (instruments['Heat Switch'].server == true) {
         var buttonStyle = { width: '45%' };
+        var buttonClick = function buttonClick(e) {
+            return ws.send(JSON.stringify({ command: 'Close Heat Switch' }));
+        };
     } else {
         var buttonStyle = { width: '45%', color: 'grey' };
+        var buttonClick = function buttonClick(e) {
+            return null;
+        };
     }
-    var buttonClick = function buttonClick(e) {
-        return ws.send(JSON.stringify({ command: 'Close Heat Switch' }));
-    };
     return React.createElement(
         'div',
         { className: 'button', style: buttonStyle, onClick: function onClick(e) {
@@ -332,16 +339,22 @@ var MagUpButton = connect(mapStateToMagUpProps)(function (_ref5) {
     if (isMaggingUp) {
         var buttonStyle = {};
         var text = 'Stop Magging Up';
+        var buttonClick = function buttonClick(e) {
+            return ws.send(JSON.stringify({ command: 'Stop Magging Up' }));
+        };
     } else if (isRegulating) {
         var buttonStyle = { color: 'grey' };
         var text = 'Mag Up';
+        var buttonClick = function buttonClick(e) {
+            return null;
+        };
     } else {
         var buttonStyle = {};
         var text = 'Mag Up';
+        var buttonClick = function buttonClick(e) {
+            return ws.send(JSON.stringify({ command: 'Mag Up' }));
+        };
     }
-    var buttonClick = function buttonClick(e) {
-        return ws.send(JSON.stringify({ command: 'Mag Up' }));
-    };
     return React.createElement(
         'div',
         { className: 'button', style: buttonStyle, onClick: function onClick(e) {
@@ -359,16 +372,22 @@ var RegulateButton = connect(mapStateToRegulateProps)(function (_ref6) {
     if (isRegulating) {
         var buttonStyle = {};
         var text = 'Stop Regulating';
+        var buttonClick = function buttonClick(e) {
+            return ws.send(JSON.stringify({ command: 'Stop Regulating' }));
+        };
     } else if (isMaggingUp) {
         var buttonStyle = { color: 'grey' };
         var text = 'Regulate';
+        var buttonClick = function buttonClick(e) {
+            return null;
+        };
     } else {
         var buttonStyle = {};
         var text = 'Regulate';
+        var buttonClick = function buttonClick(e) {
+            return ws.send(JSON.stringify({ command: 'Regulate', temp: 0 }));
+        };
     }
-    var buttonClick = function buttonClick(e) {
-        return ws.send(JSON.stringify({ command: 'Regulate', temp: 0 }));
-    };
     return React.createElement(
         'div',
         { className: 'button', style: buttonStyle, onClick: function onClick(e) {
@@ -386,13 +405,16 @@ var CompressorButton = connect(mapStateToCompressorProps)(function (_ref7) {
     if (instruments['Compressor'].connected) {
         var buttonStyle = {};
         var text = compressorOn ? 'Stop Compressor' : 'Start Compressor';
+        var buttonClick = function buttonClick(e) {
+            return ws.send(JSON.stringify({ command: 'Set Compressor State', on: false }));
+        };
     } else {
         var buttonStyle = { color: 'grey' };
         var text = 'Start/Stop Compressor';
+        var buttonClick = function buttonClick(e) {
+            return null;
+        };
     }
-    var buttonClick = function buttonClick(e) {
-        return ws.send(JSON.stringify({ command: 'Set Compressor State', on: false }));
-    };
     return React.createElement(
         'div',
         { className: 'button', style: buttonStyle, onClick: function onClick(e) {
@@ -454,6 +476,7 @@ window.onload = function () {
     };
     ws.onmessage = function (e) {
         var newState = JSON.parse(e.data);
+        console.log(newState);
         if (newState.hasOwnProperty('temps')) {
             dispatch(updateTemps(newState.temps));
             delete newState.temps;
