@@ -52,7 +52,7 @@ from labrad.types import Error as LRError
 from pyvisa.errors import VisaIOError
 from dataChest import dataChest
 from dateStamp import dateStamp
-import sys
+import sys, os
 import json
 from twisted.web.static import File
 from twisted.python import log
@@ -80,9 +80,10 @@ class MyServerProtocol(WebSocketServerProtocol):
 
 class MyFactory(WebSocketServerFactory):
     def __init__(self, *args, **kwargs):
+        self.adrServer = kwargs['adrServer']
+        del kwargs['adrServer']
         super(MyFactory, self).__init__(*args, **kwargs)
         self.clients = {}
-        self.adrServer = kwargs['adrServer']
 
     def register(self, client):
         self.clients[client.peer] = client
@@ -246,11 +247,11 @@ class ADRServer(DeviceServer):
         log.startLogging(sys.stdout)
 
         # static file server seving index.html as root
-        root = File(".")
+        root = File( os.path.join(".","www") )
 
         self.factory = MyFactory(u"ws://127.0.0.1:9876/", adrServer=self)
-        factory.protocol = MyServerProtocol
-        resource = WebSocketResource(factory)
+        self.factory.protocol = MyServerProtocol
+        resource = WebSocketResource(self.factory)
         # websockets resource on "/ws" path
         root.putChild(u"ws", resource)
 
@@ -509,9 +510,9 @@ class ADRServer(DeviceServer):
             self.client.manager.send_named_message('State Changed', 'state changed')
             self.factory.sendMessageToAll({
                 'temps': {
-                    'timeStamps':[(self.state['datetime']-datetime(1970,1,1)).total_seconds()],
+                    'timeStamps':[(self.state['datetime']-datetime.datetime(1970,1,1)).total_seconds()],
                     't60K': [self.state['T_60K']['K']],
-                    't03K': [self.state['T_03K']['K']],
+                    't03K': [self.state['T_3K']['K']],
                     'tGGG': [self.state['T_GGG']['K']],
                     'tFAA': [self.state['T_FAA']['K']]
                 }
