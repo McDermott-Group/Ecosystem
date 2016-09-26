@@ -93,8 +93,10 @@ class MyFactory(WebSocketServerFactory):
         self.clients.pop(client.peer)
 
     def sendMessageToAll(self, message):
-        for c in self.clients:
-            c.sendMessage(message)
+        text = json.dumps(message)
+        text = text.replace('NaN','null') # apparently JSON does not support nan
+        for c in self.clients.keys():
+            self.clients[c].sendMessage(text)
 
 
 def deltaT(dT):
@@ -213,6 +215,7 @@ class ADRServer(DeviceServer):
         connect/disconnect messages.
         """
         yield DeviceServer.initServer(self)
+        
         try:
             yield self.client.registry.cd(self.ADRSettingsPath)
             self.file_path = yield self.client.registry.get('Log Path')
@@ -245,16 +248,13 @@ class ADRServer(DeviceServer):
 
         # Web Socket Update Stuff:
         log.startLogging(sys.stdout)
-
-        # static file server seving index.html as root
-        root = File( os.path.join(".","www") )
-
-        self.factory = MyFactory(u"ws://127.0.0.1:9876/", adrServer=self)
+        root = File("C:\\Users\\McDermott\\Desktop\\Git Repositories\\servers\\adr\\www")
+        
+        self.factory = MyFactory(u"ws://127.0.0.1:9876/",adrServer=self)
         self.factory.protocol = MyServerProtocol
         resource = WebSocketResource(self.factory)
-        # websockets resource on "/ws" path
         root.putChild(u"ws", resource)
-
+        
         site = Site(root)
         reactor.listenTCP(9876, site)
 
@@ -515,9 +515,15 @@ class ADRServer(DeviceServer):
                     't03K': [self.state['T_3K']['K']],
                     'tGGG': [self.state['T_GGG']['K']],
                     'tFAA': [self.state['T_FAA']['K']]
-                }
+                },
+                'instruments': { name:{'server':status[0],
+                                        'connected':status[1] } 
+                                    for (name,status) in self.getInstrumentState('bla')},
+                # 'compressorOn':self.state['CompressorStatus'],
+                'pressure':1000,
+                'isMaggingUp': self.state['maggingUp'],
+                'isRegulating': self.state['regulating']
             })
-            #self.stateChanged('state changed')
             yield util.wakeupCall( max(0,self.ADRSettings['step_length']-cycleLength) )
 
     def _cancelMagUp(self):
