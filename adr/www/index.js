@@ -290,7 +290,7 @@ const CompressorButton = connect(mapStateToCompressorProps)( ({instruments,compr
     if (instruments['Compressor'].connected) {
         var buttonStyle = {};
         var text = compressorOn ? 'Stop Compressor' : 'Start Compressor'
-        var buttonClick = (e) => ws.send(JSON.stringify({command:'Set Compressor State',on:false}));
+        var buttonClick = (e) => ws.send(JSON.stringify({command:'Set Compressor State',on:!compressorOn}));
     }
     else {
         var buttonStyle = {color: 'grey'};

@@ -75,7 +75,29 @@ class MyServerProtocol(WebSocketServerProtocol):
         print('connection lost')
 
     def onMessage(self, payload, isBinary):
-        print(json.loads(payload))
+        message = json.loads(payload)
+        print(message)
+        if   message['command'] == 'Open Heat Switch':
+            self.adrServer.openHeatSwitch(None)
+        elif message['command'] == 'Close Heat Switch':
+            self.adrServer.closeHeatSwitch(None)
+        elif message['command'] == 'Mag Up':
+            self.adrServer._magUp()
+        elif message['command'] == 'Stop Magging Up':
+            self.adrServer._cancelMagUp()
+        elif message['command'] == 'Regulate':
+            temp = message['temp']
+            self.adrServer._regulate(temp)
+        elif message['command'] == 'Stop Regulating':
+            self.adrServer._cancelRegulate()
+        elif message['command'] == 'Set Compressor State':
+            if message['on']: self.adrServer.startCompressor(None)
+            else: self.adrServer.stopCompressor(None)
+        elif message['command'] == 'Refresh Instruments':
+            self.adrServer.refreshInstruments(None)
+        elif message['command'] == 'Add To Log':
+            if message['text'] is not None:
+                self.adrServer.logMessage(message['text'])
 
 
 class MyFactory(WebSocketServerFactory):
@@ -215,6 +237,18 @@ class ADRServer(DeviceServer):
         connect/disconnect messages.
         """
         yield DeviceServer.initServer(self)
+
+        # Web Socket Update Stuff:
+        log.startLogging(sys.stdout)
+        root = File("C:\\Users\\McDermott\\Desktop\\Git Repositories\\servers\\adr\\www")
+        
+        self.factory = MyFactory(u"ws://127.0.0.1:9876/",adrServer=self)
+        self.factory.protocol = MyServerProtocol
+        resource = WebSocketResource(self.factory)
+        root.putChild(u"ws", resource)
+        
+        site = Site(root)
+        reactor.listenTCP(9876, site)
         
         try:
             yield self.client.registry.cd(self.ADRSettingsPath)
@@ -245,18 +279,6 @@ class ADRServer(DeviceServer):
                                          ID = self.ID)
         except Exception as e:
             print str(e)
-
-        # Web Socket Update Stuff:
-        log.startLogging(sys.stdout)
-        root = File("C:\\Users\\McDermott\\Desktop\\Git Repositories\\servers\\adr\\www")
-        
-        self.factory = MyFactory(u"ws://127.0.0.1:9876/",adrServer=self)
-        self.factory.protocol = MyServerProtocol
-        resource = WebSocketResource(self.factory)
-        root.putChild(u"ws", resource)
-        
-        site = Site(root)
-        reactor.listenTCP(9876, site)
 
         self.updateState()
 
@@ -400,6 +422,9 @@ class ADRServer(DeviceServer):
         except Exception as e:
             self.logMessage("Could not write to log file: " + str(e) + '.')
         print '[log] '+ message
+        self.factory.sendMessageToAll({
+            'log': ((dt-datetime.datetime(1970,1,1)).total_seconds(),message,alert)
+        })
         self.client.manager.send_named_message('Log Changed', (dt,message,alert))
 
     @inlineCallbacks
@@ -419,7 +444,7 @@ class ADRServer(DeviceServer):
             if hasattr(instruments['Compressor'],'connected') \
                     and instruments['Compressor'].connected:
                 try:
-                    self.state['CompressorStatus'] = instruments['Compressor'].status()
+                    self.state['CompressorStatus'] = yield instruments['Compressor'].status()
                 except Exception as e:
                     print 'could not read compressor status', str(e)
             # diode temps
@@ -507,7 +532,6 @@ class ADRServer(DeviceServer):
             except Exception as e:
                 self.logMessage('Temperature recording failed: %s.' %str(e) )
             cycleLength = deltaT(datetime.datetime.utcnow() - cycleStartTime)
-            self.client.manager.send_named_message('State Changed', 'state changed')
             self.factory.sendMessageToAll({
                 'temps': {
                     'timeStamps':[(self.state['datetime']-datetime.datetime(1970,1,1)).total_seconds()],
@@ -519,11 +543,15 @@ class ADRServer(DeviceServer):
                 'instruments': { name:{'server':status[0],
                                         'connected':status[1] } 
                                     for (name,status) in self.getInstrumentState('bla')},
-                # 'compressorOn':self.state['CompressorStatus'],
+                'compressorOn':self.state['CompressorStatus'],
                 'pressure':1000,
                 'isMaggingUp': self.state['maggingUp'],
-                'isRegulating': self.state['regulating']
+                'isRegulating': self.state['regulating'],
+                'backEMF': self.state['magnetV']['V'],
+                'PS_I': self.state['PSCurrent']['A'],
+                'PS_V': self.state['PSVoltage']['V']
             })
+            self.client.manager.send_named_message('State Changed', 'state changed')
             yield util.wakeupCall( max(0,self.ADRSettings['step_length']-cycleLength) )
 
     def _cancelMagUp(self):
@@ -531,7 +559,9 @@ class ADRServer(DeviceServer):
         self.state['maggingUp'] = False
         self.logMessage( 'Magging up stopped at a current of ' +
                 str(self.state['PSCurrent']) + '.' )
-        #self.magUpStopped('cancel') #signal
+        self.factory.sendMessageToAll({
+            'isMaggingUp': self.state['maggingUp']
+        })
         self.client.manager.send_named_message('MagUp Stopped', 'cancel')
 
     @inlineCallbacks
@@ -565,10 +595,13 @@ class ADRServer(DeviceServer):
                             for i in range(len(deviceNames))]))
             self.logMessage(message, alert=True)
             return
+        self.state['maggingUp'] = True
+        self.factory.sendMessageToAll({
+            'isMaggingUp': self.state['maggingUp']
+        })
         self.client.manager.send_named_message('MagUp Started', 'start')
         self.logMessage('Beginning to mag up to ' +
                 str(settings['current_limit']) + ' A.')
-        self.state['maggingUp'] = True
         while self.state['maggingUp']:
             startTime = datetime.datetime.utcnow()
             dI = self.state['PSCurrent'] - self.lastState['PSCurrent']
@@ -589,6 +622,9 @@ class ADRServer(DeviceServer):
             else:
                 self.logMessage( 'Finished magging up. %s reached.'%str(self.state['PSCurrent']) )
                 self.state['maggingUp'] = False
+                self.factory.sendMessageToAll({
+                    'isMaggingUp': self.state['maggingUp']
+                })
                 self.client.manager.send_named_message('MagUp Stopped', 'done')
 
     def _cancelRegulate(self):
@@ -596,7 +632,9 @@ class ADRServer(DeviceServer):
         self.state['regulating'] = False
         self.logMessage( 'PID Control stopped at a current of ' +
                 str(self.state['PSCurrent']) + '.' )
-        #self.regulationStopped('cancel')
+        self.factory.sendMessageToAll({
+            'isRegulating': self.state['regulating']
+        })
         self.client.manager.send_named_message('Regulation Stopped', 'cancel')
 
     @inlineCallbacks
@@ -623,6 +661,9 @@ class ADRServer(DeviceServer):
                     for i in range(len(deviceNames))]))
             self.logMessage(message, alert=True)
             return
+        self.factory.sendMessageToAll({
+            'isRegulating': self.state['regulating']
+        })
         self.client.manager.send_named_message('Regulation Started', 'start')
         self.logMessage( 'Starting regulation to '+str(self.state['regulationTemp'])
                         +' K from '+str(self.state['PSCurrent'])+'.' )
@@ -693,7 +734,9 @@ class ADRServer(DeviceServer):
             else:
                 self.logMessage( 'Regulation has completed. Mag up and try again.' )
                 self.state['regulating'] = False
-                #self.regulationStopped('done') #signal
+                self.factory.sendMessageToAll({
+                    'isRegulating': self.state['regulating']
+                })
                 self.client.manager.send_named_message('Regulation Stopped', 'done')
 
     @setting(101, 'Get Settings Path', returns=['*s'])
