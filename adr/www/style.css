@@ -2,7 +2,6 @@
   body {
     /* Note the below properties for body are illustrative only.
        Not needed for responsiveness */
-    font-size:30px;
     text-align: center;
     /* line-height: 50px; */
     vertical-align: middle;
@@ -24,7 +23,10 @@
         parent container, which in this case is the  tag that defaults to
         100% page width anyway */
     background: #999999;
-    }
+}
+#tempDisplay {
+    font-size:30px;
+}
 #sideContentWrapper {
   width: 30%;
   min-width: 300px;
@@ -44,6 +46,7 @@
     display: inline-block;
     min-height: 50px;
     padding: 0px;
+    font-size:30px;
 }
 .button:hover {
     background: #888888;
@@ -53,6 +56,6 @@ select {
     background: #5c5c5c;
 }
 #tempPlot {
-    height:100%;
+    height:calc(100% - 120px);
     width: 100%;
 }

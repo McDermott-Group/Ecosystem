@@ -1,6 +1,8 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 // var React = require('react');
@@ -29,8 +31,7 @@ pump cart pressure
 T O D O :
 make pressure component
 make log component
-write actions to send back commands to server
-get real data from server
+does log field delete your input if it rerenders in the middle of typing?
 make different levels for plot times (1hr, 6hrs, 24hrs, etc)
 put in temp to regulate at part/make it change when user changes it
 make buttons unclickable when grey
@@ -406,7 +407,7 @@ var CompressorButton = connect(mapStateToCompressorProps)(function (_ref7) {
         var buttonStyle = {};
         var text = compressorOn ? 'Stop Compressor' : 'Start Compressor';
         var buttonClick = function buttonClick(e) {
-            return ws.send(JSON.stringify({ command: 'Set Compressor State', on: false }));
+            return ws.send(JSON.stringify({ command: 'Set Compressor State', on: !compressorOn }));
         };
     } else {
         var buttonStyle = { color: 'grey' };
@@ -438,6 +439,62 @@ var RefreshInstrumentsButton = function RefreshInstrumentsButton() {
     );
 };
 
+var mapStateToLogProps = function mapStateToLogProps(storeState, props) {
+    return {
+        log: storeState.log
+    };
+};
+var LogView = connect(mapStateToLogProps)(function (_ref8) {
+    var log = _ref8.log;
+
+    var alerts = log.map(function (_ref9) {
+        var _ref10 = _slicedToArray(_ref9, 3);
+
+        var utc = _ref10[0];
+        var message = _ref10[1];
+        var alert = _ref10[2];
+
+        var textColor = alert ? "#d62728" : "black"; //red or black
+        var d = new Date(0);
+        d.setUTCSeconds(utc);
+        var textWithTime = '[' + (1 + d.getMonth()) + '/' + d.getDate() + '/' + d.getFullYear() + ' ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + '] ' + message;
+        return React.createElement(
+            'span',
+            { color: textColor },
+            textWithTime + '<br />'
+        );
+    });
+    return React.createElement(
+        'div',
+        { style: { width: '100%', height: 100 } },
+        ' ',
+        alerts,
+        ' '
+    );
+});
+var LogForm = function LogForm() {
+    var clickLogButton = function clickLogButton(e) {
+        var logInput = document.getElementById("logInput");
+        ws.send(JSON.stringify({ command: 'Add To Log', text: logInput.value }));
+        logInput.value = '';
+    };
+    return React.createElement(
+        'div',
+        null,
+        React.createElement('input', { type: 'text',
+            id: 'logInput',
+            style: { width: "calc(100% - 50px)" },
+            placeholder: 'Log a message...' }),
+        React.createElement(
+            'button',
+            { style: { width: 50 }, onClick: function onClick(e) {
+                    return clickLogButton(e);
+                } },
+            'Log'
+        )
+    );
+};
+
 ReactDOM.render(React.createElement(
     Provider,
     { store: store },
@@ -462,6 +519,16 @@ ReactDOM.render(React.createElement(
     { store: store },
     React.createElement(InstrumentDisplay, null)
 ), document.getElementById("instrumentStatusDisplay"));
+ReactDOM.render(React.createElement(
+    Provider,
+    { store: store },
+    React.createElement(
+        'div',
+        null,
+        React.createElement(LogView, null),
+        React.createElement(LogForm, null)
+    )
+), document.getElementById("logHolder"));
 
 var d3 = Plotly.d3;
 
@@ -476,7 +543,6 @@ window.onload = function () {
     };
     ws.onmessage = function (e) {
         var newState = JSON.parse(e.data);
-        console.log(newState);
         if (newState.hasOwnProperty('temps')) {
             dispatch(updateTemps(newState.temps));
             delete newState.temps;

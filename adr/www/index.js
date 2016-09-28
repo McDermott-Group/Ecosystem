@@ -23,12 +23,11 @@ pump cart pressure
 
 T O D O :
 make pressure component
+make components for PS current, voltage, back EMF, etc.
 make log component
-write actions to send back commands to server
-get real data from server
+does log field delete your input if it rerenders in the middle of typing?
 make different levels for plot times (1hr, 6hrs, 24hrs, etc)
 put in temp to regulate at part/make it change when user changes it
-make buttons unclickable when grey
 **************/
 
 /********** ACTIONS ***********/
@@ -185,8 +184,12 @@ const mapStateToInstrumentProps = (storeState,props) => {
 const AllInstruments = ({instruments}) => {
     var instrumentStatuses = Object.keys(instruments).map( function(instrName) {
         var statusColor = "#d62728"; //red
-        if( instruments[instrName].server==true && instruments[instrName].connected==false ) { statusColor="#ff7f0e"; } //orange
-        else if( instruments[instrName].server==true && instruments[instrName].connected==true ) { statusColor="#2ca02c"; } //green
+        if( instruments[instrName].server==true && instruments[instrName].connected==false ) {
+            statusColor="#ff7f0e"; //orange
+        }
+        else if( instruments[instrName].server==true && instruments[instrName].connected==true ) {
+            statusColor="#2ca02c"; //green
+        }
         return <Instrument label={instrName} color={statusColor} />
     });
     return(<div>{instrumentStatuses}</div>)
@@ -308,6 +311,41 @@ const RefreshInstrumentsButton = () => {
     )
 };
 
+const mapStateToLogProps = (storeState,props) => {
+    return {
+        log: storeState.log
+    }
+}
+const LogView = connect(mapStateToLogProps)( ({log}) => {
+    var alerts = log.map( function([utc,message,alert]) {
+        var textColor = alert? "#d62728" : "black"; //red or black
+        var d = new Date(0);
+        d.setUTCSeconds(utc);
+        var textWithTime = '[' + (1+d.getMonth()) + '/' + d.getDate() + '/' + d.getFullYear() + ' '
+                        + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + '] ' + message;
+        return( <span color={textColor}>{textWithTime+'<br />'}</span> )
+    });
+    return(
+        <div style={{width:'100%', height:100}}> {alerts} </div>
+    )
+});
+const LogForm = () => {
+    const clickLogButton = (e) => {
+        var logInput = document.getElementById("logInput");
+        ws.send(JSON.stringify({command:'Add To Log', text:logInput.value}));
+        logInput.value = '';
+    }
+    return(
+        <div>
+            <input type="text"
+                    id="logInput"
+                    style={{width:"calc(100% - 50px)"}}
+                    placeholder="Log a message..." />
+            <button style={{width:50}} onClick={(e) => clickLogButton(e)} >Log</button>
+        </div>
+    )
+};
+
 
 ReactDOM.render(<Provider store={ store }>
                     <div>
@@ -323,6 +361,13 @@ ReactDOM.render(<Provider store={ store }><TempDisplay /></Provider>,
     document.getElementById("tempDisplay"));
 ReactDOM.render(<Provider store={ store }><InstrumentDisplay /></Provider>,
     document.getElementById("instrumentStatusDisplay"));
+ReactDOM.render(<Provider store={ store }>
+                    <div>
+                        <LogView />
+                        <LogForm />
+                    </div>
+                </Provider>,
+                document.getElementById("logHolder"));
 
 
 var d3 = Plotly.d3;
@@ -334,7 +379,6 @@ window.onload = function(){
     ws.onclose = function(e) { console.log("socket closed"); }
     ws.onmessage = function(e) {
         const newState = JSON.parse(e.data);
-        console.log(newState);
         if (newState.hasOwnProperty('temps')) {
             dispatch(updateTemps(newState.temps));
             delete newState.temps;

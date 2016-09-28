@@ -4,39 +4,17 @@
 	<html>
 
 	<head>
-	  <title>Proportional Grid page</title>
+	  <title>ADR Controller</title>
 	  <link rel="stylesheet" href="style.css">
 	  <script src="https://fb.me/react-15.0.0.js"></script>
 	  <script src="https://fb.me/react-dom-15.0.0.js"></script>
 	  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-	  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script> -->
-	  <!-- <script type = "text/javascript" src = "dynamic.js" >  </script> -->
-	  <!-- <script type = "text/babel">
-		  var Button = React.createClass({
-			  getInitialState: function() {
-				  return {counter: 100};
-			  },
-			  handleClick: function() {
-				  this.setState({ counter: this.state.counter+1 });
-				  // tempsFAA.push(5+Math.random());
-				  var d = new Date(20120125+this.state.counter*1000);
-				  plotSpace.data[0].x.push(d);
-				  plotSpace.data[0].y.push(5+Math.random());
-				  Plotly.redraw(plotSpace);
-			  },
-			  render: function() {
-				  return (
-					  <button onClick={this.handleClick}>{this.state.counter}</button>
-				  )
-			  }
-		  });
-
-	  </script> -->
 	</head>
 
 	<body>
 	  <div id="mainContent">
-	    <div id="tempPlot"></div>
+	    <div id="logHolder"></div>
+  	    <div id="tempPlot"></div>
 	  </div>
 	  <div id="sideContentWrapper">
 	  <div id="sideContent">
