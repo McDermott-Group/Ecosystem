@@ -241,15 +241,15 @@ class ADRServer(DeviceServer):
         # Web Socket Update Stuff:
         log.startLogging(sys.stdout)
         root = File("C:\\Users\\McDermott\\Desktop\\Git Repositories\\servers\\adr\\www")
-        
+
         self.factory = MyFactory(u"ws://127.0.0.1:9876/",adrServer=self)
         self.factory.protocol = MyServerProtocol
         resource = WebSocketResource(self.factory)
         root.putChild(u"ws", resource)
-        
+
         site = Site(root)
         reactor.listenTCP(9876, site)
-        
+
         try:
             yield self.client.registry.cd(self.ADRSettingsPath)
             self.file_path = yield self.client.registry.get('Log Path')
@@ -423,7 +423,11 @@ class ADRServer(DeviceServer):
             self.logMessage("Could not write to log file: " + str(e) + '.')
         print '[log] '+ message
         self.factory.sendMessageToAll({
-            'log': ((dt-datetime.datetime(1970,1,1)).total_seconds(),message,alert)
+            'log': [{
+                'datetime':(dt-datetime.datetime(1970,1,1)).total_seconds(),
+                'message':message,
+                'alert':alert
+            }]
         })
         self.client.manager.send_named_message('Log Changed', (dt,message,alert))
 
@@ -541,7 +545,7 @@ class ADRServer(DeviceServer):
                     'tFAA': [self.state['T_FAA']['K']]
                 },
                 'instruments': { name:{'server':status[0],
-                                        'connected':status[1] } 
+                                        'connected':status[1] }
                                     for (name,status) in self.getInstrumentState('bla')},
                 'compressorOn':self.state['CompressorStatus'],
                 'pressure':1000,

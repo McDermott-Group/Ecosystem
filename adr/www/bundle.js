@@ -1,8 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 // var React = require('react');
@@ -30,11 +28,12 @@ pump cart pressure
 
 T O D O :
 make pressure component
+make components for PS current, voltage, back EMF, etc.
 make log component
+sort log in reverse date order
 does log field delete your input if it rerenders in the middle of typing?
 make different levels for plot times (1hr, 6hrs, 24hrs, etc)
 put in temp to regulate at part/make it change when user changes it
-make buttons unclickable when grey
 **************/
 
 /********** ACTIONS ***********/
@@ -56,7 +55,7 @@ var updateInstruments = function updateInstruments() {
 };
 var UPDATE_LOG = Symbol('UPDATE_LOG');
 var updateLog = function updateLog() {
-    var newState = arguments.length <= 0 || arguments[0] === undefined ? { datetime: '', message: '' } : arguments[0];
+    var newState = arguments.length <= 0 || arguments[0] === undefined ? { datetime: '', message: '', alert: false } : arguments[0];
     return {
         type: UPDATE_LOG,
         newState: newState
@@ -100,7 +99,7 @@ var stateReducer = function stateReducer() {
 
     switch (action.type) {
         case UPDATE_LOG:
-            return Object.assign({}, state, { log: [state.log, action.newState] });
+            return Object.assign({}, state, { log: [].concat(_toConsumableArray(state.log), _toConsumableArray(action.newState)) });
         case UPDATE_STATE:
             return Object.assign({}, state, action.newState);
         case UPDATE_TEMPS:
@@ -224,8 +223,8 @@ var TempDisplay = connect(mapStateToTempProps)(AllTemps);
 
 var Instrument = function Instrument(props) {
     return React.createElement(
-        'div',
-        null,
+        'li',
+        { style: { listStyle: "none" } },
         React.createElement(
             'span',
             { style: { color: props.color } },
@@ -245,15 +244,14 @@ var AllInstruments = function AllInstruments(_ref2) {
     var instrumentStatuses = Object.keys(instruments).map(function (instrName) {
         var statusColor = "#d62728"; //red
         if (instruments[instrName].server == true && instruments[instrName].connected == false) {
-            statusColor = "#ff7f0e";
-        } //orange
-        else if (instruments[instrName].server == true && instruments[instrName].connected == true) {
-                statusColor = "#2ca02c";
-            } //green
+            statusColor = "#ff7f0e"; //orange
+        } else if (instruments[instrName].server == true && instruments[instrName].connected == true) {
+            statusColor = "#2ca02c"; //green
+        }
         return React.createElement(Instrument, { label: instrName, color: statusColor });
     });
     return React.createElement(
-        'div',
+        'ul',
         null,
         instrumentStatuses
     );
@@ -447,28 +445,29 @@ var mapStateToLogProps = function mapStateToLogProps(storeState, props) {
 var LogView = connect(mapStateToLogProps)(function (_ref8) {
     var log = _ref8.log;
 
-    var alerts = log.map(function (_ref9) {
-        var _ref10 = _slicedToArray(_ref9, 3);
-
-        var utc = _ref10[0];
-        var message = _ref10[1];
-        var alert = _ref10[2];
-
+    var alerts = log.map(function (oneLog) {
+        var utc = oneLog.datetime;
+        var message = oneLog.message;
+        var alert = oneLog.alert;
         var textColor = alert ? "#d62728" : "black"; //red or black
         var d = new Date(0);
         d.setUTCSeconds(utc);
         var textWithTime = '[' + (1 + d.getMonth()) + '/' + d.getDate() + '/' + d.getFullYear() + ' ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + '] ' + message;
         return React.createElement(
-            'span',
+            'li',
             { color: textColor },
-            textWithTime + '<br />'
+            textWithTime
         );
     });
     return React.createElement(
         'div',
-        { style: { width: '100%', height: 100 } },
+        { style: { width: '100%', height: 100, textAlign: "left", overflowY: "scroll" } },
         ' ',
-        alerts,
+        React.createElement(
+            'ul',
+            { style: { listStyle: "none" } },
+            alerts
+        ),
         ' '
     );
 });

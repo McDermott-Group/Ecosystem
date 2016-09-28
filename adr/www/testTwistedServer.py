@@ -10,6 +10,8 @@ from autobahn.twisted.websocket import WebSocketServerFactory, \
 
 from autobahn.twisted.resource import WebSocketResource
 
+from datetime import datetime
+
 
 class MyServerProtocol(WebSocketServerProtocol):
     def onOpen(self):
@@ -23,7 +25,8 @@ class MyServerProtocol(WebSocketServerProtocol):
                     'instruments':{
                         'Ruox Temperature Monitor':{'server':True,'connected':False},
                         'Compressor':{'server':True,'connected':True}
-                    }
+                    },
+                    'log':[ {'datetime':(datetime.now()-datetime(1970,1,1)).total_seconds(),'message':'hellow world','alert':False} for _ in range(9)]
                 } )
         self.sendMessage(message)
         """

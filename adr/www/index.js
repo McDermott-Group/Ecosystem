@@ -25,6 +25,7 @@ T O D O :
 make pressure component
 make components for PS current, voltage, back EMF, etc.
 make log component
+sort log in reverse date order
 does log field delete your input if it rerenders in the middle of typing?
 make different levels for plot times (1hr, 6hrs, 24hrs, etc)
 put in temp to regulate at part/make it change when user changes it
@@ -42,7 +43,7 @@ const updateInstruments = (newState={}) => ({
     newState
 });
 const UPDATE_LOG = Symbol('UPDATE_LOG');
-const updateLog = (newState={datetime:'',message:''}) => ({
+const updateLog = (newState={datetime:'',message:'',alert:false}) => ({
     type: UPDATE_LOG,
     newState
 });
@@ -78,7 +79,7 @@ const stateReducer = (state={
 }, action) => {
     switch (action.type) {
         case UPDATE_LOG:
-        return Object.assign( {}, state, {log: [state.log, action.newState]})
+        return Object.assign( {}, state, {log: [...state.log, ...action.newState]})
         case UPDATE_STATE:
         return Object.assign({},state,action.newState);
         case UPDATE_TEMPS:
@@ -173,7 +174,7 @@ const TempDisplay = connect(mapStateToTempProps)(AllTemps);
 
 const Instrument = (props) => {
     return(
-        <div><span style={{color:props.color}}>{'\u25C9 '}</span>{props.label}</div>
+        <li style={{listStyle:"none"}}><span style={{color:props.color}}>{'\u25C9 '}</span>{props.label}</li>
     )
 };
 const mapStateToInstrumentProps = (storeState,props) => {
@@ -192,7 +193,7 @@ const AllInstruments = ({instruments}) => {
         }
         return <Instrument label={instrName} color={statusColor} />
     });
-    return(<div>{instrumentStatuses}</div>)
+    return(<ul>{instrumentStatuses}</ul>)
 };
 const InstrumentDisplay = connect(mapStateToInstrumentProps)(AllInstruments);
 
@@ -317,16 +318,19 @@ const mapStateToLogProps = (storeState,props) => {
     }
 }
 const LogView = connect(mapStateToLogProps)( ({log}) => {
-    var alerts = log.map( function([utc,message,alert]) {
+    var alerts = log.map( function(oneLog) {
+        var utc = oneLog.datetime;
+        var message = oneLog.message;
+        var alert = oneLog.alert;
         var textColor = alert? "#d62728" : "black"; //red or black
         var d = new Date(0);
         d.setUTCSeconds(utc);
         var textWithTime = '[' + (1+d.getMonth()) + '/' + d.getDate() + '/' + d.getFullYear() + ' '
                         + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + '] ' + message;
-        return( <span color={textColor}>{textWithTime+'<br />'}</span> )
+        return( <li color={textColor}>{textWithTime}</li> )
     });
     return(
-        <div style={{width:'100%', height:100}}> {alerts} </div>
+        <div style={{width:'100%', height:100, textAlign:"left", overflowY:"scroll"}}> <ul style={{listStyle:"none"}}>{alerts}</ul> </div>
     )
 });
 const LogForm = () => {
