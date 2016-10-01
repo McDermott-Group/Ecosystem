@@ -32,8 +32,10 @@ timeout = 20
 
 #This file uses lowerCamelCase for compatibility with 
 #ATS provided coding examples and atsapi library. 
+#LabRAD settings use underscores for self consistency
+#with our servers.
 
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks, returnvalue
 import atsapi as ats
 import numpy as np
 import ctypes
@@ -93,30 +95,30 @@ class AlazarTechServer(LabradServer):
         boardHandle = self.boardHandles[c['devName']]
         boardHandle.setLED(ledState)
         
-    @setting(5, 'Set Capture Clock', SourceId='w', 
-            SampleRateIdOrValue='w', EdgeId='w', Decimation='w', 
+    @setting(5, 'Set Capture Clock', sourceID='w', 
+            sampleRateIdOrvalue='w', edgeID='w', decimation='w', 
             returns='')
-    def set_capture_clock(self, c, SourceId, SampleRateIdOrValue, 
-            EdgeId, Decimation):
+    def set_capture_clock(self, c, sourceID, sampleRateIdOrvalue, 
+            edgeID, decimation):
         boardHandle = self.boardHandles[c['devName']]
-        boardHandle.setCaptureClock(SourceId, SampleRateIdOrValue,
-                EdgeId, Decimation)
+        boardHandle.setCaptureClock(sourceID, sampleRateIdOrvalue,
+                edgeID, decimation)
        
-    @setting(6, 'Input Control', ChannelId=['w', 's'],
+    @setting(6, 'Input Control', channelID=['w', 's'],
             couplingID=['w', 's'], rangeID=['w', 'v[mV]'],
-            ImpedanceId='w', returns='')
-    def input_control(self, c, ChannelId, couplingID, rangeID,
-            ImpedanceId=ats.IMPEDANCE_50_OHM):
+            impedanceID='w', returns='')
+    def input_control(self, c, channelID, couplingID, rangeID,
+            impedanceID=ats.IMPEDANCE_50_OHM):
         boardHandle = self.boardHandles[c['devName']]
         
-        if type(ChannelId) == str:
-            if ChannelId.upper() == "A":
-                ChannelId = ats.CHANNEL_A
-            elif ChannelId.upper() == "B":
-                ChannelId = ats.CHANNEL_B
+        if type(channelID) == str:
+            if channelID.upper() == "A":
+                channelID = ats.CHANNEL_A
+            elif channelID.upper() == "B":
+                channelID = ats.CHANNEL_B
             else: 
                 raise Exception("Acceptable string values for "
-                        + "ChannelId are 'A' and 'B'.")
+                        + "channelID are 'A' and 'B'.")
                 
         if type(couplingID) == str:
             if couplingID.upper() == "DC":
@@ -146,34 +148,34 @@ class AlazarTechServer(LabradServer):
                 else:
                     raise Exception("Invalid rangeID provided.")
 
-        boardHandle.inputControlEx(ChannelId, couplingID, rangeID,
-                ImpedanceId)
+        boardHandle.inputControlEx(channelID, couplingID, rangeID,
+                impedanceID)
 
-    @setting(7, 'Set BW Limit', ChannelId=['w', 's'], Flag='w', returns='')
-    def set_bw_limit(self, c, ChannelId, Flag):
-        if type(ChannelId) == str:
-            if ChannelId.upper() == "A":
-                ChannelId = ats.CHANNEL_A
-            elif ChannelId.upper() == "B":
-                ChannelId = ats.CHANNEL_B
+    @setting(7, 'Set BW Limit', channelID=['w', 's'], flag='w', returns='')
+    def set_bw_limit(self, c, channelID, flag):
+        if type(channelID) == str:
+            if channelID.upper() == "A":
+                channelID = ats.CHANNEL_A
+            elif channelID.upper() == "B":
+                channelID = ats.CHANNEL_B
             else: 
                 raise Exception("Acceptable string values for "
-                        + "ChannelId are 'A' and 'B'.")
+                        + "channelID are 'A' and 'B'.")
         boardHandle = self.boardHandles[c['devName']]
-        boardHandle.setBWLimit(ChannelId, Flag)
+        boardHandle.setBWLimit(channelID, flag)
         
-    @setting(8, 'Set Trigger Operation', TriggerOperation='w', 
-            TriggerEngineId1='w', SourceId1='w', 
-            SlopeId1='w', Level1='w', 
-            TriggerEngineId2='w', SourceId2='w', 
-            SlopeId2='w', Level2='w',  returns='')
-    def set_trigger_operation(self, c, TriggerOperation, 
-            TriggerEngineId1, SourceId1, SlopeId1, Level1, 
-            TriggerEngineId2, SourceId2, SlopeId2, Level2):
+    @setting(8, 'Set Trigger Operation', triggerOperation='w', 
+            triggerEngineID1='w', sourceID1='w', 
+            slopeID1='w', level1='w', 
+            triggerEngineID2='w', sourceID2='w', 
+            slopeID2='w', level2='w',  returns='')
+    def set_trigger_operation(self, c, triggerOperation, 
+            triggerEngineID1, sourceID1, slopeID1, level1, 
+            triggerEngineID2, sourceID2, slopeID2, level2):
         boardHandle = self.boardHandles[c['devName']]
-        boardHandle.setTriggerOperation(TriggerOperation,
-                TriggerEngineId1, SourceId1, SlopeId1, Level1,
-                TriggerEngineId2, SourceId2, SlopeId2, Level2)
+        boardHandle.settriggerOperation(triggerOperation,
+                triggerEngineID1, sourceID1, slopeID1, level1,
+                triggerEngineID2, sourceID2, slopeID2, level2)
    
     @setting(9, 'Set External Trigger', couplingID='w', rangeID='w',
             returns='')
@@ -181,34 +183,34 @@ class AlazarTechServer(LabradServer):
         boardHandle = self.boardHandles[c['devName']]
         boardHandle.setExternalTrigger(couplingID, rangeID)
 
-    @setting(10, 'Set Trigger Delay', Value='w', returns='')
-    def set_trigger_delay(self, c, Value):
+    @setting(10, 'Set Trigger Delay', value='w', returns='')
+    def set_trigger_delay(self, c, value):
         boardHandle = self.boardHandles[c['devName']]
-        boardHandle.setTriggerDelay(Value)
+        boardHandle.setTriggerDelay(value)
 
-    @setting(11, 'Set Trigger Time Out', TimeoutTicks='w',
+    @setting(11, 'Set Trigger Time Out', timeoutTicks='w',
             returns='')     
-    def set_trigger_time_out(self, c, TimeoutTicks):
+    def set_trigger_time_out(self, c, timeoutTicks):
         boardHandle = self.boardHandles[c['devName']]
-        boardHandle.setTriggerTimeOut(TimeoutTicks)
+        boardHandle.setTriggerTimeOut(timeoutTicks)
    
-    @setting(12, 'Set Record Size', PreTriggerSamples='w',
-            PostTriggerSamples='w', returns='')
-    def set_record_size(self, c, PreTriggerSamples, PostTriggerSamples):
+    @setting(12, 'Set Record Size', preTriggerSamples='w',
+            postTriggerSamples='w', returns='')
+    def set_record_size(self, c, preTriggerSamples, postTriggerSamples):
         boardHandle = self.boardHandles[c['devName']]
-        boardHandle.setRecordSize(PreTriggerSamples,
-                PostTriggerSamples)
+        boardHandle.setRecordSize(preTriggerSamples,
+                postTriggerSamples)
  
-    @setting(13, 'Set Record Count', RecordsPerCapture='w', returns='')
-    def set_record_count(self, c, RecordsPerCapture):
+    @setting(13, 'Set Record Count', recordsPerCapture='w', returns='')
+    def set_record_count(self, c, recordsPerCapture):
         boardHandle = self.boardHandles[c['devName']]
-        boardHandle.setRecordCount(RecordsPerCapture)
+        boardHandle.setRecordCount(recordsPerCapture)
  
     @setting(14, 'Get Channel Info', returns='*w')
     def get_channel_info(self, c):
         boardHandle = self.boardHandles[c['devName']]
-        memorySize_samples, bitsPerSample = boardHandle.getChannelInfo()
-        return [memorySize_samples.value, bitsPerSample.value]
+        memorySizeInSamplesPerChannel, bitsPerSample = boardHandle.getChannelInfo()
+        return [memorySizeInSamplesPerChannel.value, bitsPerSample.value]
 
     @setting(15, 'Start Capture', returns='')
     def start_capture(self, c):
@@ -228,11 +230,11 @@ class AlazarTechServer(LabradServer):
         
     @setting(18, 'Set Records Per Buffer', recordsPerBuffer='w',
             returns='')
-    def set_recordsPerBuffer(self, c, recordsPerBuffer):
+    def set_records_per_buffer(self, c, recordsPerBuffer):
         c['recordsPerBuffer'] = recordsPerBuffer
         
     @setting(19, 'Get Records Per Buffer', returns='w')
-    def get_recordsPerBuffer(self, c):
+    def get_records_per_buffer(self, c):
         recordsPerBuffer = c['recordsPerBuffer']
         return recordsPerBuffer
 
@@ -281,9 +283,9 @@ class AlazarTechServer(LabradServer):
             raise Exception("ATS9870 digitizers require a minimum "
                     +"of 256 samples per record.")
         else:
-            samples_above_required_min = samplesPerRecord - 256
-            if samples_above_required_min%64!=0:
-                div64 = float(samples_above_required_min) / 64.0
+            samplesAboveRequiredMin = samplesPerRecord - 256
+            if samplesAboveRequiredMin%64!=0:
+                div64 = float(samplesAboveRequiredMin) / 64.0
                 recommendedMin = 256 + 64 * np.floor(div64)
                 recommendedMax = 256 + 64 * np.ceil(div64)
                 raise Exception("ATS9870 digitizers require the "
@@ -295,7 +297,7 @@ class AlazarTechServer(LabradServer):
                         str(recommendedMax) + ".")
 
         # TODO: Select the number of records per DMA buffer.
-        #should be chosen such that 1 MB < bytes_per_buffer < 64 MB
+        #should be chosen such that 1 MB < bytesPerBuffer < 64 MB
         #recordsPerBuffer = 10 
         recordsPerBuffer = c['recordsPerBuffer']
         c['samplesPerRecord'] = samplesPerRecord
@@ -306,46 +308,46 @@ class AlazarTechServer(LabradServer):
                     + "integer multiple of records per buffer.")
 
         # TODO: Select the number of buffers per acquisition.
-        buffers_per_acquisition = numberOfRecords/recordsPerBuffer
-        c['buffers_per_acquisition'] = buffers_per_acquisition
+        buffersPerAcquisition = numberOfRecords/recordsPerBuffer
+        c['buffersPerAcquisition'] = buffersPerAcquisition
         
         # # TODO: Select the active channels.
         channels = ats.CHANNEL_A | ats.CHANNEL_B
-        channel_count = 0
+        channelCount = 0
 
         for ch in ats.channels:
-            channel_count += (ch & channels == ch)
+            channelCount += (ch & channels == ch)
 
         # Compute the number of bytes per record and per buffer
         chan_info = self.get_channel_info(c)
-        memorySize_samples = chan_info[0]
-        bits_per_sample = chan_info[1]
-        c['bits_per_sample'] = bits_per_sample
-        bytes_per_sample = (bits_per_sample + 7) // 8
+        #memorySizeInSamplesPerChannel = chan_info[0]
+        bitsPerSample = chan_info[1]
+        c['bitsPerSample'] = bitsPerSample
+        bytesPerSample = (bitsPerSample + 7) // 8
         
-        bytes_per_record = bytes_per_sample * samplesPerRecord
-        bytes_per_buffer = bytes_per_record * recordsPerBuffer * channel_count
+        bytesPerRecord = bytesPerSample * samplesPerRecord
+        bytesPerBuffer = bytesPerRecord * recordsPerBuffer * channelCount
 
         # TODO: Select number of DMA buffers to allocate
-        buffer_count = 4
+        bufferCount = 4
 
         # Allocate DMA buffers
-        sample_type = ctypes.c_uint8
-        if bytes_per_sample > 1:
-            sample_type = ctypes.c_uint16
+        sampleType = ctypes.c_uint8
+        if bytesPerSample > 1:
+            sampleType = ctypes.c_uint16
             
         c['buffers'] = []
         #buffers = []
-        for i in range(buffer_count):
-            c['buffers'].append(ats.DMABuffer(sample_type, bytes_per_buffer))
+        for i in range(bufferCount):
+            c['buffers'].append(ats.DMABuffer(sampleType, bytesPerBuffer))
         
-        # Set the record size
-        pre_trigger_samples = 0 
-        self.set_record_size(c, pre_trigger_samples, samplesPerRecord)
+        #Current implementation is NPT Mode = No Pre Trigger Samples 
+        preTriggerSamples = 0 
+        self.set_record_size(c, preTriggerSamples, samplesPerRecord)
         
         #Configure the board to make an NPT AutoDMA acquisition
         boardHandle.beforeAsyncRead(channels,
-                -pre_trigger_samples,
+                -preTriggerSamples,
                 samplesPerRecord,
                 recordsPerBuffer,
                 numberOfRecords,
@@ -356,106 +358,106 @@ class AlazarTechServer(LabradServer):
             boardHandle.postAsyncBuffer(buffer.addr, buffer.size_bytes)
             
         #must allocate these first otherwise takes up too much time during acquisition
-        c['records_buffer'] = np.zeros(2*numberOfRecords*samplesPerRecord, dtype=np.uint8)
+        c['recordsBuffer'] = np.zeros(2*numberOfRecords*samplesPerRecord, dtype=np.uint8)
 
-    @setting(54, 'Add Demod Weights', chA_weight='*v', chB_weight='*v', demod_name ='s',  returns='')
-    def add_demod_weights(self, c, chA_weight, chB_weight, demod_name):
+    @setting(54, 'Add Demod Weights', chA_weight='*v', chB_weight='*v', demodName ='s',  returns='')
+    def add_demod_weights(self, c, chA_weight, chB_weight, demodName):
         samplesPerRecord = c['samplesPerRecord']
         numberOfRecords = c['numberOfRecords']
-        num_channels = 2
+        numChannels = 2
         if len(chA_weight) != samplesPerRecord or len(chB_weight) != samplesPerRecord:
             raise Exception("The chA_weight and chB_weight arrays "
                     +"must have a length which matches the number "
                     +"of samples per record, namely " + str(samplesPerRecord))
         else:
-            c['demodWeightsDict'][demod_name] = [chA_weight, chB_weight]
-            c['iqBuffers'][demod_name] = np.zeros((numberOfRecords, num_channels))
+            c['demodWeightsDict'][demodName] = [chA_weight, chB_weight]
+            c['iqBuffers'][demodName] = np.zeros((numberOfRecords, numChannels))
  
     @setting(55, 'Acquire Data', returns='')
     def acquire_data(self, c):
         boardHandle = self.boardHandles[c['devName']]
 
         buffersCompleted = 0
-        bytes_transferred = 0
+        bytesTransferred = 0
 
         recordsPerBuffer = c['recordsPerBuffer']
         samplesPerRecord = c['samplesPerRecord']
         
-        records_buffer = c['records_buffer'] 
+        recordsBuffer = c['recordsBuffer'] 
         
         bufferSize = 2 * recordsPerBuffer * samplesPerRecord
 
         boardHandle.startCapture() 
-        while (buffersCompleted < c['buffers_per_acquisition']):
+        while (buffersCompleted < c['buffersPerAcquisition']):
             buffer = c['buffers'][buffersCompleted % len(c['buffers'])]
             boardHandle.waitAsyncBufferComplete(buffer.addr, timeout_ms=5000)
             boardHandle.postAsyncBuffer(buffer.addr, buffer.size_bytes) 
             bufferPosition = bufferSize * buffersCompleted
-            records_buffer[bufferPosition:bufferPosition + bufferSize] = \
+            recordsBuffer[bufferPosition:bufferPosition + bufferSize] = \
                     buffer.buffer
             buffersCompleted += 1
         boardHandle.abortAsyncRead()
         
     @setting(56, 'Get Records', returns='?')
     def get_records(self, c):
-        records_buffer = c['records_buffer'] 
+        recordsBuffer = c['recordsBuffer'] 
         samplesPerRecord = c['samplesPerRecord']
         numberOfRecords = c['numberOfRecords']
-        v_full_scale = float(c['input_range_mv'])/1e3 #convert to volts
-        bits_per_sample = c['bits_per_sample']
-        num_channels = 2
-        dV = 2 * v_full_scale / ((2**bits_per_sample) - 1)
+        vFullScale = float(c['input_range_mv'])/1e3 #convert to volts
+        bitsPerSample = c['bitsPerSample']
+        numChannels = 2
+        dV = 2 * vFullScale / ((2**bitsPerSample) - 1)
         #Note that Fortran style indexing is used on 2nd reshaping
-        time_series = records_buffer.reshape((num_channels*numberOfRecords, 
+        timeSeries = recordsBuffer.reshape((numChannels*numberOfRecords, 
                                               samplesPerRecord)).\
                                      reshape((numberOfRecords,
-                                              num_channels,
+                                              numChannels,
                                               samplesPerRecord), order="F")
         #0 ==> -VFullScale, 2^(N-1) ==> ~0, (2**N)-1 ==> +VFullScale
-        time_series = -v_full_scale + time_series * dV
-        return time_series
+        timeSeries = -vFullScale + timeSeries * dV
+        return timeSeries
         
-    @setting(57, 'Get IQS', demod_name = 's', returns='?')
-    def get_iqs(self, c, demod_name):
-        records_buffer = c['records_buffer'] 
+    @setting(57, 'Get IQS', demodName = 's', returns='?')
+    def get_iqs(self, c, demodName):
+        recordsBuffer = c['recordsBuffer'] 
         samplesPerRecord = c['samplesPerRecord']
         numberOfRecords = c['numberOfRecords']
         
-        v_full_scale = float(c['input_range_mv'])/1e3 #convert to volts
-        bits_per_sample = c['bits_per_sample']
-        num_channels = 2 #think about how to do this in multi-channel case
-        dV = 2*v_full_scale/((2**bits_per_sample)-1)
+        vFullScale = float(c['input_range_mv'])/1e3 #convert to volts
+        bitsPerSample = c['bitsPerSample']
+        numChannels = 2 #think about how to do this in multi-channel case
+        dV = 2*vFullScale/((2**bitsPerSample)-1)
         
         recordsPerBuffer = c['recordsPerBuffer']
-        num_records = (len(records_buffer)/samplesPerRecord)/2
-        num_buffers = num_records/recordsPerBuffer
-        samples_per_buffer = samplesPerRecord * recordsPerBuffer
+        numRecords = (len(recordsBuffer)/samplesPerRecord)/2
+        numBuffers = numRecords/recordsPerBuffer
+        samplesPerBuffer = samplesPerRecord * recordsPerBuffer
        
-        wA = c['demodWeightsDict'][demod_name][0]
-        wB = c['demodWeightsDict'][demod_name][1]
-        iq_buffer = c['iqBuffers'][demod_name]
-        for ii in range(0, num_buffers):
+        wA = c['demodWeightsDict'][demodName][0]
+        wB = c['demodWeightsDict'][demodName][1]
+        iq_buffer = c['iqBuffers'][demodName]
+        for ii in range(0, numBuffers):
             #Note that Fortran style indexing is used on 2nd reshaping
-            time_series_chunk = records_buffer.reshape((num_channels*numberOfRecords, 
+            timeSeriesChunk = recordsBuffer.reshape((numChannels*numberOfRecords, 
                                               samplesPerRecord)).\
                                     reshape((numberOfRecords,
-                                              num_channels,
+                                              numChannels,
                                               samplesPerRecord), order="F")[ii*recordsPerBuffer:(ii+1)*recordsPerBuffer]
-            time_series_chunk = -v_full_scale + time_series_chunk * dV
+            timeSeriesChunk = -vFullScale + timeSeriesChunk * dV
             #demod array shaped like [[I1,Q1], [I2,Q2], ..., [Im, Qm]] where m = num recs per buf
-            iq_buffer[ii*recordsPerBuffer:(ii+1)*recordsPerBuffer] = self.demodulate_buffered_data(wA, wB, time_series_chunk) 
+            iq_buffer[ii*recordsPerBuffer:(ii+1)*recordsPerBuffer] = self.demodulate_buffered_data(wA, wB, timeSeriesChunk) 
             
         return iq_buffer
         
-    def demodulate_buffered_data(self, wA, wB, time_series_chunk):
-        demod_vals = []
-        for ii in range(0, len(time_series_chunk)):
-            vA = time_series_chunk[ii][0]
-            vB = time_series_chunk[ii][1]
+    def demodulate_buffered_data(self, wA, wB, timeSeriesChunk):
+        demodVals = []
+        for ii in range(0, len(timeSeriesChunk)):
+            vA = timeSeriesChunk[ii][0]
+            vB = timeSeriesChunk[ii][1]
             I = np.mean(wA*vA - wB*vB) #check that these are legit
             Q = np.mean(wA*vA + wB*vB) #check that these are legit
-            demod_vals.append([I,Q])
-        return np.asarray(demod_vals)
+            demodVals.append([I,Q])
+        return np.asarray(demodVals)
             
 __server__ = AlazarTechServer()
 
