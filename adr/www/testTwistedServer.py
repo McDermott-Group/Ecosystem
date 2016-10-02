@@ -26,7 +26,11 @@ class MyServerProtocol(WebSocketServerProtocol):
                         'Ruox Temperature Monitor':{'server':True,'connected':False},
                         'Compressor':{'server':True,'connected':True}
                     },
-                    'log':[ {'datetime':(datetime.now()-datetime(1970,1,1)).total_seconds(),'message':'hellow world','alert':False} for _ in range(9)]
+                    'pressure':769,
+                    'backEMF':0.101,
+                    'PSVoltage':1.7,
+                    'PSCurrent':8.7,
+                    'log':[ {'datetime':(datetime.now()-datetime(1970,1,1)).total_seconds()+10*i,'message':'hellow world','alert':False} for i in range(9)]
                 } )
         self.sendMessage(message)
         """

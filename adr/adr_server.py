@@ -69,6 +69,30 @@ class MyServerProtocol(WebSocketServerProtocol):
     def onOpen(self):
         self.adrServer = self.factory.register(self)
         print('new connection')
+        # probably only need to get the last 30 log messages
+        backLogs = self.adrServer.getLog(None,30)
+        # initial values
+        state = self.adrServer.state
+        self.sendMessage({
+            'temps': {
+                'timeStamps':[(state['datetime']-datetime.datetime(1970,1,1)).total_seconds()],
+                't60K': [state['T_60K']['K']],
+                't03K': [state['T_3K']['K']],
+                'tGGG': [state['T_GGG']['K']],
+                'tFAA': [state['T_FAA']['K']]
+            },
+            'instruments': { name:{'server':status[0],
+                                    'connected':status[1] }
+                                for (name,status) in self.adrServer.getInstrumentState('bla')},
+            'compressorOn':state['CompressorStatus'],
+            'pressure':None,
+            'isMaggingUp': state['maggingUp'],
+            'isRegulating': state['regulating'],
+            'backEMF': state['magnetV']['V'],
+            'PSCurrent': state['PSCurrent']['A'],
+            'PSVoltage': state['PSVoltage']['V'],
+            'log':[{'datetime':log[0], 'message':log[1],'alert':log[2]} for log in backLogs]
+        })
 
     def connectionLost(self, reason):
         self.factory.unregister(self)
@@ -86,8 +110,11 @@ class MyServerProtocol(WebSocketServerProtocol):
         elif message['command'] == 'Stop Magging Up':
             self.adrServer._cancelMagUp()
         elif message['command'] == 'Regulate':
-            temp = message['temp']
-            self.adrServer._regulate(temp)
+            try:
+                temp = float(message['temp'])
+                self.adrServer._regulate(temp)
+            except:
+                self.adrServer.logMessage('Could not convert input to temperature.',alert=True)
         elif message['command'] == 'Stop Regulating':
             self.adrServer._cancelRegulate()
         elif message['command'] == 'Set Compressor State':
@@ -548,12 +575,12 @@ class ADRServer(DeviceServer):
                                         'connected':status[1] }
                                     for (name,status) in self.getInstrumentState('bla')},
                 'compressorOn':self.state['CompressorStatus'],
-                'pressure':1000,
+                'pressure':None,
                 'isMaggingUp': self.state['maggingUp'],
                 'isRegulating': self.state['regulating'],
                 'backEMF': self.state['magnetV']['V'],
-                'PS_I': self.state['PSCurrent']['A'],
-                'PS_V': self.state['PSVoltage']['V']
+                'PSCurrent': self.state['PSCurrent']['A'],
+                'PSVoltage': self.state['PSVoltage']['V']
             })
             self.client.manager.send_named_message('State Changed', 'state changed')
             yield util.wakeupCall( max(0,self.ADRSettings['step_length']-cycleLength) )

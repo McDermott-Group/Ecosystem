@@ -27,13 +27,10 @@ magging up
 pump cart pressure
 
 T O D O :
-make pressure component
-make components for PS current, voltage, back EMF, etc.
-make log component
-sort log in reverse date order
+get backlogged log on startup
+graph of temps doesnt adjust axes over time?
 does log field delete your input if it rerenders in the middle of typing?
 make different levels for plot times (1hr, 6hrs, 24hrs, etc)
-put in temp to regulate at part/make it change when user changes it
 **************/
 
 /********** ACTIONS ***********/
@@ -93,18 +90,27 @@ var stateReducer = function stateReducer() {
         isMaggingUp: true,
         isRegulating: true,
         compressorOn: false,
-        pressure: 1000
+        pressure: NaN,
+        PSVoltage: NaN,
+        PSCurrent: NaN,
+        backEMF: NaN
     } : arguments[0];
     var action = arguments[1];
 
     switch (action.type) {
         case UPDATE_LOG:
-            return Object.assign({}, state, { log: [].concat(_toConsumableArray(state.log), _toConsumableArray(action.newState)) });
+            var newLog = [].concat(_toConsumableArray(state.log), _toConsumableArray(action.newState));
+            newLog.sort(function (a, b) {
+                return b.datetime - a.datetime;
+            }); // actually want reverse chronological
+            return Object.assign({}, state, { log: newLog });
         case UPDATE_STATE:
             return Object.assign({}, state, action.newState);
         case UPDATE_TEMPS:
             return Object.assign({}, state, { temps: {
-                    timeStamps: [].concat(_toConsumableArray(state.temps.timeStamps), _toConsumableArray(action.newState.timeStamps.map(Date))),
+                    timeStamps: [].concat(_toConsumableArray(state.temps.timeStamps), _toConsumableArray(action.newState.timeStamps.map(function (n) {
+                        return new Date(n);
+                    }))),
                     t60K: [].concat(_toConsumableArray(state.temps.t60K), _toConsumableArray(action.newState.t60K)),
                     t03K: [].concat(_toConsumableArray(state.temps.t03K), _toConsumableArray(action.newState.t03K)),
                     tGGG: [].concat(_toConsumableArray(state.temps.tGGG), _toConsumableArray(action.newState.tGGG)),
@@ -221,6 +227,47 @@ var AllTemps = function AllTemps(_ref) {
 };
 var TempDisplay = connect(mapStateToTempProps)(AllTemps);
 
+var Status = function Status(props) {
+    return React.createElement(
+        'div',
+        { style: { border: '3px solid ' + props.color } },
+        React.createElement(
+            'div',
+            { style: { color: 'white', backgroundColor: props.color, display: 'inline-block', width: '50%' } },
+            props.label
+        ),
+        React.createElement(
+            'div',
+            { style: { color: props.color, display: 'inline-block', width: '50%' } },
+            "" + props.value + " " + props.units
+        )
+    );
+};
+var mapStateToStatusProps = function mapStateToStatusProps(storeState, props) {
+    return {
+        pressure: storeState.pressure,
+        PSVoltage: storeState.PSVoltage,
+        PSCurrent: storeState.PSCurrent,
+        backEMF: storeState.backEMF
+    };
+};
+var AllStatuses = function AllStatuses(_ref2) {
+    var pressure = _ref2.pressure;
+    var PSVoltage = _ref2.PSVoltage;
+    var PSCurrent = _ref2.PSCurrent;
+    var backEMF = _ref2.backEMF;
+
+    return React.createElement(
+        'div',
+        null,
+        React.createElement(Status, { label: 'PS Voltage', color: 'grey', value: PSVoltage, units: "V" }),
+        React.createElement(Status, { label: 'PS Current', color: 'grey', value: PSCurrent, units: "A" }),
+        React.createElement(Status, { label: 'Back EMF', color: 'grey', value: backEMF, units: "V" }),
+        React.createElement(Status, { label: 'Pressure', color: 'grey', value: pressure, units: "mTorr" })
+    );
+};
+var StatusDisplay = connect(mapStateToStatusProps)(AllStatuses);
+
 var Instrument = function Instrument(props) {
     return React.createElement(
         'li',
@@ -238,8 +285,8 @@ var mapStateToInstrumentProps = function mapStateToInstrumentProps(storeState, p
         instruments: storeState.instruments
     };
 };
-var AllInstruments = function AllInstruments(_ref2) {
-    var instruments = _ref2.instruments;
+var AllInstruments = function AllInstruments(_ref3) {
+    var instruments = _ref3.instruments;
 
     var instrumentStatuses = Object.keys(instruments).map(function (instrName) {
         var statusColor = "#d62728"; //red
@@ -287,8 +334,8 @@ var mapStateToCompressorProps = function mapStateToCompressorProps(storeState, p
     };
 };
 
-var OpenHSButton = connect(mapStateToOpenHSProps)(function (_ref3) {
-    var instruments = _ref3.instruments;
+var OpenHSButton = connect(mapStateToOpenHSProps)(function (_ref4) {
+    var instruments = _ref4.instruments;
 
     if (instruments['Heat Switch'].server == true) {
         var buttonStyle = { width: '45%' };
@@ -309,8 +356,8 @@ var OpenHSButton = connect(mapStateToOpenHSProps)(function (_ref3) {
         ' Open Heat Switch '
     );
 });
-var CloseHSButton = connect(mapStateToCloseHSProps)(function (_ref4) {
-    var instruments = _ref4.instruments;
+var CloseHSButton = connect(mapStateToCloseHSProps)(function (_ref5) {
+    var instruments = _ref5.instruments;
 
     if (instruments['Heat Switch'].server == true) {
         var buttonStyle = { width: '45%' };
@@ -331,9 +378,9 @@ var CloseHSButton = connect(mapStateToCloseHSProps)(function (_ref4) {
         ' Close Heat Switch '
     );
 });
-var MagUpButton = connect(mapStateToMagUpProps)(function (_ref5) {
-    var isMaggingUp = _ref5.isMaggingUp;
-    var isRegulating = _ref5.isRegulating;
+var MagUpButton = connect(mapStateToMagUpProps)(function (_ref6) {
+    var isMaggingUp = _ref6.isMaggingUp;
+    var isRegulating = _ref6.isRegulating;
 
     if (isMaggingUp) {
         var buttonStyle = {};
@@ -364,42 +411,53 @@ var MagUpButton = connect(mapStateToMagUpProps)(function (_ref5) {
         ' '
     );
 });
-var RegulateButton = connect(mapStateToRegulateProps)(function (_ref6) {
-    var isMaggingUp = _ref6.isMaggingUp;
-    var isRegulating = _ref6.isRegulating;
+var RegulateButton = connect(mapStateToRegulateProps)(function (_ref7) {
+    var isMaggingUp = _ref7.isMaggingUp;
+    var isRegulating = _ref7.isRegulating;
 
     if (isRegulating) {
-        var buttonStyle = {};
+        var buttonStyle = { width: "70%" };
         var text = 'Stop Regulating';
         var buttonClick = function buttonClick(e) {
             return ws.send(JSON.stringify({ command: 'Stop Regulating' }));
         };
     } else if (isMaggingUp) {
-        var buttonStyle = { color: 'grey' };
+        var buttonStyle = { width: "70%", color: 'grey' };
         var text = 'Regulate';
         var buttonClick = function buttonClick(e) {
             return null;
         };
     } else {
-        var buttonStyle = {};
+        var buttonStyle = { width: "70%" };
         var text = 'Regulate';
         var buttonClick = function buttonClick(e) {
-            return ws.send(JSON.stringify({ command: 'Regulate', temp: 0 }));
+            var tempInput = document.getElementById("regTempField");
+            ws.send(JSON.stringify({ command: 'Regulate', temp: tempInput }));
         };
     }
     return React.createElement(
         'div',
-        { className: 'button', style: buttonStyle, onClick: function onClick(e) {
-                return buttonClick(e);
-            } },
-        ' ',
-        text,
-        ' '
+        { style: { fontSize: 30 } },
+        React.createElement(
+            'div',
+            { className: 'button', style: buttonStyle, onClick: function onClick(e) {
+                    return buttonClick(e);
+                } },
+            ' ',
+            text,
+            ' '
+        ),
+        React.createElement('input', { type: 'text',
+            id: 'regTempField',
+            style: { width: "calc(30% - 30px)", height: 50, fontSize: 30, textAlign: "center" },
+            placeholder: 'T',
+            value: 0 }),
+        'K'
     );
 });
-var CompressorButton = connect(mapStateToCompressorProps)(function (_ref7) {
-    var instruments = _ref7.instruments;
-    var compressorOn = _ref7.compressorOn;
+var CompressorButton = connect(mapStateToCompressorProps)(function (_ref8) {
+    var instruments = _ref8.instruments;
+    var compressorOn = _ref8.compressorOn;
 
     if (instruments['Compressor'].connected) {
         var buttonStyle = {};
@@ -442,8 +500,8 @@ var mapStateToLogProps = function mapStateToLogProps(storeState, props) {
         log: storeState.log
     };
 };
-var LogView = connect(mapStateToLogProps)(function (_ref8) {
-    var log = _ref8.log;
+var LogView = connect(mapStateToLogProps)(function (_ref9) {
+    var log = _ref9.log;
 
     var alerts = log.map(function (oneLog) {
         var utc = oneLog.datetime;
@@ -452,7 +510,7 @@ var LogView = connect(mapStateToLogProps)(function (_ref8) {
         var textColor = alert ? "#d62728" : "black"; //red or black
         var d = new Date(0);
         d.setUTCSeconds(utc);
-        var textWithTime = '[' + (1 + d.getMonth()) + '/' + d.getDate() + '/' + d.getFullYear() + ' ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + '] ' + message;
+        var textWithTime = '[' + (1 + d.getMonth()) + '/' + d.getDate() + '/' + d.getFullYear() + ' ' + ("0" + d.getHours()).slice(-2) + ':' + ("0" + d.getMinutes()).slice(-2) + ':' + ("0" + d.getSeconds()).slice(-2) + '] ' + message;
         return React.createElement(
             'li',
             { color: textColor },
@@ -513,6 +571,11 @@ ReactDOM.render(React.createElement(
     { store: store },
     React.createElement(TempDisplay, null)
 ), document.getElementById("tempDisplay"));
+ReactDOM.render(React.createElement(
+    Provider,
+    { store: store },
+    React.createElement(StatusDisplay, null)
+), document.getElementById("statusDisplay"));
 ReactDOM.render(React.createElement(
     Provider,
     { store: store },
@@ -639,7 +702,7 @@ window.onload = function () {
         Plotly.redraw(plotSpace);
     });
 
-    var addRandomTempData = function addRandomTempData() {
+    var addRandomTempDataEverySecond = function addRandomTempDataEverySecond() {
         dispatch(updateTemps({
             timeStamps: [new Date()],
             t60K: [20 + Math.random()],
@@ -647,7 +710,20 @@ window.onload = function () {
             tGGG: [10 + Math.random()],
             tFAA: [5 + Math.random()]
         }));
-        setTimeout(addTempData, 1000);
+        setTimeout(addRandomTempDataEverySecond, 500);
+    };
+    //addRandomTempDataEverySecond()
+    var addRandomTempData = function addRandomTempData() {
+        for (var i = 0; i < 200; i++) {
+            var datetime = new Date(1475185904065 + 1000 * i);
+            dispatch(updateTemps({
+                timeStamps: [datetime],
+                t60K: [20 + Math.random()],
+                t03K: [15 + Math.random()],
+                tGGG: [10 + Math.random()],
+                tFAA: [5 + Math.random()]
+            }));
+        }
     };
     //addRandomTempData()
 };

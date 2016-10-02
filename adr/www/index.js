@@ -22,13 +22,10 @@ magging up
 pump cart pressure
 
 T O D O :
-make pressure component
-make components for PS current, voltage, back EMF, etc.
-make log component
-sort log in reverse date order
+get backlogged log on startup
+graph of temps doesnt adjust axes over time?
 does log field delete your input if it rerenders in the middle of typing?
 make different levels for plot times (1hr, 6hrs, 24hrs, etc)
-put in temp to regulate at part/make it change when user changes it
 **************/
 
 /********** ACTIONS ***********/
@@ -75,25 +72,30 @@ const stateReducer = (state={
     isMaggingUp:true,
     isRegulating:true,
     compressorOn:false,
-    pressure:1000
+    pressure:NaN,
+    PSVoltage:NaN,
+    PSCurrent:NaN,
+    backEMF:NaN
 }, action) => {
     switch (action.type) {
         case UPDATE_LOG:
-        return Object.assign( {}, state, {log: [...state.log, ...action.newState]})
+            var newLog = [...state.log, ...action.newState];
+            newLog.sort( (a,b) => b.datetime - a.datetime ); // actually want reverse chronological
+            return Object.assign( {}, state, {log: newLog})
         case UPDATE_STATE:
-        return Object.assign({},state,action.newState);
+            return Object.assign({},state,action.newState);
         case UPDATE_TEMPS:
-        return Object.assign( {}, state, {temps: {
-            timeStamps:[...state.temps.timeStamps, ...action.newState.timeStamps.map(Date)],
-            t60K:[...state.temps.t60K, ...action.newState.t60K],
-            t03K:[...state.temps.t03K, ...action.newState.t03K],
-            tGGG:[...state.temps.tGGG, ...action.newState.tGGG],
-            tFAA:[...state.temps.tFAA, ...action.newState.tFAA]
-        }})
+            return Object.assign( {}, state, {temps: {
+                timeStamps:[...state.temps.timeStamps, ...action.newState.timeStamps.map((n)=>new Date(n))],
+                t60K:[...state.temps.t60K, ...action.newState.t60K],
+                t03K:[...state.temps.t03K, ...action.newState.t03K],
+                tGGG:[...state.temps.tGGG, ...action.newState.tGGG],
+                tFAA:[...state.temps.tFAA, ...action.newState.tFAA]
+            }})
         case UPDATE_INSTRUMENTS:
-        return Object.assign( {}, state, {instruments: Object.assign({},state.instruments,action.newState)})
+            return Object.assign( {}, state, {instruments: Object.assign({},state.instruments,action.newState)})
         default:
-        return state;
+            return state;
     }
 };
 
@@ -171,6 +173,34 @@ const AllTemps = ({temps}) => {
     )
 };
 const TempDisplay = connect(mapStateToTempProps)(AllTemps);
+
+const Status = (props) => {
+    return(
+        <div style={{border:'3px solid '+props.color}}>
+          <div style={{color:'white', backgroundColor:props.color, display: 'inline-block', width:'50%'}}>{props.label}</div>
+          <div style={{color:props.color, display: 'inline-block', width:'50%'}}>{""+props.value+" "+props.units}</div>
+        </div>
+    )
+};
+const mapStateToStatusProps = (storeState,props) => {
+    return {
+        pressure:storeState.pressure,
+        PSVoltage:storeState.PSVoltage,
+        PSCurrent:storeState.PSCurrent,
+        backEMF:storeState.backEMF
+    }
+}
+const AllStatuses = ({pressure,PSVoltage,PSCurrent,backEMF}) => {
+    return(
+        <div>
+            <Status label="PS Voltage" color="grey" value={PSVoltage} units={"V"} />
+            <Status label="PS Current" color="grey" value={PSCurrent} units={"A"} />
+            <Status label="Back EMF" color="grey" value={backEMF} units={"V"} />
+            <Status label="Pressure" color="grey" value={pressure} units={"mTorr"} />
+        </div>
+    )
+};
+const StatusDisplay = connect(mapStateToStatusProps)(AllStatuses);
 
 const Instrument = (props) => {
     return(
@@ -272,22 +302,33 @@ const MagUpButton = connect(mapStateToMagUpProps)( ({isMaggingUp,isRegulating}) 
 });
 const RegulateButton = connect(mapStateToRegulateProps)( ({isMaggingUp,isRegulating}) => {
     if (isRegulating) {
-        var buttonStyle = {};
+        var buttonStyle = {width:"70%"};
         var text = 'Stop Regulating';
         var buttonClick = (e) => ws.send(JSON.stringify({command:'Stop Regulating'}));
     }
     else if (isMaggingUp) {
-        var buttonStyle = {color: 'grey'};
+        var buttonStyle = {width:"70%", color: 'grey'};
         var text = 'Regulate';
         var buttonClick = (e) => (null);
     }
     else {
-        var buttonStyle = {};
+        var buttonStyle = {width:"70%"};
         var text = 'Regulate';
-        var buttonClick = (e) => ws.send(JSON.stringify({command:'Regulate',temp:0}));
+        var buttonClick = (e) => {
+            var tempInput = document.getElementById("regTempField");
+            ws.send(JSON.stringify({command:'Regulate',temp:tempInput}))
+        };
     }
     return(
-        <div className='button' style={buttonStyle} onClick={(e) => buttonClick(e)}> {text} </div>
+        <div style={{fontSize:30}}>
+            <div className='button' style={buttonStyle} onClick={(e) => buttonClick(e)}> {text} </div>
+            <input type="text"
+                    id="regTempField"
+                    style={{width:"calc(30% - 30px)", height:50,fontSize:30, textAlign:"center"}}
+                    placeholder="T"
+                    value={0} />
+            K
+        </div>
     )
 });
 const CompressorButton = connect(mapStateToCompressorProps)( ({instruments,compressorOn}) => {
@@ -326,7 +367,7 @@ const LogView = connect(mapStateToLogProps)( ({log}) => {
         var d = new Date(0);
         d.setUTCSeconds(utc);
         var textWithTime = '[' + (1+d.getMonth()) + '/' + d.getDate() + '/' + d.getFullYear() + ' '
-                        + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds() + '] ' + message;
+                        + ("0" + d.getHours()).slice(-2) + ':' + ("0" + d.getMinutes()).slice(-2) + ':' + ("0" + d.getSeconds()).slice(-2) + '] ' + message;
         return( <li color={textColor}>{textWithTime}</li> )
     });
     return(
@@ -363,6 +404,8 @@ ReactDOM.render(<Provider store={ store }>
                 document.getElementById("buttonHolder"));
 ReactDOM.render(<Provider store={ store }><TempDisplay /></Provider>,
     document.getElementById("tempDisplay"));
+ReactDOM.render(<Provider store={ store }><StatusDisplay /></Provider>,
+    document.getElementById("statusDisplay"));
 ReactDOM.render(<Provider store={ store }><InstrumentDisplay /></Provider>,
     document.getElementById("instrumentStatusDisplay"));
 ReactDOM.render(<Provider store={ store }>
@@ -468,7 +511,7 @@ window.onload = function(){
       Plotly.redraw(plotSpace);
   });
 
-  var addRandomTempData = function() {
+  var addRandomTempDataEverySecond = function() {
       dispatch(updateTemps({
           timeStamps:[new Date()],
           t60K: [20+Math.random()],
@@ -476,7 +519,20 @@ window.onload = function(){
           tGGG: [10+Math.random()],
           tFAA: [5+Math.random()]
       }));
-      setTimeout(addTempData,1000);
+      setTimeout(addRandomTempDataEverySecond,500);
+  }
+  //addRandomTempDataEverySecond()
+  var addRandomTempData = function() {
+      for (let i = 0; i < 200; i++) {
+          var datetime = new Date(1475185904065+1000*i)
+          dispatch(updateTemps({
+              timeStamps:[datetime],
+              t60K: [20+Math.random()],
+              t03K: [15+Math.random()],
+              tGGG: [10+Math.random()],
+              tFAA: [5+Math.random()]
+          }));
+      }
   }
   //addRandomTempData()
 }
