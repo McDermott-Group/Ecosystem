@@ -27,8 +27,6 @@ magging up
 pump cart pressure
 
 T O D O :
-get backlogged log on startup
-graph of temps doesnt adjust axes over time?
 does log field delete your input if it rerenders in the middle of typing?
 make different levels for plot times (1hr, 6hrs, 24hrs, etc)
 **************/
@@ -239,7 +237,7 @@ var Status = function Status(props) {
         React.createElement(
             'div',
             { style: { color: props.color, display: 'inline-block', width: '50%' } },
-            "" + props.value + " " + props.units
+            "" + props.value.toFixed(3) + " " + props.units
         )
     );
 };
