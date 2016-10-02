@@ -73,7 +73,7 @@ class MyServerProtocol(WebSocketServerProtocol):
         backLogs = self.adrServer.getLog(None,30)
         # initial values
         state = self.adrServer.state
-        self.sendMessage({
+        text = json.dumps({
             'temps': {
                 'timeStamps':[(state['datetime']-datetime.datetime(1970,1,1)).total_seconds()],
                 't60K': [state['T_60K']['K']],
@@ -91,8 +91,12 @@ class MyServerProtocol(WebSocketServerProtocol):
             'backEMF': state['magnetV']['V'],
             'PSCurrent': state['PSCurrent']['A'],
             'PSVoltage': state['PSVoltage']['V'],
-            'log':[{'datetime':log[0], 'message':log[1],'alert':log[2]} for log in backLogs]
+            'log':[{
+                'datetime':(log[0]-datetime.datetime(1970,1,1)).total_seconds(), 
+                'message':log[1],
+                'alert':log[2]} for log in backLogs]
         })
+        self.sendMessage(text)
 
     def connectionLost(self, reason):
         self.factory.unregister(self)
