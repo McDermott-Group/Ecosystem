@@ -115,9 +115,10 @@ class dataChest(dateStamp):
     folders = []
     for item in cwdContents:
       if not item.startswith('.'): #ignore hidden sys files
-        if os.path.isfile(os.path.join(self.cwdPath,item)):
+        pathToItem = self.cwdPath + "/" + item
+        if ".hdf5" in pathToItem: #os.path.isfile(os.path.join(self.cwdPath,item)) too slow
           files.append(item)
-        elif os.path.isdir(os.path.join(self.cwdPath,item)):
+        else: #elif os.path.isdir(os.path.join(self.cwdPath,item)):
           folders.append(item)
     files = sorted(files) #alphabetize for readibility
     folders = sorted(folders)
