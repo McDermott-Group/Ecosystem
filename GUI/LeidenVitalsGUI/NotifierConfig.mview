@@ -28,17 +28,16 @@ asS'Compressor:Output Water Temperature'
 p10
 (lp11
 I00
-aF400
+aS''
 aS''
 ag4
 (g5
 S'QString'
-(VNOAH_CELL, NOAH, NATE_EMAIL, NATE_CELL
-p12
-ttRp13
+(V
+ttRp12
 asS'Compressor:Oil Temperature'
-p14
-(lp15
+p13
+(lp14
 I00
 aS''
 aS''
@@ -46,10 +45,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp16
+ttRp15
 asS'Leiden DR:Exchange'
-p17
-(lp18
+p16
+(lp17
 I00
 aS''
 aS''
@@ -57,10 +56,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp19
+ttRp18
 asS'Vacuum:Still Pressure'
-p20
-(lp21
+p19
+(lp20
 I00
 aS''
 aS''
@@ -68,22 +67,22 @@ ag4
 (g5
 S'QString'
 (V
-ttRp22
+ttRp21
 asS'PT1000s:3K'
-p23
-(lp24
+p22
+(lp23
 I00
-aF300
-aF400
+aF100
+aS''
 ag4
 (g5
 S'QString'
-(VNOAH_CELL, NOAH
-p25
-ttRp26
+(VED_EMAIL
+p24
+ttRp25
 asS'Temperature:Exteranal Water Temperature'
-p27
-(lp28
+p26
+(lp27
 I00
 aS''
 aS''
@@ -91,28 +90,29 @@ ag4
 (g5
 S'QString'
 (V
-ttRp29
+ttRp28
 asS'Compressor:Helium Temperature'
-p30
-(lp31
+p29
+(lp30
 I00
-aF285
-aF290
+aS''
+aS''
 ag4
 (g5
 S'QString'
 (V
-ttRp32
+ttRp31
 asS'Leiden DR:Mix (PT-1000)'
-p33
-(lp34
+p32
+(lp33
 I00
-aS''
+aF100
 aS''
 ag4
 (g5
 S'QString'
-(V
+(VED_EMAIL
+p34
 ttRp35
 asS'Vacuum:OVC Pressure'
 p36
@@ -140,8 +140,8 @@ asS'Flow Meter:External Water Flow Rate'
 p42
 (lp43
 I01
-aF0.40000000000000002
-aF3
+aF1.3999999999999999
+aF4
 ag4
 (g5
 S'QString'
@@ -152,7 +152,7 @@ asS'Compressor:Input Water Temperature'
 p46
 (lp47
 I01
-aF278
+aF274
 aF295
 ag4
 (g5
@@ -164,11 +164,12 @@ asS'PT1000s:50K'
 p50
 (lp51
 I00
-aF300
+aF100
 aS''
 ag4
 (g5
 S'QString'
-(V
-ttRp52
+(VED_EMAIL
+p52
+ttRp53
 as.
