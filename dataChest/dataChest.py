@@ -49,8 +49,7 @@ VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32', 'int64',
 class dataChest(dateStamp):
 
   def __init__(self, path, setWorkingDirectoryToRoot = False): #add for ability to set root path 
-    self.cwdPath = os.environ["DATA_CHEST_ROOT"] #Try catch this
-    os.chdir(self.cwdPath) #Try catch this
+    self.cwdPath = os.environ["DATA_CHEST_ROOT"] #Make sure this exists
     if not setWorkingDirectoryToRoot:
       self._initializeRoot(path)
     self.root = self.cwdPath
@@ -116,9 +115,10 @@ class dataChest(dateStamp):
     folders = []
     for item in cwdContents:
       if not item.startswith('.'): #ignore hidden sys files
-        if os.path.isfile(os.path.join(self.cwdPath,item)):
+        pathToItem = self.cwdPath + "/" + item
+        if ".hdf5" in pathToItem: #os.path.isfile(os.path.join(self.cwdPath,item)) too slow
           files.append(item)
-        elif os.path.isdir(os.path.join(self.cwdPath,item)):
+        else: #elif os.path.isdir(os.path.join(self.cwdPath,item)):
           folders.append(item)
     files = sorted(files) #alphabetize for readibility
     folders = sorted(folders)
@@ -144,14 +144,12 @@ class dataChest(dateStamp):
       for ii in range(0, len(path)):
         cwdContents = self.ls()
         if (path[ii] in cwdContents[1]):
-          os.chdir(self.cwdPath+"/"+path[ii])
           self.cwdPath = self.cwdPath+"/"+path[ii]
         elif path[ii]=="..":
-          os.chdir("..")
-          self.cwdPath = os.getcwd().replace("\\", "/") #unix style path
+          lastFolder = self.cwdPath.split("/")[-1]
+          self.cwdPath = self.cwdPath[:-(len(lastFolder)+1)]
         elif path[ii]=="":
-          os.chdir(self.root)
-          self.cwdPath = os.getcwd().replace("\\", "/")
+          self.cwdPath = self.root
         else:
           raise IOError(
             "Directory does not exist.\r\n\t"
@@ -159,8 +157,7 @@ class dataChest(dateStamp):
             + str(directoryToMove)
             )
       if hasattr(self, 'root') and self.root not in self.cwdPath:
-        os.chdir(self.root)
-        self.cwdPath = os.getcwd().replace("\\", "/")
+        self.cwdPath = self.root
         raise IOError("cd() cannot be used to take users out of root.")
       return self.cwdPath
     else:
