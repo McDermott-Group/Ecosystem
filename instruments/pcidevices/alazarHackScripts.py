@@ -18,13 +18,13 @@ digitizer.select_device("ATS1::1")
 # digitizer.set_led_state(ats.LED_OFF)
 
 digitizer.configure_external_clocking()
-digitizer.congfigure_inputs(0.4*V, "DC")
-digitizer.set_trigger(0) #triggerDelay in number of samples post trigger right now
+digitizer.configure_trigger()
+digitizer.configure_inputs(4*V)
 digitizer.set_records_per_buffer(10)
-recordLen = 16*1024
-numReps = 10000
-digitizer.configure_buffers(recordLen, numReps)
-t = np.arange(0, recordLen, 1)
+digitizer.set_number_of_records(20)
+digitizer.set_samples_per_record(256)
+digitizer.configure_buffers()
+t = np.linspace(0, 255, 256)
 Omega = 30.028e6*2*np.pi
 WA = np.cos(Omega * t)
 WB = np.sin(Omega * t)
