@@ -63,8 +63,7 @@ class LeidenDRPseudoserver(LabradServer):
         
         if ('Leiden Log Files Path' not in keys or 
                 not os.path.exists(self._path)):
-                self._path = ('\\AFS\physics.wisc.edu\mcdermott-group'
-                              '\Data\DR Log Files\Leiden')
+                self._path = ('Z:\mcdermott-group\Data\DR Log Files\Leiden')
         
         if not os.path.exists(self._path):
             raise Exception("Could not find the Leiden Log Files "
