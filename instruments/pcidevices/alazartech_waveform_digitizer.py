@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = ATS Waveform Digitizer
-version = 1.2.0
+version = 1.2.1
 description = Communicates with AlazarTech Digitizers over PCIe interface.
 
 [startup]
@@ -45,8 +45,8 @@ from labrad import util
 
 
 class AlazarTechServer(LabradServer):
-    deviceName = 'ATS Digitizer Server'
-    name = 'ATS Digitizer Server'
+    deviceName = 'ATS Waveform Digitizer'
+    name = 'ATS Waveform Digitizer'
 
     def initServer(self):
         self.boardHandles = {}
@@ -127,8 +127,11 @@ class AlazarTechServer(LabradServer):
             else:
                 raise Exception("Acceptable string values for "
                         "couplingID are 'DC' and 'AC'.")
-        
+
         if type(rangeID) == units.Value:
+            rangeID = rangeID['mV'] # mV
+            if rangeID > 4000:
+                raise Exception("Invalid rangeID provided.")
             rangeIDs = [ats.INPUT_RANGE_PM_4_V,
                         ats.INPUT_RANGE_PM_2_V,
                         ats.INPUT_RANGE_PM_1_V,
@@ -136,15 +139,11 @@ class AlazarTechServer(LabradServer):
                         ats.INPUT_RANGE_PM_200_MV,
                         ats.INPUT_RANGE_PM_100_MV,
                         ats.INPUT_RANGE_PM_40_MV]
-            rangeMaxima = [4000, 2000, 1000, 400, 200, 100, 40]        
-            if rangeID['mV'] > 4000:
-                raise Exception("Invalid rangeID provided.")
-            for key in rangeMaxima:
-                if rangeID['mV'] <= key:
-                    rangeID = rangeIDs[rangeMaxima.index(key)]
-                    break
-        c['rangeV'] = float(rangeMaxima[rangeIDs.index(rangeID)]) / 1e3
+            rangeMaxima = [4000, 2000, 1000, 400, 200, 100, 40]
+            rangeID = min([key for key in rangeMaxima if rangeID <= key])
+            rangeID = rangeIDs[rangeMaxima.index(rangeID)]
 
+        c['rangeV'] = float(rangeMaxima[rangeIDs.index(rangeID)]) / 1e3
         boardHandle.inputControlEx(channelID, couplingID, rangeID,
                 impedanceID)
 
@@ -180,10 +179,10 @@ class AlazarTechServer(LabradServer):
         boardHandle = self.boardHandles[c['devName']]
         boardHandle.setExternalTrigger(couplingID, rangeID)
 
-    @setting(10, 'Set Trigger Delay', value='w', returns='')
-    def set_trigger_delay(self, c, value):
+    @setting(10, 'Set Trigger Delay', triggerDelay='w', returns='')
+    def set_trigger_delay(self, c, triggerDelay):
         boardHandle = self.boardHandles[c['devName']]
-        boardHandle.setTriggerDelay(value)
+        boardHandle.setTriggerDelay(triggerDelay)
 
     @setting(11, 'Set Trigger Time Out', timeoutTicks='w', returns='')
     def set_trigger_time_out(self, c, timeoutTicks):
@@ -219,62 +218,57 @@ class AlazarTechServer(LabradServer):
         boardHandle = self.boardHandles[c['devName']]
         boardHandle.abortCapture()
         
-    @setting(17, 'Busy', returns='')
+    @setting(17, 'Busy', returns='b')
     def busy(self, c):
         boardHandle = self.boardHandles[c['devName']]
         busyState = boardHandle.busy()
         return busyState
         
-    @setting(20, 'Set Samples Per Record', samplesPerRecord=['w', 'v[ns]'],
-            returns='')
-    def set_samples_per_record(self, c, samplesPerRecord):
-        if type(samplesPerRecord) == units.Value:
-            samplingRate = float(c['samplingRate'])
-            samplesPerRecord = int(triggerDelay['s'] * samplingRate)
-        
-        if samplesPerRecord <= 256:
-            samplesPerRecord = 256
+    @setting(20, 'Samples per Record', samplesPerRecord=['w', 'v[ns]'],
+            returns='w')
+    def samples_per_record(self, c, samplesPerRecord=None):
+        if samplesPerRecord is None:
+            if 'samplesPerRecord' not in c:
+                c['samplesPerRecord'] = 256
         else:
-            samplesAboveRequiredMin = samplesPerRecord - 256
-            if samplesAboveRequiredMin % 64:
-                div64 = float(samplesAboveRequiredMin) / 64.
-                samplesPerRecord = 256 + 64 * int(np.round(div64))
-
-        c['samplesPerRecord'] = samplesPerRecord
+            if type(samplesPerRecord) == units.Value:
+                samplingRate = float(c['samplingRate'])
+                samplesPerRecord = int(samplesPerRecord['s'] * samplingRate)
+            
+            if samplesPerRecord <= 256:
+                samplesPerRecord = 256
+            else:
+                samplesAboveRequiredMin = samplesPerRecord - 256
+                if samplesAboveRequiredMin % 64:
+                    div64 = float(samplesAboveRequiredMin) / 64.
+                    samplesPerRecord = 256 + 64 * int(np.round(div64))
+            c['samplesPerRecord'] = samplesPerRecord
         
-    @setting(21, 'Get Samples Per Record', returns='w')
-    def get_samples_per_record(self, c):
-        if 'samplesPerRecord' not in c:
-            c['samplesPerRecord'] = 256
         return c['samplesPerRecord']
         
-    @setting(22, 'Set Records Per Buffer', recordsPerBuffer='w',
-            returns='')
-    def set_records_per_buffer(self, c, recordsPerBuffer):
-        numberOfRecords = self.get_number_of_records(c)
-        c['recordsPerBuffer'] = recordsPerBuffer
-        self.set_number_of_records(c, numberOfRecords)
-        
-    @setting(23, 'Get Records Per Buffer', returns='w')
-    def get_records_per_buffer(self, c):
-        if 'recordsPerBuffer' not in c:
-            c['recordsPerBuffer'] = 10
+    @setting(22, 'Records per Buffer', recordsPerBuffer='w', returns='w')
+    def records_per_buffer(self, c, recordsPerBuffer=None):
+        if recordsPerBuffer is None:  
+            if 'recordsPerBuffer' not in c:
+                c['recordsPerBuffer'] = 10
+        else:
+            numberOfRecords = self.number_of_records(c)
+            c['recordsPerBuffer'] = recordsPerBuffer
+            self.number_of_records(c, numberOfRecords)
         return c['recordsPerBuffer']
         
-    @setting(24, 'Set Number of Records', numberOfRecords='w',
-            returns='')
-    def set_number_of_records(self, c, numberOfRecords='w'):
-        recordsPerBuffer = self.get_records_per_buffer(c)
-        buffersPerAcquisition = \
-            (numberOfRecords + recordsPerBuffer - 1) / recordsPerBuffer        
-        c['buffersPerAcquisition'] = buffersPerAcquisition
-        numberOfRecords = buffersPerAcquisition * recordsPerBuffer
-        c['numberOfRecords'] = numberOfRecords
-        
-    @setting(25, 'Get Number of Records', returns='w')
-    def get_number_of_records(self, c):
-        if 'numberOfRecords' not in c:
-            c['numberOfRecords'] = 0
+    @setting(24, 'Number of Records', numberOfRecords='w', returns='w')
+    def number_of_records(self, c, numberOfRecords=None):
+        if numberOfRecords is None:
+            if 'numberOfRecords' not in c:
+                c['numberOfRecords'] = 0
+        else:
+            recordsPerBuffer = self.records_per_buffer(c)
+            buffersPerAcquisition = \
+                (numberOfRecords + recordsPerBuffer - 1) / recordsPerBuffer        
+            c['buffersPerAcquisition'] = buffersPerAcquisition
+            numberOfRecords = buffersPerAcquisition * recordsPerBuffer
+            c['numberOfRecords'] = numberOfRecords
         return c['numberOfRecords']
 
     @setting(50, 'Configure External Clocking', returns='')
@@ -301,7 +295,7 @@ class AlazarTechServer(LabradServer):
         if type(triggerDelay) == units.Value:
             samplingRate = float(c['samplingRate'])
             triggerDelay = int(triggerDelay['s'] * samplingRate)
-        
+
         if type(triggerLevel) == units.Value:
             triggerLevel = 128 + int(127 * triggerLevel['V'] / 5)
         
@@ -325,10 +319,10 @@ class AlazarTechServer(LabradServer):
         boardHandle = self.boardHandles[c['devName']]
 
         # TODO: Select the number of records per DMA buffer.
-        # should be chosen such that 1 MB < bytesPerBuffer < 64 MB
-        recordsPerBuffer = self.get_records_per_buffer(c)
-        samplesPerRecord = self.get_samples_per_record(c)
-        numberOfRecords = self.get_number_of_records(c)
+        # should be chosen such that 1 MB < bytesPerBuffer < 64 MB.
+        recordsPerBuffer = self.records_per_buffer(c)
+        samplesPerRecord = self.samples_per_record(c)
+        numberOfRecords = self.number_of_records(c)
         
         # TODO: Select the active channels.
         channels = ats.CHANNEL_A | ats.CHANNEL_B
@@ -382,20 +376,22 @@ class AlazarTechServer(LabradServer):
     @setting(54, 'Add Demod Weights', chA_weight='*v', chB_weight='*v',
             demodName='s',  returns='')
     def add_demod_weights(self, c, chA_weight, chB_weight, demodName):
-        samplesPerRecord = self.get_samples_per_record(c)
-        numberOfRecords = self.get_number_of_records(c)
+        samplesPerRecord = self.samples_per_record(c)
+        numberOfRecords = self.number_of_records(c)
         
         chA_len = len(chA_weight)
         if chA_len > samplesPerRecord:
-            chA_weight = chA[:samplesPerRecord]
+            chA_weight = chA_weight[:samplesPerRecord]
         elif chA_len < samplesPerRecord:
-            chA_weight = chA + [0] * (samplesPerRecord - chA_len)
+            chA_weight = np.hstack([chA_weight,
+                    np.zeros(samplesPerRecord - chA_len)])
         
         chB_len = len(chB_weight)
         if chB_len > samplesPerRecord:
-            chB_weight = chB[:samplesPerRecord]
+            chB_weight = chB_weight[:samplesPerRecord]
         elif chB_len < samplesPerRecord:
-            chB_weight = chB + [0] * (samplesPerRecord - chB_len)
+            chB_weight = np.hstack([chB_weight,
+                    np.zeros(samplesPerRecord - chB_len)])
 
         if 'demodWeigthsDict' not in c:
             c['demodWeightsDict'] = {}
@@ -405,93 +401,97 @@ class AlazarTechServer(LabradServer):
             c['iqBuffers'] = {}
         c['iqBuffers'][demodName] = np.zeros((numberOfRecords, 2))
  
-    @setting(55, 'Acquire Data', returns='')
-    def acquire_data(self, c):
+    @setting(55, 'Acquire Data', timeout='v[s]', returns='')
+    def acquire_data(self, c, timeout=120*units.s):
         boardHandle = self.boardHandles[c['devName']]
 
         buffersCompleted = 0
         bytesTransferred = 0
 
-        recordsPerBuffer = self.get_records_per_buffer(c)
-        samplesPerRecord = self.get_samples_per_record(c)
+        recordsPerBuffer = self.records_per_buffer(c)
+        samplesPerRecord = self.samples_per_record(c)
         
         recordsBuffer = c['recordsBuffer']
         
-        bufferSize = 2 * recordsPerBuffer * samplesPerRecord
+        numChannels = 2
+        bufferSize = numChannels * recordsPerBuffer * samplesPerRecord
 
-        boardHandle.startCapture() 
-        while (buffersCompleted < c['buffersPerAcquisition']):
-            buffer = c['buffers'][buffersCompleted % len(c['buffers'])]
-            boardHandle.waitAsyncBufferComplete(buffer.addr, timeout_ms=50000)
-            boardHandle.postAsyncBuffer(buffer.addr, buffer.size_bytes) 
-            bufferPosition = bufferSize * buffersCompleted
-            recordsBuffer[bufferPosition:bufferPosition + bufferSize] = \
-                    buffer.buffer
-            buffersCompleted += 1
-        boardHandle.abortAsyncRead()
+        boardHandle.startCapture()
+        buffers = c['buffers']
+        try:
+            while (buffersCompleted < c['buffersPerAcquisition']):
+                buffer = buffers[buffersCompleted % len(buffers)]
+                boardHandle.waitAsyncBufferComplete(buffer.addr,
+                        timeout_ms=int(timeout['ms']))
+                boardHandle.postAsyncBuffer(buffer.addr, buffer.size_bytes) 
+                bufferPosition = bufferSize * buffersCompleted
+                recordsBuffer[bufferPosition:bufferPosition + bufferSize] = \
+                        buffer.buffer
+                buffersCompleted += 1
+        except:
+            raise
+        finally:
+            boardHandle.abortAsyncRead()
+        
+    def _process_records_buffer(self, c):
+        """
+        Convert the records buffer to the proper format. The first
+        dimension is the record number, the second dimension is the
+        channel and the last dimension is the time. The values are
+        rescaled to volts but the units are not attached.      
+        """
+        recordsBuffer = c['recordsBuffer']
+        samplesPerRecord = self.samples_per_record(c)
+        recordsPerBuffer = self.records_per_buffer(c)
+        numberOfRecords = self.number_of_records(c)
+        
+        numChannels = 2
+        numOfBuffers = numberOfRecords / recordsPerBuffer
+        samplesPerBuffer = numChannels * samplesPerRecord * recordsPerBuffer
+
+        bitsPerSample = c['bitsPerSample']
+        vFullScale = c['rangeV']
+        dV = 2 * vFullScale / ((2**bitsPerSample) - 1)
+        timeSeries = recordsBuffer.reshape(numOfBuffers,
+                numChannels, recordsPerBuffer,
+                samplesPerRecord).swapaxes(1, 2).reshape(numberOfRecords,
+                numChannels, samplesPerRecord)
+        # 0 ==> -VFullScale, 2^(N-1) ==> ~0, (2**N)-1 ==> +VFullScale
+        timeSeries = (-vFullScale + timeSeries * dV) # V
+        return timeSeries
         
     @setting(56, 'Get Records', returns='*3v[V]')
     def get_records(self, c):
-        recordsBuffer = c['recordsBuffer']
-        samplesPerRecord = self.get_samples_per_record(c)
-        numberOfRecords = self.get_number_of_records(c)
-
-        bitsPerSample = c['bitsPerSample']
-        numChannels = 2
-        vFullScale = c['rangeV']
-        dV = 2 * vFullScale / ((2**bitsPerSample) - 1)
-        # Note that Fortran style indexing is used on the 2nd reshaping.
-        timeSeries = recordsBuffer.\
-                reshape((numChannels*numberOfRecords, samplesPerRecord)).\
-                reshape((numberOfRecords,
-                         numChannels,
-                         samplesPerRecord), order="F")
-        # 0 ==> -VFullScale, 2^(N-1) ==> ~0, (2**N)-1 ==> +VFullScale
-        timeSeries = (-vFullScale + timeSeries * dV) * units.V
-        return timeSeries
+        return self._process_records_buffer(c) * units.V
         
     @setting(57, 'Get IQs', demodName='s', returns='*2v[V]')
     def get_iqs(self, c, demodName):
-        recordsBuffer = c['recordsBuffer']
-        recordsPerBuffer = self.get_records_per_buffer(c)
-        samplesPerRecord = self.get_samples_per_record(c)
-        numberOfRecords = self.get_number_of_records(c)
-
-        bitsPerSample = c['bitsPerSample']
-        numChannels = 2
-        vFullScale = c['rangeV']
-        dV = 2 * vFullScale / ((2**bitsPerSample) - 1)
-  
-        numOfBuffers = numberOfRecords / recordsPerBuffer
-        samplesPerBuffer = samplesPerRecord * recordsPerBuffer
-
         wA = c['demodWeightsDict'][demodName][0]
         wB = c['demodWeightsDict'][demodName][1]
-        iq_buffer = c['iqBuffers'][demodName]
-        for ii in range(numOfBuffers):
-            #N ote that Fortran style indexing is used on the 2nd reshaping.
-            timeSeriesChunk = recordsBuffer.\
-                    reshape((numChannels*numberOfRecords, samplesPerRecord)).\
-                    reshape((numberOfRecords,
-                             numChannels,
-                             samplesPerRecord), order="F")[ii*recordsPerBuffer:(ii+1)*recordsPerBuffer]
-            timeSeriesChunk = -vFullScale + timeSeriesChunk * dV
-            # Demod array shaped like [[I1,Q1], [I2,Q2], ..., [Im, Qm]]
-            # where m  is number of records per buffer.
-            iq_buffer[ii*recordsPerBuffer:(ii+1)*recordsPerBuffer] = \
-                    self.demodulate_buffered_data(wA, wB, timeSeriesChunk) 
-            
-        return iq_buffer * units.V
+        iqBuffer = c['iqBuffers'][demodName]
         
-    def demodulate_buffered_data(self, wA, wB, timeSeriesChunk):
-        demodVals = []
-        for ii in range(len(timeSeriesChunk)):
-            vA = timeSeriesChunk[ii][0]
-            vB = timeSeriesChunk[ii][1]
-            I = np.mean(wA * vA - wB * vB)
-            Q = np.mean(wB * vA + wA * vB)
-            demodVals.append([I,Q])
-        return np.asarray(demodVals)
+        timeSeries = self._process_records_buffer(c)
+        numberOfRecords = self.number_of_records(c)
+        
+        for ii in range(numberOfRecords):
+            vA = timeSeries[ii][0]
+            vB = timeSeries[ii][1]
+            iqBuffer[ii][0] = np.mean(wA * vA - wB * vB) # I
+            iqBuffer[ii][1] = np.mean(wB * vA + wA * vB) # Q
+
+        return iqBuffer * units.V
+
+    @setting(58, 'Get Average', returns='*2v[V]')
+    def get_average(self, c):
+        result = self._process_records_buffer(c)
+        return np.mean(result, axis=0) * units.V
+        
+    @setting(59, 'Get Times', returns='*v[ns]')
+    def get_times(self, c):
+        samplesPerRecord = self.samples_per_record(c)
+        samplingRate = float(c['samplingRate']) / 1e9 # samples per ns
+        t = np.linspace(0, samplesPerRecord-1, samplesPerRecord)
+        return (t / samplingRate) * units.ns
 
         
 __server__ = AlazarTechServer()
