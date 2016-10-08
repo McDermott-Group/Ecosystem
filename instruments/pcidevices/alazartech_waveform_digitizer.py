@@ -1,4 +1,4 @@
-# Copyright (C) 2016  Alexander Opremcak
+# Copyright (C) 2016  Alexander Opremcak, Ivan Pechenezhskiy
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -410,6 +410,7 @@ class AlazarTechServer(LabradServer):
 
         recordsPerBuffer = self.records_per_buffer(c)
         samplesPerRecord = self.samples_per_record(c)
+        numberOfRecords = self.number_of_records(c)
         
         recordsBuffer = c['recordsBuffer']
         
@@ -432,19 +433,7 @@ class AlazarTechServer(LabradServer):
             raise
         finally:
             boardHandle.abortAsyncRead()
-        
-    def _process_records_buffer(self, c):
-        """
-        Convert the records buffer to the proper format. The first
-        dimension is the record number, the second dimension is the
-        channel and the last dimension is the time. The values are
-        rescaled to volts but the units are not attached.      
-        """
-        recordsBuffer = c['recordsBuffer']
-        samplesPerRecord = self.samples_per_record(c)
-        recordsPerBuffer = self.records_per_buffer(c)
-        numberOfRecords = self.number_of_records(c)
-        
+            
         numChannels = 2
         numOfBuffers = numberOfRecords / recordsPerBuffer
         samplesPerBuffer = numChannels * samplesPerRecord * recordsPerBuffer
@@ -452,17 +441,17 @@ class AlazarTechServer(LabradServer):
         bitsPerSample = c['bitsPerSample']
         vFullScale = c['rangeV']
         dV = 2 * vFullScale / ((2**bitsPerSample) - 1)
-        timeSeries = recordsBuffer.reshape(numOfBuffers,
+        recordsBuffer = recordsBuffer.reshape(numOfBuffers,
                 numChannels, recordsPerBuffer,
                 samplesPerRecord).swapaxes(1, 2).reshape(numberOfRecords,
                 numChannels, samplesPerRecord)
         # 0 ==> -VFullScale, 2^(N-1) ==> ~0, (2**N)-1 ==> +VFullScale
-        timeSeries = (-vFullScale + timeSeries * dV) # V
-        return timeSeries
+        recordsBuffer = -vFullScale + recordsBuffer * dV # V
+        c['recordsBuffer'] = recordsBuffer
         
     @setting(56, 'Get Records', returns='*3v[V]')
     def get_records(self, c):
-        return self._process_records_buffer(c) * units.V
+        return c['recordsBuffer'] * units.V
         
     @setting(57, 'Get IQs', demodName='s', returns='*2v[V]')
     def get_iqs(self, c, demodName):
@@ -470,7 +459,7 @@ class AlazarTechServer(LabradServer):
         wB = c['demodWeightsDict'][demodName][1]
         iqBuffer = c['iqBuffers'][demodName]
         
-        timeSeries = self._process_records_buffer(c)
+        timeSeries = c['recordsBuffer']
         numberOfRecords = self.number_of_records(c)
         
         for ii in range(numberOfRecords):
@@ -483,7 +472,7 @@ class AlazarTechServer(LabradServer):
 
     @setting(58, 'Get Average', returns='*2v[V]')
     def get_average(self, c):
-        result = self._process_records_buffer(c)
+        result = c['recordsBuffer']
         return np.mean(result, axis=0) * units.V
         
     @setting(59, 'Get Times', returns='*v[ns]')
