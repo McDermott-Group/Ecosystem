@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = ATS Waveform Digitizer
-version = 1.2.1
+version = 1.3.0
 description = Communicates with AlazarTech Digitizers over PCIe interface.
 
 [startup]
@@ -448,7 +448,10 @@ class AlazarTechServer(LabradServer):
                 samplesPerRecord).swapaxes(1, 2).reshape(numberOfRecords,
                 numberOfChannels, samplesPerRecord)
         # 0 ==> -VFullScale, 2^(N-1) ==> ~0, (2**N)-1 ==> +VFullScale
-        recordsBuffer = -vFullScale + recordsBuffer * dV # V
+        # Two-step computation below does not require extra memory,
+        # unlike a single line expression.
+        recordsBuffer *= dV
+        recordsBuffer -= vFullScale # V
         c['recordsBuffer'] = recordsBuffer
         
     @setting(61, 'Get Records', returns='*3v[V]')
