@@ -69,19 +69,36 @@ class AlazarTechServer(LabradServer):
                 print('Found %s Waveform Digitizer at %s'
                         %(devType, devName))
         
-    @setting(2, 'List Devices', returns='*s')
+    @setting(1, 'List Devices', returns='*s')
     def list_devices(self, c):
         """Return list of ATS digitizer boards."""
         return self.devNames
    
-    @setting(3, 'Select Device', devName='s', returns='')
+    @setting(2, 'Select Device', devName='s', returns='')
     def select_device(self, c, devName):
-        """"""
+        """Select the ATS board."""
         if devName in self.devNames:
             c['devName'] = devName
+            
+            c['preTriggerSamples'] = 0
+            
+            # TODO: Select the active channels.
+            channels = ats.CHANNEL_A | ats.CHANNEL_B
+            channelCount = 0
+            for ch in ats.channels:
+                channelCount += (ch & channels == ch)
+            
+            c['channels'] = channels
+            c['numberOfChannels'] = channelCount
         else:
             print("Device %s could not be found" %devName)
-            
+
+    @setting(3, 'Deselect Device', returns='')
+    def deselect_device(self, c):
+        """Deselect the ATS board (clear context)."""
+        if 'devName' in c:
+            c = []
+
     @setting(4, 'Set LED State', ledState='i', returns='')
     def set_led_state(self, c, ledState):
         boardHandle = self.boardHandles[c['devName']]
@@ -243,6 +260,7 @@ class AlazarTechServer(LabradServer):
                     div64 = float(samplesAboveRequiredMin) / 64.
                     samplesPerRecord = 256 + 64 * int(np.round(div64))
             c['samplesPerRecord'] = samplesPerRecord
+            c['reinitializeBuffers'] = True
         
         return c['samplesPerRecord']
         
@@ -255,6 +273,8 @@ class AlazarTechServer(LabradServer):
             numberOfRecords = self.number_of_records(c)
             c['recordsPerBuffer'] = recordsPerBuffer
             self.number_of_records(c, numberOfRecords)
+            c['reinitializeBuffers'] = True
+
         return c['recordsPerBuffer']
         
     @setting(24, 'Number of Records', numberOfRecords='w', returns='w')
@@ -264,11 +284,12 @@ class AlazarTechServer(LabradServer):
                 c['numberOfRecords'] = 0
         else:
             recordsPerBuffer = self.records_per_buffer(c)
-            buffersPerAcquisition = \
-                (numberOfRecords + recordsPerBuffer - 1) / recordsPerBuffer        
+            buffersPerAcquisition = (numberOfRecords - 1) / recordsPerBuffer + 1        
             c['buffersPerAcquisition'] = buffersPerAcquisition
             numberOfRecords = buffersPerAcquisition * recordsPerBuffer
             c['numberOfRecords'] = numberOfRecords
+            c['reinitializeBuffers'] = True
+
         return c['numberOfRecords']
 
     @setting(50, 'Configure External Clocking', returns='')
@@ -316,6 +337,13 @@ class AlazarTechServer(LabradServer):
        
     @setting(53, 'Configure Buffers', returns='')
     def configure_buffers(self, c):
+        # Reinitialize buffers only when the size of the buffers
+        # actually changes.
+        if 'reinitializeBuffers' in c and not c['reinitializeBuffers']:
+            return
+        else:
+            c['reinitializeBuffers'] = False
+
         boardHandle = self.boardHandles[c['devName']]
 
         # TODO: Select the number of records per DMA buffer.
@@ -323,22 +351,18 @@ class AlazarTechServer(LabradServer):
         recordsPerBuffer = self.records_per_buffer(c)
         samplesPerRecord = self.samples_per_record(c)
         numberOfRecords = self.number_of_records(c)
-        
-        # TODO: Select the active channels.
-        channels = ats.CHANNEL_A | ats.CHANNEL_B
-        channelCount = 0
 
-        for ch in ats.channels:
-            channelCount += (ch & channels == ch)
+        preTriggerSamples = c['preTriggerSamples']
+        numberOfChannels = c['numberOfChannels']
 
-        # Compute the number of bytes per record and per buffer
+        # Compute the number of bytes per record and per buffer.
         chan_info = self.get_channel_info(c)
         bitsPerSample = chan_info[1]
         c['bitsPerSample'] = bitsPerSample
         bytesPerSample = (bitsPerSample + 7) // 8
         
         bytesPerRecord = bytesPerSample * samplesPerRecord
-        bytesPerBuffer = bytesPerRecord * recordsPerBuffer * channelCount
+        bytesPerBuffer = bytesPerRecord * recordsPerBuffer * numberOfChannels
 
         # TODO: Select number of DMA buffers to allocate.
         bufferCount = 4
@@ -347,15 +371,40 @@ class AlazarTechServer(LabradServer):
         sampleType = ctypes.c_uint8
         if bytesPerSample > 1:
             sampleType = ctypes.c_uint16
-            
+
         c['buffers'] = []
         for i in range(bufferCount):
             c['buffers'].append(ats.DMABuffer(sampleType, bytesPerBuffer))
         
         # Current implementation is NPT Mode = No Pre Trigger Samples. 
-        preTriggerSamples = 0 
         self.set_record_size(c, preTriggerSamples, samplesPerRecord)
+            
+        # Must allocate these first, otherwise takes up too much time
+        # during acquisition.
+        c['recordsBuffer'] = np.empty(2*numberOfRecords*samplesPerRecord,
+                dtype=np.uint8)
+
+        c['iqBuffers'] = np.empty((numberOfRecords, 2))
         
+    @setting(59, 'Abort Async Read', returns='')
+    def abort_async_read(self, c):
+        boardHandle = self.boardHandles[c['devName']]
+        boardHandle.abortAsyncRead()
+ 
+    @setting(60, 'Acquire Data', timeout='v[s]', returns='')
+    def acquire_data(self, c, timeout=120*units.s):
+        boardHandle = self.boardHandles[c['devName']]
+
+        recordsPerBuffer = self.records_per_buffer(c)
+        samplesPerRecord = self.samples_per_record(c)
+        numberOfRecords = self.number_of_records(c)
+        
+        preTriggerSamples = c['preTriggerSamples']
+        numberOfChannels = c['numberOfChannels']
+        recordsBuffer = c['recordsBuffer']
+        channels = c['channels']
+        buffers = c['buffers']
+
         # Configure the board for an NPT AutoDMA acquisition.
         boardHandle.beforeAsyncRead(channels,
                 -preTriggerSamples,
@@ -367,15 +416,48 @@ class AlazarTechServer(LabradServer):
         # Post DMA buffers to board.
         for buffer in c['buffers']:
             boardHandle.postAsyncBuffer(buffer.addr, buffer.size_bytes)
-            
-        # Must allocate these first, otherwise takes up too much time
-        # during acquisition.
-        c['recordsBuffer'] = np.zeros(2*numberOfRecords*samplesPerRecord,
-                dtype=np.uint8)
 
-    @setting(54, 'Add Demod Weights', chA_weight='*v', chB_weight='*v',
-            demodName='s',  returns='')
-    def add_demod_weights(self, c, chA_weight, chB_weight, demodName):
+        boardHandle.startCapture()
+        
+        recordsBuffer = recordsBuffer.flatten()
+        buffersCompleted = 0
+        bufferSize = numberOfChannels * recordsPerBuffer * samplesPerRecord
+        try:
+            while buffersCompleted < c['buffersPerAcquisition']:
+                buffer = buffers[buffersCompleted % len(buffers)]
+                boardHandle.waitAsyncBufferComplete(buffer.addr,
+                        timeout_ms=int(timeout['ms']))
+                boardHandle.postAsyncBuffer(buffer.addr, buffer.size_bytes) 
+                bufferPosition = bufferSize * buffersCompleted
+                recordsBuffer[bufferPosition:bufferPosition + bufferSize] = \
+                        buffer.buffer
+                buffersCompleted += 1
+        except:
+            raise
+        finally:
+            boardHandle.abortAsyncRead()
+            
+        numOfBuffers = numberOfRecords / recordsPerBuffer
+        samplesPerBuffer = numberOfChannels * samplesPerRecord * recordsPerBuffer
+
+        bitsPerSample = c['bitsPerSample']
+        vFullScale = c['rangeV']
+        dV = 2 * vFullScale / ((2**bitsPerSample) - 1)
+        recordsBuffer = recordsBuffer.reshape(numOfBuffers,
+                numberOfChannels, recordsPerBuffer,
+                samplesPerRecord).swapaxes(1, 2).reshape(numberOfRecords,
+                numberOfChannels, samplesPerRecord)
+        # 0 ==> -VFullScale, 2^(N-1) ==> ~0, (2**N)-1 ==> +VFullScale
+        recordsBuffer = -vFullScale + recordsBuffer * dV # V
+        c['recordsBuffer'] = recordsBuffer
+        
+    @setting(61, 'Get Records', returns='*3v[V]')
+    def get_records(self, c):
+        return c['recordsBuffer'] * units.V
+        
+    @setting(62, 'Get IQs', chA_weight='*v', chB_weight='*v',
+            returns='*2v[V]')
+    def get_iqs(self, c, chA_weight, chB_weight):
         samplesPerRecord = self.samples_per_record(c)
         numberOfRecords = self.number_of_records(c)
         
@@ -392,72 +474,7 @@ class AlazarTechServer(LabradServer):
         elif chB_len < samplesPerRecord:
             chB_weight = np.hstack([chB_weight,
                     np.zeros(samplesPerRecord - chB_len)])
-
-        if 'demodWeigthsDict' not in c:
-            c['demodWeightsDict'] = {}
-        c['demodWeightsDict'][demodName] = [chA_weight, chB_weight]
-        
-        if 'iqBuffers' not in c:
-            c['iqBuffers'] = {}
-        c['iqBuffers'][demodName] = np.zeros((numberOfRecords, 2))
- 
-    @setting(55, 'Acquire Data', timeout='v[s]', returns='')
-    def acquire_data(self, c, timeout=120*units.s):
-        boardHandle = self.boardHandles[c['devName']]
-
-        buffersCompleted = 0
-        bytesTransferred = 0
-
-        recordsPerBuffer = self.records_per_buffer(c)
-        samplesPerRecord = self.samples_per_record(c)
-        numberOfRecords = self.number_of_records(c)
-        
-        recordsBuffer = c['recordsBuffer']
-        
-        numChannels = 2
-        bufferSize = numChannels * recordsPerBuffer * samplesPerRecord
-
-        boardHandle.startCapture()
-        buffers = c['buffers']
-        try:
-            while (buffersCompleted < c['buffersPerAcquisition']):
-                buffer = buffers[buffersCompleted % len(buffers)]
-                boardHandle.waitAsyncBufferComplete(buffer.addr,
-                        timeout_ms=int(timeout['ms']))
-                boardHandle.postAsyncBuffer(buffer.addr, buffer.size_bytes) 
-                bufferPosition = bufferSize * buffersCompleted
-                recordsBuffer[bufferPosition:bufferPosition + bufferSize] = \
-                        buffer.buffer
-                buffersCompleted += 1
-        except:
-            raise
-        finally:
-            boardHandle.abortAsyncRead()
-            
-        numChannels = 2
-        numOfBuffers = numberOfRecords / recordsPerBuffer
-        samplesPerBuffer = numChannels * samplesPerRecord * recordsPerBuffer
-
-        bitsPerSample = c['bitsPerSample']
-        vFullScale = c['rangeV']
-        dV = 2 * vFullScale / ((2**bitsPerSample) - 1)
-        recordsBuffer = recordsBuffer.reshape(numOfBuffers,
-                numChannels, recordsPerBuffer,
-                samplesPerRecord).swapaxes(1, 2).reshape(numberOfRecords,
-                numChannels, samplesPerRecord)
-        # 0 ==> -VFullScale, 2^(N-1) ==> ~0, (2**N)-1 ==> +VFullScale
-        recordsBuffer = -vFullScale + recordsBuffer * dV # V
-        c['recordsBuffer'] = recordsBuffer
-        
-    @setting(56, 'Get Records', returns='*3v[V]')
-    def get_records(self, c):
-        return c['recordsBuffer'] * units.V
-        
-    @setting(57, 'Get IQs', demodName='s', returns='*2v[V]')
-    def get_iqs(self, c, demodName):
-        wA = c['demodWeightsDict'][demodName][0]
-        wB = c['demodWeightsDict'][demodName][1]
-        iqBuffer = c['iqBuffers'][demodName]
+        iqBuffer = c['iqBuffers']
         
         timeSeries = c['recordsBuffer']
         numberOfRecords = self.number_of_records(c)
@@ -465,17 +482,17 @@ class AlazarTechServer(LabradServer):
         for ii in range(numberOfRecords):
             vA = timeSeries[ii][0]
             vB = timeSeries[ii][1]
-            iqBuffer[ii][0] = np.mean(wA * vA - wB * vB) # I
-            iqBuffer[ii][1] = np.mean(wB * vA + wA * vB) # Q
+            iqBuffer[ii][0] = np.mean(chA_weight * vA - chB_weight * vB) # I
+            iqBuffer[ii][1] = np.mean(chB_weight * vA + chA_weight * vB) # Q
 
         return iqBuffer * units.V
 
-    @setting(58, 'Get Average', returns='*2v[V]')
+    @setting(63, 'Get Average', returns='*2v[V]')
     def get_average(self, c):
         result = c['recordsBuffer']
         return np.mean(result, axis=0) * units.V
         
-    @setting(59, 'Get Times', returns='*v[ns]')
+    @setting(64, 'Get Times', returns='*v[ns]')
     def get_times(self, c):
         samplesPerRecord = self.samples_per_record(c)
         samplingRate = float(c['samplingRate']) / 1e9 # samples per ns
