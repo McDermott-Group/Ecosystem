@@ -382,7 +382,7 @@ class AlazarTechServer(LabradServer):
         # Must allocate these first, otherwise takes up too much time
         # during acquisition.
         c['recordsBuffer'] = np.empty(2*numberOfRecords*samplesPerRecord,
-                dtype=np.uint8)
+                dtype=np.float32)
 
         c['iqBuffers'] = np.empty((numberOfRecords, 2))
         
