@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = SIM928
-version = 2.4.0
+version = 2.4.1
 description = Server interface for the SIM928 Isolated Voltage Source.
 instancename = SIM928
 
@@ -31,11 +31,13 @@ timeout = 5
 ### END NODE INFO
 """
 
+
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 from labrad.server import setting
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from labrad.units import V
+from labrad import util
 
 
 class SIM928Wrapper(GPIBDeviceWrapper):
@@ -51,18 +53,26 @@ class SIM928Wrapper(GPIBDeviceWrapper):
 
     @inlineCallbacks
     def getVoltage(self):
-        self.voltage = (yield self.query('VOLT?').addCallback(float)) * V
+        try:
+            self.voltage = (yield self.query('VOLT?').addCallback(float)) * V
+        except:
+            print('Failed attempt to read the voltage')
+            self.getVoltage()
         returnValue(self.voltage)
     
     @inlineCallbacks
     def getOutput(self):
-        self.output = yield self.query('EXON?').addCallback(int).addCallback(bool)
+        try:
+            self.output = yield self.query('EXON?').addCallback(int).addCallback(bool)
+        except:
+            print('Failed attempt to read the output state')
+            self.getOutput()
         returnValue(self.output)
 
     @inlineCallbacks
     def setVoltage(self, v):
         if self.voltage != v:
-            yield self.write('VOLT ' + str(v['V']))
+            yield self.write('VOLT %s' %str(v['V']))
             # Ensure that the voltage is actually set to the right level.
             self.voltage = yield self.getVoltage()
 
@@ -104,6 +114,6 @@ class SIM928Server(GPIBManagedServer):
 
 __server__ = SIM928Server()
 
+
 if __name__ == '__main__':
-    from labrad import util
     util.runServer(__server__)
