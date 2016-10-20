@@ -427,10 +427,10 @@ class AlazarTechServer(LabradServer):
                 buffer = buffers[buffersCompleted % len(buffers)]
                 boardHandle.waitAsyncBufferComplete(buffer.addr,
                         timeout_ms=int(timeout['ms']))
-                boardHandle.postAsyncBuffer(buffer.addr, buffer.size_bytes) 
                 bufferPosition = bufferSize * buffersCompleted
                 recordsBuffer[bufferPosition:bufferPosition + bufferSize] = \
                         buffer.buffer
+                boardHandle.postAsyncBuffer(buffer.addr, buffer.size_bytes) 
                 buffersCompleted += 1
         except:
             raise
