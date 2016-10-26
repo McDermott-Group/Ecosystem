@@ -418,7 +418,8 @@ ReactDOM.render(<Provider store={ store }>
 var d3 = Plotly.d3;
 
 window.onload = function(){
-    ws = new WebSocket("ws://localhost:9876/ws");
+    //ws = new WebSocket("ws://localhost:9876/ws");
+    ws = new WebSocket("ws://24.177.124.174:9876/ws");
     //var s = new WebSocket("ws://localhost:1025/");
     ws.onopen = function(e) { console.log("socket opened"); }
     ws.onclose = function(e) { console.log("socket closed"); }

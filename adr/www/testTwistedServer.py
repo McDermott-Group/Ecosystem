@@ -76,12 +76,13 @@ if __name__ == "__main__":
     # static file server seving index.html as root
     root = File(".")
 
-    factory = MyFactory(u"ws://127.0.0.1:9876/")
+    # factory = MyFactory(u"ws://127.0.0.1:9876/")
+    factory = MyFactory(u"ws://24.177.124.174:9876/")
     factory.protocol = MyServerProtocol
     resource = WebSocketResource(factory)
     # websockets resource on "/ws" path
     root.putChild(u"ws", resource)
 
     site = Site(root)
-    reactor.listenTCP(9876, site)
+    reactor.listenTCP(9876, site, interface='24.177.124.174')
     reactor.run()
