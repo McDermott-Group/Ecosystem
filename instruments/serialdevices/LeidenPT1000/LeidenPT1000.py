@@ -108,7 +108,8 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
                 if(float(prev[0]*sign)<=R*sign<float(curr[0]*sign)):
                     fac = (curr[0]-R)/(curr[0]-prev[0])
                     return curr[1]*(1-fac)+prev[1]*fac
-            prevRow = row    
+            prevRow = row
+        #print ("value not found")
         return np.nan
 
     @setting(100, 'Get Temperatures', returns = '*?')
@@ -117,7 +118,7 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
         self.dev = self.selectedDevice(ctx)
         for i in range(2):
             yield self.dev.write_line(str(i+1))
-            yield sleep(0.1)
+            yield sleep(0.2)
             reading = yield self.dev.read_line()
             reading = reading.strip()
             if(reading == "OL"):
@@ -125,10 +126,19 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
             elif len(reading) is 0:
                 readings.append(np.nan)
             else:
+                if i is 0:
+                    print "50K: ", reading
+                else:
+                    print "3K: ", reading
+                reading = reading.strip()
+                #print float(reading)
+                #print self.resToTemp(900)
                 readings.append(self.resToTemp(float(reading))+273.15)
-        
+#                print readings
         readings = readings*units.K
-        returnValue(readings)
+        reading1 = readings[1]
+        reading2 = readings[0]
+        returnValue([reading1,reading2])
             
     @setting(200, 'Get Device Info', returns = 's')
     def getInfo(self, ctx):

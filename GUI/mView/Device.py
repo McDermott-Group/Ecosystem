@@ -258,9 +258,9 @@ class Device:
                         #print self.settingResultIndices
                         if self.settingResultIndices != None and isinstance(reading[self.settingResultIndices[i]], labrad.units.Value):
                             try:
-                                readings.append(reading[i]._value)
+                                readings.append(reading[self.settingResultIndices[i]]._value)
                             except:
-                                readings.append(reading[i].value)
+                                readings.append(reading[self.settingResultIndices[i]].value)
                             units.append(reading[i].units)
                             
                         
