@@ -316,23 +316,24 @@ class MGui(QtGui.QMainWindow):
                 # Get the readings from the frame
                 readings = web.devices[i].getFrame().getReadings();
                 if(readings is not None):
-                    # Update all QLcds with the reading                    
-                    for y in range(len(web.devices[i].getFrame().getOutOfRangeStatus())):
-                        # Check if the reading is out of range
-                        outOfRange = web.devices[i].getFrame().getOutOfRangeStatus()
-                        # The key for a reading is "device:param"
-                        key = web.devices[i].getFrame().getTitle()+":"+web.devices[i].getFrame().getNicknames()[y] 
-                        # Check if the specific reading is out of range
-                        if outOfRange[key]:
-                            # If the reading is out of range, make everything orange
-                            self.lcds[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
-                            self.units[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
-                            self.parameters[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
-                        else:
-                            # Otherwise, things should be white
-                            self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
-                            self.units[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
-                            self.parameters[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
+                    # # Update all QLcds with the reading                    
+                    # for y in range(len(web.devices[i].getFrame().getOutOfRangeStatus())):
+                        # # Check if the reading is out of range
+                        # outOfRange = web.devices[i].getFrame().getOutOfRangeStatus()
+                        # # The key for a reading is "device:param"
+                        # key = web.devices[i].getFrame().getTitle()+":"+web.devices[i].getFrame().getNicknames()[y] 
+                        # # Check if the specific reading is out of range
+                        # if outOfRange[key]:
+                            # # If the reading is out of range, make everything orange
+                            # self.lcds[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
+                            # self.units[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
+                            # self.parameters[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
+                        # else:
+                            # pass
+                            # # Otherwise, things should be white
+                            # #self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
+                            # #self.units[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
+                            # #self.parameters[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
                     for y in range(0, len(web.devices[i].getFrame().getNicknames())):
                         # Segments should be flat
                         self.lcds[i][y].setSegmentStyle(QtGui.QLCDNumber.Flat)
