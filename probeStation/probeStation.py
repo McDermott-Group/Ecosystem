@@ -12,13 +12,15 @@ from PyQt4 import QtGui, QtCore
 import numpy as np
 import datetime
 
-# from dataChest import dataChest
+import labrad
+from dataChest import dataChest
 
 class ProbeStation(QtGui.QWidget):
 
-    def __init__(self):
+    def __init__(self, cxn):
         super(ProbeStation, self).__init__()
-
+        self.cxn = cxn
+        
         self.areaString = '1,1,1'
         self.innerDiameter = 65
         self.odd = True
@@ -171,7 +173,7 @@ class ProbeStation(QtGui.QWidget):
             area = np.fromstring( self.areaString, dtype=float, sep=',' )
             dmmRange = None
             res = 100
-            # self.resDataChest.addData( [[die, area, dmmRange, res]] )
+            self.resDataChest.addData( [[die, area, dmmRange, res]] )
             self.waferMap.addMeasurement()
             self.areaView.increaseAreasIndex()
         elif (key == QtCore.Qt.Key_Delete
@@ -366,8 +368,9 @@ class WaferMap(QtGui.QWidget):
 def main():
 
     app = QtGui.QApplication(sys.argv)
-    ps = ProbeStation()
-    sys.exit(app.exec_())
+    with labrad.connect() as cxn:
+        ps = ProbeStation(cxn)
+        sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
