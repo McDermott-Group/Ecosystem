@@ -78,11 +78,11 @@ class MAlert:
                             #print "MALERT reading below min ", min
                             self.devices[i].getFrame().setOutOfRange(key)
                             self.sendMail(self.devices[i], y, reading, people, min, max)
-                            print " min sent to ", people
+                            #print " min sent to ", people
                         elif(max != None and max<reading):
                             self.devices[i].getFrame().setOutOfRange(key)
                             self.sendMail(self.devices[i], y, reading, people, min, max)      
-                            print " max sent to ", people
+                            #print " max sent to ", people
 
                         else:
                             self.devices[i].getFrame().setInRange(key)    

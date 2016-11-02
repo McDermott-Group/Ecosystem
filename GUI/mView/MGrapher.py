@@ -49,6 +49,8 @@ import traceback
 import numpy as np
 
 from MWeb import web
+from MCheckableComboBoxes import  MCheckableComboBox
+
 class mGraph(QtGui.QWidget):
     def __init__(self, device, parent=None):
         QtGui.QWidget.__init__( self,parent)
@@ -105,7 +107,8 @@ class mGraph(QtGui.QWidget):
         self.cid = self.canvas.mpl_connect('button_press_event', self.disableAutoScaling)
         self.setStyleSheet("QPushButton{\
                     color:rgb(189,195, 199); \
-                    background:rgb(70, 80, 88)}")
+                    background:rgb(70, 80, 88)};\
+                    ")
         self.toolbarFrame = QtGui.QFrame()
         toolbarFrameLayout = QtGui.QVBoxLayout()
         toolbarFrameLayout.addWidget(self.toolbar)
@@ -136,12 +139,19 @@ class mGraph(QtGui.QWidget):
         
         self.hidden = True
         self.home = True
+        self.initialized = False
         self.currTimeRange = 120
         self.plot(self.currTimeRange)
         
        
         self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
         self.timer.start(self.refreshRateSec*1000)
+        
+        self.lineSelect = MCheckableComboBox()
+        self.lineSelect.setSizeAdjustPolicy(0)
+        self.lineSelect.setStyleSheet("\
+                    background-color:rgb(70, 80, 88);\
+                    color:rgb(189,195, 199);")
         #did it store data?
         self.dataOk = True
         self.hideButton = QtGui.QPushButton("Show Plot")
@@ -166,6 +176,8 @@ class mGraph(QtGui.QWidget):
         self.twoWkButton.clicked.connect(partial(self.plot, 1209600))
         self.allButton = QtGui.QPushButton("All Time")
         self.allButton.clicked.connect(partial(self.plot, None))
+        
+        
         self.canvas.hide()
         self.toolbar.hide()
 
@@ -175,6 +187,7 @@ class mGraph(QtGui.QWidget):
         buttonLayout.addWidget(self.hideButton)
         buttonLayout.addStretch(0)
         buttonLayout2 = QtGui.QHBoxLayout()
+        settingsbuttons1 = QtGui.QHBoxLayout()
         
         buttonLayout3 = QtGui.QHBoxLayout()
 
@@ -200,21 +213,29 @@ class mGraph(QtGui.QWidget):
         self.oneWkButton.hide()
         self.twoWkButton.hide()
         self.allButton.hide()
+        self.lineSelect.hide()
         self.matframe.hide()
         self.matPlotInfo.hide()
         self.toolbarFrame.hide()
         
+        settingsbuttons1.addWidget(self.lineSelect)
         layout = QtGui.QVBoxLayout()
-        layout.addLayout(buttonLayout)
-        layout.addLayout(buttonLayout2)
-        layout.addLayout(buttonLayout3)
-        layout.addWidget(self.matPlotInfo)
+        allButtonsLayout = QtGui.QHBoxLayout()
+        timeButtonsLayout = QtGui.QVBoxLayout()
+        allButtonsLayout.addLayout(timeButtonsLayout)
+        layout.addLayout(allButtonsLayout)
+        allButtonsLayout.addLayout(settingsbuttons1)
+        timeButtonsLayout.addLayout(buttonLayout)
+        timeButtonsLayout.addLayout(buttonLayout2)
+        timeButtonsLayout.addLayout(buttonLayout3)
+        timeButtonsLayout.addWidget(self.matPlotInfo)
         layout.addWidget(self.matframe)
         layout.addWidget(self.toolbarFrame)
         
 
         self.setLayout(layout)
-
+        
+     
     def enableAutoScaling(self):
         self.timer.start(self.refreshRateSec*1000)
         #self.canvas.mpl_disconnect(self.cid)
@@ -256,6 +277,7 @@ class mGraph(QtGui.QWidget):
             self.allButton.hide()
             self.matPlotInfo.hide()
             self.matframe.hide()
+            self.lineSelect.hide()
             self.toolbarFrame.hide()
             self.timer.stop()
             self.hideButton.setText("Show Plot")
@@ -276,13 +298,31 @@ class mGraph(QtGui.QWidget):
             self.allButton.show()
             self.plot(self.currTimeRange)
             self.matframe.show()
+            self.lineSelect.show()
             self.toolbarFrame.show()
             self.timer.start(self.refreshRateSec*1000)
             self.hideButton.setText("Hide Plot")
             self.enableAutoScaling()
             self.hidden = False
-            
+    def initializePlot(self):
+        self.initialized = True
+        dataSet =  self.device.getFrame().getDataSet()
+        self.dropdownFont = QtGui.QFont()
+        self.dropdownFont.setPointSize(12)
+            # If the dataset exists
+        #print dataSet.getVariables()
+        if dataSet is not None:
+             data = dataSet.getData()
+             #print dataSet.getVariables()
+             for i in  range(len(dataSet.getVariables()[1])):
+                text = QtCore.QString(dataSet.getVariables()[1][i][0])
+                self.lineSelect.addItem(text)
+                self.lineSelect.setFont(self.dropdownFont)
+                item = self.lineSelect.model().item(i)
+                item.setCheckState(QtCore.Qt.Checked)
+                # dataSet.getVariables()[1][i-1][0]
     def plot(self, timeRange):
+        self.line = []
         if not self.hidden:
             if timeRange != self.currTimeRange:
                 self.timer.stop()
@@ -301,6 +341,8 @@ class mGraph(QtGui.QWidget):
             dataSet =  self.device.getFrame().getDataSet()
             # If the dataset exists
             if dataSet is not None:
+                if not self.initialized:
+                    self.initializePlot()
                 # Get all data from the dataset
                 data = dataSet.getData()
                 self.ax.hold(False)
@@ -309,14 +351,15 @@ class mGraph(QtGui.QWidget):
                     #print data
                     # Get the corresponding times that the values were recorded
 
-             
+                    #print data
                     for i in range(1, len(data[-1])):
                         # Get colum. aka all values from parameter i over time
-                        column = [row[i] for row in data]
+                        
                        
                         #print times
                         # If the there is  no defined a time range
                         if self.currTimeRange is None:
+                            column = [row[i] for row in data]
                             times = [datetime.datetime.fromtimestamp(row[0]) for row in data]
                             # Plot all of the data (columns) vs time
                             # self.ax.plot_date(times, column, label =
@@ -354,10 +397,14 @@ class mGraph(QtGui.QWidget):
                                     break
 
                         try:
-                            while(len(self.line)<=i):
-                                self.line.append(self.ax.plot(1,1, label =dataSet.getVariables()[1][i-1][0])[0])
-                                
-                            self.line[i].set_data(times,column)
+                            # while(len(self.line)<=i):
+                                # print i
+                                # print "Appending"
+                            self.line.append(self.ax.plot(1,1, label =dataSet.getVariables()[1][i-1][0])[0])
+                            # print "Length times", len(times)
+                            # print "Length data", len(column)
+                            # print "time[0]", times[-1]
+                            self.line[i-1].set_data(times,column)
                             self.ax.legend(loc='upper left', shadow=True, fancybox=True)
                             # maxi = max(column)
                             # mini = min(column)
@@ -442,11 +489,14 @@ class mGraph(QtGui.QWidget):
                     self.ax.draw_artist(self.ax.yaxis)
                     self.ax.draw_artist(self.ax.xaxis)
                     
-                    
-                    for line in self.line:
-                        self.ax.draw_artist(line)
+                    #print self.line
+                    for i,  line in enumerate(self.line):
+                        #print i
+                        #print line
+                        if self.lineSelect.isChecked(i):
+                            self.ax.draw_artist(line)
                    
-                    
+                 
                     #self.ax.axis('off')
                     
                     
