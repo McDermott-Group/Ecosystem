@@ -383,6 +383,8 @@ class AlazarTechServer(LabradServer):
         # during acquisition.
         c['recordsBuffer'] = np.empty(2*numberOfRecords*samplesPerRecord,
                 dtype=np.float32)
+        # c['reshapedRecordsBuffer'] = np.empty((numberOfRecords,
+                # numberOfChannels, samplesPerRecord), dtype=np.float32)
 
         c['iqBuffers'] = np.empty((numberOfRecords, 2))
         
@@ -442,6 +444,7 @@ class AlazarTechServer(LabradServer):
 
         bitsPerSample = c['bitsPerSample']
         vFullScale = c['rangeV']
+        # dV = vFullScale / ((2**(bitsPerSample-1))) 
         dV = 2 * vFullScale / ((2**bitsPerSample) - 1)
         recordsBuffer = recordsBuffer.reshape(numOfBuffers,
                 numberOfChannels, recordsPerBuffer,
@@ -494,6 +497,7 @@ class AlazarTechServer(LabradServer):
     def get_average(self, c):
         result = c['recordsBuffer']
         return np.mean(result, axis=0) * units.V
+
         
     @setting(64, 'Get Times', returns='*v[ns]')
     def get_times(self, c):
