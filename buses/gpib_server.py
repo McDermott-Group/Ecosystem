@@ -94,7 +94,10 @@ class GPIBBusServer(LabradServer):
                     elif addr.startswith('TCPIP'):
                         instName = addr
                     elif addr.startswith('USB'):
-                        instName = addr + '::INSTR'
+                        if '::INSTR' in addr:
+                            instName = addr
+                        else:
+                            instName = addr + '::INSTR'
                     else:
                         continue
                     instr = self.rm.open_resource(instName,
