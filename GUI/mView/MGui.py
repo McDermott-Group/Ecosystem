@@ -329,6 +329,7 @@ class MGui(QtGui.QMainWindow):
                             self.units[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
                             self.parameters[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
                         else:
+                            pass
                             # Otherwise, things should be white
                             self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
                             self.units[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
