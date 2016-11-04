@@ -142,17 +142,18 @@ class mGraph(QtGui.QWidget):
         self.home = True
         self.initialized = False
         self.currTimeRange = 120
+        self.lineSelect = MCheckableComboBox()
+        self.lineSelect.setSizeAdjustPolicy(0)
+        self.lineSelect.setStyleSheet("\
+                    background-color:rgb(70, 80, 88);\
+                    color:rgb(189,195, 199);")       
         self.plot(self.currTimeRange)
         
        
         self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
         self.timer.start(self.refreshRateSec*1000)
-        
-        self.lineSelect = MCheckableComboBox()
-        self.lineSelect.setSizeAdjustPolicy(0)
-        self.lineSelect.setStyleSheet("\
-                    background-color:rgb(70, 80, 88);\
-                    color:rgb(189,195, 199);")
+        #print "initializing lineselect"
+       
         #did it store data?
         self.dataOk = True
         self.hideButton = QtGui.QPushButton("Show Plot")
@@ -306,24 +307,26 @@ class mGraph(QtGui.QWidget):
             self.enableAutoScaling()
             self.hidden = False
     def initializePlot(self, dataSet):
+
         if dataSet:
             
             varNames = dataSet.getVariables()
             varNames = [varNames[1][i][0] for i in range(len(varNames[1]))]
             self.dropdownFont = QtGui.QFont()
             self.dropdownFont.setPointSize(12)
-            if dataSet is not None:
-                 self.initialized = True
-                 #data = dataSet.getData()
-                 self.line[0].remove()
-                 self.line = []
-                 for i in  range(len(varNames)):
-                    #print varNames
-                    self.line.append(self.ax.plot(1,1, label = varNames[i])[0])
-                    text = QtCore.QString(varNames[i])
-                    self.lineSelect.addItem(text)
-                    self.lineSelect.setFont(self.dropdownFont)
-                    self.lineSelect.setChecked(i, True)
+        if dataSet is not None:
+             self.initialized = True
+             #data = dataSet.getData()
+             self.line[0].remove()
+             self.line = []
+             for i in  range(len(varNames)):
+                #print varNames
+                self.line.append(self.ax.plot(1,1, label = varNames[i])[0])
+                text = QtCore.QString(varNames[i])
+                #print "using Lineselect"
+                self.lineSelect.addItem(text)
+                self.lineSelect.setFont(self.dropdownFont)
+                self.lineSelect.setChecked(i, True)
 
     def changeIndependenVarRange(self, timeRange):
         if not self.hidden:
