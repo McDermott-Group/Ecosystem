@@ -13,18 +13,18 @@ p5
 S'QString'
 (V
 ttRp6
-asS'Lakeshore 370:Temperature 1'
+asS'Lakeshore 218:XCH'
 p7
 (lp8
 I00
-aF1
+aS''
 aS''
 ag4
 (g5
 S'QString'
 (V
 ttRp9
-asS'Lakeshore 370:Temperature 3'
+asS'Still:Pressure 2'
 p10
 (lp11
 I00
@@ -35,7 +35,7 @@ ag4
 S'QString'
 (V
 ttRp12
-asS'Still:Pressure 2'
+asS'Return:Pressure 1'
 p13
 (lp14
 I00
@@ -46,7 +46,7 @@ ag4
 S'QString'
 (V
 ttRp15
-asS'Lakeshore 370:Temperature 5'
+asS'Return:Pressure 2'
 p16
 (lp17
 I00
@@ -57,7 +57,7 @@ ag4
 S'QString'
 (V
 ttRp18
-asS'Return:Pressure 1'
+asS'Lakeshore 218:4IN'
 p19
 (lp20
 I00
@@ -68,7 +68,7 @@ ag4
 S'QString'
 (V
 ttRp21
-asS'Return:Pressure 2'
+asS'Lakeshore 370:Still'
 p22
 (lp23
 I00
@@ -79,7 +79,7 @@ ag4
 S'QString'
 (V
 ttRp24
-asS'Lakeshore 218:Sensor 2'
+asS'Lakeshore 218:STILL'
 p25
 (lp26
 I00
@@ -90,7 +90,7 @@ ag4
 S'QString'
 (V
 ttRp27
-asS'Lakeshore 218:Sensor 6'
+asS'Lakeshore 218:Sensor 3'
 p28
 (lp29
 I00
@@ -101,7 +101,7 @@ ag4
 S'QString'
 (V
 ttRp30
-asS'Lakeshore 218:Sensor 7'
+asS'Lakeshore 370:Mix 1'
 p31
 (lp32
 I00
@@ -112,7 +112,7 @@ ag4
 S'QString'
 (V
 ttRp33
-asS'Lakeshore 218:Sensor 3'
+asS'Keg:Pressure 1'
 p34
 (lp35
 I00
@@ -123,7 +123,7 @@ ag4
 S'QString'
 (V
 ttRp36
-asS'Keg:Pressure 1'
+asS'Keg:Pressure 2'
 p37
 (lp38
 I00
@@ -134,7 +134,7 @@ ag4
 S'QString'
 (V
 ttRp39
-asS'Keg:Pressure 2'
+asS'Lakeshore 370:Mix 2'
 p40
 (lp41
 I00
@@ -145,7 +145,7 @@ ag4
 S'QString'
 (V
 ttRp42
-asS'Lakeshore 218:Sensor 4'
+asS'Lakeshore 218:1K'
 p43
 (lp44
 I00
@@ -156,7 +156,7 @@ ag4
 S'QString'
 (V
 ttRp45
-asS'Lakeshore 218:Sensor 5'
+asS'Lakeshore 370:Exchange Plate'
 p46
 (lp47
 I00
@@ -167,7 +167,7 @@ ag4
 S'QString'
 (V
 ttRp48
-asS'Lakeshore 370:Temperature 2'
+asS'Lakeshore 218:MIX'
 p49
 (lp50
 I00
@@ -178,7 +178,7 @@ ag4
 S'QString'
 (V
 ttRp51
-asS'Lakeshore 218:Sensor 8'
+asS'Lakeshore 218:77K'
 p52
 (lp53
 I00
@@ -189,7 +189,7 @@ ag4
 S'QString'
 (V
 ttRp54
-asS'Lakeshore 218:Sensor 1'
+asS'Lakeshore 370:1K Pot'
 p55
 (lp56
 I00
@@ -200,7 +200,7 @@ ag4
 S'QString'
 (V
 ttRp57
-asS'Lakeshore 370:Temperature 4'
+asS'Lakeshore 218:4OUT'
 p58
 (lp59
 I00
