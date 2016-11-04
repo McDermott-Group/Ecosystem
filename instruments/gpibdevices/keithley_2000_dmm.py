@@ -62,7 +62,13 @@ class KeithleyServer(GPIBManagedServer):
     def get_fw_resistance(self, c):
         """Aquires resistance using four-wire measurement and returns it."""
         dev = self.selectedDevice(c)
-        resistance = yield dev.query('MEAS:FRES?')
+        auto = yield self.get_auto_range_status(c)
+        if not int(auto):
+            range = yield self.get_fw_range(c)
+        else:
+            range = ''
+        yield dev.write('TRIGger:SOURce IMMediate')
+        resistance = yield dev.query('MEAS:FRES? '+str(range))
         resistance = float(resistance.split(',')[0].strip('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
         returnValue(resistance * units.Ohm)
         
@@ -88,21 +94,47 @@ class KeithleyServer(GPIBManagedServer):
     def get_fw_range(self, c):
         """Aquires the DMM's four wire resistance range and returns it."""
         dev = self.selectedDevice(c)
-        resistanceRange = yield dev.query('SENS:FRES:RANGe?')
-        resistanceRange = float(resistanceRange.split(',')[0].strip('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
-        returnValue(resistanceRange * units.Ohm)
+        resistance_range = yield dev.query('SENS:FRES:RANGe?')
+        resistance_range = float(resistance_range.split(',')[0].strip('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
+        returnValue(resistance_range * units.Ohm)
 
     @setting(23, 'Return To Local', returns = '')
     def return_to_local(self, c):
         """Returns the DMM's front panel to local after interfacing remotely."""
         dev = self.selectedDevice(c)
-        resistanceRange = yield dev.write('SYSTem:LOCal')
+        yield dev.write('SYSTem:LOCal')
 
     @setting(24, 'Return To Remote', returns = '')
     def return_to_remote(self, c):
         """Returns the DMM's front panel to remote."""
         dev = self.selectedDevice(c)
-        resistanceRange = yield dev.write('SYSTem:REMote')
+        yield dev.write('SYSTem:REMote')
+        
+    @setting(25, 'Get Auto Range Status', returns = 's')
+    def get_auto_range_status(self, c):
+        """Returns the DMM's front panel to remote."""
+        dev = self.selectedDevice(c)
+        auto_range_status = yield dev.query('SENSe:FRESistance:RANGe:AUTO?')
+        returnValue(auto_range_status)
+        
+    @setting(26, 'Set Auto Range Status', auto='b')
+    def set_auto_range_status(self, c, auto):
+        """Sets the DMM's auto range."""
+        dev = self.selectedDevice(c)
+        if auto:
+            autoStr = 'ON'
+        else:
+            autoStr = 'OFF'
+        yield dev.write('SENSe:FRESistance:RANGe:AUTO '+autoStr)
+        
+    @setting(27, 'Get DMM Mode', returns = 's')
+    def get_dmm_mode(self, c):
+        """Returns the DMM's front panel to remote."""
+        dev = self.selectedDevice(c)
+        dmm_mode = yield dev.query('SENSe:FUNCtion?')
+        returnValue(dmm_mode)
+        
+    
   
 __server__ = KeithleyServer()
   

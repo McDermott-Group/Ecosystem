@@ -1,11 +1,19 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
-"""
-This application allows for easy probing of a wafer of JJs.
-
-author: Chris Wilen
-"""
+# Copyright (C) 2016 Chris Wilen
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os
 from PyQt4 import QtGui, QtCore
@@ -13,19 +21,26 @@ import numpy as np
 import datetime
 
 import labrad
+from labrad.server import inlineCallbacks
 from dataChest import dataChest
 
 class ProbeStation(QtGui.QWidget):
-
+    
     def __init__(self, cxn):
         super(ProbeStation, self).__init__()
         self.cxn = cxn
+        self.dmm = self.cxn.keithley_2000_dmm
+        p = self.dmm.packet()
+        p.select_device()
+        p.set_auto_range_status(False)
+        p.send()
         
         self.areaString = '1,1,1'
         self.innerDiameter = 65
         self.odd = True
         self.pitchX = 6.2
         self.pitchY = 6.2
+        self.fileDir = []
         self.initUI()
 
     def initUI(self):
@@ -111,49 +126,73 @@ class ProbeStation(QtGui.QWidget):
         fileDialog = QtGui.QFileDialog()
         fileDialog.setNameFilters( [self.tr('HDF5 Files (*.hdf5)'), self.tr('All Files (*)')] )
         fileDialog.setDefaultSuffix( '.hdf5' )
+        baseDirList = ['Z:','mcdermott-group','Data']
+        baseDir = os.path.join( *(baseDirList+self.fileDir) )
+        fileDialog.setDirectory( baseDir )
         filePath = str(fileDialog.getSaveFileName(self, 'Save File'))
-        if filePath[-5:] == '.hdf5':
-            filePath = filePath[:-5]
-        fileArray = filePath.split(os.sep)
-        print filePath.split(os.sep)[:-1]
+        print( 'save file: ' + filePath )
         if filePath is not '':
-            self.resDataChest = dataChest( fileArray[:-1] )
-            self.resDataChest.createDataset(fileArray[-1],
-                    [('die',[1],'string',''),('area',[1],'float64','um**2'),('DMM range',[1],'float64','Ohms')],
+            filePath = filePath.replace(baseDir, '') # remove base path
+            if filePath[-5:] == '.hdf5':
+                filePath = filePath[:-5]
+            fileArray = filePath.split('/')
+            for elem in baseDirList:
+                fileArray.remove(elem)
+            self.fileDir = fileArray[:-1]
+            fileName = fileArray[-1]
+            self.resDataChest = dataChest( self.fileDir )
+            self.resDataChest.createDataset(fileName,
+                    [('die',[1],'string',''),('area',[1],'float64','um**2'),
+                        ('DMM range',[1],'float64','Ohm')],
                     [('resistance',[1],'float64','Ohms')])
             self.resDataChest.addParameter("Date Measured", str(datetime.datetime.utcnow()))
             self.resDataChest.addParameter("Odd", self.odd)
             self.resDataChest.addParameter("Pitch X", self.pitchX)
             self.resDataChest.addParameter("Pitch Y", self.pitchY)
             self.resDataChest.addParameter("Inner Diameter", self.innerDiameter)
+            self.waferMap.initGrid()
+            self.areaView.setAreasIndex(0)
 
     def setOdd(self, odd):
         self.waferMap.setOdd(odd)
         self.odd = odd
         self.areaView.setAreasIndex(0)
-        self.resDataChest.addParameter("Odd", self.odd)
+        try:
+            self.resDataChest.addParameter("Odd", self.odd, overwrite=True)
+        except AttributeError:
+            pass # if file has not been created yet
 
     def setInnerDiameter(self, dia):
         self.waferMap.setInnerDiameter(dia)
         self.innerDiameter = dia
         self.areaView.setAreasIndex(0)
-        self.resDataChest.addParameter("Inner Diameter", self.innerDiameter)
+        try:
+            self.resDataChest.addParameter("Inner Diameter", self.innerDiameter, overwrite=True)
+        except AttributeError:
+            pass # if file has not been created yet
 
     def setPitchX(self, pitch):
         self.pitchX = pitch
         self.waferMap.setPitchX(pitch)
         self.areaView.setAreasIndex(0)
-        self.resDataChest.addParameter("Pitch X", self.pitchX)
+        try:
+            self.resDataChest.addParameter("Pitch X", self.pitchX, overwrite=True)
+        except AttributeError:
+            pass # if file has not been created yet
 
     def setPitchY(self, pitch):
         self.pitchY = pitch
         self.waferMap.setPitchY(pitch)
         self.areaView.setAreasIndex(0)
-        self.resDataChest.addParameter("Pitch Y", self.pitchY)
+        try:
+            self.resDataChest.addParameter("Pitch Y", self.pitchY, overwrite=True)
+        except AttributeError:
+            pass # if file has not been created yet
 
     def mousePressEvent(self, event):
         QtGui.QApplication.focusWidget().clearFocus()
-
+    
+    @inlineCallbacks
     def keyPressEvent(self, event):
         key = event.key()
         if key == QtCore.Qt.Key_Up:
@@ -170,10 +209,12 @@ class ProbeStation(QtGui.QWidget):
             self.areaView.setAreasIndex(0)
         elif key == QtCore.Qt.Key_Space:
             die = self.waferMap.getSelectedDie()
-            area = np.fromstring( self.areaString, dtype=float, sep=',' )
-            dmmRange = None
-            res = 100
-            self.resDataChest.addData( [[die, area, dmmRange, res]] )
+            area = float(self.areaView.getCurrentArea())
+            dmmRange = yield self.dmm.get_fw_resistance()
+            res = yield self.dmm.get_fw_range()
+            yield self.dmm.return_to_local()
+            print [die, area, dmmRange['Ohm'], res['Ohm']]
+            self.resDataChest.addData( [[die, area, dmmRange['Ohm'], res['Ohm']]] )
             self.waferMap.addMeasurement()
             self.areaView.increaseAreasIndex()
         elif (key == QtCore.Qt.Key_Delete
@@ -233,7 +274,7 @@ class AreaDisplay(QtGui.QWidget):
                 commaLabel = QtGui.QLabel(',')
                 commaLabel.setAlignment(QtCore.Qt.AlignCenter)
                 commaLabel.setFont(QtGui.QFont("Arial",36))
-                commaLabel.setStyleSheet('color: lightGrey')
+                commaLabel.setStyleSheet('color: grey')
                 commaLabel.setFixedWidth(10)
                 commaLabel.setFixedHeight(50)
                 self.areaLabels.append(commaLabel)
@@ -249,7 +290,7 @@ class AreaDisplay(QtGui.QWidget):
 
     def getCurrentArea(self):
         areaList = self.areaString.strip(',').split(',')
-        return areaList[self.index]
+        return areaList[self.index%len(areaList)]
 
     def increaseAreasIndex(self):
         self.index += 1
