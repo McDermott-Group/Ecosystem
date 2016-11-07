@@ -91,11 +91,12 @@ class mGraph(QtGui.QWidget):
         self.ax.yaxis.get_offset_text().set_color((189.0/255, 195.0/255, 199.0/255))
         # This is an array of all the lines on the plot. A line for every parameter
         self.line = []
+        #self.legend = self.ax.legend(loc='upper left')
+        self.mins = 0
+        self.maxes = 1
         # Each element of line holds a plot, to be combined onto the same graph
         self.line.append(self.ax.plot(1,1, label = "Getting Data...")[0])
-        # This is the ONLY time canvas.draw is called. It should NOT be called anywhere else if
-        # the graphing speed is to be fast.
-        self.canvas.draw()
+
         # In order to handle interactivity, I had to do some odd stuff with the
         # toolbar buttons. Self.home holds the original function called when the home button on the toolbar
         # is clicked.
@@ -141,17 +142,18 @@ class mGraph(QtGui.QWidget):
         self.home = True
         self.initialized = False
         self.currTimeRange = 120
+        self.lineSelect = MCheckableComboBox()
+        self.lineSelect.setSizeAdjustPolicy(0)
+        self.lineSelect.setStyleSheet("\
+                    background-color:rgb(70, 80, 88);\
+                    color:rgb(189,195, 199);")       
         self.plot(self.currTimeRange)
         
        
         self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
         self.timer.start(self.refreshRateSec*1000)
-        
-        self.lineSelect = MCheckableComboBox()
-        self.lineSelect.setSizeAdjustPolicy(0)
-        self.lineSelect.setStyleSheet("\
-                    background-color:rgb(70, 80, 88);\
-                    color:rgb(189,195, 199);")
+        #print "initializing lineselect"
+       
         #did it store data?
         self.dataOk = True
         self.hideButton = QtGui.QPushButton("Show Plot")
@@ -304,25 +306,29 @@ class mGraph(QtGui.QWidget):
             self.hideButton.setText("Hide Plot")
             self.enableAutoScaling()
             self.hidden = False
-    def initializePlot(self):
-        self.initialized = True
-        dataSet =  self.device.getFrame().getDataSet()
-        self.dropdownFont = QtGui.QFont()
-        self.dropdownFont.setPointSize(12)
-            # If the dataset exists
-        #print dataSet.getVariables()
+    def initializePlot(self, dataSet):
+
+        if dataSet:
+            
+            varNames = dataSet.getVariables()
+            varNames = [varNames[1][i][0] for i in range(len(varNames[1]))]
+            self.dropdownFont = QtGui.QFont()
+            self.dropdownFont.setPointSize(12)
         if dataSet is not None:
-             data = dataSet.getData()
-             #print dataSet.getVariables()
-             for i in  range(len(dataSet.getVariables()[1])):
-                text = QtCore.QString(dataSet.getVariables()[1][i][0])
+             self.initialized = True
+             #data = dataSet.getData()
+             self.line[0].remove()
+             self.line = []
+             for i in  range(len(varNames)):
+                #print varNames
+                self.line.append(self.ax.plot(1,1, label = varNames[i])[0])
+                text = QtCore.QString(varNames[i])
+                #print "using Lineselect"
                 self.lineSelect.addItem(text)
                 self.lineSelect.setFont(self.dropdownFont)
-                item = self.lineSelect.model().item(i)
-                item.setCheckState(QtCore.Qt.Checked)
-                # dataSet.getVariables()[1][i-1][0]
-    def plot(self, timeRange):
-        self.line = []
+                self.lineSelect.setChecked(i, True)
+
+    def changeIndependenVarRange(self, timeRange):
         if not self.hidden:
             if timeRange != self.currTimeRange:
                 self.timer.stop()
@@ -338,11 +344,121 @@ class mGraph(QtGui.QWidget):
                 self.currTimeRange = timeRange
                 self.timer.timeout.connect(lambda: self.plot( self.currTimeRange))
                 self.timer.start(self.refreshRateSec*1000)
+    #def getData(self, dataSet):
+    def getDataRangeFromDataSet(self, dataSet, time):
+        if dataSet:
+            data = dataSet.getData()
+            i = len(data)-1;
+            while data[i][0]>(data[-1][0]-time):
+                
+                i-=1
+            data = data[i:-1]
+            #print data
+            dataT = np.transpose(data)
+          
+          
+            return  data
+            #colums = [data[i][:] for i in range]
+           # print "times: ",dataTup = 
+        else:
+            return None
+    def plot(self, time):
+            times = None
+            self.changeIndependenVarRange(time)
             dataSet =  self.device.getFrame().getDataSet()
+            
+            if not self.initialized:
+                self.initializePlot(dataSet)
+                self.legend = self.ax.legend(loc='upper left')
+                # This is the ONLY time canvas.draw is called. It should NOT be called anywhere else if
+                # the graphing speed is to be fast.
+                self.canvas.draw()
+            else:
+                
+                data = self.getDataRangeFromDataSet(dataSet, time)
+                #data = 
+                #data = dataSet.getData()
+                for i in range(len(data[0])-1):
+                    #print dataT
+                    #print "len(dataT):", len(dataT)
+                   # print "len(dataT["+str(i+1)+"]:", len(dataT[i+1])
+                  
+                    #print "i", i
+                    #print len(self.line)
+                    if self.lineSelect.isChecked(i):
+                        
+                        #print self.line[i]
+                        #datetime.datetime.fromtimestamp(dataT[0])
+                        #self.line[i](self.ax.plot(1,1, label = dataSet.getVariables()[1][i-1][0])[0])
+                        times = [datetime.datetime.fromtimestamp(row[0]) for row in data]
+                        column = [row[i+1] for row in data]
+                        #print "times: ", len(times)
+                        #print "dataT: ", len(dataT[i+1])
+                        if not self.line[i].get_visible():
+                            self.line[i].set_visible(True)
+                        self.line[i].set_data(times,column)
+                        self.legend = self.ax.legend(loc='upper left')
+                        self.ax.grid(True)
+                        self.ax.hold(True)
+                        #self.ax.plot_date(times, \
+                         #   column, \
+                           # label = dataSet.getVariables()[1][i-1][0])
+                    else:
+                        self.line[i].set_visible(False);
+                    pass
+                self.ax.set_title(self.device.getFrame().getTitle(), color = (189.0/255, 195.0/255, 199.0/255))
+                if self.home and times:
+                    #print times[0]
+                    #print times[-1]
+                    self.ax.set_xlim(times[0], times[-1])
+                    #self.ax.set_ylim(self.mins, self.maxes)
+                    self.ax.relim(visible_only=True)
+                    self.ax.autoscale(axis = 'y')
+                
+                if(self.device.getFrame().getYLabel() is not None 
+                    and len(self.device.getFrame().getCustomUnits()) is not 0):
+                    self.ax.set_ylabel(self.device.getFrame().getYLabel()+" ("+
+                            self.device.getFrame().getCustomUnits()+")")
+                elif (self.device.getFrame().getYLabel() is not None 
+                    and len(self.device.getFrame().getUnits()[i-1]) is not 0):
+                    
+                    self.ax.set_ylabel(self.device.getFrame().getYLabel()+" ("+
+                            self.device.getFrame().getUnits()[i-1]+")")
+                                    
+                locator = AutoDateLocator()
+                    
+                self.ax.xaxis.set_major_locator(locator)
+                self.ax.xaxis.set_major_formatter(DateFormatter('%m/%d %H:%M:%S'))
+                self.figure.autofmt_xdate()
+                #print [time.toordinal() for time in times]
+                self.ax.draw_artist(self.figure)
+                self.ax.draw_artist(self.ax.patch)
+                self.ax.draw_artist(self.ax.yaxis)
+                self.ax.draw_artist(self.ax.xaxis)
+                
+                #print self.line
+                
+                #self.ax.autoscale()
+                
+
+                
+                for i,line in enumerate(self.line):
+                        self.ax.draw_artist(line)   
+                            
+                
+
+                self.ax.set_xlabel("Time")
+                self.ax.draw_artist(self.legend)
+                    
+                self.canvas.update()
+                
+                self.canvas.flush_events()
+    
+'''          
             # If the dataset exists
-            if dataSet is not None:
-                if not self.initialized:
-                    self.initializePlot()
+            if dataSet is not None: 
+               
+                    
                 # Get all data from the dataset
                 data = dataSet.getData()
                 self.ax.hold(False)
@@ -353,6 +469,7 @@ class mGraph(QtGui.QWidget):
 
                     #print data
                     for i in range(1, len(data[-1])):
+                        
                         # Get colum. aka all values from parameter i over time
                         
                        
@@ -398,14 +515,22 @@ class mGraph(QtGui.QWidget):
 
                         try:
                             # while(len(self.line)<=i):
-                                # print i
+                            #print i
                                 # print "Appending"
-                            self.line.append(self.ax.plot(1,1, label =dataSet.getVariables()[1][i-1][0])[0])
-                            # print "Length times", len(times)
-                            # print "Length data", len(column)
-                            # print "time[0]", times[-1]
-                            self.line[i-1].set_data(times,column)
-                            self.ax.legend(loc='upper left', shadow=True, fancybox=True)
+                            
+                            #if self.lineSelect.isChecked(i-1):
+                                #self.maxes = max(self.maxes, max(data))
+                                #self.mins = min(self.mins, min(data))
+                            #self.line.append(self.ax.plot(1,1, label = dataSet.getVariables()[1][i-1][0])[0])
+                           # self.line[-1].set_data(times,column)
+                            
+                                #pass
+                            print "Line len: ",len(self.line)
+                            print "Length times", len(times)
+                            print "Length data", len(column)
+                            print "time[0]", times[0]
+                           
+                            #legend = self.ax.legend(loc='upper left', shadow=True, fancybox=True)
                             # maxi = max(column)
                             # mini = min(column)
                             # newMax = max(column)
@@ -427,8 +552,10 @@ class mGraph(QtGui.QWidget):
 
                             #print "Failed to log data"
                         # Add a legend
-                        legend = self.ax.legend(loc='upper left')
-                        self.ax.set_title(self.device.getFrame().getTitle(), color = (189.0/255, 195.0/255, 199.0/255))
+                        #legend = self.ax.legend(loc='upper left')
+                        #self.ax.grid(True)
+                       # self.ax.set_title(self.device.getFrame().getTitle(), color = (189.0/255, 195.0/255, 199.0/255))
+                        #self.ax.hold(True)
                         
                         if(self.device.getFrame().getYLabel() is not None 
                             and len(self.device.getFrame().getCustomUnits()) is not 0):
@@ -440,9 +567,9 @@ class mGraph(QtGui.QWidget):
                             self.ax.set_ylabel(self.device.getFrame().getYLabel()+" ("+
                                     self.device.getFrame().getUnits()[i-1]+")")
                                     
-                        self.ax.set_xlabel("Time")
-                    
-                        self.ax.hold(True)
+                        #self.ax.set_xlabel("Time")
+                        #self.ax.hold(True)
+                        
                         # locator = AutoDateLocator()
                         #self.ax.fmt_xdata = AutoDateFormatter()
                         #self.ax.xaxis.set_major_locator(locator)
@@ -455,58 +582,52 @@ class mGraph(QtGui.QWidget):
                         # self.ax.set_ylim(bottom = 733681, top = 733682)
                         
                         #self.figure.tight_layout()
-                        self.ax.grid(True)
-                       
+                        #self.ax.grid(True)
+               
                 except Exception as e :
                    print "Error"
                 try:
-              
+                    pass
                     
                    
-                    self.ax.grid(True)
-                    #self.ax.clear(self.ax.yaxis)
-                    #self.ax.cla()
-             
-
-                        
-                    if self.home:
-                        self.ax.set_xlim(times[0], times[-1])
-                        self.ax.relim()
-                        self.ax.autoscale()
                     
-                
+                    #self.ax.clear()
+                    #self.ax.cla()
+                    
+                    # # if self.home:
+                        # # self.ax.set_xlim(times[0], times[-1])
+                        # # #self.ax.set_ylim(self.mins, self.maxes)
+                        # # #self.ax.relim(visible_only = True)
+                        # # self.ax.autoscale()
     
                     #print self.ax.get_data_interval()
-                    self.ax.draw_artist(self.figure)
-                    self.ax.draw_artist(self.ax.patch)
                     
-                    locator = AutoDateLocator()
+                    # # self.ax.draw_artist(self.figure)
+                    # # self.ax.draw_artist(self.ax.patch)
                     
-                    self.ax.xaxis.set_major_locator(locator)
-                    self.ax.xaxis.set_major_formatter(DateFormatter('%m/%d %H:%M:%S'))
-                    self.figure.autofmt_xdate()
-                    #print [time.toordinal() for time in times]
-                    self.ax.draw_artist(self.ax.yaxis)
-                    self.ax.draw_artist(self.ax.xaxis)
+                    # # locator = AutoDateLocator()
                     
-                    #print self.line
-                    for i,  line in enumerate(self.line):
-                        #print i
-                        #print line
-                        if self.lineSelect.isChecked(i):
-                            self.ax.draw_artist(line)
-                   
-                 
-                    #self.ax.axis('off')
+                    # # self.ax.xaxis.set_major_locator(locator)
+                    # # self.ax.xaxis.set_major_formatter(DateFormatter('%m/%d %H:%M:%S'))
+                    # # self.figure.autofmt_xdate()
+                    # # #print [time.toordinal() for time in times]
+                    # # self.ax.draw_artist(self.ax.yaxis)
+                    # # self.ax.draw_artist(self.ax.xaxis)
+                    
+                    # # #print self.line
+                    # # #self.ax.hold(False)
+                    # # # # for i,line in enumerate(self.line):
+                        # # # # if self.lineSelect.isChecked(i):
+                            # # # # self.ax.draw_artist(line)
                     
                     
+                    # # self.ax.autoscale()
+                    # # self.ax.draw_artist(legend)
                     
-                    self.ax.draw_artist(legend)
-                   
-                    self.canvas.update()
+                    # # self.canvas.update()
                     
-                    self.canvas.flush_events()
-                
+                    # # self.canvas.flush_events()
+                    
                 except:
                     times = [datetime.datetime.fromtimestamp(row[0]) for row in data]
                     traceback.print_exc()
@@ -515,5 +636,5 @@ class mGraph(QtGui.QWidget):
                     self.ax.autoscale()
                     #print self.ax.get_data_interval()
                     pass
-            
+            '''
         #self.timer.singleShot(self.device.getFrame().getPlotRefreshRate()*1000, partial(self.plot, timeRange))
