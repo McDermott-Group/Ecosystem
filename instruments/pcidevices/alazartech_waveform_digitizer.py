@@ -317,8 +317,10 @@ class AlazarTechServer(LabradServer):
         # Ensure that the sampling rate is set.
         self.sampling_rate(c)
         # Assume a 10 MHz reference.
+        # self.set_capture_clock(c, ats.EXTERNAL_CLOCK_10MHz_REF,
+                # 1000000000, ats.CLOCK_EDGE_RISING, c['decimation'])
         self.set_capture_clock(c, ats.EXTERNAL_CLOCK_10MHz_REF,
-                1000000000, ats.CLOCK_EDGE_RISING, c['decimation'])
+                c['samplingRate'], ats.CLOCK_EDGE_RISING, 1)
  
     @setting(51, 'Configure Inputs', rangeID=['w', 'v[mV]'],
             couplingID=['w', 's'], returns='')
