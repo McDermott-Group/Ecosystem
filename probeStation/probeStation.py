@@ -33,6 +33,7 @@ class ProbeStation(QtGui.QWidget):
         p = self.dmm.packet()
         p.select_device()
         p.set_auto_range_status(False)
+        p.return_to_local()
         p.send()
         
         self.areaString = '1,1,1'
@@ -196,10 +197,10 @@ class ProbeStation(QtGui.QWidget):
     def keyPressEvent(self, event):
         key = event.key()
         if key == QtCore.Qt.Key_Up:
-            self.waferMap.changeSelectedDie(0,1)
+            self.waferMap.changeSelectedDie(0,-1)
             self.areaView.setAreasIndex(0)
         elif key == QtCore.Qt.Key_Down:
-            self.waferMap.changeSelectedDie(0,-1)
+            self.waferMap.changeSelectedDie(0,1)
             self.areaView.setAreasIndex(0)
         elif key == QtCore.Qt.Key_Left:
             self.waferMap.changeSelectedDie(-1,0)
@@ -213,8 +214,8 @@ class ProbeStation(QtGui.QWidget):
             dmmRange = yield self.dmm.get_fw_resistance()
             res = yield self.dmm.get_fw_range()
             yield self.dmm.return_to_local()
-            print [die, area, dmmRange['Ohm'], res['Ohm']]
             self.resDataChest.addData( [[die, area, dmmRange['Ohm'], res['Ohm']]] )
+            print [die, area, dmmRange['Ohm'], res['Ohm']]
             self.waferMap.addMeasurement()
             self.areaView.increaseAreasIndex()
         elif (key == QtCore.Qt.Key_Delete
@@ -229,6 +230,7 @@ class ProbeStation(QtGui.QWidget):
                 self.areaView.setAreasString(self.areaString)
             except ValueError:
                 pass
+        print self.waferMap.getSelectedDie()
 
 class AreaDisplay(QtGui.QWidget):
 
@@ -364,7 +366,7 @@ class WaferMap(QtGui.QWidget):
         self.update()
 
     def getSelectedDie(self):
-        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[self.selectedDie[0]] + str(int(self.selectedDie[1]))
+        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[self.selectedDie[0]] + str(int(self.selectedDie[1])+1)
 
     def addMeasurement(self):
         self.dieMapData[self.selectedDie[0]][self.selectedDie[1]] = True
@@ -403,7 +405,7 @@ class WaferMap(QtGui.QWidget):
                 else: # blue otherwise
                     qp.setBrush(QtGui.QColor(25, 0, 90, 200))
                 if self.dieMapMask[x][y]:
-                    qp.drawRect(self.width()/2 - minWindowDim/2 + (x+0.05)*pitchX, minWindowDim-(y+1)*pitchY, dieWidth,dieHeight)
+                    qp.drawRect(self.width()/2 - minWindowDim/2 + (x+0.05)*pitchX, (y+0.05)*pitchY, dieWidth,dieHeight)
 
 
 def main():
