@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = ATS Waveform Digitizer
-version = 1.3.0
+version = 1.4.0
 description = Communicates with AlazarTech Digitizers over PCIe interface.
 
 [startup]
@@ -105,13 +105,14 @@ class AlazarTechServer(LabradServer):
         boardHandle.setLED(ledState)
         
     @setting(5, 'Set Capture Clock', sourceID='w', 
-            sampleRateIdOrvalue='w', edgeID='w', decimation='w', 
+            sampleRateIDorValue='w', edgeID='w', decimation='w', 
             returns='')
-    def set_capture_clock(self, c, sourceID, sampleRateIdOrvalue, 
+    def set_capture_clock(self, c, sourceID, sampleRateIDorValue, 
             edgeID, decimation):
         boardHandle = self.boardHandles[c['devName']]
-        boardHandle.setCaptureClock(sourceID, sampleRateIdOrvalue,
+        boardHandle.setCaptureClock(sourceID, sampleRateIDorValue,
                 edgeID, decimation)
+        # boardHandle.setExternalClockLevel(50)
        
     @setting(6, 'Input Control', channelID=['w', 's'],
             couplingID=['w', 's'], rangeID=['w', 'v[mV]'],
@@ -291,11 +292,33 @@ class AlazarTechServer(LabradServer):
             c['reinitializeBuffers'] = True
 
         return c['numberOfRecords']
+        
+    @setting(25, 'Sampling Rate', samplingRate=['w', 'v[S/s]'],
+            returns='v[S/s]')
+    def sampling_rate(self, c, samplingRate=None):
+        if samplingRate is None:
+            if 'samplingRate' not in c:
+                # Assume a sampling rate of 1 GS/s.
+                c['samplingRate'] = 1000000000
+                c['decimation'] = 1
+        else:
+            if type(samplingRate) == units.Value:
+                samplingRate = samplingRate['S/s']
+            rates = (1000000000, 500000000, 250000000)
+            samplingRate = max([rate for rate in rates
+                                 if samplingRate >= rate])
+            c['decimation'] = 1000000000 / samplingRate
+            c['samplingRate'] = samplingRate
 
-    @setting(50, 'Configure External Clocking', returns='')
-    def configure_external_clocking(self, c):
-        # Assume 10 MHz reference clock and a sampling rate of 1 GS/s.
-        c['samplingRate'] = 1000000000
+        return c['samplingRate'] * units.Unit('S/s')
+
+    @setting(50, 'Configure Clock Reference', returns='')
+    def configure_clock_reference(self, c):
+        # Ensure that the sampling rate is set.
+        self.sampling_rate(c)
+        # Assume a 10 MHz reference.
+        # self.set_capture_clock(c, ats.EXTERNAL_CLOCK_10MHz_REF,
+                # 1000000000, ats.CLOCK_EDGE_RISING, c['decimation'])
         self.set_capture_clock(c, ats.EXTERNAL_CLOCK_10MHz_REF,
                 c['samplingRate'], ats.CLOCK_EDGE_RISING, 1)
  
@@ -314,8 +337,8 @@ class AlazarTechServer(LabradServer):
             triggerLevel=['w', 'v[V]'], returns='')
     def configure_trigger(self, c, triggerDelay=0, triggerLevel=150):
         if type(triggerDelay) == units.Value:
-            samplingRate = float(c['samplingRate'])
-            triggerDelay = int(triggerDelay['s'] * samplingRate)
+            samplingRate = float(c['samplingRate'] * c['decimation'])
+            triggerDelay = int(triggerDelay['s'] * samplingRate + 0.5)
 
         if type(triggerLevel) == units.Value:
             triggerLevel = 128 + int(127 * triggerLevel['V'] / 5)
@@ -452,7 +475,7 @@ class AlazarTechServer(LabradServer):
                 numberOfChannels, samplesPerRecord)
         # 0 ==> -VFullScale, 2^(N-1) ==> ~0, (2**N)-1 ==> +VFullScale
         # Two-step computation below does not require extra memory,
-        # unlike a single line expression.
+        # unlike an equivalent single line expression.
         recordsBuffer *= dV
         recordsBuffer -= vFullScale # V
         c['recordsBuffer'] = recordsBuffer
@@ -498,7 +521,6 @@ class AlazarTechServer(LabradServer):
         result = c['recordsBuffer']
         return np.mean(result, axis=0) * units.V
 
-        
     @setting(64, 'Get Times', returns='*v[ns]')
     def get_times(self, c):
         samplesPerRecord = self.samples_per_record(c)
