@@ -45,7 +45,9 @@ import atexit
 import traceback
 
 class MGui(QtGui.QMainWindow):
-    print "Starting mView (C) Noah Meltzer 2016\r\n"
+    print "##########################################"
+    print "## Starting mView (C) Noah Meltzer 2016 ##"
+    print "##########################################"
     # Holds the Qlabels that label the parameters
     parameters = [[]]
     # Each tile on the gui is called a frame, this is the list of them
@@ -300,7 +302,7 @@ class MGui(QtGui.QMainWindow):
         # Update the gui every so often. This CAN ONLY be done 
         # in the main thread.
         self.timer.singleShot(web.guiRefreshRate*1000, self.update)
-        self.MAlert.begin()
+        #self.MAlert.begin()
         sys.exit(app.exec_())
 
     def update(self):
@@ -327,6 +329,7 @@ class MGui(QtGui.QMainWindow):
                             self.units[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
                             self.parameters[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
                         else:
+                            pass
                             # Otherwise, things should be white
                             self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
                             self.units[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 

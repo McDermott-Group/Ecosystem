@@ -1,3 +1,30 @@
+# Copyright (C) 2016 Noah Meltzer
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+__author__ = "Noah Meltzer"
+__copyright__ = "Copyright 2016, Noah Meltzer, McDermott Group"
+__license__ = "GPL"
+__version__ = "1.0.1"
+__maintainer__ = "Noah Meltzer"
+__status__ = "Beta"
+
+"""
+description = Allows the user to configure the refresh rates for plots, devices
+              and LCD numbers.
+"""
+
 import sys
 sys.dont_write_bytecode = True
 from PyQt4 import QtCore, QtGui
@@ -10,22 +37,28 @@ class ConfigGui(QtGui.QDialog):
         # Create a tab for update speed settings
         mainTabWidget = QtGui.QTabWidget()
         mainTabWidget.addTab(refreshRateContents(), "Refresh Rates")
+        # Create the main layout for the gui
         mainLayout = QtGui.QVBoxLayout()
+        # Add the tab widget to the main layout
         mainLayout.addWidget(mainTabWidget)
+        # The button layout will hold the OK button
         buttonLayout = QtGui.QHBoxLayout()
         okButton = QtGui.QPushButton(self)
         okButton.setText("Ok")
+        # Give the button some cusion so that it will not be streched out
         buttonLayout.addStretch(0)
         buttonLayout.addWidget(okButton)
+        # Add the button
         mainLayout.addLayout(buttonLayout)
         self.setLayout(mainLayout)
         self.setWindowTitle("Device Config")
+        # Close the window when the ok button is clicked
         okButton.clicked.connect(self.close)
         
 class refreshRateContents(QtGui.QWidget):
     def __init__(self, parent = None):
         super(refreshRateContents, self).__init__(parent)
-        #self.mainGui = mainGui
+        
         mainLayout = QtGui.QVBoxLayout()
         
         self.setLayout(mainLayout) 
@@ -94,7 +127,7 @@ class devRefRateConfig(QtGui.QWidget):
         self.setLayout(devRefLayout)
         
     def updateDevPlotRate(self):
-        print self.plotRefRateEdit.text()
+        #print self.plotRefRateEdit.text()
         try:
             self.device.getFrame().setPlotRefreshRate(float(self.plotRefRateEdit.text()))
            # print self.self.device.getFrame().getPlotRefreshRate()

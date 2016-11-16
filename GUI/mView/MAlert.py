@@ -78,9 +78,12 @@ class MAlert:
                             #print "MALERT reading below min ", min
                             self.devices[i].getFrame().setOutOfRange(key)
                             self.sendMail(self.devices[i], y, reading, people, min, max)
+                            #print " min sent to ", people
                         elif(max != None and max<reading):
                             self.devices[i].getFrame().setOutOfRange(key)
                             self.sendMail(self.devices[i], y, reading, people, min, max)      
+                            #print " max sent to ", people
+
                         else:
                             self.devices[i].getFrame().setInRange(key)    
                     else:
@@ -101,11 +104,11 @@ class MAlert:
         HOURS_BETWEEN_EMAILS = 3
         elapsedHrs = (time.time()-self.t1)/3600
         key = device.getFrame().getTitle()+":"+device.getFrame().getNicknames()[y] 
-        print people == ''
         if people != '':
             if(not self.mailSent[key]):
-                self.message.append(("Time: "
-                    +time.asctime( time.localtime(time.time()) )
+            
+                self.mailSent[key] = True
+                self.message.append((time.strftime('%x at %X',time.localtime(time.time()))
                     +" | "+device.getFrame().getTitle()+"->"
                     + device.getFrame().getNicknames()[y] + ": "+
                     str(device.getFrame().getReadings()[y])+
@@ -116,12 +119,13 @@ class MAlert:
                     " - " +str(max)+
                     device.getFrame().getUnits()[y]+"."))
                 
-                self.mailSent[key] = True
-
+                self.message.append((""))
             if(HOURS_BETWEEN_EMAILS<elapsedHrs):
                 if not len([str(person).strip() for person in people.split(',')][0]) == 0:
                     print "sending mail"
-                    print self.message
+                    #print self.message
+                    for key in self.mailSent:
+                        self.mailSent[key] = False
                     success, address = self.tele.send_sms(
                         device.getFrame().getNicknames()[y], 
                                             str(self.message), 

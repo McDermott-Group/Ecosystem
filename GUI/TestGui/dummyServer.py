@@ -3,6 +3,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 import random
 import numpy as np
 import time as t
+
 class MyServer(LabradServer):
     name = "My Server"    # Will be labrad name of server
 
@@ -14,7 +15,7 @@ class MyServer(LabradServer):
        # return 0.5
     @setting(11, returns = 'v')
     def Pressure(self, c, data):
-          return np.sin((t.time()-self.start)/1.5)
+          return 2*np.sin((t.time()-self.start)/1.5)
     def somethingElse(self):
         print("something Else")
         
