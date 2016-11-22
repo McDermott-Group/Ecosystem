@@ -207,176 +207,57 @@ class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
 		returnValue(points)
 
 	@inlineCallbacks
-	def measurement_setup(self, meas):
+	def measurement_setup(self, SList, formList):
 		"""
-		Set the measurement parameters. Use a string of the form Sxx
-		(S21, S11...) for the measurement type.
+		Set the measurement parameters. Use a list of strings of the form Sxx
+		(S21, S11...) for the measurement type.  The form list can be either
+		'IQ' or 'MP' for mag/phase.
 		"""
-		if meas not in self.availableTraces:
-			raise ValueError('Illegal measurment definition: %s.'
-					%str(meas))
+		for Sp in SList:
+            if Sp not in self.availableTraces:
+                raise ValueError('Illegal measurment definition: %s.' %str(Sp))
 
-		dev = self.selectedDevice(c)
 		# Delete all measurements on the PNA.
-		yield dev.write('CALC:PAR:DEL:ALL')
+		yield self.write('CALC:PAR:DEL:ALL')
 		# Close window 1 if it already exists.
-		if (yield dev.query('DISP:WIND1:STATE?')) == '1':
-			dev.write('DISP:WIND1:STATE OFF')
+		if (yield self.query('DISP:WIND1:STATE?')) == '1':
+			self.write('DISP:WIND1:STATE OFF')
 		# Create window 1.
-		yield dev.write('DISP:WIND1:STATE ON')
-		yield dev.write('CALC:PAR:DEF:EXT "%s",%s' %(meas, meas))
-		yield dev.write('DISP:WIND1:TRAC1:FEED "%s"' %meas)
-		yield dev.write('CALC:PAR:SEL "%s"' %meas)
-		yield dev.write('SENS1:SWE:TIME:AUTO ON')
+		yield self.write('DISP:WIND1:STATE ON')
+        for k, Sp in enumerate(SList):
+			if formList[k] is 'IQ':
+	            yield dev.write('CALC:PAR:DEF:EXT "R_%s",%s' %(Sp, Sp))
+	            yield dev.write('DISP:WIND1:TRAC%d:FEED "R_%s"' %(2 * k + 1, Sp))
+	            yield dev.write('CALC:PAR:DEF:EXT "I_%s",%s' %(Sp, Sp))
+	            yield dev.write('DISP:WIND1:TRAC%d:FEED "I_%s"' %(2 * k + 2, Sp))
+	            yield dev.write('CALC:PAR:SEL "R_%s"' %Sp)
+	            yield dev.write('CALC:FORM REAL')
+	            yield dev.write('CALC:PAR:SEL "I_%s"' %Sp)
+	            yield dev.write('CALC:FORM IMAG')
+			if formList[k] is 'MP':
+	            yield dev.write('CALC:PAR:DEF:EXT "M_%s",%s' %(Sp, Sp))
+	            yield dev.write('DISP:WIND1:TRAC%d:FEED "M_%s"' %(2 * k + 1, Sp))
+	            yield dev.write('CALC:PAR:DEF:EXT "P_%s",%s' %(Sp, Sp))
+	            yield dev.write('DISP:WIND1:TRAC%d:FEED "P_%s"' %(2 * k + 2, Sp))
+	            yield dev.write('CALC:PAR:SEL "M_%s"' %Sp)
+	            yield dev.write('CALC:FORM MLOG')
+	            yield dev.write('CALC:PAR:SEL "P_%s"' %Sp)
+	            yield dev.write('CALC:FORM PHAS')
+			yield dev.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 1))
+            yield dev.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 2))
+            yield dev.write('SENS1:SWE:TIME:AUTO ON')
+
 		yield dev.write('TRIG:SOUR IMM')
 
 	@inlineCallbacks
 	def get_trace(self):
 		"""Get the active trace from the network analyzer."""
 
-		meas = yield self.query('SYST:ACT:MEAS?')
-		yield self.write('CALC:PAR:SEL %s' %meas)
-		yield self.write('FORM ASC,0')
+		# get list of traces in form "name, S21, name, S32,..."
+		measList = yield self.write('CALC:PAR:CAT?')
+		measList = measList.split(',')
 
-		avgMode = yield self.average_mode(c)
-		if avgMode:
-			avgCount = yield self.average_points(c)
-			yield self.restart_averaging(c)
-			yield self.write('SENS:SWE:GRO:COUN %i' %avgCount)
-			yield self.write('ABORT;SENS:SWE:MODE GRO')
-		else:
-			# Stop the current sweep and immediately send a trigger.
-			yield self.write('ABORT;SENS:SWE:MODE SING')
-
-		# Wait for the measurement to finish.
-		yield self.query('*OPC?', timeout=24*units.h)
-		ascii_data = yield self.query('CALC1:DATA? FDATA')
-
-		data = numpy.array([x for x in ascii_data.split(',')],
-				dtype=float) * units.dB
-		returnValue(data)
-
-	@inlineCallbacks
-	def get_s2p(self, ports):
-		"""
-		Get the scattering parameters from the network analyzer
-		in the S2P format. The input parameter should be a tuple that
-		specifies two network analyzer ports, e.g. (1, 2).
-		Available ports are 1, 2[, 3, and 4]. The data are returned as
-		a list of tuples in the following format:
-			*(frequency,
-			S[ports[0], ports[0]], Phase[ports[0], ports[0]],
-			S[ports[1], ports[0]], Phase[ports[1], ports[0]],
-			S[ports[0], ports[1]], Phase[ports[0], ports[1]],
-			S[ports[1], ports[1]], Phase[ports[0], ports[1]]).
-		"""
-		if len(ports) != 2:
-			raise Exception("Two and only two ports should be "
-					"specified.")
-		for port in ports:
-			if port < 1 or port > nPorts:
-				raise Exception("Port number could be only '1', '2'[, "
-						"'3', or '4'].")
-		if ports[0] == ports[1]:
-			raise Exception("Port numbers should not be equal.")
-
-		S = (''.join(['S', str(ports[0]), str(ports[0])]),
-			 ''.join(['S', str(ports[0]), str(ports[1])]),
-			 ''.join(['S', str(ports[1]), str(ports[0])]),
-			 ''.join(['S', str(ports[1]), str(ports[1])]))
-		# Delete all measurements on the PNA.
-		yield self.write('CALC:PAR:DEL:ALL')
-		# Close window 1 if it already exists.
-		if (yield self.query('DISP:WIND1:STATE?')) == '1':
-			self.write('DISP:WIND1:STATE OFF')
-		# Create window 1.
-		yield self.write('DISP:WIND1:STATE ON')
-		for k in range(4):
-			yield self.write('CALC:PAR:DEF:EXT "s2p_%s",%s'
-					%(S[k], S[k]))
-			yield self.write('DISP:WIND1:TRAC%d:FEED "s2p_%s"'
-					%(k + 1, S[k]))
-			yield self.write('CALC:PAR:SEL "s2p_%s"' %S[k])
-			yield self.write('SENS1:SWE:TIME:AUTO ON')
-			yield self.write('TRIG:SOUR IMM')
-
-		yield self.write('FORM ASC,0')
-
-		avgMode = yield self.average_mode(c)
-		if avgMode:
-			avgCount = yield self.average_points(c)
-			yield self.restart_averaging(c)
-			yield self.write('SENS:SWE:GRO:COUN %i' %avgCount)
-			yield self.write('ABORT;SENS:SWE:MODE GRO')
-		else:
-			# Stop the current sweep and immediately send a trigger.
-			yield self.write('ABORT;SENS:SWE:MODE SING')
-
-		# Wait for the measurement to finish.
-		yield self.query('*OPC?', timeout=24*units.h)
-		ascii_data = yield self.query("CALC:DATA:SNP:PORT? '%i,%i'"
-				%ports)
-		data = numpy.array([x for x in ascii_data.split(',')],
-			dtype=float)
-		length = numpy.size(data) / 9
-		data = data.reshape(9, length)
-		data = [(data[0, k] * units.Hz,
-				 data[1, k] * units.dB, data[2, k] * units.deg,
-				 data[3, k] * units.dB, data[4, k] * units.deg,
-				 data[5, k] * units.dB, data[6, k] * units.deg,
-				 data[7, k] * units.dB, data[8, k] * units.deg)
-				 for k in range(length)]
-		returnValue(data)
-
-	@inlineCallbacks
-	def get_s_parameters(self, S):
-		"""
-		Get a set of scattering parameters from the network analyzer.
-		The input parameter should be a list of strings in the format
-		['S21','S43','S34',...] where Smn is the S-parameter connecting
-		port n to port m. Available ports are 1, 2[, 3, and 4]. The data
-		is returned as a list *[*Re(Sxy), *Im(Sxy)]. The values are
-		unitless. To obtain the magnitude in dB use the following
-		equation: 20 * log10(Re(Sxy)^2 + Im(Sxy)^2).
-		"""
-		S = [x.capitalize() for x in S]
-		# Remove duplicates.
-		S = list(set(S))
-
-		# Match to strings of format "Sxy" only.
-		for Sp in S:
-			if Sp not in self.availableTraces:
-				raise ValueError('Illegal measurment definition: %s.'
-						%str(Sp))
-
-		# Delete all measurements on the PNA.
-		yield self.write('CALC:PAR:DEL:ALL')
-		# Close window 1 if it already exists.
-		if (yield self.query('DISP:WIND1:STATE?')) == '1':
-			self.write('DISP:WIND1:STATE OFF')
-		# Create window 1.
-		yield self.write('DISP:WIND1:STATE ON')
-		for k, Sp in enumerate(S):
-			yield self.write('CALC:PAR:DEF:EXT "Rxy_%s",%s'
-					%(Sp, Sp))
-			yield self.write('DISP:WIND1:TRAC%d:FEED "Rxy_%s"'
-					%(2 * k + 1, Sp))
-			yield self.write('CALC:PAR:DEF:EXT "Ixy_%s",%s'
-					%(Sp, Sp))
-			yield self.write('DISP:WIND1:TRAC%d:FEED "Ixy_%s"'
-					%(2 * k + 2, Sp))
-			yield self.write('CALC:PAR:SEL "Rxy_%s"' %Sp)
-			yield self.write('CALC:FORM REAL')
-			yield self.write('CALC:PAR:SEL "Ixy_%s"' %Sp)
-			yield self.write('CALC:FORM IMAG')
-			yield self.write('SENS1:SWE:TIME:AUTO ON')
-			yield self.write('TRIG:SOUR IMM')
-
-		yield self.write('FORM ASC,0')
-
-		for k in range(len(S)):
-			yield self.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 1))
-			yield self.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 2))
+		yield self.write('FORM REAL') # do we need to add ',64'
 
 		avgMode = yield self.average_mode(c)
 		if avgMode:
@@ -391,22 +272,15 @@ class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
 		# Wait for the measurement to finish.
 		yield self.query('*OPC?', timeout=24*units.h)
 
+		# pull data
 		data = []
-		for Sp in S:
-			yield self.write('CALC:PAR:SEL "Rxy_%s"' %Sp)
-			ascii_data = yield self.query('CALC:DATA? FDATA')
-			real = numpy.array([x for x in ascii_data.split(',')],
-				dtype=float)
-			yield self.write('CALC:PAR:SEL "Ixy_%s"' %Sp)
-			ascii_data = yield self.query('CALC:DATA? FDATA')
-			imag = numpy.array([x for x in ascii_data.split(',')],
-			dtype=float)
-			data.append([real, imag])
+		for meas in measList[::2]:
+			yield dev.write('CALC:PAR:SEL "%s"' %meas)
+			bin_data = yield dev.query('CALC:DATA? FDATA')
+            d = numpy.fromstring(bin_data], dtype=numpy.float64)
+            data.append(d)
 
 		returnValue(data)
-
-	def display_format(self, fmt):
-		raise NotImplementedError
 
 class KeysightDeviceWrapper(AgilentN5230ADeviceWrapper):
 
@@ -778,21 +652,24 @@ class VNAServer(GPIBManagedServer):
 		resp  = yield dev.sweep_points(points)
 		returnValue(resp)
 
-	@setting(1500, 'Measurement Setup', meas='s', returns='s')
-	def measurement_setup(self, c, meas='S21'):
-        """
-        Set or get the measurement mode: transmission or reflection.
+	@setting(1500, 'Measurement Setup', SList='*s', formList='?')
+	def measurement_setup(self, c, SList=['S21'], formList=None):
+		"""
+		Set the measurement parameters. Use a list of strings of the form Sxx
+		(S21, S11...) for the measurement type.  The form list can be either
+		'IQ' or 'MP' for mag/phase.
+		"""
+		if formList is not None:
+			if len(formList) is not len(SList):
+				raise IndexError('S List and Form List are not the same length.')
+			for form in formList:
+				if form not in ('IQ','MP'):
+					raise ValueError('Illegal measurment definition: %s.' %str(form))
+		else:
+			formList = ['MP']*len(SList)
 
-        Following options are allowed (could be in any letter case):
-            "S11", "REFL", 'R', 'REFLECTION' for the reflection mode;
-            "S21", "TRAN", 'T', 'TRANSMISSION', 'TRANS' for the
-            transmission mode.
-
-        Output is either 'S11' or 'S21'.
-        """
 		dev = self.selectedDevice(c)
-		resp  = yield dev.measurement_setup(meas)
-		returnValue(resp)
+		yield dev.measurement_setup(SList, formList)
 
 	@setting(1600, 'Get Trace', returns=['*v[dB]', '*v', '*v[deg]', '*c'])
 	def get_trace(self, c):
@@ -800,45 +677,11 @@ class VNAServer(GPIBManagedServer):
         Get network analyzer trace. The output depends on the display
         format:
             "LOGMAG" - real [dB];
-            "LINMAG" - real [linear units];
             "PHASE"  - real [deg];
             "REIM"   - complex [linear units].
         """
 		dev = self.selectedDevice(c)
 		resp  = yield dev.get_trace()
-		returnValue(resp)
-
-	@setting(1700, 'Get S2P', ports='(w, w)', returns=('*(v[Hz], '
-		'v[dB], v[deg], v[dB], v[deg], v[dB], v[deg], v[dB], '
-		'v[deg])'))
-	def get_s2p(self, c, ports=(1, 2)):
-    	"""
-        Get the scattering parameters from the network analyzer
-        in the S2P format. The input parameter should be a tuple that
-        specifies two network analyzer ports, e.g. (1, 2).
-        Available ports are 1, 2, 3, and 4. The data are returned as
-        a list of tuples in the following format:
-            *(frequency,
-            S[ports[0], ports[0]], Phase[ports[0], ports[0]],
-            S[ports[1], ports[0]], Phase[ports[1], ports[0]],
-            S[ports[0], ports[1]], Phase[ports[0], ports[1]],
-            S[ports[1], ports[1]], Phase[ports[0], ports[1]]).
-        """
-		dev = self.selectedDevice(c)
-		resp  = yield dev.get_s2p(ports)
-		returnValue(resp)
-
-	@setting(1800, 'Display Format', fmt='s', returns='s')
-	def display_format(self, c, fmt=None):
-        """
-        Set or get the display format. Following options are allowed:
-            "LOGMAG" - log magnitude display;
-            "LINMAG" - linear magnitude display;
-            "PHASE"  - phase display;
-            "REIM"   - real and imaginary display.
-        """
-		dev = self.selectedDevice(c)
-		resp  = yield dev.display_format(fmt)
 		returnValue(resp)
 
 
