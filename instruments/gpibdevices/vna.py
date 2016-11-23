@@ -214,6 +214,8 @@ class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
         (S21, S11...) for the measurement type.  The form list can be either
         'IQ' or 'MP' for mag/phase.
         """
+		SList = [S.upper() for S in SList]
+
         for Sp in SList:
             if Sp not in self.availableTraces:
                 raise ValueError('Illegal measurment definition: %s.' %str(Sp))
@@ -258,8 +260,8 @@ class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
         measList = yield self.query('CALC:PAR:CAT?')
         measList = measList.strip('"').split(',')
 
-        # yield self.write('FORM REAL') # do we need to add ',64'
-        yield self.write('FORM ASC,0')
+        yield self.write('FORM REAL') # do we need to add ',64'
+        # yield self.write('FORM ASC,0')
 
         avgMode = yield self.average_mode(None)
         if avgMode:
@@ -279,9 +281,10 @@ class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
         unitMultiplier = {'I':1, 'Q':1, 'P':units.deg, 'M':units.dB}
         for meas in measList[::2]:
             yield self.write('CALC:PAR:SEL "%s"' %meas)
-            data_string = yield self.query('CALC:DATA? FDATA')
-            # d = numpy.fromstring(data_string, dtype=numpy.float64)
-            d = numpy.array([x for x in data_string.split(',')], dtype=float) * unitMultiplier[meas[0]]
+			yield self.query('CALC:DATA? FDATA')
+            data_string = yield self.read_raw()
+            d = numpy.fromstring(data_string, dtype=numpy.float64)
+            # d = numpy.array([x for x in data_string.split(',')], dtype=float) * unitMultiplier[meas[0]]
             data.append(d)
 
         returnValue(data)
@@ -451,8 +454,6 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
         Get network analyzer trace. The output depends on the display
         format:
             "LOGMAG" - real [dB];
-            "LINMAG" - real [linear units];
-            "PHASE"  - real [deg];
             "REIM"   - complex [linear units].
         """
         # PC-DOS 32-bit floating-point format with 4 bytes-per-number,
@@ -474,18 +475,14 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
         raw = numpy.fromstring(dataBuffer, dtype=numpy.float32)
         data = numpy.empty((raw.shape[-1] - 1) / 2)
         real = raw[1:-1:2]
-        if fmt == 'LOGMAG':
-            returnValue(real.astype(float) * units.dB)
-        elif fmt == 'LINMAG':
-            returnValue(real.astype(float))
-        elif fmt == 'PHASE':
-            returnValue(real.astype(float) * units.deg)
-        elif fmt == 'REIM':
+        if self.form == 'MP':
+            returnValue([real.astype(float) * units.dB])
+        elif self.form == 'IQ':
             imag = numpy.hstack((raw[2:-1:2], raw[-1]))
-            returnValue(real.astype(float) + 1j * imag.astype(float))
+            returnValue([real.astype(float) + 1j * imag.astype(float)])
 
     @inlineCallbacks
-    def measurement_setup(self, mode):
+    def measurement_setup(self, SList, formList):
         """
         Set or get the measurement mode: transmission or reflection.
 
@@ -494,63 +491,32 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
             "S21", "TRAN", 'T', 'TRANSMISSION', 'TRANS' for the
             transmission mode.
 
-        Output is either 'S11' or 'S21'.
+		formList sets the display format. Following options are allowed:
+            "MP" - log magnitude display;
+            "IQ"   - real and imaginary display.
         """
-        if mode is None:
-            resp = yield self.query('RFLP?')
-            if bool(int(resp)):
-                returnValue('S11')
-            else:
-                returnValue('S21')
-        else:
+        if SList is not None:
+			if len(SList) != 1:
+				raise IndexError('This VNA only takes a single trace')
+			mode = SList[0] # given a list but this VNA can only take one
             if mode.upper() in ('S11', 'R', 'REFL', 'REFLECTION'):
                 yield self.write('RFLP')
-                returnValue('S11')
-            if mode.upper() in ('S21', 'T', 'TRAN', 'TRANS',
-                    'TRANSMISSION'):
+            if mode.upper() in ('S21', 'T', 'TRAN', 'TRANS', 'TRANSMISSION'):
                 yield self.write('TRAP')
-                returnValue('S21')
             else:
                 raise ValueError('Unknown measurement mode: %s.' %mode)
 
-    def get_s2p(self, ports):
-        raise NotImplementedError
-
-    @inlineCallbacks
-    def display_format(self, fmt):
-        """
-        Set or get the display format. Following options are allowed:
-            "LOGMAG" - log magnitude display;
-            "LINMAG" - linear magnitude display;
-            "PHASE"  - phase display;
-            "REIM"   - real and imaginary display.
-        """
-        if fmt is None:
-            resp = yield self.query('LOGM?')
-            if bool(int(resp)):
-                returnValue('LOGMAG')
-            resp = yield self.query('LINM?')
-            if bool(int(resp)):
-                returnValue('LINMAG')
-            resp = yield self.query('PHAS?')
-            if bool(int(resp)):
-                returnValue('PHASE')
-            resp = yield self.query('POLA?')
-            if bool(int(resp)):
-                returnValue('REIM')
-        else:
-            if fmt.upper() == 'LOGMAG':
+        if formList is not None:
+			fmt = formList[0]
+			self.form = fmt.upper()
+            if fmt.upper() == 'MP':
                 yield self.write('LOGM')
-            elif fmt.upper() == 'LINMAG':
-                yield self.write('LINM')
-            elif fmt.upper() == 'PHASE':
-                yield self.write('PHAS')
-            elif fmt.upper() == 'REIM':
+            elif fmt.upper() == 'IQ':
                 yield self.write('POLA')
             else:
-                raise ValueError('Unknown display format request: %s.'
-                    %fmt)
-        returnValue(fmt)
+                raise ValueError('Unknown display format request: %s.' %fmt)
+		else:
+			self.form = None
 
 
 class VNAServer(GPIBManagedServer):
