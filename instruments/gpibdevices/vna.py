@@ -43,7 +43,7 @@ from gpib_device_wrapper import ReadRawGPIBDeviceWrapper
 
 from utilities import sleep
 
-class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
+class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
 
     availableTraces = ('S11', 'S12', 'S13', 'S14', 'S21', 'S22', 'S23',
             'S24', 'S31', 'S32', 'S33', 'S34', 'S41', 'S42', 'S43',
@@ -214,7 +214,7 @@ class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
         (S21, S11...) for the measurement type.  The form list can be either
         'IQ' or 'MP' for mag/phase.
         """
-		SList = [S.upper() for S in SList]
+        SList = [S.upper() for S in SList]
 
         for Sp in SList:
             if Sp not in self.availableTraces:
@@ -260,7 +260,7 @@ class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
         measList = yield self.query('CALC:PAR:CAT?')
         measList = measList.strip('"').split(',')
 
-        yield self.write('FORM REAL') # do we need to add ',64'
+        yield self.write('FORM REAL,64') # do we need to add ',64'
         # yield self.write('FORM ASC,0')
 
         avgMode = yield self.average_mode(None)
@@ -279,11 +279,13 @@ class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
         # pull data
         data = []
         unitMultiplier = {'I':1, 'Q':1, 'P':units.deg, 'M':units.dB}
+        # the data will come in with a header in the form '#[single char][number of data points][data]'
         for meas in measList[::2]:
             yield self.write('CALC:PAR:SEL "%s"' %meas)
-			yield self.query('CALC:DATA? FDATA')
+            yield self.write('CALC:DATA? FDATA')
             data_string = yield self.read_raw()
-            d = numpy.fromstring(data_string, dtype=numpy.float64)
+            data_string = data_string[len(data_string)%8:] # remove header
+            d = numpy.fromstring(data_string, dtype=numpy.float64) # * unitMultiplier[meas[0]]
             # d = numpy.array([x for x in data_string.split(',')], dtype=float) * unitMultiplier[meas[0]]
             data.append(d)
 
@@ -476,7 +478,8 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
         data = numpy.empty((raw.shape[-1] - 1) / 2)
         real = raw[1:-1:2]
         if self.form == 'MP':
-            returnValue([real.astype(float) * units.dB])
+            # &&& is every other entry in the dataset the phase for this???
+            returnValue([real.astype(float)])
         elif self.form == 'IQ':
             imag = numpy.hstack((raw[2:-1:2], raw[-1]))
             returnValue([real.astype(float) + 1j * imag.astype(float)])
@@ -491,14 +494,14 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
             "S21", "TRAN", 'T', 'TRANSMISSION', 'TRANS' for the
             transmission mode.
 
-		formList sets the display format. Following options are allowed:
+        formList sets the display format. Following options are allowed:
             "MP" - log magnitude display;
             "IQ"   - real and imaginary display.
         """
         if SList is not None:
-			if len(SList) != 1:
-				raise IndexError('This VNA only takes a single trace')
-			mode = SList[0] # given a list but this VNA can only take one
+            if len(SList) != 1:
+                raise IndexError('This VNA only takes a single trace')
+            mode = SList[0] # given a list but this VNA can only take one
             if mode.upper() in ('S11', 'R', 'REFL', 'REFLECTION'):
                 yield self.write('RFLP')
             if mode.upper() in ('S21', 'T', 'TRAN', 'TRANS', 'TRANSMISSION'):
@@ -507,16 +510,16 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
                 raise ValueError('Unknown measurement mode: %s.' %mode)
 
         if formList is not None:
-			fmt = formList[0]
-			self.form = fmt.upper()
+            fmt = formList[0]
+            self.form = fmt.upper()
             if fmt.upper() == 'MP':
                 yield self.write('LOGM')
             elif fmt.upper() == 'IQ':
                 yield self.write('POLA')
             else:
                 raise ValueError('Unknown display format request: %s.' %fmt)
-		else:
-			self.form = None
+        else:
+            self.form = None
 
 
 class VNAServer(GPIBManagedServer):
@@ -641,7 +644,7 @@ class VNAServer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         yield dev.measurement_setup(SList, formList)
 
-    @setting(1600, 'Get Trace', returns='*2?')#'(*v[dB],*v[deg],*v[dB],*v[deg])')#['*2v[dB]', '*2v', '*2v[deg]', '*2c', '?'])
+    @setting(1600, 'Get Trace', returns='*2v')#'(*v[dB],*v[deg],*v[dB],*v[deg])')#['*2v[dB]', '*2v', '*2v[deg]', '*2c', '?'])
     def get_trace(self, c):
         """
         Get network analyzer trace. The output depends on the display
