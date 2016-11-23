@@ -260,8 +260,8 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         measList = yield self.query('CALC:PAR:CAT?')
         measList = measList.strip('"').split(',')
 
-        yield self.write('FORM REAL,64') # do we need to add ',64'
-        # yield self.write('FORM ASC,0')
+        # yield self.write('FORM REAL,64') # do we need to add ',64'
+        yield self.write('FORM ASC,0')
 
         avgMode = yield self.average_mode(None)
         if avgMode:
@@ -283,10 +283,11 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         for meas in measList[::2]:
             yield self.write('CALC:PAR:SEL "%s"' %meas)
             yield self.write('CALC:DATA? FDATA')
-            data_string = yield self.read_raw()
-            data_string = data_string[len(data_string)%8:] # remove header
-            d = numpy.fromstring(data_string, dtype=numpy.float64) # * unitMultiplier[meas[0]]
-            # d = numpy.array([x for x in data_string.split(',')], dtype=float) * unitMultiplier[meas[0]]
+            data_string = yield self.read()
+            # data_string = yield self.read_raw()
+            # data_string = data_string[len(data_string)%8:] # remove header
+            # d = numpy.fromstring(data_string, dtype=numpy.float64) # * unitMultiplier[meas[0]]
+            d = numpy.array([x for x in data_string.split(',')], dtype=float)# * unitMultiplier[meas[0]]
             data.append(d)
 
         returnValue(data)
@@ -529,7 +530,7 @@ class VNAServer(GPIBManagedServer):
                     # the manufacturer, hence the change between Keysight and Agilent in
                     # name and deviceName.
                       'AGILENT TECHNOLOGIES N5242A': KeysightDeviceWrapper,
-                        'KEYSIGHT TECHNOLOGIES E5063A': KeysightDeviceWrapper,
+                      'KEYSIGHT TECHNOLOGIES E5063A': KeysightDeviceWrapper,
                       'HEWLETT PACKARD 8720ET': Agilent8720ETDeviceWrapper}
 
     @setting(100, 'Clear Status')
