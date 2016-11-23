@@ -92,9 +92,9 @@ class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
         '''Set or get the sweep center frequency.'''
         if cfreq is None:
             resp = yield self.query('SENS1:FREQ:CENT?')
-            creq = float(resp)*units.Hz
+            cfreq = float(resp)*units.Hz
         else:
-            yield self.write('SENS1:FREQ:CENT %I'%cfreq['Hz'])
+            yield self.write('SENS1:FREQ:CENT %i'%cfreq['Hz'])
         returnValue(cfreq)
 
     @inlineCallbacks
@@ -119,7 +119,7 @@ class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
     def stop_frequency(self, stop):
         '''Set or get sweep stop frequency.'''
         if stop is None:
-            resp = yield self.quey('SENS1:FREQ:STOP?')
+            resp = yield self.query('SENS1:FREQ:STOP?')
             stop = float(resp)*units.Hz
         else:
             yield self.write('SENS1:FREQ:STOP %i' %stop['Hz'])
@@ -255,15 +255,16 @@ class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
         """Get the active trace from the network analyzer."""
 
         # get list of traces in form "name, S21, name, S32,..."
-        measList = yield self.write('CALC:PAR:CAT?')
-        measList = measList.split(',')
+        measList = yield self.query('CALC:PAR:CAT?')
+        measList = measList.strip('"').split(',')
 
-        yield self.write('FORM REAL') # do we need to add ',64'
+        # yield self.write('FORM REAL') # do we need to add ',64'
+        yield self.write('FORM ASC,0')
 
-        avgMode = yield self.average_mode(c)
+        avgMode = yield self.average_mode(None)
         if avgMode:
-            avgCount = yield self.average_points(c)
-            yield self.restart_averaging(c)
+            avgCount = yield self.average_points(None)
+            yield self.restart_averaging()
             yield self.write('SENS:SWE:GRO:COUN %i' %avgCount)
             yield self.write('ABORT;SENS:SWE:MODE GRO')
         else:
@@ -275,10 +276,12 @@ class AgilentN5230ADeviceWrapper(GPIBDeviceWrapper):
 
         # pull data
         data = []
+        unitMultiplier = {'I':1, 'Q':1, 'P':units.deg, 'M':units.dB}
         for meas in measList[::2]:
             yield self.write('CALC:PAR:SEL "%s"' %meas)
-            bin_data = yield self.query('CALC:DATA? FDATA')
-            d = numpy.fromstring(bin_data, dtype=numpy.float64)
+            data_string = yield self.query('CALC:DATA? FDATA')
+            # d = numpy.fromstring(data_string, dtype=numpy.float64)
+            d = numpy.array([x for x in data_string.split(',')], dtype=float) * unitMultiplier[meas[0]]
             data.append(d)
 
         returnValue(data)
@@ -672,7 +675,7 @@ class VNAServer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         yield dev.measurement_setup(SList, formList)
 
-    @setting(1600, 'Get Trace', returns=['*v[dB]', '*v', '*v[deg]', '*c'])
+    @setting(1600, 'Get Trace', returns='*2?')#'(*v[dB],*v[deg],*v[dB],*v[deg])')#['*2v[dB]', '*2v', '*2v[deg]', '*2c', '?'])
     def get_trace(self, c):
         """
         Get network analyzer trace. The output depends on the display
