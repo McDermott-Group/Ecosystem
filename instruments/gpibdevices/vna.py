@@ -250,7 +250,7 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
             yield self.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 2))
             yield self.write('SENS1:SWE:TIME:AUTO ON')
 
-        if trig is 'EXT':
+        if triggerType is 'EXT':
             yield self.write('TRIG:SOUR EXT')
             yield self.write('TRIG:TYPE LEV')
         else:
