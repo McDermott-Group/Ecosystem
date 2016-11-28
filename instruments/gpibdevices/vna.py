@@ -208,7 +208,7 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         returnValue(points)
 
     @inlineCallbacks
-    def measurement_setup(self, SList, formList):
+    def measurement_setup(self, SList, formList, triggerType):
         """
         Set the measurement parameters. Use a list of strings of the form Sxx
         (S21, S11...) for the measurement type.  The form list can be either
@@ -250,7 +250,11 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
             yield self.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 2))
             yield self.write('SENS1:SWE:TIME:AUTO ON')
 
-        yield self.write('TRIG:SOUR IMM')
+        if trig is 'EXT':
+            yield self.write('TRIG:SOUR EXT')
+            yield self.write('TRIG:TYPE LEV')
+        else:
+            yield self.write('TRIG:SOUR IMM')
 
     @inlineCallbacks
     def get_trace(self):
@@ -486,7 +490,7 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
             returnValue([real.astype(float) + 1j * imag.astype(float)])
 
     @inlineCallbacks
-    def measurement_setup(self, SList, formList):
+    def measurement_setup(self, SList, formList, triggerType):
         """
         Set or get the measurement mode: transmission or reflection.
 
@@ -521,6 +525,9 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
                 raise ValueError('Unknown display format request: %s.' %fmt)
         else:
             self.form = None
+
+        if triggerType is not 'IMM':
+            raise Warning('Only immediate ("IMM") triggering is implemented for this VNA.')
 
 
 class VNAServer(GPIBManagedServer):
@@ -626,8 +633,8 @@ class VNAServer(GPIBManagedServer):
         resp  = yield dev.sweep_points(points)
         returnValue(resp)
 
-    @setting(1500, 'Measurement Setup', SList='*s', formList='?')
-    def measurement_setup(self, c, SList=['S21'], formList=None):
+    @setting(1500, 'Measurement Setup', SList='*s', formList='?', triggerType='s')
+    def measurement_setup(self, c, SList=['S21'], formList=None, triggerType='IMM'):
         """
         Set the measurement parameters. Use a list of strings of the form Sxx
         (S21, S11...) for the measurement type.  The form list can be either
@@ -643,7 +650,7 @@ class VNAServer(GPIBManagedServer):
             formList = ['MP']*len(SList)
 
         dev = self.selectedDevice(c)
-        yield dev.measurement_setup(SList, formList)
+        yield dev.measurement_setup(SList, formList, triggerType)
 
     @setting(1600, 'Get Trace', returns='*2v')#'(*v[dB],*v[deg],*v[dB],*v[deg])')#['*2v[dB]', '*2v', '*2v[deg]', '*2c', '?'])
     def get_trace(self, c):
