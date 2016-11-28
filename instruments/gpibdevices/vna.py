@@ -228,7 +228,7 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         # Create window 1.
         yield self.write('DISP:WIND1:STATE ON')
         for k, Sp in enumerate(SList):
-            if formList[k] is 'IQ':
+            if formList[k] == 'IQ':
                 yield self.write('CALC:PAR:DEF:EXT "R_%s",%s' %(Sp, Sp))
                 yield self.write('DISP:WIND1:TRAC%d:FEED "R_%s"' %(2 * k + 1, Sp))
                 yield self.write('CALC:PAR:DEF:EXT "I_%s",%s' %(Sp, Sp))
@@ -237,7 +237,7 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
                 yield self.write('CALC:FORM REAL')
                 yield self.write('CALC:PAR:SEL "I_%s"' %Sp)
                 yield self.write('CALC:FORM IMAG')
-            if formList[k] is 'MP':
+            if formList[k] == 'MP':
                 yield self.write('CALC:PAR:DEF:EXT "M_%s",%s' %(Sp, Sp))
                 yield self.write('DISP:WIND1:TRAC%d:FEED "M_%s"' %(2 * k + 1, Sp))
                 yield self.write('CALC:PAR:DEF:EXT "P_%s",%s' %(Sp, Sp))
@@ -249,8 +249,8 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
             yield self.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 1))
             yield self.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 2))
             yield self.write('SENS1:SWE:TIME:AUTO ON')
-
-        if triggerType is 'EXT':
+        
+        if triggerType == 'EXT':
             yield self.write('TRIG:SOUR EXT')
             yield self.write('TRIG:TYPE LEV')
         else:
@@ -634,7 +634,7 @@ class VNAServer(GPIBManagedServer):
         returnValue(resp)
 
     @setting(1500, 'Measurement Setup', SList='*s', formList='?', triggerType='s')
-    def measurement_setup(self, c, SList=['S21'], formList=None, triggerType='IMM'):
+    def measurement_setup(self, c, SList=['S21'], formList=['MP'], triggerType='IMM'):
         """
         Set the measurement parameters. Use a list of strings of the form Sxx
         (S21, S11...) for the measurement type.  The form list can be either
