@@ -349,15 +349,22 @@ class mGraph(QtGui.QWidget):
         if dataSet:
             data = dataSet.getData()
             i = len(data)-1;
-            while data[i][0]>(data[-1][0]-time):
+            #print data[i][0]
+            if(time):
+                while data[i][0] > (data[-1][0]-time):
+                    
+                    i-=1
+                    if(-1*i > len(data)):
+                        return data
+                data = data[i:-1]
+                #print data
+                dataT = np.transpose(data)
+                return  data
                 
-                i-=1
-            data = data[i:-1]
-            #print data
-            dataT = np.transpose(data)
-          
-          
-            return  data
+            else:
+                return data
+              
+                
             #colums = [data[i][:] for i in range]
            # print "times: ",dataTup = 
         else:
