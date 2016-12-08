@@ -155,17 +155,17 @@ class ProbeStation(QtGui.QWidget):
             self.areaView.setAreasIndex(0)
 
     def setOdd(self, odd):
-        self.waferMap.setOdd(odd)
-        self.odd = odd
+        self.waferMap.setOdd(bool(odd))
+        self.odd = bool(odd)
         self.areaView.setAreasIndex(0)
         try:
-            self.resDataChest.addParameter("Odd", self.odd, overwrite=True)
+            self.resDataChest.addParameter("Odd", bool(self.odd), overwrite=True)
         except AttributeError:
             pass # if file has not been created yet
 
     def setInnerDiameter(self, dia):
-        self.waferMap.setInnerDiameter(dia)
-        self.innerDiameter = dia
+        self.waferMap.setInnerDiameter(float(dia))
+        self.innerDiameter = float(dia)
         self.areaView.setAreasIndex(0)
         try:
             self.resDataChest.addParameter("Inner Diameter", self.innerDiameter, overwrite=True)
@@ -173,8 +173,8 @@ class ProbeStation(QtGui.QWidget):
             pass # if file has not been created yet
 
     def setPitchX(self, pitch):
-        self.pitchX = pitch
-        self.waferMap.setPitchX(pitch)
+        self.pitchX = float(pitch)
+        self.waferMap.setPitchX(float(pitch))
         self.areaView.setAreasIndex(0)
         try:
             self.resDataChest.addParameter("Pitch X", self.pitchX, overwrite=True)
@@ -182,8 +182,8 @@ class ProbeStation(QtGui.QWidget):
             pass # if file has not been created yet
 
     def setPitchY(self, pitch):
-        self.pitchY = pitch
-        self.waferMap.setPitchY(pitch)
+        self.pitchY = float(pitch)
+        self.waferMap.setPitchY(float(pitch))
         self.areaView.setAreasIndex(0)
         try:
             self.resDataChest.addParameter("Pitch Y", self.pitchY, overwrite=True)
@@ -211,8 +211,8 @@ class ProbeStation(QtGui.QWidget):
         elif key == QtCore.Qt.Key_Space:
             die = self.waferMap.getSelectedDie()
             area = float(self.areaView.getCurrentArea())
-            dmmRange = yield self.dmm.get_fw_resistance()
-            res = yield self.dmm.get_fw_range()
+            res = yield self.dmm.get_fw_resistance()
+            dmmRange = yield self.dmm.get_fw_range()
             yield self.dmm.return_to_local()
             self.resDataChest.addData( [[die, area, dmmRange['Ohm'], res['Ohm']]] )
             print [die, area, dmmRange['Ohm'], res['Ohm']]
