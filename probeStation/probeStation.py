@@ -104,14 +104,16 @@ class ProbeStation(QtGui.QWidget):
         self.evenRadio.toggled.connect(lambda:self.setOdd(False))
         dieSetupLayout.addWidget(self.evenRadio)
 
+        # layouts
         dieSetupLayout.addStretch(1)
 
         layout.addLayout(waferSetupLayout)
         layout.addLayout(dieSetupLayout)
 
-        fileButton = QtGui.QPushButton("Select File")
-        fileButton.clicked.connect(self.selectFile)
-        layout.addWidget(fileButton)
+        # file button
+        self.fileButton = QtGui.QPushButton("Select File")
+        self.fileButton.clicked.connect(self.selectFile)
+        layout.addWidget(self.fileButton)
 
         self.areaView = AreaDisplay()
         self.areaView.setAreasString(self.areaString)
@@ -142,17 +144,34 @@ class ProbeStation(QtGui.QWidget):
             self.fileDir = fileArray[:-1]
             fileName = fileArray[-1]
             self.resDataChest = dataChest( self.fileDir )
-            self.resDataChest.createDataset(fileName,
-                    [('die',[1],'string',''),('area',[1],'float64','um**2'),
-                        ('DMM range',[1],'float64','Ohm')],
-                    [('resistance',[1],'float64','Ohms')])
-            self.resDataChest.addParameter("Date Measured", str(datetime.datetime.utcnow()))
-            self.resDataChest.addParameter("Odd", self.odd)
-            self.resDataChest.addParameter("Pitch X", self.pitchX)
-            self.resDataChest.addParameter("Pitch Y", self.pitchY)
-            self.resDataChest.addParameter("Inner Diameter", self.innerDiameter)
+            try:
+                self.resDataChest.openDataset(fileName, modify=True)
+                print( 'opened old dataset' )
+            except Exception:
+                self.resDataChest.createDataset(fileName,
+                        [('die',[1],'string',''),('area',[1],'float64','um**2'),
+                            ('DMM range',[1],'float64','Ohm')],
+                        [('resistance',[1],'float64','Ohms')])
+            try:
+                self.resDataChest.addParameter("Date Measured", str(datetime.datetime.utcnow()))
+            except RuntimeError:
+                pass # this will be trown when we try to open an old dataset and don't overwrite this
+            self.resDataChest.addParameter("Odd", self.odd, overwrite=True)
+            self.resDataChest.addParameter("Pitch X", self.pitchX, overwrite=True)
+            self.resDataChest.addParameter("Pitch Y", self.pitchY, overwrite=True)
+            self.resDataChest.addParameter("Inner Diameter", self.innerDiameter, overwrite=True)
             self.waferMap.initGrid()
             self.areaView.setAreasIndex(0)
+        self.fileButton.setText('End Measurement')
+        self.fileButton.disconnect()
+        self.fileButton.connect(self.endMeasurement)
+        
+    def endMeasurement(self):
+        self.fileDir = []
+        self.resDataChest = None
+        self.fileButton.setText('Select File')
+        self.fileButton.disconnect()
+        self.fileButton.connect(self.selectFile)
 
     def setOdd(self, odd):
         self.waferMap.setOdd(bool(odd))
