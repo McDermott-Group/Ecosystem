@@ -132,7 +132,7 @@ class ProbeStation(QtGui.QWidget):
         baseDirList = ['Z:','mcdermott-group','Data']
         baseDir = os.path.join( *(baseDirList+self.fileDir) )
         fileDialog.setDirectory( baseDir )
-        filePath = str(fileDialog.getSaveFileName(self, 'Save File'))
+        filePath = str(fileDialog.getSaveFileName(self, 'Save File', options=QtGui.QFileDialog.DontConfirmOverwrite))
         print( 'save file: ' + filePath )
         if filePath is not '':
             filePath = filePath.replace(baseDir, '') # remove base path
@@ -163,15 +163,15 @@ class ProbeStation(QtGui.QWidget):
             self.waferMap.initGrid()
             self.areaView.setAreasIndex(0)
         self.fileButton.setText('End Measurement')
-        self.fileButton.disconnect()
-        self.fileButton.connect(self.endMeasurement)
+        self.fileButton.clicked.disconnect(self.selectFile)
+        self.fileButton.clicked.connect(self.endMeasurement)
         
     def endMeasurement(self):
         self.fileDir = []
         self.resDataChest = None
         self.fileButton.setText('Select File')
-        self.fileButton.disconnect()
-        self.fileButton.connect(self.selectFile)
+        self.fileButton.clicked.disconnect(self.endMeasurement)
+        self.fileButton.clicked.connect(self.selectFile)
 
     def setOdd(self, odd):
         self.waferMap.setOdd(bool(odd))
