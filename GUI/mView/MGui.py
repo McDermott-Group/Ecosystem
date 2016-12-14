@@ -85,7 +85,8 @@ class MGui(QtGui.QMainWindow):
     def initGui(self, devices, parent = None):
         '''Configure all gui elements.'''
         QtGui.QWidget.__init__(self, parent)
-        app.setActiveWindow(self) 
+        app.setActiveWindow(self)
+        QtGui.QApplication.setStyle(QtGui.QStyleFactory.create('plastique'))
         # On GUI exit, run stop function
         atexit.register(self.stop)
         web.devices = devices
@@ -259,8 +260,16 @@ class MGui(QtGui.QMainWindow):
                 
         self.mainVBox[0].addStretch(0)
         self.mainVBox[1].addStretch(0)
+        
+        
         print("Gui initialized")
-   
+    def mousePressEvent(self, event):
+        #print "click"
+        focused_widget = QtGui.QApplication.focusWidget()
+        #print focused_widget
+        if isinstance(focused_widget, QtGui.QScrollArea):
+            focused_widget.clearFocus()
+        QtGui.QMainWindow.mousePressEvent(self, event)
     def stop(self):
         '''Stop and close mView cleanly'''
         print "Closing mView"
@@ -303,6 +312,7 @@ class MGui(QtGui.QMainWindow):
         # in the main thread.
         self.timer.singleShot(web.guiRefreshRate*1000, self.update)
         #self.MAlert.begin()
+        QtGui.QApplication.focusWidget().clearFocus()
         sys.exit(app.exec_())
 
     def update(self):

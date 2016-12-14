@@ -38,9 +38,9 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 import csv
-
+import os
 from utilities import sleep
-
+import traceback
 
 class goldsteinsPT1000TemperatureMonitorWrapper(DeviceWrapper):
     @inlineCallbacks
@@ -85,17 +85,22 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
         yield DeviceServer.initServer(self)
     
     def resToTemp(self, R):
-        R = R / 10 # Because the curve we use is for the PT100.
-        f = open('PT100Table.csv', 'rb')
+        try:
+            R = R / 10 # Because the curve we use is for the PT100.
+            #print "CWD"
+            #print os.getcwd()
+            os.chdir(os.path.dirname(__file__))
+            #print os.getcwd()
+            f = open('PT100Table.csv')
 
-        reader = csv.reader(f)
-        
-        curr = [0,0]
-        prevRow = [0]
-        for i, row in enumerate(reader):
-            for y, cell in enumerate(row[1::]):
-                prev = curr[:]
-                try:
+            reader = csv.reader(f)
+            
+            curr = [0,0]
+            prevRow = [0]
+            for i, row in enumerate(reader):
+                for y, cell in enumerate(row[1::]):
+                    prev = curr[:]
+                    
                     curr[0] = float(cell)
                     if(float(prevRow[0])>0):
                         curr[1]=(float(row[0])+y)
@@ -103,42 +108,55 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
                     else:
                         curr[1]=(float(row[0])-y)
                         sign = -1
-                except:
-                    continue
-                if(float(prev[0]*sign)<=R*sign<float(curr[0]*sign)):
-                    fac = (curr[0]-R)/(curr[0]-prev[0])
-                    return curr[1]*(1-fac)+prev[1]*fac
-            prevRow = row
-        #print ("value not found")
-        return np.nan
+                    
+                    if(float(prev[0]*sign)<=R*sign<float(curr[0]*sign)):
+                        #print float(prev[0]*sign), R*sign, float(curr[0]*sign)
+                        #print "curr: ", curr
+                        #print "prev: ", prev
+                        fac = (curr[0]-R)/(curr[0]-prev[0])
+                        #print "fac: ", fac
+                        #print "curr[1]*(1-fac): ", curr[1]*(1-fac)
+                        #print "prev[1]*fac: ", prev[1]*fac
+                        return curr[1]*(1-fac)+prev[1]*fac
+                prevRow = row
+            #print ("value not found")
+            return np.nan
+        except:
+            traceback.print_exc()
 
     @setting(100, 'Get Temperatures', returns = '*?')
     def getTemperatures(self, ctx):
+
         readings = []
         self.dev = self.selectedDevice(ctx)
+
         for i in range(2):
             yield self.dev.write_line(str(i+1))
             yield sleep(0.2)
             reading = yield self.dev.read_line()
-            reading = reading.strip()
-            if(reading == "OL"):
-                readings.append(np.nan)
+           
+            readings.append(reading)
+            #print readings
+            print "Test: ", self.resToTemp(1203)
+            readings[i] = reading.strip()
+            if(reading == "OL\r\n"):
+                readings[i] = np.nan
             elif len(reading) is 0:
-                readings.append(np.nan)
+                readings[i] = np.nan
             else:
-                if i is 0:
+                if i == 0:
                     print "50K: ", reading
                 else:
                     print "3K: ", reading
-                reading = reading.strip()
-                #print float(reading)
-                #print self.resToTemp(900)
-                readings.append(self.resToTemp(float(reading))+273.15)
-#                print readings
-        readings = readings*units.K
-        reading1 = readings[1]
-        reading2 = readings[0]
-        returnValue([reading1,reading2])
+                readings[i] = reading.strip()
+              
+                readings[i] = self.resToTemp(float(readings[i]))+273.15
+        readings = [round(readings[0],1)*units.K, round(readings[1],1)*units.K]
+        #reading1 = readings[1]
+        #reading2 = readings[0]
+        #print [reading1,reading2]
+        returnValue(readings)
+
             
     @setting(200, 'Get Device Info', returns = 's')
     def getInfo(self, ctx):
