@@ -104,14 +104,16 @@ class ProbeStation(QtGui.QWidget):
         self.evenRadio.toggled.connect(lambda:self.setOdd(False))
         dieSetupLayout.addWidget(self.evenRadio)
 
+        # layouts
         dieSetupLayout.addStretch(1)
 
         layout.addLayout(waferSetupLayout)
         layout.addLayout(dieSetupLayout)
 
-        fileButton = QtGui.QPushButton("Select File")
-        fileButton.clicked.connect(self.selectFile)
-        layout.addWidget(fileButton)
+        # file button
+        self.fileButton = QtGui.QPushButton("Select File")
+        self.fileButton.clicked.connect(self.selectFile)
+        layout.addWidget(self.fileButton)
 
         self.areaView = AreaDisplay()
         self.areaView.setAreasString(self.areaString)
@@ -130,7 +132,7 @@ class ProbeStation(QtGui.QWidget):
         baseDirList = ['Z:','mcdermott-group','Data']
         baseDir = os.path.join( *(baseDirList+self.fileDir) )
         fileDialog.setDirectory( baseDir )
-        filePath = str(fileDialog.getSaveFileName(self, 'Save File'))
+        filePath = str(fileDialog.getSaveFileName(self, 'Save File', options=QtGui.QFileDialog.DontConfirmOverwrite))
         print( 'save file: ' + filePath )
         if filePath is not '':
             filePath = filePath.replace(baseDir, '') # remove base path
@@ -142,30 +144,47 @@ class ProbeStation(QtGui.QWidget):
             self.fileDir = fileArray[:-1]
             fileName = fileArray[-1]
             self.resDataChest = dataChest( self.fileDir )
-            self.resDataChest.createDataset(fileName,
-                    [('die',[1],'string',''),('area',[1],'float64','um**2'),
-                        ('DMM range',[1],'float64','Ohm')],
-                    [('resistance',[1],'float64','Ohms')])
-            self.resDataChest.addParameter("Date Measured", str(datetime.datetime.utcnow()))
-            self.resDataChest.addParameter("Odd", self.odd)
-            self.resDataChest.addParameter("Pitch X", self.pitchX)
-            self.resDataChest.addParameter("Pitch Y", self.pitchY)
-            self.resDataChest.addParameter("Inner Diameter", self.innerDiameter)
+            try:
+                self.resDataChest.openDataset(fileName, modify=True)
+                print( 'opened old dataset' )
+            except Exception:
+                self.resDataChest.createDataset(fileName,
+                        [('die',[1],'string',''),('area',[1],'float64','um**2'),
+                            ('DMM range',[1],'float64','Ohm')],
+                        [('resistance',[1],'float64','Ohms')])
+            try:
+                self.resDataChest.addParameter("Date Measured", str(datetime.datetime.utcnow()))
+            except RuntimeError:
+                pass # this will be trown when we try to open an old dataset and don't overwrite this
+            self.resDataChest.addParameter("Odd", self.odd, overwrite=True)
+            self.resDataChest.addParameter("Pitch X", self.pitchX, overwrite=True)
+            self.resDataChest.addParameter("Pitch Y", self.pitchY, overwrite=True)
+            self.resDataChest.addParameter("Inner Diameter", self.innerDiameter, overwrite=True)
             self.waferMap.initGrid()
             self.areaView.setAreasIndex(0)
+        self.fileButton.setText('End Measurement')
+        self.fileButton.clicked.disconnect(self.selectFile)
+        self.fileButton.clicked.connect(self.endMeasurement)
+        
+    def endMeasurement(self):
+        self.fileDir = []
+        self.resDataChest = None
+        self.fileButton.setText('Select File')
+        self.fileButton.clicked.disconnect(self.endMeasurement)
+        self.fileButton.clicked.connect(self.selectFile)
 
     def setOdd(self, odd):
-        self.waferMap.setOdd(odd)
-        self.odd = odd
+        self.waferMap.setOdd(bool(odd))
+        self.odd = bool(odd)
         self.areaView.setAreasIndex(0)
         try:
-            self.resDataChest.addParameter("Odd", self.odd, overwrite=True)
+            self.resDataChest.addParameter("Odd", bool(self.odd), overwrite=True)
         except AttributeError:
             pass # if file has not been created yet
 
     def setInnerDiameter(self, dia):
-        self.waferMap.setInnerDiameter(dia)
-        self.innerDiameter = dia
+        self.waferMap.setInnerDiameter(float(dia))
+        self.innerDiameter = float(dia)
         self.areaView.setAreasIndex(0)
         try:
             self.resDataChest.addParameter("Inner Diameter", self.innerDiameter, overwrite=True)
@@ -173,8 +192,8 @@ class ProbeStation(QtGui.QWidget):
             pass # if file has not been created yet
 
     def setPitchX(self, pitch):
-        self.pitchX = pitch
-        self.waferMap.setPitchX(pitch)
+        self.pitchX = float(pitch)
+        self.waferMap.setPitchX(float(pitch))
         self.areaView.setAreasIndex(0)
         try:
             self.resDataChest.addParameter("Pitch X", self.pitchX, overwrite=True)
@@ -182,8 +201,8 @@ class ProbeStation(QtGui.QWidget):
             pass # if file has not been created yet
 
     def setPitchY(self, pitch):
-        self.pitchY = pitch
-        self.waferMap.setPitchY(pitch)
+        self.pitchY = float(pitch)
+        self.waferMap.setPitchY(float(pitch))
         self.areaView.setAreasIndex(0)
         try:
             self.resDataChest.addParameter("Pitch Y", self.pitchY, overwrite=True)
@@ -211,8 +230,8 @@ class ProbeStation(QtGui.QWidget):
         elif key == QtCore.Qt.Key_Space:
             die = self.waferMap.getSelectedDie()
             area = float(self.areaView.getCurrentArea())
-            dmmRange = yield self.dmm.get_fw_resistance()
-            res = yield self.dmm.get_fw_range()
+            res = yield self.dmm.get_fw_resistance()
+            dmmRange = yield self.dmm.get_fw_range()
             yield self.dmm.return_to_local()
             self.resDataChest.addData( [[die, area, dmmRange['Ohm'], res['Ohm']]] )
             print [die, area, dmmRange['Ohm'], res['Ohm']]
