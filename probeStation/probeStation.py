@@ -139,8 +139,6 @@ class ProbeStation(QtGui.QWidget):
             if filePath[-5:] == '.hdf5':
                 filePath = filePath[:-5]
             fileArray = filePath.split('/')
-            for elem in baseDirList:
-                fileArray.remove(elem)
             self.fileDir = fileArray[:-1]
             fileName = fileArray[-1]
             self.resDataChest = dataChest( self.fileDir )
