@@ -137,7 +137,7 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
            
             readings.append(reading)
             #print readings
-            print "Test: ", self.resToTemp(1203)
+            #print "Test: ", self.resToTemp(1203)
             readings[i] = reading.strip()
             if(reading == "OL\r\n"):
                 readings[i] = np.nan
@@ -150,8 +150,11 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
                     print "3K: ", reading
                 readings[i] = reading.strip()
               
-                readings[i] = self.resToTemp(float(readings[i]))+273.15
-        readings = [round(readings[0],1)*units.K, round(readings[1],1)*units.K]
+                #readings[i] = self.resToTemp(float(readings[i]))+273.15
+        try:
+            readings = [round(float(readings[0]),1)*units.Ohm, round(float(readings[1]),1)*units.Ohm]
+        except:
+            traceback.print_exc()
         #reading1 = readings[1]
         #reading2 = readings[0]
         #print [reading1,reading2]
