@@ -40,6 +40,8 @@ from twisted.internet.task import LoopingCall
 from labrad.server import LabradServer, setting
 from labrad.units import mK, K, s
 
+import numpy as np
+
 
 class LeidenDRPseudoserver(LabradServer):
     """
@@ -133,21 +135,29 @@ class LeidenDRPseudoserver(LabradServer):
     @setting(10, 'Still Temperature', returns='v[mK]')
     def still_temperature(self, c):
         """Return the still chamber temperature."""
+        if(self._still_temp>300*K):
+            return np.nan
         return self._still_temp
 
     @setting(11, 'Exchange Temperature', returns='v[mK]')
     def exchange_temperature(self, c):
         """Return the exchange chamber temperature."""
+        if(self._exchange_temp>300*K):
+            return np.nan
         return self._exchange_temp
         
     @setting(12, 'Mix Temperature', returns='v[mK]')
     def mix_temperature(self, c):
         """Return the mix chamber temperature."""
+        if(self._mix_temp>300*K):
+            return np.nan
         return self._mix_temp
         
     @setting(13, 'Mix Temperature PT1000', returns='v[K]')
     def mix_temperature_pt1000(self, c):
         """Return the mix chamber temperature measured with PT1000."""
+        if(self._mix_temp_PT1000>300*K):
+            return np.nan
         return self._mix_temp_PT1000
 
 
