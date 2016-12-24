@@ -260,16 +260,14 @@ class MGui(QtGui.QMainWindow):
                 
         self.mainVBox[0].addStretch(0)
         self.mainVBox[1].addStretch(0)
-        
-        
         print("Gui initialized")
+
     def mousePressEvent(self, event):
-        #print "click"
         focused_widget = QtGui.QApplication.focusWidget()
-        #print focused_widget
         if isinstance(focused_widget, QtGui.QScrollArea):
             focused_widget.clearFocus()
         QtGui.QMainWindow.mousePressEvent(self, event)
+
     def stop(self):
         '''Stop and close mView cleanly'''
         print "Closing mView"
@@ -285,15 +283,17 @@ class MGui(QtGui.QMainWindow):
 
     def setRefreshRate(self, period):
         web.guiRefreshRate = period
+
     def openConfig(self):
         self.Config = ConfigGui(self)
         self.Config.exec_()
+
     def startGui(self, devices, title, dataTitle, tele):
         '''Start the GUI'''
-        # Used as the name of the dataChest data title
+        # Used as the name of the dataChest data title.
         self.dataTitle = dataTitle
         web.devices = devices
-        # Start the notifier
+        # Start the notifier.
         web.telecomm = tele
         self.NotifierGUI = NotifierGUI()
         self.MAlert = MAlert.MAlert()
@@ -316,23 +316,23 @@ class MGui(QtGui.QMainWindow):
         sys.exit(app.exec_())
 
     def update(self):
-        '''Update the GUI'''
-        readings = []
+        '''Update the GUI.'''
         error = False
-        # loop through all devices
-        for i in range(0, len(web.devices)):
-            # If there is no error with the device
-            if(not web.devices[i].getFrame().isError()):
-                # Get the readings from the frame
-                readings = web.devices[i].getFrame().getReadings();
-                if(readings is not None):
-                    # Update all QLcds with the reading                    
+        # Loop through all devices.
+        for i in range(len(web.devices)):
+            # If there is no error with the device.
+            if not web.devices[i].getFrame().isError():
+                # Get the readings from the frame.
+                readings = web.devices[i].getFrame().getReadings()
+                precisions = web.devices[i].getFrame().getPrecisions()
+                if readings is not None:
+                    # Update all QLcds with the reading.
                     for y in range(len(web.devices[i].getFrame().getOutOfRangeStatus())):
-                        # Check if the reading is out of range
+                        # Check if the reading is out of range.
                         outOfRange = web.devices[i].getFrame().getOutOfRangeStatus()
-                        # The key for a reading is "device:param"
+                        # The key for a reading is "device:param".
                         key = web.devices[i].getFrame().getTitle()+":"+web.devices[i].getFrame().getNicknames()[y] 
-                        # Check if the specific reading is out of range
+                        # Check if the specific reading is out of range.
                         if outOfRange[key]:
                             # If the reading is out of range, make everything orange
                             self.lcds[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
@@ -340,25 +340,28 @@ class MGui(QtGui.QMainWindow):
                             self.parameters[i][y].setStyleSheet("color:rgb(200, 100, 50);\n")
                         else:
                             pass
-                            # Otherwise, things should be white
+                            # Otherwise, things should be white.
                             self.lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
                             self.units[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
                             self.parameters[i][y].setStyleSheet("color:rgb(189, 195, 199);\n") 
-                    for y in range(0, len(web.devices[i].getFrame().getNicknames())):
+                    for y in range(len(web.devices[i].getFrame().getNicknames())):
                         # Segments should be flat
                         self.lcds[i][y].setSegmentStyle(QtGui.QLCDNumber.Flat)
                         try:
-                            # If the readings are not nan, then display a reading
-                            if(not math.isnan(readings[y])):
-                                self.lcds[i][y].display(readings[y])
-                            # If the reading is nan, or there is none, it is denoted by ---
+                            # If the readings are not nan, then display
+                            # a reading.
+                            format = "%." + str(int(precisions[y])) + "f"
+                            if not math.isnan(readings[y]):
+                                self.lcds[i][y].display(format %readings[y])
+                            # If the reading is nan, or there is none,
+                            # it is denoted by "---".
                             else:
                                 self.lcds[i][y].display("---")
                         except TypeError:
                             traceback.print_exc()
                             pass
-                        # If there are units, put them next to the number
-                        if(len(web.devices[i].getFrame().getUnits())>0):
+                        # If there are units, put them next to the number.
+                        if web.devices[i].getFrame().getUnits():
                             self.units[i][y].setText(web.devices[i]
                                 .getFrame().getUnits()[y])
                             self.font.setPointSize(18)
@@ -366,8 +369,8 @@ class MGui(QtGui.QMainWindow):
                             self.font.setPointSize(12)
             else:
                 # Otherwise if there is an error, show that on 
-                # the gui through outlined lcd numbers
-                for y in range(0, len(self.lcds[i])):
+                # the gui through outlined lcd numbers.
+                for y in range(len(self.lcds[i])):
                     self.lcds[i][y].setSegmentStyle(QtGui
                         .QLCDNumber.Outline)
                     self.lcds[i][y].display("-")

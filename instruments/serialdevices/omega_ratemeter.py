@@ -154,8 +154,8 @@ class OmegaRatemeterServer(DeviceServer):
         """Setting that returns rate"""
         self.dev = self.selectedDevice(ctx)
         rate = yield self.getRate(self.dev)
-        if(rate is None):
-            rate = 0*units.galUS/units.min
+        if rate is None:
+            rate = 0 * units.galUS/units.min
         returnValue(rate)
         
     @inlineCallbacks
@@ -179,7 +179,6 @@ class OmegaRatemeterServer(DeviceServer):
             # Convert the reading to the correct units.
             gal = units.WithUnit(1, 'gal')
             output = reading * gal / units.min
-            #print(output)
             returnValue(output)
 
     @inlineCallbacks

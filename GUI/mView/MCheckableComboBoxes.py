@@ -13,12 +13,13 @@ class MCheckableComboBox(QtGui.QComboBox):
             item.setCheckState(QtCore.Qt.Unchecked)
         else:
             item.setCheckState(QtCore.Qt.Checked)
+
     def isChecked(self,index):
-       # print index
         item = self.model().item(index)
         if item.checkState() == QtCore.Qt.Checked:
             return True
         return False
+
     def setChecked(self, index, checked):
         item = self.model().item(index)
         item.setCheckState(QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked)

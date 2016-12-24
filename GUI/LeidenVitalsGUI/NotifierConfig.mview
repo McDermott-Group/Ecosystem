@@ -13,7 +13,7 @@ p5
 S'QString'
 (V
 ttRp6
-asS'Vacuum:IVC Pressure'
+asS'PT1000s:50K Stage Temperature'
 p7
 (lp8
 I00
@@ -24,7 +24,7 @@ ag4
 S'QString'
 (V
 ttRp9
-asS'Compressor:Output Water Temperature'
+asS'Vacuum:IVC Pressure'
 p10
 (lp11
 I00
@@ -35,7 +35,7 @@ ag4
 S'QString'
 (V
 ttRp12
-asS'Compressor:Oil Temperature'
+asS'Leiden DR:Mix (TT)'
 p13
 (lp14
 I00
@@ -57,7 +57,7 @@ ag4
 S'QString'
 (V
 ttRp18
-asS'Vacuum:Still Pressure'
+asS'Temperature:Exteranal Water Temperature'
 p19
 (lp20
 I00
@@ -68,32 +68,20 @@ ag4
 S'QString'
 (V
 ttRp21
-asS'PT1000s:3K'
+asS'PT1000s:3K Stage PT1000 Resistance'
 p22
 (lp23
 I00
-aF100
-aS''
-ag4
-(g5
-S'QString'
-(VED_EMAIL
-p24
-ttRp25
-asS'Temperature:Exteranal Water Temperature'
-p26
-(lp27
-I00
 aS''
 aS''
 ag4
 (g5
 S'QString'
 (V
-ttRp28
+ttRp24
 asS'Compressor:Helium Temperature'
-p29
-(lp30
+p25
+(lp26
 I00
 aS''
 aS''
@@ -101,22 +89,32 @@ ag4
 (g5
 S'QString'
 (V
-ttRp31
+ttRp27
+asS'PT1000s:50K Stage PT1000 Resistance'
+p28
+(lp29
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp30
 asS'Leiden DR:Mix (PT-1000)'
-p32
-(lp33
+p31
+(lp32
 I00
-aF100
+aS''
 aS''
 ag4
 (g5
 S'QString'
-(VED_EMAIL
-p34
-ttRp35
+(V
+ttRp33
 asS'Vacuum:OVC Pressure'
-p36
-(lp37
+p34
+(lp35
 I00
 aS''
 aS''
@@ -124,10 +122,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp38
-asS'Leiden DR:Mix (TT)'
-p39
-(lp40
+ttRp36
+asS'PT1000s:3K Stage Temperature'
+p37
+(lp38
 I00
 aS''
 aS''
@@ -135,41 +133,60 @@ ag4
 (g5
 S'QString'
 (V
-ttRp41
+ttRp39
+asS'Compressor:Output Water Temperature'
+p40
+(lp41
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp42
 asS'Flow Meter:External Water Flow Rate'
-p42
-(lp43
-I01
-aF1.3999999999999999
-aF4
+p43
+(lp44
+I00
+aS''
+aS''
 ag4
 (g5
 S'QString'
-(VNOAH_CELL, NOAH, ALEX, ED_EMAIL, CHRIS_CELL, CHRIS_EMAIL, NATE_EMAIL, NATE_CELL, RYAN_CELL, RYAN_EMAIL, JOHN_CELL, JOHN_EMAIL, MATT_CELL, MATT_EMAIL, IVAN_EMAIL
-p44
+(V
 ttRp45
 asS'Compressor:Input Water Temperature'
 p46
 (lp47
-I01
-aF274
-aF295
-ag4
-(g5
-S'QString'
-(VNOAH_CELL, NOAH, ALEX, ED_EMAIL, CHRIS_CELL, CHRIS_EMAIL, NATE_EMAIL, NATE_CELL, RYAN_CELL, RYAN_EMAIL, JOHN_CELL, JOHN_EMAIL, MATT_CELL, MATT_EMAIL, IVAN_EMAIL
-p48
-ttRp49
-asS'PT1000s:50K'
-p50
-(lp51
 I00
-aF100
+aS''
 aS''
 ag4
 (g5
 S'QString'
-(VED_EMAIL
+(V
+ttRp48
+asS'Vacuum:Still Pressure'
+p49
+(lp50
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp51
+asS'Compressor:Oil Temperature'
 p52
-ttRp53
+(lp53
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp54
 as.
