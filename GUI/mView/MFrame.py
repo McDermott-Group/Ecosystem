@@ -20,56 +20,55 @@ __version__ = "1.5.1"
 __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
-"""
-description = Organizes information returned by servers
-"""
-
 
 import sys
 import MGrapher
 sys.dont_write_bytecode = True
 
+
 class MFrame:
     '''This class acts as the interface between the devices and all classes
     which use the device or any of its parameters'''
-    # Name of device's server
+    # Name of device's server.
     serverTitle = None
-    # Parameter names to be displayed on GUI
+    # Parameter names to be displayed on the GUI.
     nicknames = None
-    # Settings which are called by the GUI
+    # Settings which are called by the GUI.
     serverSettings = None
-    # Device readings
+    # Device readings.
     readings = None
-    # Errors
+    # Precisions.
+    precisions = None
+    # Errors.
     error = False
-    # Error messages
+    # Error messages.
     errmsg = None
-    # Label on the y axis of the datachest dataplot
+    # Label on the y axis of the datachest dataplot.
     yLabel = ""
-    # Units used for each parameter
+    # Units used for each parameter.
     units = []
-    # Buttons on the GUI used to control the device
+    # Buttons on the GUI used to control the device.
     buttons = [[]]
-    # Stores an index of a certain button
+    # Stores an index of a certain button.
     buttonInd = None
-    # Is a specified button pushed
+    # Is a specified button pushed.
     buttonPushed = False
-    # Store the plots
+    # Store the plots.
     isPlotBool = False
     # Just in case the user wants to label their NGui plot with
     # custom units (note these are only the units displayed onscreen,
-    # not the units that the data is logged with)
+    # not the units that the data is logged with).
     custUnits = ''
-    # If the length of the graph should be plotted over a fixed interval
+    # If the length of the graph should be plotted over a fixed interval.
     plotLength = None
-    # Hold the datachest object
+    # Hold the datachest object.
     dataSet = None
-    # hold the plot
+    # Hold the plot.
     plot = None
-    # Refresh rate of plot
+    # Refresh rate of plot.
     plotRefreshRate = 1
 
-    # RefreshRate for the device
+    # RefreshRate for the device.
     refreshRate = 1
 
     # Is there a reading out of range?
@@ -78,91 +77,129 @@ class MFrame:
 
     def setTitle(self, title):
         self.serverTitle = title
+
     def getTitle(self):
         return self.serverTitle
+
     def getNicknames(self):
         return self.nicknames
+
     def setNicknames(self, nicknames):
         self.nicknames = nicknames
+
     def setReadings(self, readings):
         self.readings = readings
+
     def getReadings(self):
         return self.readings
+        
+    def setPrecisions(self, precisions):
+        self.precisions = precisions
+
+    def getPrecisions(self):
+        return self.precisions
+        
     def setReadingIndices(self, index):
         self.readingIndices = index
+
     def getReadingIndices(self):
         return self.readingIndices
+       
     def raiseError(self, msg):
         self.error = True
         self.errmsg = msg
+
     def retractError(self):
         self.error = False
         self.errmsg = None
+
     def isError(self):
         return self.error
+
     def errorMsg(self):
         return self.errmsg
+
     def setUnits(self, units):
         self.units = units
+
     def getUnits(self):
         return self.units
+
     def getCustomUnits(self):
         return self.custUnits
+
     def getButtons(self):
         return self.buttons
+
     def setButtons(self, buttons):
         self.buttons = buttons
+
     def buttonPressed(self, buttonInd):
         self.buttonInd = buttonInd
         self.buttonPushed = True
+
     def getButtonPressed(self):
         self.buttonPushed = False
         return self.buttonInd
+
     def isButtonPressed(self):
         return self.buttonPushed
+
     def setYLabel(self, y, custUnits=''):
         self.custUnits = custUnits
         self.yLabel = y
+
     def getYLabel(self):
         return self.yLabel
+
     def addPlot(self, length = None):
         self.isPlotBool=True
         self.plotLength = length
+
     def isPlot(self):
         return self.isPlotBool
+
     def setPlot(self, p):
         self.plot = p
+
     def getPlot(self):
         return self.plot
+
     def setPlotRefreshRate(self, period):
         self.plotRefreshRate = period
+
     def getPlotRefreshRate(self):
         return self.plotRefreshRate
+
     def setRefreshRate(self, period):
         self.refreshRate = period
+
     def getRefreshRate(self):
         return self.refreshRate
+
     def getPlotLength(self):
         return self.plotLength
+
     def setDataSet(self, dataSet):
-        self.dataSet = dataSet;
+        self.dataSet = dataSet
+
     def getDataSet(self):
         return self.dataSet
+
     def enableDataLogging(self, b):
         self.logData = b
+
     def isDataLogging(self):
         return self.logData
+
     def getOutOfRangeStatus(self): 
-        return self.outOfRange        
+        return self.outOfRange
+        
     def setOutOfRange(self, key):
-        #print "length of outofrange: ", len(self.outOfRange)
-        #print "FRAME: setting out of range"
-
         self.outOfRange[key] = True
-        #print "FRAME: ", self.outOfRange
-    def setInRange(self, key):
 
+    def setInRange(self, key):
         self.outOfRange[key] = False
+
     def disableRange(self):
       self.outOfRange = {key:False for key in self.outOfRange}
-      

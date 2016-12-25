@@ -947,7 +947,7 @@ class dataChest(dateStamp):
     validTypes = (int, long, float, complex, bool,
                   list, np.ndarray, str, unicode)
     if isinstance(parameterName, str):
-      if self._formatFilename(parameterName, " +-.") != parameterName:
+      if self._formatFilename(parameterName, " +-.[]") != parameterName:
         self.exception = ValueError("Invalid parameter name provided.")
         return False
       elif not isinstance(parameterValue, validTypes): 

@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Goldstein's PT1000 Temperature Monitor
-version = 1.0.1
+version = 1.1.0
 description = Monitors temperature of PT1000
 
 [startup]
@@ -30,17 +30,19 @@ timeout = 20
 ### END NODE INFO
 """
 
-from twisted.internet.defer import inlineCallbacks, returnValue
+import os
+import traceback
 import numpy as np
+import csv
+from twisted.internet.defer import inlineCallbacks, returnValue
 
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting
 import labrad.units as units
 from labrad import util
-import csv
-import os
+
 from utilities import sleep
-import traceback
+
 
 class goldsteinsPT1000TemperatureMonitorWrapper(DeviceWrapper):
     @inlineCallbacks
@@ -78,8 +80,7 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
     deviceWrapper = goldsteinsPT1000TemperatureMonitorWrapper
     
     @inlineCallbacks
-    def initServer(self):
-        print "Server Initializing"
+    def initServer(self): 
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
@@ -87,10 +88,7 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
     def resToTemp(self, R):
         try:
             R = R / 10 # Because the curve we use is for the PT100.
-            #print "CWD"
-            #print os.getcwd()
             os.chdir(os.path.dirname(__file__))
-            #print os.getcwd()
             f = open('PT100Table.csv')
 
             reader = csv.reader(f)
@@ -110,23 +108,15 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
                         sign = -1
                     
                     if(float(prev[0]*sign)<=R*sign<float(curr[0]*sign)):
-                        #print float(prev[0]*sign), R*sign, float(curr[0]*sign)
-                        #print "curr: ", curr
-                        #print "prev: ", prev
                         fac = (curr[0]-R)/(curr[0]-prev[0])
-                        #print "fac: ", fac
-                        #print "curr[1]*(1-fac): ", curr[1]*(1-fac)
-                        #print "prev[1]*fac: ", prev[1]*fac
                         return curr[1]*(1-fac)+prev[1]*fac
                 prevRow = row
-            #print ("value not found")
             return np.nan
         except:
             traceback.print_exc()
 
-    @setting(100, 'Get Temperatures', returns = '*?')
-    def getTemperatures(self, ctx):
-
+    @setting(100, 'Get Resistances', returns='*v[Ohm]')
+    def getResistances(self, ctx):
         readings = []
         self.dev = self.selectedDevice(ctx)
 
@@ -136,29 +126,39 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
             reading = yield self.dev.read_line()
            
             readings.append(reading)
-            #print readings
-            print "Test: ", self.resToTemp(1203)
             readings[i] = reading.strip()
             if(reading == "OL\r\n"):
                 readings[i] = np.nan
             elif len(reading) is 0:
                 readings[i] = np.nan
             else:
-                if i == 0:
-                    print "50K: ", reading
-                else:
-                    print "3K: ", reading
                 readings[i] = reading.strip()
-              
-                readings[i] = self.resToTemp(float(readings[i]))+273.15
-        readings = [round(readings[0],1)*units.K, round(readings[1],1)*units.K]
-        #reading1 = readings[1]
-        #reading2 = readings[0]
-        #print [reading1,reading2]
+        try:
+            readings = [round(float(readings[0]), 2) * units.Ohm,
+                        round(float(readings[1]), 2) * units.Ohm]
+        except:
+            traceback.print_exc()
+        returnValue(readings)
+        
+    def _pt1000_res2temp(self, resistance):
+        R = resistance['Ohm']
+        R0 = 1000
+        A = 3.9083e-3
+        B = -5.7750e-7
+        temp = -R0 * A + np.sqrt((R0 * A)**2 - 4 * R0 * B * (R0 - R))
+        temp /= 2 * R0 * B
+        temp += 273.15
+        return temp
+    
+    @setting(110, 'Get Temperatures', returns='*v[K]')
+    def getTemperatures(self, ctx):
+        resistances = yield self.getResistances(ctx)
+        readings = [self._pt1000_res2temp(resistances[0]) * units.K,
+                    self._pt1000_res2temp(resistances[1]) * units.K]
         returnValue(readings)
 
             
-    @setting(200, 'Get Device Info', returns = 's')
+    @setting(200, 'Get Device Info', returns='s')
     def getInfo(self, ctx):
         self.dev = self.selectedDevice(ctx)
         yield self.dev.write_line('?')
@@ -170,7 +170,8 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
     @inlineCallbacks
     def loadConfigInfo(self):
         reg = self.reg
-        yield reg.cd(['', 'Servers','PT1000TemperatureMonitor', 'Links'], True)
+        yield reg.cd(['', 'Servers','PT1000TemperatureMonitor',
+                'Links'], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -191,8 +192,10 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
             devName = '{} - {}'.format(server, port)
             devs += [(name, (server, port))]
         returnValue(devs)
+
         
 __server__ = goldsteinsPT1000TemperatureMonitorServer()
+
 
 if __name__=='__main__':
     util.runServer(__server__)

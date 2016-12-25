@@ -56,38 +56,54 @@ class nViewer:
             print("Please start the telecomm server")
             time.sleep(2)
             sys.exit(1)
-    
-        
+
         PT1000s = Device("PT1000s")
         PT1000s.connection(cxn)
         PT1000s.setServerName("goldstein_s_pt1000_temperature_monitor")
-        PT1000s.addParameter("3K", "get_temperatures", None, 0)
-        PT1000s.addParameter("50K", "get_temperatures", None, 1)
+        PT1000s.addParameter("50K Stage Temperature", "get_temperatures", None, 0)
+        PT1000s.addParameter("3K Stage Temperature", "get_temperatures", None, 1)
+        PT1000s.addParameter("50K Stage PT1000 Resistance", "get_resistances", None, 0)
+        PT1000s.addParameter("3K Stage PT1000 Resistance", "get_resistances", None, 1)
         PT1000s.selectDeviceCommand("select_device", 0)
-        PT1000s.setYLabel("Temperature")
+        PT1000s.setYLabel("Temperature (K) and Resistance")
         PT1000s.addPlot()
         PT1000s.begin()
         self.devices.append(PT1000s)
-        
-        
+
         LeidenDRTemperature = Device("Leiden DR")
         LeidenDRTemperature.connection(cxn)
 
         LeidenDRTemperature.setServerName("leiden_dr_temperature")
-        LeidenDRTemperature.addParameter("Mix (PT-1000)",
-                "mix_temperature_pt1000", None)
-        LeidenDRTemperature.addParameter("Mix (TT)",
-                "mix_temperature", None)
         LeidenDRTemperature.addParameter("Still",
                 "still_temperature", None)
         LeidenDRTemperature.addParameter("Exchange",
                 "exchange_temperature", None)
+        LeidenDRTemperature.addParameter("Mix (TT)",
+                "mix_temperature", None)
+        LeidenDRTemperature.addParameter("Mix (PT-1000)",
+                "mix_temperature_pt1000", None)
+
         LeidenDRTemperature.selectDeviceCommand("select_device", 0)
         LeidenDRTemperature.addPlot()
         LeidenDRTemperature.begin()
         LeidenDRTemperature.setYLabel("Temperature")
         self.devices.append(LeidenDRTemperature)
 
+        Vacuum = Device("Vacuum")
+        Vacuum.setServerName("pfeiffer_vacuum_maxigauge")
+        Vacuum.connection(cxn)
+        Vacuum.addPlot()
+        Vacuum.addParameter("OVC Pressure", "get_pressures", None, 3,
+                'mbar', 4)
+        Vacuum.addParameter("IVC Pressure", "get_pressures", None, 4,
+                'mbar', 4)
+        Vacuum.addParameter("Still Pressure", "get_pressures", None, 5,
+                'mbar', 4)
+        Vacuum.setYLabel("Pressure")
+        Vacuum.selectDeviceCommand("select_device", 0)
+        Vacuum.begin()
+        self.devices.append(Vacuum)
+        
         Compressor = Device("Compressor")
         Compressor.setServerName("cp2800_compressor")
         Compressor.addButton("Turn Off",
@@ -97,35 +113,20 @@ class nViewer:
                 "You are about to turn the compressor on.",
                 "status", None)
         Compressor.addParameter("Input Water Temperature",
-                "temperaturesforgui", None, 0)
+                "temperaturesforgui", None, 0, 'degC', 1)
         Compressor.addParameter("Output Water Temperature",
-                "temperaturesforgui", None, 1)
+                "temperaturesforgui", None, 1, 'degC', 1)
         Compressor.addParameter("Helium Temperature",
-                "temperaturesforgui", None, 2)
+                "temperaturesforgui", None, 2, 'degC', 1)
         Compressor.addParameter("Oil Temperature",
-                "temperaturesforgui", None, 3)
+                "temperaturesforgui", None, 3, 'degC', 1)
         Compressor.addPlot()
         Compressor.setYLabel("Temperature")
         Compressor.selectDeviceCommand("select_device", 0)
         Compressor.connection(cxn)
         Compressor.begin()
+        
         self.devices.append(Compressor)
-        
-        Vacuum = Device("Vacuum")
-        Vacuum.setServerName("pfeiffer_vacuum_maxigauge")
-        Vacuum.connection(cxn)
-        Vacuum.addPlot()
-        # Vacuum.addParameter("Sensor 1", "get_pressures", None, 0)
-        # Vacuum.addParameter("Sensor 2", "get_pressures", None, 1)
-        # Vacuum.addParameter("Sensor 3", "get_pressures", None, 2)
-        Vacuum.addParameter("OVC Pressure", "get_pressures", None, 3)
-        Vacuum.addParameter("IVC Pressure", "get_pressures", None, 4)
-        Vacuum.addParameter("Still Pressure", "get_pressures", None, 5)
-        Vacuum.setYLabel("Pressure")
-        Vacuum.selectDeviceCommand("select_device", 0)
-        Vacuum.begin()
-        self.devices.append(Vacuum)
-        
         Temperature = Device("Temperature")
         Temperature.connection(cxn)
         Temperature.setServerName("omega_temperature_monitor")
