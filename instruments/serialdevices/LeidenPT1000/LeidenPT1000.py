@@ -123,7 +123,8 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
         temp /= 2 * R0 * B
         temp += 273.15 # K
         
-        # Extra correction.
+        # Extra error correction obtained by fitting the error function to
+        # the 6th-degree polynomial.
         p1 = 6.0933e-17
         p2 = -3.2865e-13
         p3 = 6.8074e-10
@@ -133,6 +134,15 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
         p7 = 2.7358
         temp -= (p1 * R**6 + p2 * R**5 + p3 * R**4 + p4 * R**3 +
                  p5 * R**2 + p6 * R + p7)
+
+        # Extra error correction obtaine by fitting the residual error to
+        # the 3rd-degree rational funciton.
+        a1 = 3.508e+04
+        q1 = -78.44
+        q2 = 2275
+        q3 = -1.855e+04
+        temp -= a1 / (R**3 + q1 * R**2 + q2 * R + q3)
+
         return temp
     
     @setting(110, 'Get Temperatures', returns='*v[K]')
