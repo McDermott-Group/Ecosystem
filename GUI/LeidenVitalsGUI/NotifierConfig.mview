@@ -3,7 +3,7 @@ S'PT1000s:50K Stage Temperature'
 p2
 (lp3
 I01
-aF40
+aF30
 aF100
 acsip
 _unpickle_type
