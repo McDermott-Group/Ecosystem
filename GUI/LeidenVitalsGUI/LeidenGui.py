@@ -13,24 +13,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-
-"""
-version = 1.1.1
-description = Monitors Leiden Devices
-"""
-
 import sys
-sys.dont_write_bytecode = True
-import MGui     # Handles all GUI operations. Independent of  LabRAD.
-
-from Device import Device
-from multiprocessing.pool import ThreadPool
-import threading
-import labrad
-import labrad.units as units
 import time
-from dataChestWrapper import *
 from tendo import singleton
+
+import labrad
+
+from dataChestWrapper import *
+import MGui # Handles all GUI operations. Independent of LabRAD.
+from Device import Device
+
+sys.dont_write_bytecode = True
+
 
 class nViewer:
     gui = None
@@ -39,7 +33,8 @@ class nViewer:
     def __init__(self, parent = None):
         # Establish a connection to LabRAD.
         try:
-            me = singleton.SingleInstance() # will sys.exit(-1) if other instance is running
+            # Thiss will sys.exit(-1) if other instance is running.
+            me = singleton.SingleInstance()
         except:
             print("Multiple instances cannot be running")
             time.sleep(2)
@@ -60,10 +55,14 @@ class nViewer:
         PT1000s = Device("PT1000s")
         PT1000s.connection(cxn)
         PT1000s.setServerName("goldstein_s_pt1000_temperature_monitor")
-        PT1000s.addParameter("50K Stage Temperature", "get_temperatures", None, 0)
-        PT1000s.addParameter("3K Stage Temperature", "get_temperatures", None, 1)
-        PT1000s.addParameter("50K Stage PT1000 Resistance", "get_resistances", None, 0)
-        PT1000s.addParameter("3K Stage PT1000 Resistance", "get_resistances", None, 1)
+        PT1000s.addParameter("50K Stage Temperature",
+                "get_temperatures", None, 0, precision=1)
+        PT1000s.addParameter("3K Stage Temperature",
+                "get_temperatures", None, 1, precision=1)
+        # PT1000s.addParameter("50K Stage PT1000 Resistance",
+                # "get_resistances", None, 0)
+        # PT1000s.addParameter("3K Stage PT1000 Resistance",
+                # "get_resistances", None, 1)
         PT1000s.selectDeviceCommand("select_device", 0)
         PT1000s.setYLabel("Temperature (K) and Resistance")
         PT1000s.addPlot()
@@ -72,17 +71,15 @@ class nViewer:
 
         LeidenDRTemperature = Device("Leiden DR")
         LeidenDRTemperature.connection(cxn)
-
         LeidenDRTemperature.setServerName("leiden_dr_temperature")
-        LeidenDRTemperature.addParameter("Still",
+        LeidenDRTemperature.addParameter("Still Temperature",
                 "still_temperature", None)
-        LeidenDRTemperature.addParameter("Exchange",
+        LeidenDRTemperature.addParameter("Exchange Temperature",
                 "exchange_temperature", None)
-        LeidenDRTemperature.addParameter("Mix (TT)",
+        LeidenDRTemperature.addParameter("Mix Temperature (TT)",
                 "mix_temperature", None)
-        LeidenDRTemperature.addParameter("Mix (PT-1000)",
+        LeidenDRTemperature.addParameter("Mix Temperature (PT-1000)",
                 "mix_temperature_pt1000", None)
-
         LeidenDRTemperature.selectDeviceCommand("select_device", 0)
         LeidenDRTemperature.addPlot()
         LeidenDRTemperature.begin()
@@ -125,8 +122,8 @@ class nViewer:
         Compressor.selectDeviceCommand("select_device", 0)
         Compressor.connection(cxn)
         Compressor.begin()
-        
         self.devices.append(Compressor)
+
         Temperature = Device("Temperature")
         Temperature.connection(cxn)
         Temperature.setServerName("omega_temperature_monitor")
@@ -155,8 +152,8 @@ class nViewer:
         # Create the gui.
         self.gui = MGui.MGui()
         self.gui.startGui(self.devices, 'Leiden DR GUI', 'Leiden Data', tele)
-        
-        
+
+
 # In Python, the main class's __init__() IS NOT automatically called.
 viewer = nViewer()    
 viewer.__init__()
