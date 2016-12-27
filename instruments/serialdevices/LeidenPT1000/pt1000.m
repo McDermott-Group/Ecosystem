@@ -22,25 +22,29 @@ C_ITS90 = -4.1830E-12;
 
 T_IPTS68 = R2T(A_IPTS68, B_IPTS68, R0, R);
 T_ITS90 = R2T(A_ITS90, B_ITS90, R0, R);
+T_Leiden = R2T_Leiden(R);
 
 figure
 plot(R, Tcalib, 'ro',...
      R, T_IPTS68, 'g^',...
-     R, T_ITS90, 'bv', 'MarkerSize', 10, 'LineWidth', 2)
+     R, T_ITS90, 'bv',...
+     R, T_Leiden, 'ks', 'MarkerSize', 10, 'LineWidth', 2)
 title('Resistance Calibration')
 xlabel('Resistance (Ohm)')
 ylabel('Temperature (K)')
-legend('calibration', 'IPTS-68', 'ITS-90', 'Location', 'SouthEast')
+legend('calibration', 'IPTS-68', 'ITS-90', 'Leiden',...
+    'Location', 'SouthEast')
 axis tight
 grid on
 
 figure
 plot(R, T_IPTS68 - Tcalib, 'g^',...
-     R, T_ITS90 - Tcalib, 'bv', 'MarkerSize', 10, 'LineWidth', 2)
+     R, T_ITS90 - Tcalib, 'bv',...
+     R, T_Leiden - Tcalib, 'ks', 'MarkerSize', 10, 'LineWidth', 2)
 title('Calibration Error')
 xlabel('Resistance (Ohm)')
 ylabel('Temperature Error (K)')
-legend('IPTS-68', 'ITS-90', 'Location', 'SouthEast')
+legend('IPTS-68', 'ITS-90', 'Leiden', 'Location', 'SouthEast')
 axis tight
 grid on
 end
@@ -66,4 +70,22 @@ function T = R2T(A, B, R0, R)
     q2 = 2275;
     q3 = -1.855e+04;
     T = T - (a1 ./ (R.^3 + q1 * R.^2 + q2 * R + q3));
+end
+
+function T = R2T_Leiden(R)
+    % Calibration from a test report (CF-450-Eriksson-Wisconsin).
+    A = -469.544790033;
+    B1 = 2142.429105073;
+    B2 = -4278.355519358;
+    B3 = 4917.129912473;
+    B4 = -3583.140137551;
+    B5 = 1717.059717072;
+    B6 = -541.269035711;
+    B7 = 108.277676198;
+    B8 = -12.478784052;
+    B9 = 0.631579503;
+    logR = log10(R);
+    T = 10.^(A + B1 * logR + B2 * logR.^2 + B3 * logR.^3 +...
+        B4 * logR.^4 + B5 * logR.^5 + B6 * logR.^6 + B7 * logR.^7 +...
+        B8 * logR.^8 + B9 * logR.^9);
 end
