@@ -1,5 +1,5 @@
 (dp1
-S'Leiden DR:Still'
+S'50K and 3K PT1000 Temperature:50K Stage Temperature'
 p2
 (lp3
 I00
@@ -13,7 +13,7 @@ p5
 S'QString'
 (V
 ttRp6
-asS'Vacuum:IVC Pressure'
+asS'Dilution Unit Temperature:Mix Temperature (TT)'
 p7
 (lp8
 I00
@@ -24,7 +24,7 @@ ag4
 S'QString'
 (V
 ttRp9
-asS'Compressor:Output Water Temperature'
+asS'Mix PT1000 Temperature:Mix Temperature (PT1000)'
 p10
 (lp11
 I00
@@ -38,6 +38,18 @@ ttRp12
 asS'Compressor:Oil Temperature'
 p13
 (lp14
+I01
+aF10
+aF50
+ag4
+(g5
+S'QString'
+(VIVAN_EMAIL
+p15
+ttRp16
+asS'Dilution Unit Temperature:Still Temperature'
+p17
+(lp18
 I00
 aS''
 aS''
@@ -45,10 +57,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp15
-asS'Leiden DR:Exchange'
-p16
-(lp17
+ttRp19
+asS'50K and 3K PT1000 Temperature:3K Stage Temperature'
+p20
+(lp21
 I00
 aS''
 aS''
@@ -56,10 +68,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp18
-asS'Vacuum:Still Pressure'
-p19
-(lp20
+ttRp22
+asS'Water Temperature:Exteranal Water Temperature'
+p23
+(lp24
 I00
 aS''
 aS''
@@ -67,20 +79,8 @@ ag4
 (g5
 S'QString'
 (V
-ttRp21
-asS'PT1000s:3K'
-p22
-(lp23
-I00
-aF100
-aS''
-ag4
-(g5
-S'QString'
-(VED_EMAIL
-p24
 ttRp25
-asS'Temperature:Exteranal Water Temperature'
+asS'Compressor:Helium Temperature'
 p26
 (lp27
 I00
@@ -91,7 +91,7 @@ ag4
 S'QString'
 (V
 ttRp28
-asS'Compressor:Helium Temperature'
+asS'Water Flow:External Water Flow Rate'
 p29
 (lp30
 I00
@@ -102,74 +102,74 @@ ag4
 S'QString'
 (V
 ttRp31
-asS'Leiden DR:Mix (PT-1000)'
+asS'Vacuum:IVC Pressure'
 p32
 (lp33
-I00
-aF100
-aS''
+I01
+aF0
+aF30
 ag4
 (g5
 S'QString'
-(VED_EMAIL
+(VIVAN_EMAIL
 p34
 ttRp35
 asS'Vacuum:OVC Pressure'
 p36
 (lp37
-I00
-aS''
-aS''
+I01
+aF0
+aF1
 ag4
 (g5
 S'QString'
-(V
-ttRp38
-asS'Leiden DR:Mix (TT)'
-p39
-(lp40
-I00
-aS''
-aS''
+(VIVAN_EMAIL
+p38
+ttRp39
+asS'Compressor:Output Water Temperature'
+p40
+(lp41
+I01
+aF10
+aF60
 ag4
 (g5
 S'QString'
-(V
-ttRp41
-asS'Flow Meter:External Water Flow Rate'
+(VIVAN_EMAIL
 p42
-(lp43
-I01
-aF1.3999999999999999
-aF4
-ag4
-(g5
-S'QString'
-(VNOAH_CELL, NOAH, ALEX, ED_EMAIL, CHRIS_CELL, CHRIS_EMAIL, NATE_EMAIL, NATE_CELL, RYAN_CELL, RYAN_EMAIL, JOHN_CELL, JOHN_EMAIL, MATT_CELL, MATT_EMAIL, IVAN_EMAIL
+ttRp43
+asS'Dilution Unit Temperature:Exchange Temperature'
 p44
-ttRp45
-asS'Compressor:Input Water Temperature'
-p46
-(lp47
-I01
-aF274
-aF295
-ag4
-(g5
-S'QString'
-(VNOAH_CELL, NOAH, ALEX, ED_EMAIL, CHRIS_CELL, CHRIS_EMAIL, NATE_EMAIL, NATE_CELL, RYAN_CELL, RYAN_EMAIL, JOHN_CELL, JOHN_EMAIL, MATT_CELL, MATT_EMAIL, IVAN_EMAIL
-p48
-ttRp49
-asS'PT1000s:50K'
-p50
-(lp51
+(lp45
 I00
-aF100
+aS''
 aS''
 ag4
 (g5
 S'QString'
-(VED_EMAIL
-p52
+(V
+ttRp46
+asS'Compressor:Input Water Temperature'
+p47
+(lp48
+I01
+aF1
+aF22
+ag4
+(g5
+S'QString'
+(VIVAN_EMAIL
+p49
+ttRp50
+asS'Vacuum:Still Pressure'
+p51
+(lp52
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
 ttRp53
 as.

@@ -13,24 +13,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-
-"""
-version = 1.1.1
-description = Monitors Leiden Devices
-"""
-
 import sys
-sys.dont_write_bytecode = True
-import MGui     # Handles all GUI operations. Independent of  LabRAD.
-
-from Device import Device
-from multiprocessing.pool import ThreadPool
-import threading
-import labrad
-import labrad.units as units
 import time
-from dataChestWrapper import *
 from tendo import singleton
+
+import labrad
+
+from dataChestWrapper import *
+import MGui # Handles all GUI operations. Independent of LabRAD.
+from Device import Device
+
+sys.dont_write_bytecode = True
+
 
 class nViewer:
     gui = None
@@ -39,7 +33,8 @@ class nViewer:
     def __init__(self, parent = None):
         # Establish a connection to LabRAD.
         try:
-            me = singleton.SingleInstance() # will sys.exit(-1) if other instance is running
+            # Thiss will sys.exit(-1) if other instance is running.
+            me = singleton.SingleInstance()
         except:
             print("Multiple instances cannot be running")
             time.sleep(2)
@@ -56,39 +51,78 @@ class nViewer:
             print("Please start the telecomm server")
             time.sleep(2)
             sys.exit(1)
-    
-        
-        PT1000s = Device("PT1000s")
+
+        PT1000s = Device("50K and 3K PT1000 Temperature")
         PT1000s.connection(cxn)
         PT1000s.setServerName("goldstein_s_pt1000_temperature_monitor")
-        PT1000s.addParameter("3K", "get_temperatures", None, 0)
-        PT1000s.addParameter("50K", "get_temperatures", None, 1)
+        PT1000s.addParameter("50K Stage Temperature",
+                "get_temperatures", None, 0, precision=1)
+        PT1000s.addParameter("3K Stage Temperature",
+                "get_temperatures", None, 1, precision=1)
+        # PT1000s.addParameter("50K Stage PT1000 Resistance",
+                # "get_resistances", None, 0)
+        # PT1000s.addParameter("3K Stage PT1000 Resistance",
+                # "get_resistances", None, 1)
         PT1000s.selectDeviceCommand("select_device", 0)
         PT1000s.setYLabel("Temperature")
         PT1000s.addPlot()
         PT1000s.begin()
         self.devices.append(PT1000s)
-        
-        
-        LeidenDRTemperature = Device("Leiden DR")
-        LeidenDRTemperature.connection(cxn)
 
+        LeidenDRTemperature = Device("Dilution Unit Temperature")
+        LeidenDRTemperature.connection(cxn)
         LeidenDRTemperature.setServerName("leiden_dr_temperature")
-        LeidenDRTemperature.addParameter("Mix (PT-1000)",
-                "mix_temperature_pt1000", None)
-        LeidenDRTemperature.addParameter("Mix (TT)",
-                "mix_temperature", None)
-        LeidenDRTemperature.addParameter("Still",
+        LeidenDRTemperature.addParameter("Still Temperature",
                 "still_temperature", None)
-        LeidenDRTemperature.addParameter("Exchange",
+        LeidenDRTemperature.addParameter("Exchange Temperature",
                 "exchange_temperature", None)
+        LeidenDRTemperature.addParameter("Mix Temperature (TT)",
+                "mix_temperature", None)
+        LeidenDRTemperature.selectDeviceCommand("select_device", 0)
+        LeidenDRTemperature.addPlot()
+        LeidenDRTemperature.begin()
+        LeidenDRTemperature.setYLabel("Temperature")
+        self.devices.append(LeidenDRTemperature)
+        
+        LeidenDRTemperature = Device("Mix PT1000 Temperature")
+        LeidenDRTemperature.connection(cxn)
+        LeidenDRTemperature.setServerName("leiden_dr_temperature")
+        LeidenDRTemperature.addParameter("Mix Temperature (PT1000)",
+                "mix_temperature_pt1000", None)
         LeidenDRTemperature.selectDeviceCommand("select_device", 0)
         LeidenDRTemperature.addPlot()
         LeidenDRTemperature.begin()
         LeidenDRTemperature.setYLabel("Temperature")
         self.devices.append(LeidenDRTemperature)
 
+        Vacuum = Device("Vacuum")
+        Vacuum.connection(cxn)
+        Vacuum.setServerName("pfeiffer_vacuum_maxigauge")
+        Vacuum.addParameter("OVC Pressure", "get_pressures", None, 3,
+                'mbar', 4)
+        Vacuum.addParameter("IVC Pressure", "get_pressures", None, 4,
+                'mbar', 4)
+        Vacuum.addParameter("Still Pressure", "get_pressures", None, 5,
+                'mbar', 4)
+        Vacuum.setYLabel("Pressure")
+        Vacuum.selectDeviceCommand("select_device", 0)
+        Vacuum.addPlot()
+        Vacuum.begin()
+        self.devices.append(Vacuum)
+
+        Temperature = Device("Water Temperature")
+        Temperature.connection(cxn)
+        Temperature.setServerName("omega_temperature_monitor")
+        Temperature.addParameter("Exteranal Water Temperature",
+                "get_temperature")
+        Temperature.selectDeviceCommand("select_device", 0)
+        Temperature.setYLabel("Temperature")
+        Temperature.addPlot()
+        Temperature.begin()
+        self.devices.append(Temperature)
+
         Compressor = Device("Compressor")
+        Compressor.connection(cxn)
         Compressor.setServerName("cp2800_compressor")
         Compressor.addButton("Turn Off",
                 "You are about to turn the compressor off.",
@@ -97,47 +131,20 @@ class nViewer:
                 "You are about to turn the compressor on.",
                 "status", None)
         Compressor.addParameter("Input Water Temperature",
-                "temperaturesforgui", None, 0)
+                "temperaturesforgui", None, 0, 'degC', 1)
         Compressor.addParameter("Output Water Temperature",
-                "temperaturesforgui", None, 1)
+                "temperaturesforgui", None, 1, 'degC', 1)
         Compressor.addParameter("Helium Temperature",
-                "temperaturesforgui", None, 2)
+                "temperaturesforgui", None, 2, 'degC', 1)
         Compressor.addParameter("Oil Temperature",
-                "temperaturesforgui", None, 3)
-        Compressor.addPlot()
-        Compressor.setYLabel("Temperature")
+                "temperaturesforgui", None, 3, 'degC', 1)
         Compressor.selectDeviceCommand("select_device", 0)
-        Compressor.connection(cxn)
+        Compressor.setYLabel("Temperature")
+        Compressor.addPlot()
         Compressor.begin()
         self.devices.append(Compressor)
         
-        Vacuum = Device("Vacuum")
-        Vacuum.setServerName("pfeiffer_vacuum_maxigauge")
-        Vacuum.connection(cxn)
-        Vacuum.addPlot()
-        # Vacuum.addParameter("Sensor 1", "get_pressures", None, 0)
-        # Vacuum.addParameter("Sensor 2", "get_pressures", None, 1)
-        # Vacuum.addParameter("Sensor 3", "get_pressures", None, 2)
-        Vacuum.addParameter("OVC Pressure", "get_pressures", None, 3)
-        Vacuum.addParameter("IVC Pressure", "get_pressures", None, 4)
-        Vacuum.addParameter("Still Pressure", "get_pressures", None, 5)
-        Vacuum.setYLabel("Pressure")
-        Vacuum.selectDeviceCommand("select_device", 0)
-        Vacuum.begin()
-        self.devices.append(Vacuum)
-        
-        Temperature = Device("Temperature")
-        Temperature.connection(cxn)
-        Temperature.setServerName("omega_temperature_monitor")
-        Temperature.addParameter("Exteranal Water Temperature",
-                "get_temperature")
-        Temperature.selectDeviceCommand("select_device", 0)
-        Temperature.addPlot()
-        Temperature.setYLabel("Temperature")
-        Temperature.begin()
-        self.devices.append(Temperature)
-
-        Flow = Device("Flow Meter")
+        Flow = Device("Water Flow")
         Flow.connection(cxn)
         Flow.setServerName("omega_ratemeter")
         Flow.addParameter("External Water Flow Rate", "get_rate")
@@ -153,9 +160,10 @@ class nViewer:
         
         # Create the gui.
         self.gui = MGui.MGui()
-        self.gui.startGui(self.devices, 'Leiden DR GUI', 'Leiden Data', tele)
-        
-        
+        self.gui.startGui(self.devices, 'Leiden DR GUI', 'Leiden Data',
+                tele)
+
+
 # In Python, the main class's __init__() IS NOT automatically called.
 viewer = nViewer()    
 viewer.__init__()

@@ -18,10 +18,12 @@
 [info]
 name = Telecomm Server
 version = 1.1
-description = 
+description =
+
 [startup]
 cmdline = %PYTHON% %FILE%
 timeout = 20
+
 [shutdown]
 message = 987654321
 timeout = 20
@@ -32,23 +34,23 @@ timeout = 20
 #Document input/output values
 #Instructions for usage:
 #   1) In the registry, create the directory /Servers/Telecomm
-#   2) Create a key named smsUsers with value
-#       [("USERNAME_1","TENDIGITPHONENUMBER@txt.att.net"),...
-#       ,("USERNAME_M","TENDIGITPHONENUMBER@vtext.com")]
+#   2) Create a key named 'smsUsers' with value
+#       [("USERNAME1","TENDIGITPHONENUMBER@txt.att.net"),...
+#       ,("USERNAMEM","TENDIGITPHONENUMBER@vtext.com")]
 #      Note that the domain name depends on the user's
-#      mobile phone provider. "USERNAME_" should be all caps.
-#   3) Create a key named domain with a value that
+#      mobile phone provider. "USERNAME" must be ALL caps.
+#   3) Create a key named 'domain' with a value that
 #      matches the domain name of the email address
 #      from which you wish to send messages.
 #      e.g. domain = "physics.someschool.edu"
-#   4) Create a key named smtpServer whose value is
+#   4) Create a key named 'smtpServer' whose value is
 #      the smtp server you wish to use.
-#   5) (Optional) Create a key named password which
-#      is determined by the login credentials of
+#   5) (Optional) Create a key named 'password'
+#      corresponding to the login credentials of
 #      the account you plan to send messages from.
 #      Note that some smtp servers require you to
 #      authenticate before you can send messages
-#      to email addresses with different domains.
+#      to email addresses outside of its domain.
 
 from labrad import types as T, util
 from labrad.server import LabradServer, setting, Signal
@@ -66,9 +68,9 @@ DOMAIN_KEY = 'domain'
 SERVER_KEY = 'smtpServer'
 PASSWORD_KEY = 'password'
 
-
 def textMessage(recipients, subject, msg, domain, server, username='LabRAD', password=None, attempts=2):
     """Send a text message to one or more recipients
+
     INPUTS:
     recipients - str or [str,str...]: List of names of labmembers
     to whom you want to send the message. These names must be in the
@@ -83,6 +85,7 @@ def textMessage(recipients, subject, msg, domain, server, username='LabRAD', pas
 
 def email(toAddrs, subject, msg, domain, server, username='LabRAD', password=None, attempts=2, noisy=False):
     """Send an email to one or more recipients
+
     INPUTS:
     toAddrs - str or [str...]: target address or list of target addresses
     subject - str: Subject of the message
