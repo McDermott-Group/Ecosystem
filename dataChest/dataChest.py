@@ -18,10 +18,8 @@ import h5py
 from dateStamp import dateStamp
 import numpy as np
 import string
-import inspect
-import time
-import gc
 import re
+import ast
 
 VAR_NAME_INDEX = 0
 VAR_SHAPE_INDEX = 1
@@ -94,15 +92,14 @@ class dataChest(dateStamp):
     if self._formatFilename(directoryToMake, " +-.") == directoryToMake:
       if directoryToMake not in dirContents:
         os.mkdir(self.cwdPath+"/"+directoryToMake) #Try except this even though safe guarded
-        return directoryToMake
       else:
-        raise ValueError(
+        raise OSError(
           "Directory already exists.\r\n\t"
           + "Directory name provided: "
           + directoryToMake
           )
     else:
-      raise ValueError(
+      raise OSError(
         "Invalid directory name provided.\r\n\t"
         + "Directory name provided: "+ directoryToMake+".\r\n\t"
         + "Suggested name: "+ self._formatFilename(directoryToMake, " +-.")
@@ -111,28 +108,29 @@ class dataChest(dateStamp):
   def ls(self):
     """Lists the contents of the current working directory."""
     cwdContents = os.listdir(self.cwdPath)
-    files = []
-    folders = []
+    filesList = []
+    foldersList = []
     for item in cwdContents:
       if not item.startswith('.'): #ignore hidden sys files
         pathToItem = self.cwdPath + "/" + item
         if ".hdf5" in pathToItem: #os.path.isfile(os.path.join(self.cwdPath,item)) too slow
-          files.append(item)
+          filesList.append(item)
         else: #elif os.path.isdir(os.path.join(self.cwdPath,item)):
-          folders.append(item)
-    files = sorted(files) #alphabetize for readibility
-    folders = sorted(folders)
-    return [files, folders]
+          foldersList.append(item)
+    filesList = sorted(filesList) #alphabetize for readibility
+    foldersList = sorted(foldersList)
+    return [filesList, foldersList]
 
   def pwd(self):
-    return self.cwdPath
+    currentWorkingDirectory = self.cwdPath
+    return currentWorkingDirectory
 
-  def cd(self, directoryToMove):
+  def cd(self, relativePath):
     """Changes the current working directory."""
-    if isinstance(directoryToMove, str):
-      path = [directoryToMove]
-    elif isinstance(directoryToMove, list):
-      path = directoryToMove
+    if isinstance(relativePath, str):
+      path = [relativePath]
+    elif isinstance(relativePath, list):
+      path = relativePath
     else:
       raise TypeError(
         "Acceptable input types are strings e.g.\"SomeFolder\"\r\n\t"
@@ -159,7 +157,6 @@ class dataChest(dateStamp):
       if hasattr(self, 'root') and self.root not in self.cwdPath:
         self.cwdPath = self.root
         raise IOError("cd() cannot be used to take users out of root.")
-      return self.cwdPath
     else:
       raise Warning("Calling cd() on an empty list has no meaning.")
     
@@ -171,7 +168,9 @@ class dataChest(dateStamp):
     self.readOnlyFlag = False
     self.dataCategory = None #treat self.dataCategory consistently
     
-    if datasetName != self._formatFilename(datasetName, " +-."):
+    if datasetName != self._formatFilename(datasetName, " =+-."):
+      print "datasetName=", datasetName
+      print "self._formatFilename(datasetName,  +-.)=", self._formatFilename(datasetName, " +-.")
       raise self.exception
     elif not self._isVarsListValid("independents", indepVarsList): 
       raise self.exception
@@ -194,16 +193,17 @@ class dataChest(dateStamp):
   def getDatasetName(self):
     if self.currentHDF5Filename is not None:
       self._updateFileDate("Date Accessed")
-      return self.currentHDF5Filename.split("/")[-1]
+      currentDatasetName = self.currentHDF5Filename.split("/")[-1]
+      return currentDatasetName
     else:
-      raise Warning("No dataset is currently open.")
+      return None
 
   def getVariables(self):
     if self.currentHDF5Filename is not None:
-      indeps = self._varListFromGrp(self.file["independents"])
-      deps = self._varListFromGrp(self.file["dependents"])
+      indepVarsList = self._varListFromGrp(self.file["independents"])
+      depVarsList = self._varListFromGrp(self.file["dependents"])
       self._updateFileDate("Date Accessed")
-      return [indeps, deps]
+      return [indepVarsList, depVarsList]
     else:
       raise Warning(
         "No file is currently selected. First select a file\r\n\t"
@@ -292,12 +292,12 @@ class dataChest(dateStamp):
     dateISO = self.dateStamp.utcDateIsoString()
     self._updateFileDate("Date Accessed", dateISO)
     self._updateFileDate("Date Modified", dateISO)
-    return True
 
   def getNumRows(self):
     if self.currentHDF5Filename is not None:
       self._updateFileDate("Date Accessed")
-      return self.file.attrs["Number Of Rows Added"]
+      numRows = self.file.attrs["Number Of Rows Added"]
+      return numRows
     else:
       raise Warning("No dataset is currently open.")
 
@@ -355,7 +355,7 @@ class dataChest(dateStamp):
         + "createDataset()."
         )
 
-  def openDataset(self, filename, modify = None):
+  def openDataset(self, filename, modify = False):
     """Opens a dataset in the current working directory if it exists."""
     if '.hdf5' not in filename: #adds file extension if omitted
       filename = filename+".hdf5"
@@ -375,7 +375,16 @@ class dataChest(dateStamp):
         varGroupAttributes = self.file[varType].attrs.keys()
         varGrp = self.file[varType]
         for item in varGroupAttributes:
-          self.varDict[varType][str(item)] = varGrp.attrs[item].tolist()
+          #hack for backward compatibility with N-d datasets
+          if item == 'shapes':
+            tempList = varGrp.attrs[item].tolist()
+            if type(tempList[0]) == str:
+              tempList = self._convertElementsToLists(tempList)
+              self.varDict[varType][str(item)] = tempList
+            else:
+              self.varDict[varType][str(item)] = varGrp.attrs[item].tolist()
+          else:
+            self.varDict[varType][str(item)] = varGrp.attrs[item].tolist()
 
       self.dataCategory = self.file.attrs["Data Category"]
       self.numIndepWrites = self.file.attrs["Number Of Rows Added"]
@@ -387,13 +396,14 @@ class dataChest(dateStamp):
         + "the desired dataset."
         )
 
-  def addParameter(self, paramName, paramValue, overwrite = None): 
+  def addParameter(self, paramName, paramValue, overwrite = False): 
     if self.readOnlyFlag == True:
       raise Warning(
         "You cannot add parameters to this file as it was\r\n\t"
         + "opened read only. Files opened with openDataset()\r\n\t"
         + "are read only by design. You must make a new set\r\n\t"
-        + "if you wish to add parameters to one."
+        + "if you wish to add parameters to one. or set\r\n\t"
+        + "modify = True."
         )
     elif self.currentHDF5Filename is not None:
       if self._isParameterValid(paramName, paramValue, overwrite):
@@ -411,13 +421,15 @@ class dataChest(dateStamp):
         + "createDataset() before using addParameter()."
         )
       
-  def getParameter(self, parameterName, byIOError=False):
+  def getParameter(self, paramName, bypassIOError=False):
     if self.currentHDF5Filename is not None:
-      if parameterName in self.file["parameters"].attrs.keys():
+      if paramName in self.file["parameters"].attrs.keys():
         self._updateFileDate("Date Accessed")
-        return self.file["parameters"].attrs[parameterName]
+        paramValue = self.file["parameters"].attrs[paramName] # add in type preservation here
+        return paramValue
+        
       else:
-        if not byIOError:
+        if not bypassIOError:
           raise IOError("Parameter name not found.")
         else:
           return None
@@ -495,9 +507,26 @@ class dataChest(dateStamp):
     for varTypes in varDict.keys():
       for varAttrs in varDict[varTypes].keys():
         varGrp = self.file[varTypes]
-        varGrp.attrs[varAttrs] = varDict[varTypes][varAttrs]
+        #hack for backward compatibility with N-d datasets
+        if varAttrs == 'shapes': 
+          convertedShapesList = self._convertElementsToStr(varDict[varTypes][varAttrs])
+          varGrp.attrs[varAttrs] = convertedShapesList
+        else:
+          varGrp.attrs[varAttrs] = varDict[varTypes][varAttrs]
       self._initDatasetGroup(varGrp, varDict[varTypes])
     self.file.flush()
+
+  def _convertElementsToStr(self, listToConvert):
+    convertedList = []
+    for ii in range(0, len(listToConvert)):
+      convertedList.append(str(listToConvert[ii]))
+    return convertedList
+
+  def _convertElementsToLists(self, listToConvert):
+    convertedList = []
+    for ii in range(0, len(listToConvert)):
+      convertedList.append(ast.literal_eval(listToConvert[ii]))
+    return convertedList
     
   def _initDatasetGroup(self, group, varDict):
     
@@ -581,7 +610,12 @@ class dataChest(dateStamp):
     units = varDict.attrs["units"]
     varList = []
     for ii in range(0, len(names)):
-      varTup = (names[ii],shapes[ii].tolist(),types[ii],units[ii])
+      #hack for backward compatibility with N-d datasets1
+      if type(shapes[ii].tolist()) == str:
+        tempShape = ast.literal_eval(shapes[ii].tolist())
+        varTup = (names[ii],tempShape,types[ii],units[ii])
+      else:
+        varTup = (names[ii],shapes[ii].tolist(),types[ii],units[ii])
       varList.append(varTup)
     return varList
     
@@ -589,7 +623,7 @@ class dataChest(dateStamp):
       """Returns a valid filename from the filename provided."""
       defaultCharsTup = (string.ascii_letters, string.digits)
       if isinstance(fileName, str):
-        if len(fileName)==0:
+        if len(fileName) == 0:
           self.exception = TypeError("Filenames cannot be empty.")
           return "Error" #fix this          
         elif additionalChars is None:
@@ -942,10 +976,15 @@ class dataChest(dateStamp):
         return False
     return True
 
-  def _isParameterValid(self, parameterName, parameterValue, overwrite = None):
+  def _isParameterValid(self, parameterName, parameterValue, overwrite = False):
 
     validTypes = (int, long, float, complex, bool,
-                  list, np.ndarray, str, unicode)
+                  list, np.ndarray, np.bool_, np.int8,
+                  np.int16, np.int32, np.int64, np.uint8,
+                  np.uint16, np.uint32, np.uint64, np.int_,
+                  np.float16, np.float32, np.float64, np.float_,
+                  np.complex64, np.complex128, np.complex_,
+                  str, unicode)
     if isinstance(parameterName, str):
       if self._formatFilename(parameterName, " +-.") != parameterName:
         self.exception = ValueError("Invalid parameter name provided.")
@@ -962,7 +1001,7 @@ class dataChest(dateStamp):
         #lists must be of one type or else type conversion occurs
         #[12.0, 5e-67, "stringy"] --> ['12.0', '5e-67', 'stringy']
         return False
-      elif overwrite is None and parameterName in self.file["parameters"].attrs.keys():
+      elif overwrite is False and parameterName in self.file["parameters"].attrs.keys():
         self.exception = RuntimeError(
           "Parameter name already exists. \r\n\t"
           +"Parameter values cannot be overwritten."
@@ -1097,6 +1136,7 @@ class dataChest(dateStamp):
     
     dataShape = np.asarray(data).shape
     totalNumVars = len(indepShapes+depShapes)
+    print "dataShape=", dataShape
     if len(dataShape) != 3:  # (1,totalNumVars,lengthOfDataArray)
       self.exception = ValueError(
         "Arbitrary Type 2 Data has rows\r\n\t"
