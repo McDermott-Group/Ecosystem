@@ -48,6 +48,8 @@ class dataChest(dateStamp):
 
   def __init__(self, path, setWorkingDirectoryToRoot = False): #add for ability to set root path 
     self.cwdPath = os.environ["DATA_CHEST_ROOT"] #Make sure this exists
+    if "\\" in self.cwdPath:
+      self.cwdPath = self.cwdPath.replace("\\", "/")
     if not setWorkingDirectoryToRoot:
       self._initializeRoot(path)
     self.root = self.cwdPath
