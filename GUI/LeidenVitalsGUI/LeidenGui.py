@@ -126,10 +126,10 @@ class nViewer:
         Compressor.setServerName("cp2800_compressor")
         Compressor.addButton("Turn Off",
                 "You are about to turn the compressor off.",
-                "status", None)
+                "stop", None)
         Compressor.addButton("Turn On",
                 "You are about to turn the compressor on.",
-                "status", None)
+                "start", None)
         Compressor.addParameter("Input Water Temperature",
                 "temperaturesforgui", None, 0, 'degC', 1)
         Compressor.addParameter("Output Water Temperature",
