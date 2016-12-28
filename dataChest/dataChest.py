@@ -130,7 +130,19 @@ class dataChest(dateStamp):
   def cd(self, relativePath):
     """Changes the current working directory."""
     if isinstance(relativePath, str):
-      path = [relativePath]
+      if "\\" in relativePath:
+        if "/" not in relativePath:
+          path = relativePath.split("\\")
+        else:
+          raise ValueError(
+            "Acceptable relativePaths cannot contain both forward\r\n\t"
+            + "and backward slashes. Please choose a direction\r\n\t"
+            + "and stick with it."
+            )
+      elif "/" in relativePath:
+        path = relativePath.split("/")
+      else:
+        path = [relativePath]
     elif isinstance(relativePath, list):
       path = relativePath
     else:
@@ -154,7 +166,7 @@ class dataChest(dateStamp):
           raise IOError(
             "Directory does not exist.\r\n\t"
             + "Directory name provided: "
-            + str(directoryToMove)
+            + str(path[ii])
             )
       if hasattr(self, 'root') and self.root not in self.cwdPath:
         self.cwdPath = self.root
