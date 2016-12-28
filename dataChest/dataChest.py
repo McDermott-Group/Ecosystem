@@ -391,7 +391,7 @@ class dataChest(dateStamp):
       self.numDepWrites = self.numIndepWrites    
     else:
       self.currentHDF5Filename = None
-      raise Warning(
+      raise ValueError(
         "File not found, please cd into the directory with\r\n\t"
         + "the desired dataset."
         )
