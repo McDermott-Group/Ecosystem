@@ -1,6 +1,5 @@
 import time
 import numpy as np
-import atsapi as ats
 import matplotlib.pyplot as plt
 
 import labrad
@@ -31,7 +30,7 @@ avg = digitizer.get_average()
 times = digitizer.get_times()
 
 stop = time.time()
-print('Executions time: %f seconds.' %(stop-start))
+print('Execution time: %f seconds.' %(stop-start))
 
 I = avg[0]
 Q = avg[1]

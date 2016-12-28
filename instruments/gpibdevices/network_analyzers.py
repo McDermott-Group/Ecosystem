@@ -20,7 +20,7 @@
 ### BEGIN NODE INFO
 [info]
 name = GPIB Network Analyzers
-version = 1.3.0
+version = 1.4.0
 description = Provides basic control for network analayzers.
 
 [startup]
@@ -33,7 +33,7 @@ timeout = 5
 ### END NODE INFO
 """
 
-import numpy
+import numpy as np
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 from labrad import util
@@ -46,17 +46,18 @@ from utilities import sleep
 
 
 class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
-    availableTraces = ('S11', 'S12', 'S13', 'S14', 'S21', 'S22', 'S23',
+    model = 'Agilent Technologies N5230'
+    available_traces = ('S11', 'S12', 'S13', 'S14', 'S21', 'S22', 'S23',
             'S24', 'S31', 'S32', 'S33', 'S34', 'S41', 'S42', 'S43',
             'S44')
     nPorts = 4
 
     @inlineCallbacks
     def initialize(self):
-        # Create a new packet
+        # Create a new packet.
         p = self._packet()
-        # Write to the packet
-        # This is the system->preset command
+        # Write to the packet.
+        # Run the system preset command.
         p.write('SYST:PRES')
         yield p.send()
         yield sleep(0.1)
@@ -76,20 +77,20 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         yield self.initialize()
 
     @inlineCallbacks
-    def power_output(self, powOn):
-        """Turn output power on or off."""
-        if powOn is None:
+    def power_output(self, output=None):
+        """Turn the output power on or off."""
+        if output is None:
             resp = yield self.query('OUTP?')
-            powOn = bool(int(resp))
+            output = bool(int(resp))
         else:
-            if powOn:
+            if output:
                 yield self.write('OUTP ON')
             else:
                 yield self.write('OUTP OFF')
-        returnValue(powOn)
+        returnValue(output)
 
     @inlineCallbacks
-    def center_frequency(self, cfreq):
+    def center_frequency(self, cfreq=None):
         """Set or get the sweep center frequency."""
         if cfreq is None:
             resp = yield self.query('SENS1:FREQ:CENT?')
@@ -99,7 +100,7 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         returnValue(cfreq)
 
     @inlineCallbacks
-    def frequency_span(self, span):
+    def frequency_span(self, span=None):
         """Set or get the sweep frequency span."""
         if span is None:
             resp = yield self.query('SENS1:FREQ:SPAN?')
@@ -109,7 +110,7 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         returnValue(span)
 
     @inlineCallbacks
-    def start_frequency(self, start):
+    def start_frequency(self, start=None):
         """Set or get the sweep start frequency."""
         if start is None:
             resp = yield self.query('SENS1:FREQ:STAR?')
@@ -119,7 +120,7 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         returnValue(start)
 
     @inlineCallbacks
-    def stop_frequency(self, stop):
+    def stop_frequency(self, stop=None):
         """Set or get the sweep stop frequency."""
         if stop is None:
             resp = yield self.query('SENS1:FREQ:STOP?')
@@ -129,12 +130,14 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         returnValue(stop)
 
     @inlineCallbacks
-    def sweep_type(self, stype):
+    def sweep_type(self, stype='LIN'):
         """
         Set or get the frequency sweep type. 
         
-        Accepts: stype ('LIN' - for linear,
-                       ('CW' - for single frequency).
+        Accepts:
+            stype: 'LIN' - for linear sweep,
+                   'CW' - for single frequency
+                   (default: 'LIN').
         """
         if stype is None:
             stype = yield self.query('SENS1:SWE:TYPE?')
@@ -147,7 +150,7 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         returnValue(stype)
 
     @inlineCallbacks
-    def if_bandwidth(self, bw):
+    def if_bandwidth(self, bw=None):
         """Set or get the IF bandwidth."""
         if bw is None:
             resp = yield self.query('SENS1:BAND?')
@@ -157,8 +160,8 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         returnValue(bw)
 
     @inlineCallbacks
-    def average_mode(self, avg):
-        """Turn sweep averaging on or off, or query state."""
+    def average_mode(self, avg=None):
+        """Turn the sweep averaging on or off, or query the state."""
         if avg is None:
             resp = yield self.query('SENS1:AVER?')
             avg = bool(int(resp))
@@ -171,23 +174,25 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
 
     @inlineCallbacks
     def restart_averaging(self):
-        """Clears and restarts trace averaging on the current sweep."""
+        """
+        Clear and restart the trace averaging on the current sweep.
+        """
         yield self.write('SENS1:AVER:CLE')
 
     @inlineCallbacks
-    def average_points(self, count):
+    def average_points(self, avg_pts=None):
         """
         Set or get the number of measurements to combine for an average.
         """
-        if count is None:
+        if avg_pts is None:
             resp = yield self.query('SENS1:AVER:COUN?')
-            count = int(float(resp))
+            avg_pts = int(float(resp))
         else:
-            yield self.write('SENS1:AVER:COUN %d' %count)
-        returnValue(count)
+            yield self.write('SENS1:AVER:COUN %d' %avg_pts)
+        returnValue(avg_pts)
 
     @inlineCallbacks
-    def source_power(self, power):
+    def source_power(self, power=None):
         if power is None:
             resp = yield self.query('SOUR:POW?')
             power = float(resp) * units.dBm
@@ -199,11 +204,11 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
     def get_sweep_time(self):
         """Get the time to complete a sweep."""
         resp = yield self.query('SENS1:SWE:TIME?')
-        swpTime = float(resp) * units.s
-        returnValue(swpTime)
+        sweep_time = float(resp) * units.s
+        returnValue(sweep_time)
 
     @inlineCallbacks
-    def sweep_points(self, points):
+    def sweep_points(self, points=None):
         """Set or get the number of points in the sweep."""
         if points is None:
             resp = yield self.query('SENS1:SWE:POIN?')
@@ -213,17 +218,26 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         returnValue(points)
 
     @inlineCallbacks
-    def measurement_setup(self, SList, formList, triggerType):
+    def measurement_setup(self, s_params=['S11'], formats=['MP'],
+            trigger='IMM'):
         """
-        Set the measurement parameters. Use a list of strings of
-        the form Sxx (S21, S11...) for the measurement type.
-        The formList can be either 'IQ' or 'MP' for mag/phase.
+        Setup the measurement.
+        
+        Accepts:
+            s_params: list of strings of the form Sxy ['S21', 'S11',...]
+                    (default: ['S11']).
+            formats: list of strings composed of 'RI' or 'MP',
+                    'RI' - for the real/imaginary returned data format,
+                    'MP' - for the magnitude/phase display format
+                    (default: ['MP']).
+            trigger: 'IMM' - for immediate triggering,
+                     'EXT' - for external triggering (default: 'IMM').
         """
-        SList = [S.upper() for S in SList]
+        s_params = [S.upper() for S in s_params]
 
-        for Sp in SList:
-            if Sp not in self.availableTraces:
-                raise ValueError('Illegal measurment definition: %s.'
+        for Sp in s_params:
+            if Sp not in self.available_traces:
+                raise ValueError('Illegal S-parameter: %s.'
                         %str(Sp))
 
         # Delete all measurements on the PNA.
@@ -233,21 +247,25 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
             self.write('DISP:WIND1:STATE OFF')
         # Create window 1.
         yield self.write('DISP:WIND1:STATE ON')
-        for k, Sp in enumerate(SList):
-            if formList[k] == 'IQ':
+        for k, Sp in enumerate(s_params):
+            if formats[k] == 'RI':
                 yield self.write('CALC:PAR:DEF:EXT "R_%s",%s' %(Sp, Sp))
-                yield self.write('DISP:WIND1:TRAC%d:FEED "R_%s"' %(2 * k + 1, Sp))
+                yield self.write('DISP:WIND1:TRAC%d:FEED "R_%s"'
+                                                    %(2 * k + 1, Sp))
                 yield self.write('CALC:PAR:DEF:EXT "I_%s",%s' %(Sp, Sp))
-                yield self.write('DISP:WIND1:TRAC%d:FEED "I_%s"' %(2 * k + 2, Sp))
+                yield self.write('DISP:WIND1:TRAC%d:FEED "I_%s"'
+                                                    %(2 * k + 2, Sp))
                 yield self.write('CALC:PAR:SEL "R_%s"' %Sp)
                 yield self.write('CALC:FORM REAL')
                 yield self.write('CALC:PAR:SEL "I_%s"' %Sp)
                 yield self.write('CALC:FORM IMAG')
-            if formList[k] == 'MP':
+            elif formats[k] == 'MP':
                 yield self.write('CALC:PAR:DEF:EXT "M_%s",%s' %(Sp, Sp))
-                yield self.write('DISP:WIND1:TRAC%d:FEED "M_%s"' %(2 * k + 1, Sp))
+                yield self.write('DISP:WIND1:TRAC%d:FEED "M_%s"'
+                                                    %(2 * k + 1, Sp))
                 yield self.write('CALC:PAR:DEF:EXT "P_%s",%s' %(Sp, Sp))
-                yield self.write('DISP:WIND1:TRAC%d:FEED "P_%s"' %(2 * k + 2, Sp))
+                yield self.write('DISP:WIND1:TRAC%d:FEED "P_%s"'
+                                                    %(2 * k + 2, Sp))
                 yield self.write('CALC:PAR:SEL "M_%s"' %Sp)
                 yield self.write('CALC:FORM MLOG')
                 yield self.write('CALC:PAR:SEL "P_%s"' %Sp)
@@ -256,25 +274,25 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
             yield self.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 2))
             yield self.write('SENS1:SWE:TIME:AUTO ON')
         
-        if triggerType == 'EXT':
+        if trigger == 'EXT':
             yield self.write('TRIG:SOUR EXT')
             yield self.write('TRIG:TYPE LEV')
         else:
             yield self.write('TRIG:SOUR IMM')
 
     @inlineCallbacks
-    def get_trace(self):
+    def get_data(self):
         """Get the active trace from the network analyzer."""
 
-        # Get list of traces in form "name, S21, name, S32,..."
-        measList = yield self.query('CALC:PAR:CAT?')
-        measList = measList.strip('"').split(',')
+        # Get list of traces in form "name, S21, name, S32,...".
+        formats_s_params = yield self.query('CALC:PAR:CAT?')
+        formats_s_params = formats_s_params.strip('"').split(',')
 
-        # yield self.write('FORM REAL,64') # Do we need to add ',64' ?
+        # yield self.write('FORM REAL,64') # Do we need to add ',64'?
         yield self.write('FORM ASC,0')
 
-        avgMode = yield self.average_mode(None)
-        if avgMode:
+        avg_mode = yield self.average_mode(None)
+        if avg_mode:
             avgCount = yield self.average_points(None)
             yield self.restart_averaging()
             yield self.write('SENS:SWE:GRO:COUN %i' %avgCount)
@@ -286,27 +304,42 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         # Wait for the measurement to finish.
         yield self.query('*OPC?', timeout=24*units.h)
 
-        # Pull data.
-        data = []
-        unitMultiplier = {'I':1, 'Q':1, 'P':units.deg, 'M':units.dB}
+        # Pull the data.
+        data = ()
+        pair = ()
+        unit_multipliers = {'R': 1, 'I': 1, 'P': units.deg, 'M': units.dB}
         # The data will come in with a header in the form
         # '#[single char][number of data points][data]'.
-        for meas in measList[::2]:
+        for idx, meas in enumerate(formats_s_params[::2]):
             yield self.write('CALC:PAR:SEL "%s"' %meas)
             yield self.write('CALC:DATA? FDATA')
             data_string = yield self.read()
-            d = numpy.array([x for x in data_string.split(',')], dtype=float)
-            data.append(d)
-
+            d = np.array([x for x in data_string.split(',')], dtype=float)
+            # data.append(d * unit_multipliers[meas[0]])
+            pair += (d * unit_multipliers[meas[0]]),
+            if idx % 2:
+                data += (pair),
+                pair = ()
         returnValue(data)
 
 
-class KeysightDeviceWrapper(AgilentN5230ADeviceWrapper):
-        availableTraces = ('S11', 'S12', 'S21', 'S22')
-        nPorts = 2
+class KeysightN5242ADeviceWrapper(AgilentN5230ADeviceWrapper):
+    model = 'Keysight Technologies N5242A'
+    available_traces = ('S11', 'S12', 'S21', 'S22')
+    nPorts = 2
+
+
+class KeysightE5063ADeviceWrapper(AgilentN5230ADeviceWrapper):
+    model = 'Keysight Technologies E5063A'
+    available_traces = ('S11', 'S12', 'S21', 'S22')
+    nPorts = 2
 
 
 class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
+    model = 'Agilent Technologies 8720ET'
+    available_traces = ('S11', 'S21')
+    nPorts = 2
+        
     @inlineCallbacks
     def initialize(self):
         p = self._packet()
@@ -328,20 +361,20 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
         yield self.initialize()
 
     @inlineCallbacks
-    def power_output(self, powOn):
-        """Turn output power on or off."""
-        if powOn is None:
+    def power_output(self, output=None):
+        """Turn the output power on or off."""
+        if output is None:
             resp = yield dev.query('POWT?')
-            powOn = bool(int(resp))
+            output = bool(int(resp))
         else:
-            if powOn:
+            if output:
                 yield dev.write('POWTON')
             else:
                 yield dev.write('POWTOFF')
-        returnValue(powOn)
+        returnValue(output)
 
     @inlineCallbacks
-    def center_frequency(self, cfreq):
+    def center_frequency(self, cfreq=None):
         """Set or get the sweep center frequency."""
         if cfreq is None:
             resp = yield self.query('CENT?')
@@ -351,7 +384,7 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
         returnVlaue(cfreq)
 
     @inlineCallbacks
-    def frequency_span(self, span):
+    def frequency_span(self, span=None):
         """Set or get the sweep frequency span."""
         if span is None:
             resp = yield self.query('SPAN?')
@@ -361,7 +394,7 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
         returnVlaue(span)
 
     @inlineCallbacks
-    def start_frequency(self, start):
+    def start_frequency(self, start=None):
         """Set or get the sweep start frequency."""
         if start is None:
             resp = yield self.query('STAR?')
@@ -371,7 +404,7 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
         returnVlaue(start)
 
     @inlineCallbacks
-    def stop_frequency(self, stop):
+    def stop_frequency(self, stop=None):
         """Set or get the sweep stop frequency."""
         dev = self.selectedDevice(c)
         if stop is None:
@@ -381,21 +414,21 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
             yield self.write('STOP%i' %freq['Hz'])
         returnValue(stop)
 
-    def sweep_type(self, stype):
+    def sweep_type(self, stype=None):
         raise NotImplementedError
 
     @inlineCallbacks
-    def if_bandwidth(self, bw):
+    def if_bandwidth(self, bw=None):
         """Set or get the IF bandwidth."""
         if bw is None:
             resp = yield self.query('IFBW?')
-            bw = float(resp)*units.Hz
+            bw = float(resp) * units.Hz
         else:
             yield self.write('IFBW%i' %freq['Hz'])
         returnVlaue(bw)
 
     @inlineCallbacks
-    def average_mode(self, avg):
+    def average_mode(self, avg=None):
         """Set or get average state."""
         if avg is None:
             resp = yield self.query('AVERO?')
@@ -409,21 +442,21 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
 
     @inlineCallbacks
     def restart_averaging(self):
-        """Restart trace averaging."""
+        """Restart the trace averaging."""
         yield self.write('AVERREST')
 
     @inlineCallbacks
-    def average_points(self, aN):
+    def average_points(self, avg_pts=None):
         """Set or get number of points in average (in 0-999 range)."""
-        if aN is None:
+        if avg_pts is None:
             N = yield self.query('AVERFACT?')
-            aN = int(float(N))
+            avg_pts = int(float(N))
         else:
-            yield self.write('AVERFACT%i' %aN)
-        returnValue(aN)
+            yield self.write('AVERFACT%i' %avg_pts)
+        returnValue(avg_pts)
 
     @inlineCallbacks
-    def source_power(self, power):
+    def source_power(self, power=None):
         """Set or get the sweep power level."""
         if power is None:
             resp = yield self.query('POWE?')
@@ -431,12 +464,12 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
         else:
             if power['dBm'] < -100:
                 power = -100 * units.dBm
-                print('Minimum power level for Agilent 8720ET is %s.'
-                        %power)
+                print('Minimum power level for %s is %s.'
+                        %(self.model, power))
             if power['dBm'] > 10:
                 power = 10 * units.dBm
-                print('Maximum power level for Agilent 8720ET is %s.'
-                        %power)
+                print('Maximum power level for %s is %s.'
+                        %(self.model, power))
             yield self.write('POWE%iDB' %power['dBm'])
         returnValue(power)
 
@@ -444,32 +477,70 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
     def get_sweep_time(self):
         """Get the time to complete a sweep."""
         resp = yield self.query('SWET?')
-        swpTime = float(resp) * units.s
-        returnValue(swpTime)
+        sweep_time = float(resp) * units.s
+        returnValue(sweep_time)
 
     @inlineCallbacks
-    def sweep_points(self, pn):
+    def sweep_points(self, sweep_pts=None):
         """
         Set or get number of points in a sweep. The number will be
         automatically coarsen to 3, 11, 21, 26, 51, 101, 201, 401, 801,
         or 1601 by the network analyzer.
         """
-        if pn is not None:
-            yield self.write('POIN%i' %pn)
+        if sweep_pts is not None:
+            yield self.write('POIN%i' %sweep_pts)
             t = yield self.query('SWET?')
             yield sleep(2 * float(t)) # Be sure to wait for two sweep
                                       # times as required in the docs.
         resp = yield self.query('POIN?')
-        pn = int(float(resp))
-        returnValue(pn)
+        sweep_pts = int(float(resp))
+        returnValue(sweep_pts)
 
     @inlineCallbacks
-    def get_trace(self):
+    def measurement_setup(self, s_params=['S11'], formats=['MP'],
+            trigger='IMM'):
+        """
+        Setup the measurement.
+
+        Accepts:
+            s_params: either ['S11'] for the reflection data or ['S21']
+                    for the transmission (default: ['S11']).
+            formats: list of strings composed of 'RI' or 'MP',
+                    'RI' - for the real/imaginary returned data format,
+                    'MP' - for the magnitude/phase display format
+                    (default: ['MP']).
+            trigger: 'IMM' - for immediate triggering (default: 'IMM').
+        """
+        if len(s_params) != 1:
+            raise IndexError('This VNA only takes a single trace.')
+        
+        mode = s_params[0] # Given a list but this VNA can only take one.
+        if mode.upper() == 'S11':
+            yield self.write('RFLP')
+        elif mode.upper() == 'S21':
+            yield self.write('TRAP')
+        else:
+            raise ValueError('Illegal S-parameter: %s.' %mode)
+
+        fmt = formats[0]
+        self.form = fmt.upper()
+        if fmt.upper() == 'MP':
+            yield self.write('LOGM')
+        elif fmt.upper() == 'RI':
+            yield self.write('POLA')
+        else:
+            raise ValueError('Unknown display format request: %s.'
+                    %fmt)
+
+        if trigger.upper() != 'IMM':
+            raise ValueError('Only immediate ("IMM") triggering is '
+                          'implemented for this network analyzer.')
+
+    @inlineCallbacks
+    def get_data(self):
         """
         Get network analyzer trace. The output depends on the display
-        format:
-            "LOGMAG" - real [dB];
-            "REIM"   - complex [linear units].
+        format.
         """
         # PC-DOS 32-bit floating-point format with 4 bytes-per-number,
         # 8 bytes-per-data point.
@@ -487,68 +558,29 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
         dataBuffer = yield self.read_raw()
 
         fmt = yield self.display_format(c)
-        raw = numpy.fromstring(dataBuffer, dtype=numpy.float32)
-        data = numpy.empty((raw.shape[-1] - 1) / 2)
+        raw = np.fromstring(dataBuffer, dtype=np.float32)
+        data = np.empty((raw.shape[-1] - 1) / 2)
         real = raw[1:-1:2]
+        imag = np.hstack((raw[2:-1:2], raw[-1]))
+        
         if self.form == 'MP':
-            # Is every other entry in the dataset the phase?
-            returnValue([real.astype(float)])
-        elif self.form == 'IQ':
-            imag = numpy.hstack((raw[2:-1:2], raw[-1]))
-            returnValue([real.astype(float) + 1j * imag.astype(float)])
-
-    @inlineCallbacks
-    def measurement_setup(self, SList, formList, triggerType):
-        """
-        Set or get the measurement mode: transmission or reflection.
-
-        Following options are allowed (could be in any letter case):
-            "S11", "REFL", 'R', 'REFLECTION' for the reflection mode;
-            "S21", "TRAN", 'T', 'TRANSMISSION', 'TRANS' for the
-            transmission mode.
-
-        formList sets the display format. Following options are allowed:
-            "MP" - log magnitude display;
-            "IQ" - real and imaginary display.
-        """
-        if SList is not None:
-            if len(SList) != 1:
-                raise IndexError('This VNA only takes a single trace')
-            mode = SList[0] # Given a list but this VNA can only take one.
-            if mode.upper() in ('S11', 'R', 'REFL', 'REFLECTION'):
-                yield self.write('RFLP')
-            if mode.upper() in ('S21', 'T', 'TRAN', 'TRANS', 'TRANSMISSION'):
-                yield self.write('TRAP')
-            else:
-                raise ValueError('Unknown measurement mode: %s.' %mode)
-
-        if formList is not None:
-            fmt = formList[0]
-            self.form = fmt.upper()
-            if fmt.upper() == 'MP':
-                yield self.write('LOGM')
-            elif fmt.upper() == 'IQ':
-                yield self.write('POLA')
-            else:
-                raise ValueError('Unknown display format request: %s.'
-                        %fmt)
-        else:
-            self.form = None
-
-        if triggerType is not 'IMM':
-            raise Warning('Only immediate ("IMM") triggering is '
-                          'implemented for this VNA.')
+            data = (real.astype(float) * units.dB,
+                    imag.astype(float) * units.deg),
+        elif self.form == 'RI':
+            data = (real.astype(float), imag.astype(float)),
+        returnValue(data)
 
 
 class VNAServer(GPIBManagedServer):
     name = 'GPIB Network Analyzers'
     
     # Note: while N5242A and E5063A are from Keysight, *IDN? returns
-    # Agilent asthe manufacturer, hence the changes between Keysight and
-    # Agilent in name and deviceName.
+    # Agilent as the manufacturer, hence the changes between Keysight
+    # and Agilent in the device names and wrappers. Similarly, 8720ET is
+    # from Agilent but HP is listed as its manufacturer.
     deviceWrappers = {'AGILENT TECHNOLOGIES N5230A': AgilentN5230ADeviceWrapper,
-                      'AGILENT TECHNOLOGIES N5242A': KeysightDeviceWrapper,
-                      'AGILENT TECHNOLOGIES E5063A': KeysightDeviceWrapper,
+                      'AGILENT TECHNOLOGIES N5242A': KeysightN5242ADeviceWrapper,
+                      'AGILENT TECHNOLOGIES E5063A': KeysightE5063ADeviceWrapper,
                       'HEWLETT PACKARD 8720ET': Agilent8720ETDeviceWrapper}
 
     @setting(100, 'Clear Status')
@@ -567,12 +599,12 @@ class VNAServer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         dev.preset()
 
-    @setting(200, 'Power Output', pow='b', returns='b')
-    def power_output(self, c, pow=None):
+    @setting(200, 'Power Output', power='b', returns='b')
+    def power_output(self, c, power=None):
         """Turn output power on or off, or query state."""
         dev = self.selectedDevice(c)
-        pow = yield dev.power_output(pow)
-        returnValue(pow)
+        power = yield dev.power_output(power)
+        returnValue(power)
 
     @setting(300, 'Center Frequency', cfreq='v[Hz]', returns='v[Hz]')
     def center_frequency(self, c, cfreq=None):
@@ -599,25 +631,25 @@ class VNAServer(GPIBManagedServer):
     def stop_frequency(self, c, stop=None):
         """Set or get the sweep stop frequency."""
         dev = self.selectedDevice(c)
-        resp  = yield dev.stop_frequency(stop)
+        resp = yield dev.stop_frequency(stop)
         returnValue(resp)
 
     @setting(700, 'Sweep Type', stype='s', returns='s')
     def sweep_type(self, c, stype=None):
         dev = self.selectedDevice(c)
-        resp  = yield dev.sweep_type(stype)
+        resp = yield dev.sweep_type(stype)
         returnValue(resp)
 
     @setting(800, 'IF Bandwidth', bw='v[Hz]', returns='v[Hz]')
     def if_bandwidth(self, c, bw=None):
         dev = self.selectedDevice(c)
-        resp  = yield dev.if_bandwidth(bw)
+        resp = yield dev.if_bandwidth(bw)
         returnValue(resp)
 
     @setting(900, 'Average Mode', avg='b', returns='b')
     def average_mode(self, c, avg=None):
         dev = self.selectedDevice(c)
-        resp  = yield dev.average_mode(avg)
+        resp = yield dev.average_mode(avg)
         returnValue(resp)
 
     @setting(1000, 'Restart Averaging')
@@ -625,65 +657,93 @@ class VNAServer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         dev.restart_averaging()
 
-    @setting(1100, 'Average Points', count='w', returns='w')
-    def average_points(self, c, count = None):
+    @setting(1100, 'Average Points', avg_pts='w', returns='w')
+    def average_points(self, c, avg_pts=None):
         dev = self.selectedDevice(c)
-        resp  = yield dev.average_points(count)
+        resp = yield dev.average_points(avg_pts)
         returnValue(resp)
 
-    @setting(1200, 'Source Power', pow='v[dBm]', returns='v[dBm]')
-    def source_power(self, c, pow=None):
+    @setting(1200, 'Source Power', power='v[dBm]', returns='v[dBm]')
+    def source_power(self, c, power=None):
         dev = self.selectedDevice(c)
-        resp  = yield dev.source_power(pow)
+        resp = yield dev.source_power(power)
         returnValue(resp)
 
     @setting(1300, 'Get Sweep Time', returns='v[s]')
     def get_sweep_time(self, c):
         dev = self.selectedDevice(c)
-        resp  = yield dev.get_sweep_time(pow)
+        resp = yield dev.get_sweep_time(power)
         returnValue(resp)
 
     @setting(1400, 'Sweep Points', points='w', returns='w')
-    def sweep_points(self, c, points = None):
+    def sweep_points(self, c, points=None):
         dev = self.selectedDevice(c)
-        resp  = yield dev.sweep_points(points)
+        resp = yield dev.sweep_points(points)
         returnValue(resp)
 
-    @setting(1500, 'Measurement Setup', SList='*s', formList='?',
-            triggerType='s')
-    def measurement_setup(self, c, SList=['S21'], formList=['MP'],
-            triggerType='IMM'):
+    @setting(1500, 'Measurement Setup', s_params='*s', formats='*s',
+            trigger='s')
+    def measurement_setup(self, c, s_params=['S21'], formats=['MP'],
+            trigger='IMM'):
         """
-        Set the measurement parameters. Use a list of strings of
-        the form Sxx (S21, S11...) for the measurement type. 
-        The formList can be either 'IQ' or 'MP' for mag/phase.
+        Setup the measurement.
+
+        Accepts:
+            s_params: list of strings of the form Sxy ['S21', 'S11',...]
+                    (default: ['S21']).
+            formats: list of strings composed of 'RI' or 'MP',
+                    'RI' - for the real/imaginary returned data format,
+                    'MP' - for the magnitude/phase display format
+                    (default: all traces are 'MP').
+            trigger: 'IMM' - for immediate triggering,
+                    'EXT' - for external triggering
+                    (default: 'IMM').
         """
-        if formList is not None:
-            if len(formList) is not len(SList):
-                raise IndexError('SList and formList are not the same '
+        if formats is not None:
+            if len(formats) is not len(s_params):
+                raise IndexError('s_params and formats are not the same '
                         'length.')
-            for form in formList:
-                if form not in ('IQ', 'MP'):
+            for form in formats:
+                if form not in ('RI', 'MP'):
                     raise ValueError('Illegal measurment definition: '
                             '%s.' %str(form))
         else:
-            formList = ['MP'] * len(SList)
+            formats = ['MP'] * len(s_params)
 
         dev = self.selectedDevice(c)
-        yield dev.measurement_setup(SList, formList, triggerType)
+        yield dev.measurement_setup(s_params, formats, trigger)
 
-    @setting(1600, 'Get Trace', returns='*2v')
-    def get_trace(self, c):
+    @setting(1600, 'Get Data', returns='?')
+    def get_data(self, c):
         """
-        Get network analyzer trace. The output depends on the display
-        format:
-            "LOGMAG" - real [dB];
-            "PHASE"  - real [deg];
-            "REIM"   - complex [linear units].
+        Get the network analyzer trace. The output depends on
+        the display format. The returned data is a 3D-tuple. The first
+        index defines an S-parameter in the dataset (specified by
+        argument s_params in 'Measurement Setup' setting), the second
+        index always runs from 0 to 1 and corresponds to either
+        real/imaginary or magnitude/phase S-parameter values
+        (which are set by agrument formats in 'Measurement Setup'), and
+        the third dimension corresponds to the sweep frequencies.
         """
         dev = self.selectedDevice(c)
-        resp  = yield dev.get_trace()
+        resp = yield dev.get_data()
         returnValue(resp)
+
+    @setting(1700, 'Get Frequencies', returns='*v[Hz]')
+    def get_frequencies(self, c):
+        """Get the trace frequencies."""
+        dev = self.selectedDevice(c)
+        start = yield dev.start_frequency()
+        stop = yield dev.stop_frequency()
+        pts = yield dev.sweep_points()
+        freqs = np.linspace(start['Hz'], stop['Hz'], pts) * units.Hz
+        returnValue(freqs)
+        
+    @setting(1800, 'Get Model', returns='s')
+    def get_model(self, c):
+        """Get the network analyzer model."""
+        dev = self.selectedDevice(c)
+        return dev.model
 
 
 __server__ = VNAServer()
