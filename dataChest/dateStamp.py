@@ -60,13 +60,13 @@ class dateStamp:
       dt = 60.0/(26**3-1)
       return dt*num
             
-  def dateStamp(self, dateISO = None):
+  def dateStamp(self, utcDateIso = None):
       """Change ``num'' to given base
       Upto base 36 is supported."""
-      if dateISO == None:
-          dateISO = datetime.utcnow().isoformat()
-      ymd = dateISO.split("T")[0].split("-")
-      hms = dateISO.split("T")[1].split(":")
+      if utcDateIso == None:
+          utcDateIso = datetime.utcnow().isoformat()
+      ymd = utcDateIso.split("T")[0].split("-")
+      hms = utcDateIso.split("T")[1].split(":")
       hour = hms[0]
       minute = hms[1]
       secs = hms[2]
@@ -81,8 +81,8 @@ class dateStamp:
       return ymdConverted+hour+minute+secsConverted
 
   def utcDateIsoString(self):
-    dateISO = datetime.utcnow().isoformat()
-    return dateISO
+    utcDateISO = datetime.utcnow().isoformat()
+    return utcDateISO
     
 
   def invertDateStamp(self, dateStamp):
