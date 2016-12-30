@@ -20,6 +20,7 @@ import numpy as np
 import string
 import re
 import ast
+import pickle
 
 VAR_NAME_INDEX = 0
 VAR_SHAPE_INDEX = 1
@@ -39,10 +40,23 @@ ERROR_GRAMMAR = {
 
 VALID_DATA_TYPES = ['bool_', 'int8', 'int16', 'int32', 'int64',
                     'uint8', 'uint16', 'uint32', 'uint64',
-                    'int_', 'float16', 'float32', 'float64',
-                    'float_', 'complex64', 'complex128',
-                    'complex_', 'utc_datetime','string'
+                    'float16', 'float32', 'float64',
+                    'complex64', 'complex128',
+                    'utc_datetime','string'
                     ]
+
+VALID_PARAMETER_TYPES = ["int", "long", "float", "complex", "bool",
+                         "list", "str", "unicode", "tuple", "dict",
+                         "bool_", "int8", "int16", "int32", "int64",
+                         "uint8", "uint16", "uint32", "uint64",
+                         "float16", "float32", "float64",
+                         "complex64", "complex128"]
+
+TYPE_CASTING_OBJECTS = [int, long, float, complex, bool, list,
+                            str, unicode, tuple, dict, np.bool_, np.int8, np.int16,
+                            np.int32, np.int64, np.uint8, np.uint16,
+                            np.uint32, np.uint64, np.float16, np.float32,
+                            np.float64, np.complex64, np.complex128]
 
 class dataChest(dateStamp):
 
@@ -183,8 +197,6 @@ class dataChest(dateStamp):
     self.dataCategory = None #treat self.dataCategory consistently
     
     if datasetName != self._formatFilename(datasetName, " =+-."):
-      print "datasetName=", datasetName
-      print "self._formatFilename(datasetName,  +-.)=", self._formatFilename(datasetName, " +-.")
       raise self.exception
     elif not self._isVarsListValid("independents", indepVarsList): 
       raise self.exception
@@ -410,7 +422,19 @@ class dataChest(dateStamp):
         + "the desired dataset."
         )
 
-  def addParameter(self, paramName, paramValue, overwrite = False): 
+  def _getParamterTypeString(self, paramValue):
+    paramTypeString = paramValue.__class__.__name__
+    for ii in range(0, len(VALID_PARAMETER_TYPES)):
+      if paramTypeString == VALID_PARAMETER_TYPES[ii]:
+        return paramTypeString
+    return "Invalid"
+
+  def _typeCastParameter(self, paramValue, paramType):
+    for ii in range(0, len(VALID_PARAMETER_TYPES)):
+      if paramType == VALID_PARAMETER_TYPES[ii]:
+        return TYPE_CASTING_OBJECTS[ii](paramValue)
+
+  def addParameter(self, paramName, paramValue, paramUnits="", overwrite=False): 
     if self.readOnlyFlag == True:
       raise Warning(
         "You cannot add parameters to this file as it was\r\n\t"
@@ -420,12 +444,22 @@ class dataChest(dateStamp):
         + "modify = True."
         )
     elif self.currentHDF5Filename is not None:
-      if self._isParameterValid(paramName, paramValue, overwrite):
+      if self._isParameterValid(paramName, paramValue, paramUnits, overwrite):
         dateISO = self.dateStamp.utcDateIsoString()
         self._updateFileDate("Date Accessed", dateISO)
         self._updateFileDate("Date Modified", dateISO)
   
-        self.file["parameters"].attrs[paramName] = paramValue
+        if paramName not in self.file["parameters"].keys():
+          self.file["parameters"].create_group(paramName)
+
+        paramTypeStr = self._getParamterTypeString(paramValue)
+        if paramTypeStr in ["long", "tuple", "dict"]:
+          paramValue = pickle.dumps(paramValue, protocol=0)
+        paramGrp = self.file["parameters"][paramName]
+        paramGrp.attrs["value"] = paramValue
+        paramGrp.attrs["dtype"] = paramTypeStr
+        paramGrp.attrs["units"] = paramUnits
+        
         self.file.flush()
       else:
         raise self.exception
@@ -434,14 +468,26 @@ class dataChest(dateStamp):
         "No file is currently selected. Create a file using\r\n\t"
         + "createDataset() before using addParameter()."
         )
-      
+
   def getParameter(self, paramName, bypassIOError=False):
     if self.currentHDF5Filename is not None:
       if paramName in self.file["parameters"].attrs.keys():
         self._updateFileDate("Date Accessed")
         paramValue = self.file["parameters"].attrs[paramName] # add in type preservation here
         return paramValue
-        
+      elif paramName in self.file["parameters"].keys():
+        self._updateFileDate("Date Accessed")
+        paramGrp = self.file["parameters"][paramName]
+        paramValue = paramGrp.attrs["value"]
+        paramType = str(paramGrp.attrs["dtype"])
+        if paramType in ["long", "tuple", "dict"]:
+          paramValue = pickle.loads(paramValue)
+        paramUnits = str(paramGrp.attrs["units"])
+        paramValue = self._typeCastParameter(paramValue, str(paramType))
+        if paramUnits == "":
+          return paramValue
+        else:
+          return (paramValue, paramUnits)
       else:
         if not bypassIOError:
           raise IOError("Parameter name not found.")
@@ -467,9 +513,14 @@ class dataChest(dateStamp):
 
   def getParameterList(self):
     if self.currentHDF5Filename is not None:
-      unicodeList = self.file["parameters"].attrs.keys()
       self._updateFileDate("Date Accessed")
-      return [str(x) for x in unicodeList]
+      #backwards compatibility
+      paramList1 = self.file["parameters"].attrs.keys()
+      paramList1 = [str(x) for x in paramList1] # convert from unicode
+      #new style parameters
+      paramList2 = self.file["parameters"].keys()
+      paramList2 = [str(x) for x in paramList2]
+      return paramList1 + paramList2
     else:
       raise Warning(
         "No file is currently selected. Please select a file\r\n\t"
@@ -990,32 +1041,27 @@ class dataChest(dateStamp):
         return False
     return True
 
-  def _isParameterValid(self, parameterName, parameterValue, overwrite = False):
+  def _isParameterValid(self, paramName, paramValue, paramUnits, overwrite = False):
 
-    validTypes = (int, long, float, complex, bool,
-                  list, np.ndarray, np.bool_, np.int8,
-                  np.int16, np.int32, np.int64, np.uint8,
-                  np.uint16, np.uint32, np.uint64, np.int_,
-                  np.float16, np.float32, np.float64, np.float_,
-                  np.complex64, np.complex128, np.complex_,
-                  str, unicode)
-    if isinstance(parameterName, str):
-      if self._formatFilename(parameterName, " +-.[]") != parameterName:
+    if isinstance(paramName, str):
+      if self._formatFilename(paramName, " +-.[]") != paramName:
         self.exception = ValueError("Invalid parameter name provided.")
         return False
-      elif not isinstance(parameterValue, validTypes): 
+      elif self._getParamterTypeString(paramValue) == "Invalid": #self._getParamterTypeString(paramValue):
         self.exception = ValueError(
           "Invalid datatype parameter\r\n\t"
           + "was provided.\r\n\t"
           + "Accepted types: int, long, float,\r\n\t"
           + "complex, bool, list, np.ndarray,\r\n\t"
           + "str, unicode.\r\n\t"
-          + "Type provided=", type(parameterValue)
+          + "Type provided=", type(paramValue)
           )
         #lists must be of one type or else type conversion occurs
         #[12.0, 5e-67, "stringy"] --> ['12.0', '5e-67', 'stringy']
         return False
-      elif overwrite is False and parameterName in self.file["parameters"].attrs.keys():
+      elif type(paramUnits) != str:
+        self.exception = ValueError("Parameter units must be type str.")
+      elif overwrite is False and paramName in self.file["parameters"].attrs.keys():
         self.exception = RuntimeError(
           "Parameter name already exists. \r\n\t"
           +"Parameter values cannot be overwritten."
@@ -1435,34 +1481,11 @@ class dataChest(dateStamp):
       return True
     else:
       return False
-    
-##  def _isColumnHomogeneousList(self, colVal):
-##    tup = None
-##    checked = []
-##    for value in np.ndenumerate(colVal):
-##        tup = value[0][:-1]
-##        for ii in range(0, len(tup)):
-##          if tup not in checked:
-##            checked.append(tup)
-##            if not isinstance(self.valByTup(tup, colVal),
-##                              (list, np.ndarray)):
-##              return False
-##            tup = tup[:-1]
-##    return True
-##
-##  def valByTup(self, tupl, array):
-##      answer = array
-##      for i in tupl:
-##          answer = answer[i]
-##      return answer
-
 
 #automatically close file when new one is created or object is killed
 #make sure that files are always closed and we dont run into file already open conflicts
 ##TODO:
     ##cut lines to <=72 characters
-    ##add dictionary parameter capabilities ***
-    ##over night writes both locally and on afs data corruption tests
     ##refactor
 
  
