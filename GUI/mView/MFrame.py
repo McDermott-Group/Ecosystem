@@ -16,19 +16,14 @@
 __author__ = "Noah Meltzer"
 __copyright__ = "Copyright 2016, McDermott Group"
 __license__ = "GPL"
-__version__ = "1.5.1"
+__version__ = "1.5.2"
 __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
 
-import sys
-import MGrapher
-sys.dont_write_bytecode = True
-
-
 class MFrame:
-    '''This class acts as the interface between the devices and all classes
-    which use the device or any of its parameters'''
+    """This class acts as the interface between the devices and all
+    classes which use the device or any of its parameters."""
     # Name of device's server.
     serverTitle = None
     # Parameter names to be displayed on the GUI.
@@ -43,7 +38,7 @@ class MFrame:
     error = False
     # Error messages.
     errmsg = None
-    # Label on the y axis of the datachest dataplot.
+    # Label on the y axis of the dataChest dataplot.
     yLabel = ""
     # Units used for each parameter.
     units = []
@@ -51,7 +46,7 @@ class MFrame:
     buttons = [[]]
     # Stores an index of a certain button.
     buttonInd = None
-    # Is a specified button pushed.
+    # Is a specified button pushed?
     buttonPushed = False
     # Store the plots.
     isPlotBool = False
@@ -67,12 +62,11 @@ class MFrame:
     plot = None
     # Refresh rate of plot.
     plotRefreshRate = 1
-
     # RefreshRate for the device.
     refreshRate = 1
 
-    # Is there a reading out of range?
     def __init__(self):
+        # Is there a reading out of range?
         self.outOfRange = {}
 
     def setTitle(self, title):
@@ -202,4 +196,4 @@ class MFrame:
         self.outOfRange[key] = False
 
     def disableRange(self):
-      self.outOfRange = {key:False for key in self.outOfRange}
+      self.outOfRange = {key: False for key in self.outOfRange}

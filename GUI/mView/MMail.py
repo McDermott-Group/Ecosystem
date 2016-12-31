@@ -13,48 +13,33 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Utilities libraries.
-
 __author__ = "Noah Meltzer"
 __copyright__ = "Copyright 2016, McDermott Group"
 __license__ = "GPL"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
-"""
-# description = Very simple email client.
-"""
-import sys
-sys.dont_write_bytecode = True
 
 import smtplib
 from email.mime.text import MIMEText
 
+
 class MMail:
-	def __init__(self, To, From, Subject, Body):
-		msg = MIMEText(Body)
-		print("Mailing")
-		msg['Subject'] =  Subject
-		msg['From'] = From
-		msg['To'] = To
-		# We use gmail
-		smtpObj = smtplib.SMTP('smtp.gmail.com')
-		# Say hello to gmail servers
-		smtpObj.ehlo()
-		# Initialize TLS security
-		smtpObj.starttls()
-		# try:
-			# Login
-		#print(msg.as_string())
-		if(len(To) is not 0):
-			#print To
-			smtpObj.login('physics.labrad@gmail.com', 'mcdermott')
-			# Send the mail
-			#print("To")
-			smtpObj.sendmail('physics.labrad@gmail.com',To.split(',') , msg.as_string())         
-			print "Successfully sent mail"
-		smtpObj.quit()
-		# except:
-			# print "Mail failed."
-# except:
-	# print "Error: unable to send email"
+    """Very simple email client."""
+    def __init__(self, To, From, Subject, Body):
+        msg = MIMEText(Body)
+        msg['Subject'] =  Subject
+        msg['From'] = From
+        msg['To'] = To
+        smtpObj = smtplib.SMTP('smtp.gmail.com')
+        # Say hello to the email server.
+        smtpObj.ehlo()
+        # Initialize TLS security.
+        smtpObj.starttls()
+        if To:
+            smtpObj.login('physics.labrad@gmail.com', 'mcdermott')
+            # Send the email.
+            smtpObj.sendmail('physics.labrad@gmail.com', To.split(','),
+                    msg.as_string())         
+            print("Successfully sent mail.")
+        smtpObj.quit()
