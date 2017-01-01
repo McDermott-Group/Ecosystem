@@ -80,10 +80,8 @@ class MGui(QtGui.QMainWindow):
         atexit.register(self.stop)
         
         # Make the GUI fullscreen.
-        geometry = app.desktop().availableGeometry()
-        geometry.setHeight(geometry.height())
-        self.setGeometry(geometry)
-        
+        self.showMaximized()
+       
         web.devices = devices
         # Make GUI area scrollable.
         self.main_widget = QtGui.QWidget()
@@ -92,6 +90,7 @@ class MGui(QtGui.QMainWindow):
         self.scrollArea.setWidget(self.main_widget)
         self.scrollArea.setWidgetResizable(True)
         self.setCentralWidget(self.scrollArea)
+      
         # Setup stylesheet.
         self.scrollArea.setStyleSheet("background:rgb(70, 80, 88)")
         # Configure the menu bar.
@@ -319,7 +318,10 @@ class MGui(QtGui.QMainWindow):
         # Update the GUI every so often. This CAN ONLY be done 
         # in the main thread.
         self.timer.singleShot(web.guiRefreshRate * 1000, self.update)
-        QtGui.QApplication.focusWidget().clearFocus()
+        try:
+            QtGui.QApplication.focusWidget().clearFocus()
+        except:
+            pass
         sys.exit(app.exec_())
 
     def update(self):
