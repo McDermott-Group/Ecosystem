@@ -26,26 +26,27 @@ import traceback
 import labrad
 from labrad.units import Value, ValueArray
 
-from dataChestWrapper import dataChestWrapper
-from MFrame import MFrame
+# from dataChestWrapper import dataChestWrapper
+# from MFrame import MFrame
 import MPopUp
-
+from MDevice import MDevice
 import threading
 
-class Device:
+class Device(MDevice):
     """The device class handles a LabRAD device."""
-    def __init__(self, name):
+    def __init__(self, *args):
+        super(Device, self).__init__(*args)
         # Get all the stuff from the constructor.
         # Has a the device made an appearance, this is so we dont alert
         # the user more than once if a device dissapears.
         self.foundDevice = False
-        self.name = name
+        self.name = args[0]
         # Nicknames of settings (the ones that show up on the GUI).
         self.nicknames = []
-        # Units for the settings to be used with the values on the GUI.
+        #Units for the settings to be used with the values on the GUI.
         self.settingUnits = []
         # List of the precisions for the values on the GUI.
-        self.settingPrecisions = []
+        self.precisions = []
         # List of settings that the user wants run on their device.
         settings = []
         # The actual names of the settings.
@@ -64,7 +65,6 @@ class Device:
         # Arguments that should be passed to settings if necessary.
         self.settingArgs =[]    
         self.settingResultIndices = []
-        self.frame = MFrame()
         self.frame.setYLabel(None)
         # Determine which buttons get messages.
         self.buttonMessages = []
@@ -72,11 +72,10 @@ class Device:
         self.buttonNames = []
         self.buttonSettings = []
         self.buttons = []
-        # Datachest wrapper.
-        self.datachest = dataChestWrapper(self)
+    
         # Tells thread to keep going.
         self.keepGoing = True
-        atexit.register(self.stop)
+        
     
     def stop(self):
         self.keepGoing = False
@@ -91,18 +90,18 @@ class Device:
         self.nicknames.append(parameter)
         self.settingArgs.append(arg)
         self.settingUnits.append(units)
-        self.settingPrecisions.append(precision)
+        self.precisions.append(precision)
         
     def connection(self, cxn):
         self.cxn = cxn
         self.ctx = cxn.context()
 
-    def addButton(self, name, msg, setting, arg=None):
+    def addButton(self, name, msg, action, arg=None):
         self.buttons.append([])
         i = len(self.buttons) - 1
         button = self.buttons[i]
         button.append(name)
-        button.append(setting)
+        button.append(action)
         button.append(msg)
         button.append(arg)
         self.frame.setButtons(self.buttons)
@@ -158,12 +157,12 @@ class Device:
             self.frame.raiseError("LabRAD issue.")
             return False
         
-    def getFrame(self):
-        """Return the device's frame."""
-        return self.frame
+    # def getFrame(self):
+        # """Return the device's frame."""
+        # return self.frame
 
-    def logData(self, b):
-        self.frame.enableDataLogging(b)
+    # def logData(self, b):
+        # self.frame.enableDataLogging(b)
 
     def prompt(self, button):
         """If a button is clicked, handle it."""
@@ -244,7 +243,7 @@ class Device:
                         u = reading.units
                         readings.append(reading[u])
                         units.append(u)
-                        precisions.append(self.settingPrecisions[i])
+                        precisions.append(self.precisions[i])
                     elif type(reading) is list:
                         for j in range(len(reading)):
                             rd = reading[j]
@@ -256,7 +255,7 @@ class Device:
                                 u = rd.units
                                 readings.append(rd[u])
                                 units.append(u)
-                                precisions.append(self.settingPrecisions[i])
+                                precisions.append(self.precisions[i])
                             else:
                                 readings.append(reading[i])
                                 units.append("")
@@ -265,7 +264,7 @@ class Device:
                         try:
                             readings.append(reading)
                             units.append("")
-                            precisions.append(self.settingPrecisions[i])
+                            precisions.append(self.precisions[i])
                         except:
                             print("Problem with readings, type '%s' "
                                   "cannot be displayed."
