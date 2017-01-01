@@ -60,7 +60,11 @@ class MDevice(object):
     def getFrame(self):
         """Return the device's frame."""
         return self.frame
+        
     def logData(self, b):
         self.frame.enableDataLogging(b)
+        
+    def __str__(self):
+        return self.frame.getTitle()
 
     
