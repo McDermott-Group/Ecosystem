@@ -29,6 +29,7 @@ from PyQt4 import QtCore, QtGui
 
 from NotifierGUI import NotifierGUI
 from MConfigGui import ConfigGui
+from MDataSetConfigGUI import DataSetConfigGUI
 import MGrapher
 import MAlert
 from MWeb import web
@@ -111,6 +112,9 @@ class MGui(QtGui.QMainWindow):
         deviceSettingsAction = QtGui.QAction('&Configure...', self)
         deviceSettingsAction.triggered.connect(self.openConfig)
         
+        newDataSetAction = QtGui.QAction('&New DataSet...', self)
+        newDataSetAction.triggered.connect(self.openNewDataSetConfig)
+        
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(exitAction)
         
@@ -119,6 +123,9 @@ class MGui(QtGui.QMainWindow):
         
         DeviceMenu = menubar.addMenu('&Devices')
         DeviceMenu.addAction(deviceSettingsAction)
+        
+        DataChestMenu = menubar.addMenu('&DataChest')
+        DataChestMenu.addAction(newDataSetAction)
         # Keeps track of the number of widgets, used for placing tiles
         # into the correct column.
         numWidgets = 0
@@ -287,7 +294,14 @@ class MGui(QtGui.QMainWindow):
         # the main GUI will not be running.
         self.NotifierGUI = NotifierGUI()
         self.NotifierGUI.exec_()
-
+        
+    def openNewDataSetConfig(self):
+        """Open the new data set configuration GUI."""
+        # NOTE, this is run on the main thread, so while it is open
+        # the main GUI will not be running.
+        self.DataSetConfigGUI = DataSetConfigGUI()
+        self.DataSetConfigGUI.exec_()
+        
     def setRefreshRate(self, period):
         web.guiRefreshRate = period
 

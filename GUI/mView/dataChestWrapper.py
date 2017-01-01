@@ -22,6 +22,7 @@ __status__ = "Beta"
 
 import re
 import atexit
+import os
 import threading
 import datetime as dt
 from PyQt4 import QtCore, QtGui
@@ -29,7 +30,7 @@ from PyQt4 import QtCore, QtGui
 from dateStamp import *
 from dataChest import *
 
-
+import traceback
 class dataChestWrapper:
     """
     The dataChestWrapper class handles all datalogging. An instance 
@@ -79,7 +80,11 @@ class dataChestWrapper:
         except:
             self.dataSet.mkdir(str(int(now.day / 7)))
             self.dataSet.cd(str(int(now.day / 7)))
-
+        try:
+            self.device.getFrame().DataLoggingInfo()['location'] = os.path.abspath(
+                self.dataSet.pwd())
+        except:
+            traceback.print_exc()
         # Look at the names of all existing datasets and check
         # if the name contains the title of the current device. 
         existingFiles = self.dataSet.ls()
