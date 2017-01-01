@@ -22,50 +22,58 @@ __status__ = "Beta"
 
 
 class MFrame:
-    """This class acts as the interface between the devices and all
-    classes which use the device or any of its parameters."""
-    # Name of device's server.
-    serverTitle = None
-    # Parameter names to be displayed on the GUI.
-    nicknames = None
-    # Settings which are called by the GUI.
-    serverSettings = None
-    # Device readings.
-    readings = None
-    # Precisions.
-    precisions = None
-    # Errors.
-    error = False
-    # Error messages.
-    errmsg = None
-    # Label on the y axis of the dataChest dataplot.
-    yLabel = ""
-    # Units used for each parameter.
-    units = []
-    # Buttons on the GUI used to control the device.
-    buttons = [[]]
-    # Stores an index of a certain button.
-    buttonInd = None
-    # Is a specified button pushed?
-    buttonPushed = False
-    # Store the plots.
-    isPlotBool = False
-    # Just in case the user wants to label their NGui plot with
-    # custom units (note these are only the units displayed onscreen,
-    # not the units that the data is logged with).
-    custUnits = ''
-    # If the length of the graph should be plotted over a fixed interval.
-    plotLength = None
-    # Hold the datachest object.
-    dataSet = None
-    # Hold the plot.
-    plot = None
-    # Refresh rate of plot.
-    plotRefreshRate = 1
-    # RefreshRate for the device.
-    refreshRate = 1
-
+  
     def __init__(self):
+        """This class acts as the interface between the devices and all
+    classes which use the device or any of its parameters."""
+        # Name of device's server.
+        self.serverTitle = None
+        # Parameter names to be displayed on the GUI.
+        self.nicknames = None
+        # Settings which are called by the GUI.
+        self.serverSettings = None
+        # Device readings.
+        self.readings = None
+        # Precisions.
+        self.precisions = None
+        # Errors.
+        self.error = False
+        # Error messages.
+        self.errmsg = None
+        # Label on the y axis of the dataChest dataplot.
+        self.yLabel = ""
+        # Units used for each parameter.
+        self.units = []
+        # Buttons on the GUI used to control the device.
+        self.buttons = [[]]
+        # Stores an index of a certain button.
+        self.buttonInd = None
+        # Is a specified button pushed?
+        self.buttonPushed = False
+        # Store the plots.
+        self.isPlotBool = False
+        # Just in case the user wants to label their NGui plot with
+        # custom units (note these are only the units displayed onscreen,
+        # not the units that the data is logged with).
+        self.custUnits = ''
+        # If the length of the graph should be plotted over a fixed interval.
+        self.plotLength = None
+        # Hold the datachest object.
+        self.dataSet = None
+        # Hold the plot.
+        self.plot = None
+        # Refresh rate of plot.
+        self.plotRefreshRate = 1
+        # RefreshRate for the device.
+        self.refreshRate = 1
+        # Datalogging disabled by default
+        self.logData = False
+        # Dictionary holding datalogging settings
+        self.datalogsettingsDict = {
+                "enabled"   :    self.logData,
+                "location":     None,
+                "dataset"   :     self.dataSet
+                }
         # Is there a reading out of range?
         self.outOfRange = {}
 
@@ -185,7 +193,10 @@ class MFrame:
 
     def isDataLogging(self):
         return self.logData
-
+        
+    def DataLoggingInfo(self):
+        return self.datalogsettingsDict
+        
     def getOutOfRangeStatus(self): 
         return self.outOfRange
         
@@ -197,3 +208,4 @@ class MFrame:
 
     def disableRange(self):
       self.outOfRange = {key: False for key in self.outOfRange}
+      
