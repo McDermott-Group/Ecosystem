@@ -84,7 +84,9 @@ class Device(MDevice):
         self.serverName = name
         
     def addParameter(self, parameter, setting, arg=None, index=None,
-            units=None, precision=2):
+            units=None, precision=2, **kwargs):
+        
+        self.frame.DataLoggingInfo()['channels'][parameter] = kwargs.get('log', True)
         self.settingNames.append(setting)
         self.settingResultIndices.append(index)
         self.nicknames.append(parameter)

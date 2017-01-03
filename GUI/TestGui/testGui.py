@@ -32,7 +32,7 @@ class nViewer:
         LeidenDRTemperature.connection(cxn)
 
         LeidenDRTemperature.setServerName("my_server")
-        LeidenDRTemperature.addParameter("Pressure","pressure", None)
+        LeidenDRTemperature.addParameter("Pressure","pressure", None, log = False)
         LeidenDRTemperature.addParameter("Temperature", "temperature", None)
         #LeidenDRTemperature.selectDeviceCommand("select_device", 0)
         LeidenDRTemperature.addPlot()

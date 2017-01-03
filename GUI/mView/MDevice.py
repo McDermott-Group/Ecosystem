@@ -16,7 +16,7 @@
 __author__ = "Noah Meltzer"
 __copyright__ = "Copyright 2016, McDermott Group"
 __license__ = "GPL"
-__version__ = "2.0.2"
+__version__ = "1.0.2"
 __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 import atexit
@@ -61,10 +61,11 @@ class MDevice(object):
         """Return the device's frame."""
         return self.frame
         
-    def logData(self, b):
+    def logData(self, b, channels = None):
+        self.frame.DataLoggingInfo['channels'] = channels
         self.frame.enableDataLogging(b)
         
     def __str__(self):
         return self.frame.getTitle()
 
-    
+   

@@ -72,7 +72,8 @@ class MFrame:
         self.datalogsettingsDict = {
                 "enabled"   :    self.logData,
                 "location":     None,
-                "dataset"   :     self.dataSet
+                "dataset"   :     self.dataSet,
+                "channels":     {}
                 }
         # Is there a reading out of range?
         self.outOfRange = {}
