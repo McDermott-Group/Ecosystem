@@ -2,8 +2,8 @@
 S'Random:Temperature'
 p2
 (lp3
-I01
-aF0.5
+I00
+aS''
 aS''
 acsip
 _unpickle_type
@@ -16,8 +16,8 @@ ttRp6
 asS'Random:Pressure'
 p7
 (lp8
-I01
-aF1
+I00
+aS''
 aS''
 ag4
 (g5

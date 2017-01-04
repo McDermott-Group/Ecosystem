@@ -138,7 +138,7 @@ class NewDataSetSettings(QtGui.QWidget):
             print "New path for", str(device)+":", location
             device.getFrame().DataLoggingInfo()['name'] = name
             device.getFrame().DataLoggingInfo()['location'] = location
-            grid.itemAtPosition(row, 2).widget().setText(location)
+            grid.itemAtPosition(row, 1).widget().setText(location)
         # else:
             # print "DATA_CHEST_ROOT Directory must be a parent directory of datalogging location."
         #grid.itemAtPosition(row, 2).widget().setText(dir.replace(root, ''))
