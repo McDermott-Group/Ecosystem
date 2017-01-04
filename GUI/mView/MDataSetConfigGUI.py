@@ -117,9 +117,9 @@ class NewDataSetSettings(QtGui.QWidget):
                 hBox.addStretch(0)
     def openFileDialog(self, device, grid,  row):
         root = os.environ['DATA_CHEST_ROOT']
-        
-        dir = QtGui.QFileDialog.getSaveFileName(self, "Open Folder", 
-            device.getFrame().DataLoggingInfo()['location'])
+        name =   device.getFrame().DataLoggingInfo()['name']
+        dir = QtGui.QFileDialog.getSaveFileName(self, "Save New Data Set...", 
+            device.getFrame().DataLoggingInfo()['location']+"\\"+name , "")
          
         #print dir
         
