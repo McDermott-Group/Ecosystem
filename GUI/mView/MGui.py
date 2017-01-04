@@ -112,7 +112,7 @@ class MGui(QtGui.QMainWindow):
         deviceSettingsAction = QtGui.QAction('&Configure...', self)
         deviceSettingsAction.triggered.connect(self.openConfig)
         
-        newDataSetAction = QtGui.QAction('&New DataSet...', self)
+        newDataSetAction = QtGui.QAction('&Data Logging Configuration...', self)
         newDataSetAction.triggered.connect(self.openNewDataSetConfig)
         
         fileMenu = menubar.addMenu('&File')
@@ -385,7 +385,8 @@ class MGui(QtGui.QMainWindow):
                             else:
                                 self.lcds[i][y].display("---")
                         except TypeError:
-                            traceback.print_exc()
+                            pass
+                            #traceback.print_exc()
                         # If there are units, put them next to
                         # the number.
                         if frame.getUnits():

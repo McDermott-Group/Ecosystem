@@ -1,7 +1,7 @@
 import sys
 sys.dont_write_bytecode = True
 import MGui             # Handles all gui operations. Independent of labrad.
-
+from MWeb import web
 #from PyQt4 import QtCore, QtGui
 
 from Device import Device
@@ -45,7 +45,8 @@ class nViewer:
         
         # Start the datalogger. This line can be commented
         # out if no datalogging is required.
-        self.chest = dataChestWrapper(self.devices)
+        #print self.devices
+       # self.chest = dataChestWrapper(self.devices)
         
         # Create the gui
         self.gui = MGui.MGui()

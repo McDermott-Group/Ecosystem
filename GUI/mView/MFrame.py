@@ -73,7 +73,9 @@ class MFrame:
                 "enabled"   :    self.logData,
                 "location":     None,
                 "dataset"   :     self.dataSet,
-                "channels":     {}
+                "channels":     {},
+                "chest"        :      None,
+                "name"           :      self.serverTitle
                 }
         # Is there a reading out of range?
         self.outOfRange = {}

@@ -25,13 +25,13 @@ import traceback
 
 import labrad
 from labrad.units import Value, ValueArray
-
+from dataChestWrapper import dataChestWrapper
 # from dataChestWrapper import dataChestWrapper
 # from MFrame import MFrame
 import MPopUp
 from MDevice import MDevice
 import threading
-
+from MWeb import web
 class Device(MDevice):
     """The device class handles a LabRAD device."""
     def __init__(self, *args):
@@ -119,6 +119,9 @@ class Device(MDevice):
         self.frame.setTitle(self.name)
         self.frame.setNicknames(self.nicknames)
         self.frame.setReadingIndices(self.settingResultIndices)
+        self.frame.DataLoggingInfo()['name'] = self.name
+        self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self)
+        self.datachest = self.frame.DataLoggingInfo()['chest']
         # Each device NEEDS to run on a different thread 
         # than the main thread (which ALWAYS runs the GUI).
         # This thread is responsible for querying the devices.

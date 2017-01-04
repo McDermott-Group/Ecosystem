@@ -20,13 +20,13 @@ __version__ = "1.0.2"
 __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 import atexit
-from dataChestWrapper import dataChestWrapper
+
 from MFrame import MFrame
 class MDevice(object):
     def __init__(self, name):
         self.frame = MFrame()
         # Datachest wrapper.
-        self.datachest = dataChestWrapper(self)
+       
         atexit.register(self.stop)
     def addParameter(self, *args):
         print ("ERROR: Child of MDevice must "
@@ -66,6 +66,8 @@ class MDevice(object):
         self.frame.enableDataLogging(b)
         
     def __str__(self):
+        if self.frame.getTitle() is None:
+            return "Unnamed Device"
         return self.frame.getTitle()
 
    

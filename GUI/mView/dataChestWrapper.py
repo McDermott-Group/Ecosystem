@@ -22,14 +22,15 @@ __status__ = "Beta"
 
 import re
 import atexit
-import os
+
 import threading
 import datetime as dt
 from PyQt4 import QtCore, QtGui
 
+
 from dateStamp import *
 from dataChest import *
-
+import os
 import traceback
 class dataChestWrapper:
     """
@@ -40,6 +41,7 @@ class dataChestWrapper:
     def __init__(self, device):
         """Initiallize the dataChest."""
         # Define the current time.
+       
         now = dt.datetime.now()
         # Create a devices reference that can be accessed 
         # outside of this scope.
@@ -65,26 +67,61 @@ class dataChestWrapper:
         # This is because datasets are stored using the name of
         # the device, which is what the program looks for when checking
         # if there are data files that already exist.
-        title = str(self.device.getFrame().getTitle()).replace(" ", "")
+        title = str(self.device.getFrame().DataLoggingInfo()['name']).replace(" ", "")
         # Datasets are stored in the folder 'DATA_CHEST_ROOT\year\month\'
         # Try to access the current month's folder, if it does not
         # exist, make it.
-        try:
-            self.dataSet.cd(str(now.month))
-        except:
-            self.dataSet.mkdir(str(now.month))
-            self.dataSet.cd(str(now.month))
+        location = self.device.getFrame().DataLoggingInfo()['location']
+        # root = os.environ['DATA_CHEST_ROOT']
+        # relativePath =  os.path.relpath(root, dir)
+        # print "Configuring datalogging for", str(self.device)+" located at", location
+        if location != None:
+           # try:
+               
+                
+                self.dataSet.cd("")
+                root =   os.path.abspath(self.dataSet.pwd())
+                print "root", root
+                print "location", location
+                relativePath =  os.path.relpath(location, root)
+                
+                print "Relative Path: ", relativePath
+                
+                path = relativePath.split("\\")
+                print "relative path:", path
+                self.dataSet = dataChest(path[1])
+                if relativePath == '.':
+                    relativePath = ''
+                
+               # print "pwd", self.dataSet.pwd()
+                self.dataSet.cd(relativePath)
+                
+                print "Configuring datalogging for", str(self.device)+" located at", location
+            # except:
+                # print "Problem logging data in "+str(location)+", reverting to default"
+                # location = None
+                # self.device.getFrame().DataLoggingInfo()['location'] = None
+                # self.dataSet.cd(os.path.relpath(self.dataSet.pwd(), root))
+                # traceback.print_exc()
+                
+        if location == None:
+           try:
+                self.dataSet.cd(str(now.month))
+           except:
+                self.dataSet.mkdir(str(now.month))
+                self.dataSet.cd(str(now.month))
 
-        try:
-            self.dataSet.cd(str(int(now.day / 7)))
-        except:
-            self.dataSet.mkdir(str(int(now.day / 7)))
-            self.dataSet.cd(str(int(now.day / 7)))
-        try:
-            self.device.getFrame().DataLoggingInfo()['location'] = os.path.abspath(
-                self.dataSet.pwd())
-        except:
-            traceback.print_exc()
+           try:
+                self.dataSet.cd(str(int(now.day / 7)))
+           except:
+                self.dataSet.mkdir(str(int(now.day / 7)))
+                self.dataSet.cd(str(int(now.day / 7)))
+                
+           try:
+                self.device.getFrame().DataLoggingInfo()['location'] = os.path.abspath(
+                    self.dataSet.pwd())
+           except:
+                traceback.print_exc()
         # Look at the names of all existing datasets and check
         # if the name contains the title of the current device. 
         existingFiles = self.dataSet.ls()
@@ -162,10 +199,12 @@ class dataChestWrapper:
             vars = []
             vars.append(dStamp.utcNowFloat())
             # Append NaN.
-            for y in range(1, self.dataSet.getParameter("DataWidth")):
-                vars.append(np.nan)
-            self.dataSet.addData([vars])
-        
+            try:
+                for y in range(1, self.dataSet.getParameter("DataWidth")):
+                    vars.append(np.nan)
+                self.dataSet.addData([vars])
+            except:
+                pass
     def save(self):
         '''Stores the data'''
         # For all datasets, check if there are readings
@@ -182,10 +221,13 @@ class dataChestWrapper:
             vars = []
             readings = []
             for y in range(len(self.device.getFrame().getNicknames())):
+                # Channels that should be logged
+                enabled = self.device.getFrame().DataLoggingInfo()['channels']
+                nickname = self.device.getFrame().getNicknames()[y] 
                 # This checks if the reading is displayed on the GUI
                 # if it is not, then it does not include it in
                 # the dataset.
-                if self.device.getFrame().getNicknames()[y] is not None:
+                if nickname is not None and enabled[nickname]:
                     devReadings = self.device.getFrame().getReadings()
                     # If the device has readings.
                     if devReadings is not None:
@@ -195,6 +237,8 @@ class dataChestWrapper:
                             readings.append(np.nan)
                     else:
                         readings.append(np.nan)
+                else:
+                    readings.append(np.nan)
             dStamp = dateStamp()
             # If the device has readings, add data to dataset.
             if(readings is not None):
@@ -206,6 +250,7 @@ class dataChestWrapper:
                 try:
                     self.dataSet.addData([vars])
                 except:
+                    traceback.print_exc()
                     print("%s: could not store data, this might be due"
                           " to a change made to the parameters of the "
                           "device, if this is the case then either "
