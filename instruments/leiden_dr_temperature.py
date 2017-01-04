@@ -166,13 +166,17 @@ class LeidenDRPseudoserver(LabradServer):
         
         # Fine thresholding.
         if filtered.size:
-            Tmean = np.mean(filtered)
+            if filtered.size > 1:
+                T = filtered[-2]
+            else:
+                T = filtered[0]
             Tstd = np.std(filtered)
-            mask = np.logical_or(np.less(array, Tmean - 3 * Tstd),
-                                 np.greater(array, Tmean + 3 * Tstd))
+            lower_threshold = np.nanmax([T - 3 * Tstd, T / 2.])
+            upper_threshold = np.nanmin([T + 3 * Tstd, 2 * T])
+            mask = np.logical_and(np.less(array, upper_threshold),
+                                  np.greater(array, lower_threshold))
             filtered = array.copy()
-            filtered[mask] = np.nan
-            filtered = array[np.isfinite(filtered)]
+            filtered = filtered[mask]
 
         if filtered.size:
             return filtered[-1]
