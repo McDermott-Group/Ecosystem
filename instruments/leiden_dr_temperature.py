@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Leiden DR Temperature
-version = 0.4.0
+version = 0.4.1
 description =  Gives access to Leiden DR temperatures.
 instancename = Leiden DR Temperature
 
@@ -136,9 +136,9 @@ class LeidenDRPseudoserver(LabradServer):
             raw_mix = float(fields[12])           # mK
             raw_mix_pt1000 = float(fields[13])    # K
             
-            if self._arr_still[-1] != raw_still and \
-                    self._arr_exch[-1] != raw_exch and \
-                    self._arr_mix[-1] != raw_mix and \
+            if self._arr_still[-1] != raw_still or \
+                    self._arr_exch[-1] != raw_exch or \
+                    self._arr_mix[-1] != raw_mix or \
                     self._arr_mix_pt1000[-1] != raw_mix_pt1000:
                 
                 self._arr_still = np.roll(self._arr_still, -1)
@@ -153,28 +153,41 @@ class LeidenDRPseudoserver(LabradServer):
     
     def filteredTemperature(self, array, lower_threshold,
             upper_threshold):
+        if not np.any(np.isfinite(array)):
+            return np.nan
         # Raw thresholding.
-        mask = np.logical_or(np.less(array, lower_threshold),
-                             np.greater(array, upper_threshold))
-        filtered = array.copy()
-        filtered[mask] = np.nan
-        raw = array[np.isfinite(filtered)]
+        array = array[np.isfinite(array)]
+        mask = np.logical_and(np.less(array, upper_threshold),
+                              np.greater(array, lower_threshold))
+        raw = array[mask]
         
         # Median filtering.
-        filtered = medfilt(filtered, 5)
-        filtered = filtered[np.isfinite(filtered)]
+        filtered = medfilt(raw, 5)
         
         # Fine thresholding.
         if filtered.size:
-            Tmean = np.mean(filtered)
+            weight = np.exp(-np.linspace(filtered.size / 3., 0,
+                                         filtered.size))
+            T = np.mean(weight * filtered) / np.mean(weight)
             Tstd = np.std(filtered)
-            mask = np.logical_or(np.less(array, Tmean - 3 * Tstd),
-                                 np.greater(array, Tmean + 3 * Tstd))
-            filtered = array.copy()
-            filtered[mask] = np.nan
-            filtered = array[np.isfinite(filtered)]
+            if T > lower_threshold:
+                if Tstd > T / 100.:
+                    lower_threshold = np.max([lower_threshold,
+                            T - 3. * Tstd, 0.75 * T])
+                    upper_threshold = np.min([upper_threshold,
+                            T + 3. * Tstd, 1.25 * T])
+                else:
+                    lower_threshold = np.max([lower_threshold, 0.75 * T])
+                    upper_threshold = np.min([upper_threshold, 1.25 * T])
+                mask = np.logical_and(np.less(array, upper_threshold),
+                                      np.greater(array, lower_threshold))
+                fine = array[mask]
+            else:
+                fine = raw
 
-        if filtered.size:
+        if fine.size:
+            return fine[-1]
+        elif filtered.size:
             return filtered[-1]
         elif raw.size:
             return raw[-1]
@@ -212,17 +225,17 @@ class LeidenDRPseudoserver(LabradServer):
     @setting(21, 'Still Temperature', returns='v[mK]')
     def still_temperature(self, c):
         """Return the still chamber temperature."""
-        return self.filteredTemperature(self._arr_still, 1, 20e3) * mK
+        return self.filteredTemperature(self._arr_still, 1, 2e4) * mK
 
     @setting(22, 'Exchange Temperature', returns='v[mK]')
     def exchange_temperature(self, c):
         """Return the exchange chamber temperature."""
-        return self.filteredTemperature(self._arr_exch, 1, 20e3) * mK
+        return self.filteredTemperature(self._arr_exch, 1, 2e4) * mK
         
     @setting(23, 'Mix Temperature', returns='v[mK]')
     def mix_temperature(self, c):
         """Return the mix chamber temperature."""
-        return self.filteredTemperature(self._arr_mix, 1, 20e3) * mK
+        return self.filteredTemperature(self._arr_mix, 1, 2e4) * mK
         
     @setting(24, 'Mix Temperature Pt1000', returns='v[K]')
     def mix_temperature_pt1000(self, c):
