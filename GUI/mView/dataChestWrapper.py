@@ -53,7 +53,8 @@ class dataChestWrapper:
         atexit.register(self.done)
         self.dataSet = dataChest(str(now.year))
         self.hasData = False
-            
+        self.keepLoggingNan = True
+        self.dStamp = dateStamp()
     def configureDataSets(self):
         """
         Initialize the datalogger, if datasets already exist, use them.
@@ -193,7 +194,6 @@ class dataChestWrapper:
         with NaN values.
         """
         dStamp = dateStamp()
-
         # If the dataset was being logged.
         if self.hasData:
             vars = []
@@ -204,12 +204,15 @@ class dataChestWrapper:
                     vars.append(np.nan)
                 self.dataSet.addData([vars])
             except:
-                pass
+                traceback.print_exc()
+                
     def save(self):
         '''Stores the data'''
         # For all datasets, check if there are readings
         #for i in range(0, len(self.devices)):
-
+       # dStamp = dateStamp()
+        #dStamp.utcNowFloat()
+        
         if self.device.getFrame().getReadings() is not None:
             # If the device did not have any readings and now it does
             # then we want to create a dataset.
@@ -220,6 +223,8 @@ class dataChestWrapper:
             indepvars = []
             vars = []
             readings = []
+
+            currentlyLogging = False
             for y in range(len(self.device.getFrame().getNicknames())):
                 # Channels that should be logged
                 enabled = self.device.getFrame().DataLoggingInfo()['channels']
@@ -228,6 +233,8 @@ class dataChestWrapper:
                 # if it is not, then it does not include it in
                 # the dataset.
                 if nickname is not None and enabled[nickname]:
+                    self.keepLoggingNan= True
+                    currentlyLogging = True
                     devReadings = self.device.getFrame().getReadings()
                     # If the device has readings.
                     if devReadings is not None:
@@ -239,16 +246,22 @@ class dataChestWrapper:
                         readings.append(np.nan)
                 else:
                     readings.append(np.nan)
-            dStamp = dateStamp()
+                        
+            
+          
             # If the device has readings, add data to dataset.
-            if(readings is not None):
-                indepvars.append(dStamp.utcNowFloat())
+            if(readings is not None and currentlyLogging):
+              
+                indepvars.append(self.dStamp.utcNowFloat())
                 depvars.extend(readings)
                 vars.extend(indepvars)
                 vars.extend(depvars)
                 varslist = self.dataSet.getVariables()
+                #print vars
                 try:
-                    self.dataSet.addData([vars])
+                      print vars
+                      self.dataSet.addData([vars])
+                    
                 except:
                     traceback.print_exc()
                     print("%s: could not store data, this might be due"
@@ -257,3 +270,10 @@ class dataChestWrapper:
                           "delete the data set from the current storage"
                           " directory or move it somewhere else."
                           %self.device.getFrame().getTitle())
+          
+                
+            if self.keepLoggingNan and not currentlyLogging:
+                self.done()
+
+                self.keepLoggingNan = False
+                currentlyLogging = False

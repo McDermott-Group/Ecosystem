@@ -80,41 +80,52 @@ class DataSetConfigGUI(QtGui.QDialog):
 class NewDataSetSettings(QtGui.QWidget):
     def __init__(self, parent = None):
         super(NewDataSetSettings, self).__init__(parent)
+        font = QtGui.QFont()
+        font.setPointSize(14)
         
+        hbox = QtGui.QHBoxLayout()
         mainLayout = QtGui.QVBoxLayout()
         self.checkboxes = []
         grid = QtGui.QGridLayout()
         self.setLayout(mainLayout)
+        mainLayout.addLayout(hbox)
         mainLayout.addLayout(grid)
-        grid.addWidget(QtGui.QLabel("DATA_CHEST_ROOT Environment Variable:"),0,0)
-        grid.addWidget(QtGui.QLabel("\t"+str(os.environ['DATA_CHEST_ROOT'])), 0, 1,1,2)
-
+        rootlbl = QtGui.QLabel("DATA_CHEST_ROOT:")
+        rootlbl.setFont(font)
+        hbox.addWidget(rootlbl)
+        hbox.addWidget(QtGui.QLabel("\t"+str(os.environ['DATA_CHEST_ROOT'])))
+        
        # grid.addWidget(QtGui.QLabel("Data Log Locations: "),1,0,1,2)
         
-        font = QtGui.QFont()
-        font.setPointSize(14)
+       
         
         row = 2
         for device in web.devices:
             row += 1
-            title = QtGui.QLabel(str(device))
+            title = QtGui.QLabel(str(device)+": ")
             title.setFont(font)
             grid.addWidget(title,row,0)
             grid.addWidget(QtGui.QLabel(str(device.getFrame()
                 .DataLoggingInfo()['location'])),row,1)
             button = QtGui.QPushButton("Browse...",self)
             button.clicked.connect(partial(self.openFileDialog, device, grid, row))
-            grid.addWidget(button,row, 3)
+            buttonHbox = QtGui.QHBoxLayout()
+            grid.addLayout(buttonHbox, row, 3)
+            buttonHbox.addStretch(0)
+            buttonHbox.addWidget(button)
+
             for nickname in device.getFrame().getNicknames():
                 row += 1
-                hBox = QtGui.QHBoxLayout()
+                #hBox = QtGui.QHBoxLayout()
                 checkbox = QtGui.QCheckBox(self)
                 self.checkboxes.append(checkbox)
                 checkbox.setChecked(device.getFrame().DataLoggingInfo()['channels'][nickname])
-                grid.addLayout(hBox, row, 0)
-                hBox.addWidget(checkbox)
-                hBox.addWidget(QtGui.QLabel(nickname))
-                hBox.addStretch(0)
+                #grid.addLayout(hBox, row, 0)
+                grid.addWidget(QtGui.QLabel(nickname), row, 0)
+                grid.addWidget(checkbox, row, 1)
+                #hBox.addWidget(checkbox)
+                #hBox.addWidget(QtGui.QLabel(nickname))
+                #hBox.addStretch(0)
     def openFileDialog(self, device, grid,  row):
         root = os.environ['DATA_CHEST_ROOT']
         name =   device.getFrame().DataLoggingInfo()['name']
