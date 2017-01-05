@@ -177,7 +177,7 @@ class LeidenDRPseudoserver(LabradServer):
                     upper_threshold = np.min([upper_threshold,
                             T + 3. * Tstd, 1.25 * T])
                 else:
-                    lower_threshold = np.max([lower_threshold, 0.75 * T]])
+                    lower_threshold = np.max([lower_threshold, 0.75 * T])
                     upper_threshold = np.min([upper_threshold, 1.25 * T])
                 mask = np.logical_and(np.less(array, upper_threshold),
                                       np.greater(array, lower_threshold))
