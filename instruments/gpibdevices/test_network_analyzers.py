@@ -12,11 +12,11 @@ def single_value_setting_test(vna, setting, value):
     print("'%s' setting is set to %s." %(setting, value))
 
 def vna_test(device_id=0, s_params=['S21'], formats=['RI'], trigger='IMM',
-        single_value_settings={'Source Power':    -20*units.dBm,
+        single_value_settings={'Source Power':    -10*units.dBm,
                                'Start Frequency':   1*units.GHz,
                                'Stop Frequency':   10*units.GHz,
                                'IF Bandwidth':      1*units.kHz,
-                               'Sweep Points':    301,
+                               'Sweep Points':    1001,
                                'Average Points':   10},
         plot_magnitude=True, plot_phase=False):
     print('Running single trace VNA test...')
@@ -67,7 +67,7 @@ def vna_test(device_id=0, s_params=['S21'], formats=['RI'], trigger='IMM',
                 phs = data[idx][1]['deg']
         
             if plot_magnitude:
-                plt.figure(2*device_id)
+                plt.figure(2 * device_id)
                 plt.plot(freqs['GHz'], mag)
                 plt.xlabel('Frequency (GHz)')
                 plt.ylabel('Magnitude (dB)')
@@ -75,10 +75,10 @@ def vna_test(device_id=0, s_params=['S21'], formats=['RI'], trigger='IMM',
                 plt.xlim([freqs[0]['GHz'], freqs[-1]['GHz']])
             
             if plot_phase:
-                plt.figure(2*device_id+1)
+                plt.figure(2 * device_id + 1)
                 plt.plot(freqs['GHz'], phs)
                 plt.xlabel('Frequency (GHz)')
-                plt.ylabel('Magnitude (dB)')
+                plt.ylabel('Phase (deg)')
                 plt.legend(s_params)
                 plt.xlim([freqs[0]['GHz'], freqs[-1]['GHz']])
             
@@ -86,5 +86,8 @@ def vna_test(device_id=0, s_params=['S21'], formats=['RI'], trigger='IMM',
  
  
 if __name__ == '__main__':
-    vna_test(s_params=['S11', 'S12', 'S21', 'S22'],
-             formats=['RI', 'RI', 'MP', 'MP'])
+    # vna_test(s_params=['S11', 'S12', 'S21', 'S22'],
+             # formats=['RI', 'RI', 'MP', 'MP'])
+             
+    vna_test(s_params=['S22', 'S22'], formats=['RI', 'MP'],
+            plot_phase=True)
