@@ -56,7 +56,8 @@ class DataSetConfigGUI(QtGui.QDialog):
                 try:
                     device.getFrame().DataLoggingInfo()['chest'].configureDataSets()
                 except Exception as e:
-                    print(e)
+                    traceback.print_exc()
+                    self.cancel()
             for device in web.devices:
                 for i,checkbox in enumerate(self.settingsWidget.checkboxes):
                     device.getFrame().DataLoggingInfo()['channels'][device.getFrame()
@@ -74,8 +75,9 @@ class DataSetConfigGUI(QtGui.QDialog):
     def cancel(self):
         # Revert all changes
          for i,device in enumerate(web.devices):
-            info = device.getFrame().DataLoggingInfo() 
-            info = self.initialStates[i]
+            for key in device.getFrame().DataLoggingInfo().keys():
+                device.getFrame().DataLoggingInfo()[key] = self.initialStates[i][key]
+
          self.close()
 class NewDataSetSettings(QtGui.QWidget):
     def __init__(self, parent = None):
@@ -137,13 +139,20 @@ class NewDataSetSettings(QtGui.QWidget):
         dir = os.path.abspath(dir).rsplit('\\',1)
         location = dir[0]
         name = dir[1]
-        print "location:", location
-        print "name:", name
         
         if not root in location:
                 print "ERROR"
-                errorMsg = PopUp(str("ERROR: Directory must be inside of DATA_CHEST_ROOT."))
+                errorMsg = PopUp(str(
+                    "ERROR: Directory must be inside of directory in DATA_CHEST_ROOT."
+                    ))
                 errorMsg.exec_()
+        elif root == location:
+          print "ERROR"
+          errorMsg = PopUp(str(
+              "ERROR: Data must be stored inside of a "
+              "DIRECTORY which is itself under DATA_CHEST_ROOT."
+              ))
+          errorMsg.exec_()
         else:
             relativePath =  os.path.relpath(location, root)
             print "New path for", str(device)+":", location

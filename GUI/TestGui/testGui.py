@@ -32,8 +32,8 @@ class nViewer:
         LeidenDRTemperature.connection(cxn)
 
         LeidenDRTemperature.setServerName("my_server")
-        LeidenDRTemperature.addParameter("Pressure","pressure", None, log = False)
-        LeidenDRTemperature.addParameter("Temperature", "temperature", None)
+        LeidenDRTemperature.addParameter("Random Pressure","pressure", None, log = False)
+        LeidenDRTemperature.addParameter("Random Temperature", "temperature", None)
         #LeidenDRTemperature.selectDeviceCommand("select_device", 0)
         LeidenDRTemperature.addPlot()
         LeidenDRTemperature.setPlotRefreshRate(0.5)

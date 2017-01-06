@@ -319,7 +319,6 @@ class mGraph(QtGui.QWidget):
                 self.canvas.draw()
             else:
                 data = self.getDataRangeFromDataSet(dataSet, time)
-                #print data
                 for i in range(len(data[0])-1):
                     if self.lineSelect.isChecked(i):
                         times = [dt.datetime.fromtimestamp(row[0])
