@@ -166,29 +166,24 @@ class LeidenDRPseudoserver(LabradServer):
         
         # Fine thresholding.
         if filtered.size:
-            weight = np.exp(-np.linspace(filtered.size / 3., 0,
+            weight = np.exp(-np.linspace(filtered.size / 5., 0,
                                          filtered.size))
-            T = np.mean(weight * filtered) / np.mean(weight)
-            Tstd = np.std(filtered)
-            if T > lower_threshold:
-                if Tstd > T / 100.:
-                    lower_threshold = np.max([lower_threshold,
-                            T - 3. * Tstd, 0.75 * T])
-                    upper_threshold = np.min([upper_threshold,
-                            T + 3. * Tstd, 1.25 * T])
-                else:
-                    lower_threshold = np.max([lower_threshold, 0.75 * T])
-                    upper_threshold = np.min([upper_threshold, 1.25 * T])
-                mask = np.logical_and(np.less(array, upper_threshold),
-                                      np.greater(array, lower_threshold))
-                fine = array[mask]
+            Tmean = np.sum(weight * filtered) / np.sum(weight)
+            Tmed = np.median(raw)
+            
+            if Tmean > 1.2 * Tmed or Tmean < 0.8 * Tmed:
+                T = Tmed
             else:
-                fine = raw
-
-        if fine.size:
-            return fine[-1]
-        elif filtered.size:
-            return filtered[-1]
+                T = Tmean 
+            lower_threshold = np.max([lower_threshold, 0.8 * T])
+            upper_threshold = np.min([upper_threshold, 1.2 * T])
+            mask = np.logical_and(np.less(array, upper_threshold),
+                                  np.greater(array, lower_threshold))
+            fine = array[mask]
+            if fine.size:
+                return fine[-1]
+            else:
+                return Tmean
         elif raw.size:
             return raw[-1]
         else:
