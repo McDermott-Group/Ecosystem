@@ -4,7 +4,7 @@ import MGui             # Handles all gui operations. Independent of labrad.
 from MWeb import web
 #from PyQt4 import QtCore, QtGui
 
-from Device import Device
+from MDevices.Device import Device
 from multiprocessing.pool import ThreadPool
 import threading
 import labrad

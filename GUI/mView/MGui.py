@@ -33,7 +33,7 @@ from MDataSetConfigGUI import DataSetConfigGUI
 import MGrapher
 import MAlert
 from MWeb import web
-
+from MNodeEditor.MNodeEditorHandler import MNodeEditorHandler
 
 class MGui(QtGui.QMainWindow):
     """Handles construction of GUI using mView framework."""
@@ -115,6 +115,9 @@ class MGui(QtGui.QMainWindow):
         newDataSetAction = QtGui.QAction('&Data Logging Configuration...', self)
         newDataSetAction.triggered.connect(self.openNewDataSetConfig)
         
+        virtualDevicesConfigAction = QtGui.QAction('&Virtual devices editor...',self)
+        virtualDevicesConfigAction.triggered.connect(self.openVirtualDevicesConfig)
+        
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(exitAction)
         
@@ -126,6 +129,9 @@ class MGui(QtGui.QMainWindow):
         
         DataChestMenu = menubar.addMenu('&DataChest')
         DataChestMenu.addAction(newDataSetAction)
+        
+        VirtualDevicesMenu = menubar.addMenu('&Virtual Devices')
+        VirtualDevicesMenu.addAction(virtualDevicesConfigAction)
         # Keeps track of the number of widgets, used for placing tiles
         # into the correct column.
         numWidgets = 0
@@ -141,6 +147,7 @@ class MGui(QtGui.QMainWindow):
         # Which column are we adding a tile to next.
         self.VBoxColumn = 0
         
+       
         devices = web.devices
         buttons = self.buttons
         titles = self.titles
@@ -148,6 +155,8 @@ class MGui(QtGui.QMainWindow):
         tiles = self.tiles
         lcds = self.lcds
         params = self.parameters
+        
+        self.neh = MNodeEditorHandler(self)
         # Do for each device.
         for i in range(len(devices)):
             # Add a QFrame, this is the border, and the parent of all
@@ -304,7 +313,8 @@ class MGui(QtGui.QMainWindow):
         
     def setRefreshRate(self, period):
         web.guiRefreshRate = period
-
+    def openVirtualDevicesConfig(self):
+        self.neh.showEditor()
     def openConfig(self):
         self.Config = ConfigGui(self)
         self.Config.exec_()

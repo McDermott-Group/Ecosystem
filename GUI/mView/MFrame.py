@@ -62,24 +62,23 @@ class MFrame:
         self.dataSet = None
         # Hold the plot.
         self.plot = None
-        # Refresh rate of plot.
-        self.plotRefreshRate = 1
-        # RefreshRate for the device.
-        self.refreshRate = 1
-        # Datalogging disabled by default
         self.logData = False
-        # Dictionary holding datalogging settings
+        self.dataSet = None
+        self.serverTitle = None
+        
         self.datalogsettingsDict = {
-                "enabled"   :    self.logData,
-                "location":     None,
-                "dataset"   :     self.dataSet,
-                "channels":     {},
-                "chest"        :      None,
-                "name"           :      self.serverTitle
-                }
+                    "enabled"   :    self.logData,
+                    "location":     None,
+                    "dataset"   :     self.dataSet,
+                    "channels":     {},
+                    "chest"        :      None,
+                    "name"           :      self.serverTitle
+                    }
+       
         # Is there a reading out of range?
         self.outOfRange = {}
-
+        # Device's node, only used for virtual devices
+        self.node = None
     def setTitle(self, title):
         self.serverTitle = title
 
@@ -211,4 +210,6 @@ class MFrame:
 
     def disableRange(self):
       self.outOfRange = {key: False for key in self.outOfRange}
-      
+    
+    def setNode(self, node):
+        self.node = node

@@ -26,8 +26,14 @@ class MDevice(object):
     def __init__(self, name):
         self.frame = MFrame()
         # Datachest wrapper.
-       
+       # Dictionary holding datalogging settings
+         # Datalogging disabled by default
+
         atexit.register(self.stop)
+       # Refresh rate of plot.
+        self.plotRefreshRate = 1
+        # RefreshRate for the device.
+        self.refreshRate = 1
     def addParameter(self, *args):
         print ("ERROR: Child of MDevice must "
             "implement MDevice.addParameter().")

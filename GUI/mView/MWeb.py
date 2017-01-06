@@ -38,5 +38,7 @@ class web:
     telecomm = None
     # DPI scaling ratio.
     ratio = 1
+    # List of virtual devices
+    virtualDevices = []
 
     
