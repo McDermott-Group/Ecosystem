@@ -89,8 +89,20 @@ class dataChestWrapper:
                     
                 print "Root Location:", root
                 print "relativePath:", relativePath
-                self.dataSet = dataChest(relativePath)
                 path = relativePath.split("\\")
+                print "path:",path
+                #self.dataSet.cd('')
+                self.dataSet = dataChest(path[0])
+                self.dataSet.cd('')
+                print "self.dataSet.pwd():", self.dataSet.pwd().replace("/","\\")
+                print "location:",location
+                relativepath = os.path.relpath(location, self.dataSet.pwd().replace("/","\\"))
+                print "second relative path:", relativePath
+               
+                path = relativePath.split("\\")
+                
+                for folder in path[1::]:
+                    self.dataSet.cd(folder)
                
 
                 #self.dataSet = dataChest(path[0])
