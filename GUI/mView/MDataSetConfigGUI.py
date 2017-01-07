@@ -58,8 +58,8 @@ class DataSetConfigGUI(QtGui.QDialog):
                 except Exception as e:
                     traceback.print_exc()
                     self.cancel()
-            for device in web.devices:
-                for i,checkbox in enumerate(self.settingsWidget.checkboxes):
+            for y,device in enumerate(web.devices):
+                for i,checkbox in enumerate(self.settingsWidget.checkboxes[y]):
                     device.getFrame().DataLoggingInfo()['channels'][device.getFrame()
                         .getNicknames()[i]] = (checkbox.checkState() != 0)
             self.close()
@@ -102,7 +102,7 @@ class NewDataSetSettings(QtGui.QWidget):
        
         
         row = 2
-        for device in web.devices:
+        for i,device in enumerate(web.devices):
             row += 1
             title = QtGui.QLabel(str(device)+": ")
             title.setFont(font)
@@ -115,12 +115,12 @@ class NewDataSetSettings(QtGui.QWidget):
             grid.addLayout(buttonHbox, row, 3)
             buttonHbox.addStretch(0)
             buttonHbox.addWidget(button)
-
+            self.checkboxes.append([])
             for nickname in device.getFrame().getNicknames():
                 row += 1
                 #hBox = QtGui.QHBoxLayout()
                 checkbox = QtGui.QCheckBox(self)
-                self.checkboxes.append(checkbox)
+                self.checkboxes[i].append(checkbox)
                 checkbox.setChecked(device.getFrame().DataLoggingInfo()['channels'][nickname])
                 #grid.addLayout(hBox, row, 0)
                 grid.addWidget(QtGui.QLabel(nickname), row, 0)
