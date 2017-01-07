@@ -18,8 +18,12 @@ class DataSetConfigGUI(QtGui.QDialog):
        # print self.initialStates
         #Create a tab for new dataset settings
         mainTabWidget = QtGui.QTabWidget()
-        self.settingsWidget = NewDataSetSettings()
-        mainTabWidget.addTab(self.settingsWidget, "Data Logging Config")
+        self.advancedSettingsWidget = DataSetSettings(advanced = True)
+        self.simpleSettingsWidget = DataSetSettings(advanced = False)
+        
+        mainTabWidget.addTab(self.simpleSettingsWidget, "Basic")
+        mainTabWidget.addTab(self.advancedSettingsWidget, "Advanced")
+        
         #Create the main layout for the GUI.
         mainLayout = QtGui.QVBoxLayout()
         # Add teh tab widget to the main layout.
@@ -58,8 +62,8 @@ class DataSetConfigGUI(QtGui.QDialog):
                 except Exception as e:
                     traceback.print_exc()
                     self.cancel()
-            for y,device in enumerate(web.devices):
-                for i,checkbox in enumerate(self.settingsWidget.checkboxes[y]):
+            for device in web.devices:
+                for i,checkbox in enumerate(self.settingsWidget.checkboxes):
                     device.getFrame().DataLoggingInfo()['channels'][device.getFrame()
                         .getNicknames()[i]] = (checkbox.checkState() != 0)
             self.close()
@@ -79,9 +83,10 @@ class DataSetConfigGUI(QtGui.QDialog):
                 device.getFrame().DataLoggingInfo()[key] = self.initialStates[i][key]
 
          self.close()
-class NewDataSetSettings(QtGui.QWidget):
-    def __init__(self, parent = None):
-        super(NewDataSetSettings, self).__init__(parent)
+class DataSetSettings(QtGui.QWidget):
+    def __init__(self, parent = None, **kwargs):
+        super(DataSetSettings, self).__init__(parent)
+        isAdvanced = kwargs.get('advanced', False)
         font = QtGui.QFont()
         font.setPointSize(14)
         
@@ -99,41 +104,55 @@ class NewDataSetSettings(QtGui.QWidget):
         
        # grid.addWidget(QtGui.QLabel("Data Log Locations: "),1,0,1,2)
         
-       
-        
-        row = 2
-        for i,device in enumerate(web.devices):
-            row += 1
-            title = QtGui.QLabel(str(device)+": ")
+        if not isAdvanced:
+            grid = QtGui.QGridLayout()
+            mainLayout.addLayout(grid)
+            title = QtGui.QLabel(str("Log Folder: "))
             title.setFont(font)
-            grid.addWidget(title,row,0)
-            grid.addWidget(QtGui.QLabel(str(device.getFrame()
-                .DataLoggingInfo()['location'])),row,1)
+            grid.addWidget(title,0,0)
+            location =  QtGui.QLabel(web.devices[0].getFrame().DataLoggingInfo()['location'])
+            grid.addWidget(location, 0, 1)
             button = QtGui.QPushButton("Browse...",self)
-            button.clicked.connect(partial(self.openFileDialog, device, grid, row))
+            button.clicked.connect(partial(self.openFileDialog, None, grid, 0))
             buttonHbox = QtGui.QHBoxLayout()
-            grid.addLayout(buttonHbox, row, 3)
+            grid.addLayout(buttonHbox, 0, 3)
             buttonHbox.addStretch(0)
             buttonHbox.addWidget(button)
-            self.checkboxes.append([])
-            for nickname in device.getFrame().getNicknames():
+        else:
+            row = 2
+            for device in web.devices:
                 row += 1
-                #hBox = QtGui.QHBoxLayout()
-                checkbox = QtGui.QCheckBox(self)
-                self.checkboxes[i].append(checkbox)
-                checkbox.setChecked(device.getFrame().DataLoggingInfo()['channels'][nickname])
-                #grid.addLayout(hBox, row, 0)
-                grid.addWidget(QtGui.QLabel(nickname), row, 0)
-                grid.addWidget(checkbox, row, 1)
-                #hBox.addWidget(checkbox)
-                #hBox.addWidget(QtGui.QLabel(nickname))
-                #hBox.addStretch(0)
+                title = QtGui.QLabel(str(device)+": ")
+                title.setFont(font)
+                grid.addWidget(title,row,0)
+                grid.addWidget(QtGui.QLabel(str(device.getFrame()
+                    .DataLoggingInfo()['location'])),row,1)
+                button = QtGui.QPushButton("Browse...",self)
+                button.clicked.connect(partial(self.openFileDialog, device, grid, row))
+                buttonHbox = QtGui.QHBoxLayout()
+                grid.addLayout(buttonHbox, row, 3)
+                buttonHbox.addStretch(0)
+                buttonHbox.addWidget(button)
+
+                for nickname in device.getFrame().getNicknames():
+                    row += 1
+                    #hBox = QtGui.QHBoxLayout()
+                    checkbox = QtGui.QCheckBox(self)
+                    self.checkboxes.append(checkbox)
+                    checkbox.setChecked(device.getFrame().DataLoggingInfo()['channels'][nickname])
+                    #grid.addLayout(hBox, row, 0)
+                    grid.addWidget(QtGui.QLabel(nickname), row, 0)
+                    grid.addWidget(checkbox, row, 1)
+                    #hBox.addWidget(checkbox)
+                    #hBox.addWidget(QtGui.QLabel(nickname))
+                    #hBox.addStretch(0)
     def openFileDialog(self, device, grid,  row):
         root = os.environ['DATA_CHEST_ROOT']
-        name =   device.getFrame().DataLoggingInfo()['name']
+        if device!=None:
+            name =   device.getFrame().DataLoggingInfo()['name']
         dir = QtGui.QFileDialog.getSaveFileName(self, "Save New Data Set...", 
-            device.getFrame().DataLoggingInfo()['location']+"\\"+name , "")
-         
+            web.devices[0].getFrame().DataLoggingInfo()['location']+"\\"+name , "")
+             
         #print dir
         
         dir = os.path.abspath(dir).rsplit('\\',1)
@@ -155,9 +174,15 @@ class NewDataSetSettings(QtGui.QWidget):
           errorMsg.exec_()
         else:
             relativePath =  os.path.relpath(location, root)
-            print "New path for", str(device)+":", location
-            device.getFrame().DataLoggingInfo()['name'] = name
-            device.getFrame().DataLoggingInfo()['location'] = location
+            if device != None:
+            
+                print "New path for", str(device)+":", location
+                device.getFrame().DataLoggingInfo()['name'] = name
+                device.getFrame().DataLoggingInfo()['location'] = location
+            else:
+                for device in web.devices:
+                    device.getFrame().DataLoggingInfo()['name'] = device.getFrame().getTitle()
+                    device.  device.getFrame().DataLoggingInfo()['location'] = location
             grid.itemAtPosition(row, 1).widget().setText(location)
         # else:
             # print "DATA_CHEST_ROOT Directory must be a parent directory of datalogging location."
