@@ -51,7 +51,7 @@ class dataChestWrapper:
         self.hasData = None
         # The done function must be called when the GUI exits.
         atexit.register(self.done)
-        self.dataSet = dataChest(str(now.year))
+        self.dataSet = None
         self.hasData = False
         self.keepLoggingNan = True
         self.dStamp = dateStamp()
@@ -68,7 +68,7 @@ class dataChestWrapper:
         # This is because datasets are stored using the name of
         # the device, which is what the program looks for when checking
         # if there are data files that already exist.
-        title = str(self.device.getFrame().DataLoggingInfo()['name']).replace(" ", "")
+        title = str(self.device.getFrame().DataLoggingInfo()['name']).replace(" ", "_")
         # Datasets are stored in the folder 'DATA_CHEST_ROOT\year\month\'
         # Try to access the current month's folder, if it does not
         # exist, make it.
@@ -77,35 +77,41 @@ class dataChestWrapper:
         # relativePath =  os.path.relpath(root, dir)
         # print "Configuring datalogging for", str(self.device)+" located at", location
         if location != None:
-           # try:
                
+               # self.dataSet = dataChest()
                 
-                self.dataSet.cd("")
-                root =   os.path.abspath(self.dataSet.pwd())
-                print "root", root
-                print "location", location
+                #self.dataSet.cd("")
+                #root =   os.path.abspath(self.dataSet.pwd())
+                root = os.environ['DATA_CHEST_ROOT']
                 relativePath =  os.path.relpath(location, root)
-                
-                print "Relative Path: ", relativePath
-                
-                path = relativePath.split("\\")
-                print "relative path:", path
-                self.dataSet = dataChest(path[1])
                 if relativePath == '.':
-                    relativePath = ''
+                    raise IOError("Cannot create dataset directly under DATA_CHEST_ROOT.")
+                    
+                print "Root Location:", root
+                print "relativePath:", relativePath
+                path = relativePath.split("\\")
+                print "path:",path
+                #self.dataSet.cd('')
+                self.dataSet = dataChest(path[0])
+                self.dataSet.cd('')
+                print "self.dataSet.pwd():", self.dataSet.pwd().replace("/","\\")
+                print "location:",location
+                relativepath = os.path.relpath(location, self.dataSet.pwd().replace("/","\\"))
+                print "second relative path:", relativePath
+               
+                path = relativePath.split("\\")
                 
-               # print "pwd", self.dataSet.pwd()
-                self.dataSet.cd(relativePath)
+                for folder in path[1::]:
+                    self.dataSet.cd(folder)
+               
+
+                #self.dataSet = dataChest(path[0])
+                #self.dataSet.cd(relativePath)
                 
                 print "Configuring datalogging for", str(self.device)+" located at", location
-            # except:
-                # print "Problem logging data in "+str(location)+", reverting to default"
-                # location = None
-                # self.device.getFrame().DataLoggingInfo()['location'] = None
-                # self.dataSet.cd(os.path.relpath(self.dataSet.pwd(), root))
-                # traceback.print_exc()
                 
         if location == None:
+           self.dataSet = dataChest(str(now.year))
            try:
                 self.dataSet.cd(str(now.month))
            except:
@@ -246,9 +252,7 @@ class dataChestWrapper:
                         readings.append(np.nan)
                 else:
                     readings.append(np.nan)
-                        
-            
-          
+
             # If the device has readings, add data to dataset.
             if(readings is not None and currentlyLogging):
               
@@ -259,9 +263,7 @@ class dataChestWrapper:
                 varslist = self.dataSet.getVariables()
                 #print vars
                 try:
-                      print vars
-                      self.dataSet.addData([vars])
-                    
+                      self.dataSet.addData([vars])        
                 except:
                     traceback.print_exc()
                     print("%s: could not store data, this might be due"
