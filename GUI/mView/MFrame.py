@@ -213,7 +213,7 @@ class MFrame:
         return self.logData
         
     def DataLoggingInfo(self):
-       
+        
         return self.datalogsettingsDict
 
     def getOutOfRangeStatus(self): 

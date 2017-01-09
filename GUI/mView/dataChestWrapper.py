@@ -61,6 +61,12 @@ class dataChestWrapper:
         dataname = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device), 'name')
         channels = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device), 'channels')
         location = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device),  'location')
+        #Do a sanity check
+        for nickname in self.device.getFrame().getNicknames():
+            if channels == None or nickname not in channels.keys():
+                channels = self.device.getFrame().DataLoggingInfo()['channels']
+                print "Error when retreiving logged channels in config file, restoring to", channels
+        
         self.device.getFrame().DataLoggingInfo()['name'] = dataname
         self.device.getFrame().DataLoggingInfo()['channels'] = channels
         self.device.getFrame().DataLoggingInfo()['location'] = location
