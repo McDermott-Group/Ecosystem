@@ -228,7 +228,7 @@ class CompressorServer(DeviceServer):
         dev = self.selectedDevice(c)
         return dev.temperatures()
 
-    @setting(1050, 'TemperaturesForGui',returns='*v[K]{curr}')
+    @setting(1050, 'Current Temperatures Only', returns='*v[K]{curr}')
     def temperaturesForGui(self, c):
         dev = self.selectedDevice(c)
         allTemps = yield dev.temperatures()

@@ -30,27 +30,29 @@ asS'Dilution Unit Temperatures:Mix Temperature'
 p12
 (lp13
 I00
-aS''
-aS''
+aF1
+aF1500
 ag4
 (g5
 S'QString'
-(V
-ttRp14
+(VIVAN_EMAIL
+p14
+ttRp15
 asS'Dilution Unit Temperatures:Exchange Temperature'
-p15
-(lp16
+p16
+(lp17
 I00
-aS''
-aS''
+aF1
+aF1000
 ag4
 (g5
 S'QString'
-(V
-ttRp17
-asS'Mix Pt1000 Temperature:Mix Temperature'
+(VIVAN_EMAIL
 p18
-(lp19
+ttRp19
+asS'Mix Pt1000 Temperature:Mix Temperature'
+p20
+(lp21
 I00
 aS''
 aS''
@@ -58,10 +60,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp20
+ttRp22
 asS'Water Temperature:Exteranal Water Temperature'
-p21
-(lp22
+p23
+(lp24
 I00
 aF1
 aF20
@@ -69,11 +71,11 @@ ag4
 (g5
 S'QString'
 (VIVAN_EMAIL
-p23
-ttRp24
-asS'Compressor:Helium Temperature'
 p25
-(lp26
+ttRp26
+asS'Compressor:Helium Temperature'
+p27
+(lp28
 I00
 aS''
 aS''
@@ -81,22 +83,22 @@ ag4
 (g5
 S'QString'
 (V
-ttRp27
+ttRp29
 asS'Water Flow:External Water Flow Rate'
-p28
-(lp29
+p30
+(lp31
 I00
 aF1.3999999999999999
-aF100
+aF10
 ag4
 (g5
 S'QString'
 (VIVAN_EMAIL
-p30
-ttRp31
-asS'Vacuum:Still Pressure'
 p32
-(lp33
+ttRp33
+asS'Vacuum:Still Pressure'
+p34
+(lp35
 I00
 aS''
 aS''
@@ -104,10 +106,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp34
+ttRp36
 asS'Vacuum:OVC Pressure'
-p35
-(lp36
+p37
+(lp38
 I01
 aF0
 aF1
@@ -115,11 +117,11 @@ ag4
 (g5
 S'QString'
 (VIVAN_EMAIL
-p37
-ttRp38
-asS'Dilution Unit Temperatures:Still Temperature'
 p39
-(lp40
+ttRp40
+asS'Dilution Unit Temperatures:Still Temperature'
+p41
+(lp42
 I00
 aF1
 aF500
@@ -127,11 +129,11 @@ ag4
 (g5
 S'QString'
 (VIVAN_EMAIL
-p41
-ttRp42
-asS'50K and 3K Pt1000 Temperatures:3K Stage Temperature'
 p43
-(lp44
+ttRp44
+asS'50K and 3K Pt1000 Temperatures:3K Stage Temperature'
+p45
+(lp46
 I00
 aS''
 aS''
@@ -139,10 +141,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp45
+ttRp47
 asS'50K and 3K Pt1000 Temperatures:50K Stage Temperature'
-p46
-(lp47
+p48
+(lp49
 I00
 aS''
 aS''
@@ -150,10 +152,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp48
+ttRp50
 asS'Compressor:Input Water Temperature'
-p49
-(lp50
+p51
+(lp52
 I01
 aF1
 aF22
@@ -161,11 +163,11 @@ ag4
 (g5
 S'QString'
 (VIVAN_EMAIL
-p51
-ttRp52
-asS'Compressor:Oil Temperature'
 p53
-(lp54
+ttRp54
+asS'Compressor:Oil Temperature'
+p55
+(lp56
 I01
 aF10
 aF50
@@ -173,6 +175,6 @@ ag4
 (g5
 S'QString'
 (VIVAN_EMAIL
-p55
-ttRp56
+p57
+ttRp58
 as.
