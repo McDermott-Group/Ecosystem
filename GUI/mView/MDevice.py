@@ -24,7 +24,9 @@ import atexit
 from MFrame import MFrame
 class MDevice(object):
     def __init__(self, name):
+
         self.frame = MFrame()
+
         # Datachest wrapper.
        
         atexit.register(self.stop)

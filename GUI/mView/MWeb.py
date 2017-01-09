@@ -20,7 +20,9 @@ __version__ = "1.0.1"
 __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
-
+import traceback
+import inspect
+import MPersistentData
 class web:
     """
     Organizes global variables. Allows all other classes to easily
@@ -29,6 +31,8 @@ class web:
     """
     # Store minimum and maximum values for all readings. MAlert uses
     # this to check if readings are still in bounds.
+    
+    
     limitDict = {}
     # All devices.
     devices = []
@@ -38,5 +42,9 @@ class web:
     telecomm = None
     # DPI scaling ratio.
     ratio = 1
+    title = None
 
+    persistentData = None
+    
+   
     

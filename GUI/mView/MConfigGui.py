@@ -79,7 +79,8 @@ class refreshRateContents(QtGui.QWidget):
         guiRefLayoutH.addWidget(QtGui.QLabel("GUI Refresh period:"))
         guiRefLayoutH.addStretch(0)
         self.refRateEdit = QtGui.QLineEdit()
-        self.refRateEdit.setText(str(web.guiRefreshRate))
+        #print "Gui ref rate:", web.persistentData(None, 'guiRefreshRate')
+        self.refRateEdit.setText(str(web.persistentData.persistentDataAccess(None, 'guiRefreshRate')))
         guiRefLayoutH.addWidget(self.refRateEdit)
         guiRefLayoutH.addWidget(QtGui.QLabel('s'))
         self.refRateEdit.editingFinished.connect(self.updateMainGuiRefRate)
@@ -90,7 +91,8 @@ class refreshRateContents(QtGui.QWidget):
         
     def updateMainGuiRefRate(self):
        try:
-            web.guiRefreshRate = float(self.refRateEdit.text())
+           web.persistentData.persistentDataAccess(float(self.refRateEdit.text()), 'guiRefreshRate')
+            
        except:
             traceback.print_exc()
 
@@ -100,7 +102,7 @@ class devRefRateConfig(QtGui.QWidget):
         super(devRefRateConfig, self).__init__(parent)
  
         self.device = device
- 
+        
         devRefConfig = QtGui.QWidget()
         devRefLayout = QtGui.QVBoxLayout()
         devRefLayoutH = QtGui.QHBoxLayout()
@@ -112,6 +114,7 @@ class devRefRateConfig(QtGui.QWidget):
         devRefConfig.setLayout(devRefLayout)
         self.devRefRateEdit = QtGui.QLineEdit()
         self.devRefRateEdit.editingFinished.connect(self.updateDevRefRate)
+        
         self.devRefRateEdit.setText(str(device.getFrame().getRefreshRate()))
         devRefLayoutH.addWidget(self.devRefRateEdit)
         devRefLayoutH.addWidget(QtGui.QLabel('s'))

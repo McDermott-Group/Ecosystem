@@ -5,12 +5,14 @@ from functools import partial
 from dataChestWrapper import dataChestWrapper
 import traceback
 from MPopUp import PopUp
-
+import atexit
 
 class DataSetConfigGUI(QtGui.QDialog):
     """Allows user to create custom data logs."""
     def __init__(self, parent = None):
         super(DataSetConfigGUI, self).__init__(parent)
+        atexit.register(self.saveState)
+
         #Save initial state just in case changes are canceled
         self.initialStates = []
         for device in web.devices:
@@ -45,10 +47,17 @@ class DataSetConfigGUI(QtGui.QDialog):
         mainLayout.addLayout(buttonLayout)
         self.setLayout(mainLayout)
         self.setWindowTitle("DataChest Config")
+    
+    def saveState(self):
+       pass
+
+    
     def okClicked(self):
         # Take a look at what changed
         root = os.environ['DATA_CHEST_ROOT']
+      
         for i,device in enumerate(web.devices):
+            print "Data logging info:",device.getFrame().DataLoggingInfo()
             # If any changes were made, reinitialize the datalogger.
             #print "initial: ",self.initialStates[i]
             #print "final: ",device.getFrame().DataLoggingInfo()
@@ -56,7 +65,7 @@ class DataSetConfigGUI(QtGui.QDialog):
             
         
             if self.initialStates[i] != device.getFrame().DataLoggingInfo():
-                print "some info was changed"
+               # print "some info was changed"
                 try:
                     device.getFrame().DataLoggingInfo()['chest'].configureDataSets()
                 except Exception as e:
@@ -167,8 +176,8 @@ class DataSetSettings(QtGui.QWidget):
         #print dir
         
        
-        print "root:", root
-        print "location:",location
+        #print "root:", root
+        #print "location:",location
         if not root in location:
                 print "ERROR"
                 errorMsg = PopUp(str(
@@ -186,12 +195,12 @@ class DataSetSettings(QtGui.QWidget):
             relativePath =  os.path.relpath(location, root)
             if device != None:
             
-                print "New path for", str(device)+":", location
+                #print "New path for", str(device)+":", location
                 device.getFrame().DataLoggingInfo()['name'] = name
                 device.getFrame().DataLoggingInfo()['location'] = location
             else:
-                print "location labels size : ",len(self.configGui.advancedSettingsWidget.locationLabels)
-                print "location labels: ",self.configGui.advancedSettingsWidget.locationLabels
+                #print "location labels size : ",len(self.configGui.advancedSettingsWidget.locationLabels)
+                #print "location labels: ",self.configGui.advancedSettingsWidget.locationLabels
                 for i,device in enumerate(web.devices):
                     device.getFrame().DataLoggingInfo()['name'] = device.getFrame().getTitle()
                     device.getFrame().DataLoggingInfo()['location'] = location

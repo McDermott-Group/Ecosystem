@@ -75,8 +75,8 @@ class Device(MDevice):
     
         # Tells thread to keep going.
         self.keepGoing = True
+        self.frame.setTitle(self.name)
         
-    
     def stop(self):
         self.keepGoing = False
         
@@ -116,7 +116,7 @@ class Device(MDevice):
         self.selectedDevice = arg
     
     def begin(self):
-        self.frame.setTitle(self.name)
+      
         self.frame.setNicknames(self.nicknames)
         self.frame.setReadingIndices(self.settingResultIndices)
         self.frame.DataLoggingInfo()['name'] = self.name
@@ -132,10 +132,16 @@ class Device(MDevice):
         self.deviceThread.start()
 
     def setRefreshRate(self, period):
-        self.frame.setRefreshRate(period)
+        #print "title of device:",self.frame.getTitle()
+        if  self.frame.getTitle()is None:
+            raise IOError("Refresh Rates cannot be set until name is given to device.")
+        #self.frame.setRefreshRate(period)
 
     def setPlotRefreshRate(self, period):
-        self.frame.setPlotRefreshRate(period)
+        #print "title of device:",self.frame.getTitle()
+       if  self.frame.getTitle()is None:
+            raise IOError("Refresh Rates cannot be set until name is given to device.")
+       #self.frame.setPlotRefreshRate(period)
 
     def addPlot(self, length=None):
         self.frame.addPlot(length)

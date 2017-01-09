@@ -20,10 +20,12 @@ __version__ = "1.5.2"
 __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
+from MWeb import web
 
 class MFrame:
   
     def __init__(self):
+
         """This class acts as the interface between the devices and all
     classes which use the device or any of its parameters."""
         # Name of device's server.
@@ -62,10 +64,6 @@ class MFrame:
         self.dataSet = None
         # Hold the plot.
         self.plot = None
-        # Refresh rate of plot.
-        self.plotRefreshRate = 1
-        # RefreshRate for the device.
-        self.refreshRate = 1
         # Datalogging disabled by default
         self.logData = False
         # Dictionary holding datalogging settings
@@ -77,13 +75,20 @@ class MFrame:
                 "chest"        :      None,
                 "name"           :      self.serverTitle
                 }
+
+        restoredSettings = web.persistentData.persistentDataAccess(None,"DataLoggingInfo", self.serverTitle)
+
+        if restoredSettings != None:
+            self.datalogsettingsDict = restoredSettings
         # Is there a reading out of range?
         self.outOfRange = {}
-
+       
     def setTitle(self, title):
+       # print "Set title:", title
         self.serverTitle = title
-
+    
     def getTitle(self):
+        #print "Get Title:",self.serverTitle
         return self.serverTitle
 
     def getNicknames(self):
@@ -171,17 +176,27 @@ class MFrame:
         return self.plot
 
     def setPlotRefreshRate(self, period):
-        self.plotRefreshRate = period
-
+        if  self.getTitle()is None:
+            raise IOError("Refresh Rates cannot be set until name is given to device.")
+        web.persistentData.persistentDataAccess(period, 'deviceRefreshRates',self.getTitle(),'plot')
+      
     def getPlotRefreshRate(self):
-        return self.plotRefreshRate
-
+        #pprint.pprint(web.persistentDataDict)
+        if  self.getTitle()is None:
+            raise IOError("Refresh Rates cannot be set until name is given to device.")
+        return web.persistentData.persistentDataAccess(None, 'deviceRefreshRates',self.getTitle(),'plot')
+        
     def setRefreshRate(self, period):
-        self.refreshRate = period
-
+        if  self.getTitle()is None:
+            raise IOError("Refresh Rates cannot be set until name is given to device.")
+        
+        web.persistentData.persistentDataAccess(period, 'deviceRefreshRates',self.getTitle(),'readings') 
+        
     def getRefreshRate(self):
-        return self.refreshRate
-
+        if  self.getTitle()is None:
+            raise IOError("Refresh Rates cannot be set until name is given to device.")
+        return web.persistentData.persistentDataAccess(None, 'deviceRefreshRates',self.getTitle(),'readings')
+        
     def getPlotLength(self):
         return self.plotLength
 
@@ -198,8 +213,9 @@ class MFrame:
         return self.logData
         
     def DataLoggingInfo(self):
+       
         return self.datalogsettingsDict
-        
+
     def getOutOfRangeStatus(self): 
         return self.outOfRange
         
