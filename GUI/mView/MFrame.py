@@ -184,7 +184,7 @@ class MFrame:
         #pprint.pprint(web.persistentDataDict)
         if  self.getTitle()is None:
             raise IOError("Refresh Rates cannot be set until name is given to device.")
-        return web.persistentData.persistentDataAccess(None, 'deviceRefreshRates',self.getTitle(),'plot')
+        return web.persistentData.persistentDataAccess(None, 'deviceRefreshRates',self.getTitle(),'plot', default = 1)
         
     def setRefreshRate(self, period):
         if  self.getTitle()is None:
@@ -195,7 +195,7 @@ class MFrame:
     def getRefreshRate(self):
         if  self.getTitle()is None:
             raise IOError("Refresh Rates cannot be set until name is given to device.")
-        return web.persistentData.persistentDataAccess(None, 'deviceRefreshRates',self.getTitle(),'readings')
+        return web.persistentData.persistentDataAccess(None, 'deviceRefreshRates',self.getTitle(),'readings', default = 1)
         
     def getPlotLength(self):
         return self.plotLength

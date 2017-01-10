@@ -129,6 +129,10 @@ class DataSetSettings(QtGui.QWidget):
             grid.addLayout(buttonHbox, 0, 3)
             buttonHbox.addStretch(0)
             buttonHbox.addWidget(button)
+            
+            defaultButton = QtGui.QPushButton("Automatically Configure Data Sets", self)
+            defaultButton.clicked.connect(partial(self.resetToDefault,grid))
+            mainLayout.addWidget(defaultButton)
             mainLayout.addStretch(0)
         else:
             row = 2
@@ -160,6 +164,21 @@ class DataSetSettings(QtGui.QWidget):
                     #hBox.addWidget(checkbox)
                     #hBox.addWidget(QtGui.QLabel(nickname))
                     #hBox.addStretch(0)
+    def resetToDefault(self,grid):
+
+        for i,device in enumerate(web.devices):
+            device.getFrame().DataLoggingInfo()['name'] = device.getFrame().getTitle()
+            device.getFrame().DataLoggingInfo()['location'] = None
+            try:
+                device.getFrame().DataLoggingInfo()['chest'].configureDataSets()
+            except Exception as e:
+                traceback.print_exc()
+            location = device.getFrame().DataLoggingInfo()['location']
+            self.configGui.advancedSettingsWidget.locationLabels[i].setText(location)
+        
+           
+        grid.itemAtPosition(0, 1).widget().setText(location)
+        
     def openFileDialog(self, device, grid,  row):
         root = os.environ['DATA_CHEST_ROOT']
         if device!=None:

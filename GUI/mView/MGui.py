@@ -31,9 +31,10 @@ from NotifierGUI import NotifierGUI
 from MConfigGui import ConfigGui
 from MDataSetConfigGUI import DataSetConfigGUI
 from MPersistentData import MPersistentData
+from MWeb import web
 import MGrapher
 import MAlert
-from MWeb import web
+
 
 
 class MGui(QtGui.QMainWindow):
@@ -41,7 +42,7 @@ class MGui(QtGui.QMainWindow):
     print("##########################################")
     print("## Starting mView (C) Noah Meltzer 2016 ##")
     print("##########################################")
-
+    web.persistentData = MPersistentData()
     # Holds the Qlabels that label the parameters.
     parameters = [[]]
     # Each tile on the GUI is called a frame, this is the list of them.
@@ -73,7 +74,7 @@ class MGui(QtGui.QMainWindow):
     VBoxColumn = 0
     # Used to allow query to keep calling itself.
     keepGoing = True
-    web.persistentData = MPersistentData()
+    
     
     def initGui(self, devices, parent=None):
         """Configure all GUI elements."""

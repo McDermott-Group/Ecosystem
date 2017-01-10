@@ -126,11 +126,7 @@ class nViewer:
         lake218.begin()
         self.devices.append(lake218)
         
-        
-        # Start the datalogger. This line can be commented
-        # out if no datalogging is required.
-        self.chest = dataChestWrapper(self.devices)
-        
+
         # Create the gui
         self.gui = MGui.MGui()
         self.gui.startGui(self.devices, 'Leiden Gui', 'Leiden Data', tele)

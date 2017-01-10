@@ -29,7 +29,7 @@ class MPersistentData:
 
     persistentDataDict = {}
     def __init__(self):
-
+        print "Loading persistent data..."
         self.location = os.path.dirname(traceback.extract_stack()[0][0])
         self.name = 'mview.config'
         try:
@@ -39,10 +39,11 @@ class MPersistentData:
         atexit.register(self.saveState)
 
     def saveState(self):
-        print self.persistentDataDict
+        #print self.persistentDataDict
         pickle.dump(self.persistentDataDict, open(os.path.join(self.location, self.name), 'wb'))
         
     def restoreState(self):
+        
         self.persistentDataDict = pickle.load(open(os.path.join(self.location, self.name), 'rb'))
         #print self.persistentDataDict
     def persistentDataAccess(self, val, *args, **kwargs):

@@ -149,10 +149,6 @@ class nViewer:
         Flow.begin()
         self.devices.append(Flow)
 
-        # Start the datalogger. This line can be commented
-        # out if no datalogging is required.
-        self.chest = dataChestWrapper(self.devices)
-        
         # Create the gui.
         self.gui = MGui.MGui()
         self.gui.startGui(self.devices, 'Leiden DR GUI', 'Leiden Data',

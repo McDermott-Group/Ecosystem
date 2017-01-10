@@ -62,16 +62,19 @@ class dataChestWrapper:
         channels = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device), 'channels')
         location = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device),  'location')
         #Do a sanity check
+        print "device:", self.device
         for nickname in self.device.getFrame().getNicknames():
             if channels == None or nickname not in channels.keys():
                 channels = self.device.getFrame().DataLoggingInfo()['channels']
                 print "Error when retreiving logged channels in config file, restoring to", channels
-        
+        if dataname is None:
+            dataname = self.device.getFrame().getTitle()
+
         self.device.getFrame().DataLoggingInfo()['name'] = dataname
         self.device.getFrame().DataLoggingInfo()['channels'] = channels
         self.device.getFrame().DataLoggingInfo()['location'] = location
     def saveState(self):
-        print "saving"
+        #print "saving"
         
         
             #web.persistentData.persistentDataAccess(device.getFrame().DataLoggingInfo(),"DataLoggingInfo", str(device))
@@ -81,13 +84,14 @@ class dataChestWrapper:
         location = self.device.getFrame().DataLoggingInfo()['location']
         web.persistentData.persistentDataAccess(dataname, 'DataLoggingInfo', str(self.device), 'name')
         web.persistentData.persistentDataAccess(channels, 'DataLoggingInfo', str(self.device), 'channels')
-        web.persistentData.persistentDataAccess(location, 'DataLoggingInfo', str(self.device),  'location')
+        web.persistentData.persistentDataAccess(location, 'DataLoggingInfo', str(self.device), 'location')
         
     def configureDataSets(self):
         """
         Initialize the datalogger, if datasets already exist, use them.
         Otherwise create new ones.
         """
+        print "configuring data"
         now = dt.datetime.now()
         self.hasData = True
         # Generate a title for the dataset. NOTE: if 
