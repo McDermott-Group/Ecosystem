@@ -89,7 +89,7 @@ class MAlert:
                     else:
                         self.devices[i].getFrame().setInRange(key)
         if(self.keepGoing):
-            threading.Timer(web.guiRefreshRate, self.monitorReadings).start()
+            threading.Timer(web.persistentData.persistentDataAccess(None, 'guiRefreshRage',default = 1), self.monitorReadings).start()
     def toFloat(self, val):
         try:
             return float(val)

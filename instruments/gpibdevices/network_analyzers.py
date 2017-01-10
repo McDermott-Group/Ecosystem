@@ -421,14 +421,14 @@ class KeysightE5063ADeviceWrapper(AgilentN5230ADeviceWrapper):
         yield self.write('INIT1:CONT 0')
         yield self.write('ABOR')
         yield self.write('INIT1')
-        if (yield self.query('TRIG:SOUR?')) == 'INT':
-            yield self.write('TRIG')
 
+        # Wait for the measurement to finish.
         sweep_time = yield self.get_sweep_time()
         yield sleep(sweep_time)
 
         # Wait for the measurement to finish.
         yield self.query('*OPC?', timeout=24*units.h)
+
         # Pull the data.
         yield self.write('FORM:DATA ASC')
         data = ()

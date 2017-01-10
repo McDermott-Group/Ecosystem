@@ -16,7 +16,7 @@ def vna_test(device_id=0, s_params=['S21'], formats=['RI'], trigger='IMM',
                                'Start Frequency':   1*units.GHz,
                                'Stop Frequency':   10*units.GHz,
                                'IF Bandwidth':      1*units.kHz,
-                               'Sweep Points':    1001,
+                               'Sweep Points':    2001,
                                'Average Points':   10},
         plot_magnitude=True, plot_phase=False):
     print('Running single trace VNA test...')
@@ -89,5 +89,5 @@ if __name__ == '__main__':
     # vna_test(s_params=['S11', 'S12', 'S21', 'S22'],
              # formats=['RI', 'RI', 'MP', 'MP'])
              
-    vna_test(s_params=['S22', 'S22'], formats=['RI', 'MP'],
+    vna_test(s_params=['S11', 'S11'], formats=['RI', 'MP'],
             plot_phase=True)

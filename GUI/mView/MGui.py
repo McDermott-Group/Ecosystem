@@ -30,6 +30,8 @@ from PyQt4 import QtCore, QtGui
 from NotifierGUI import NotifierGUI
 from MConfigGui import ConfigGui
 from MDataSetConfigGUI import DataSetConfigGUI
+from MPersistentData import MPersistentData
+from MWeb import web
 import MGrapher
 import MAlert
 from MWeb import web
@@ -40,6 +42,7 @@ class MGui(QtGui.QMainWindow):
     print("##########################################")
     print("## Starting mView (C) Noah Meltzer 2016 ##")
     print("##########################################")
+    web.persistentData = MPersistentData()
     # Holds the Qlabels that label the parameters.
     parameters = [[]]
     # Each tile on the GUI is called a frame, this is the list of them.
@@ -71,7 +74,8 @@ class MGui(QtGui.QMainWindow):
     VBoxColumn = 0
     # Used to allow query to keep calling itself.
     keepGoing = True
-
+    
+    
     def initGui(self, devices, parent=None):
         """Configure all GUI elements."""
         QtGui.QWidget.__init__(self, parent)
@@ -91,7 +95,7 @@ class MGui(QtGui.QMainWindow):
         self.scrollArea.setWidget(self.main_widget)
         self.scrollArea.setWidgetResizable(True)
         self.setCentralWidget(self.scrollArea)
-      
+
         # Setup stylesheet.
         self.scrollArea.setStyleSheet("background:rgb(70, 80, 88)")
         # Configure the menu bar.
@@ -286,6 +290,7 @@ class MGui(QtGui.QMainWindow):
         print("GUI initialized.")
 
     def mousePressEvent(self, event):
+        
         focused_widget = QtGui.QApplication.focusWidget()
         if isinstance(focused_widget, QtGui.QScrollArea):
             focused_widget.clearFocus()
@@ -298,6 +303,7 @@ class MGui(QtGui.QMainWindow):
         exit()
         
     def openNotifierSettings(self):
+        
         """Open the notifier settings GUI."""
         # NOTE, this is run on the main thread, so while it is open
         # the main GUI will not be running.
@@ -312,15 +318,18 @@ class MGui(QtGui.QMainWindow):
         self.DataSetConfigGUI.exec_()
         
     def setRefreshRate(self, period):
-        web.guiRefreshRate = period
+        web.persistentData.persistentDataAccess(period,'guiRefreshRate')
+        
     def openVirtualDevicesConfig(self):
         self.neh.showEditor()
+
     def openConfig(self):
         self.Config = ConfigGui(self)
         self.Config.exec_()
 
     def startGui(self, devices, title, dataTitle, tele):
         """Start the GUI."""
+        print "Starting GUI."
         # Used as the name of the dataChest data title.
         self.dataTitle = dataTitle
         web.devices = devices
@@ -336,16 +345,17 @@ class MGui(QtGui.QMainWindow):
         # Call the class's initialization function.
         self.initGui(devices)
         self.setWindowTitle(title)
+        web.title = title
         # Show the GUI.
         self.show()
         self.timer = QtCore.QTimer(self)
         # Update the GUI every so often. This CAN ONLY be done 
         # in the main thread.
-        self.timer.singleShot(web.guiRefreshRate * 1000, self.update)
-        try:
-            QtGui.QApplication.focusWidget().clearFocus()
-        except:
-            pass
+        self.timer.singleShot(web.persistentData.persistentDataAccess(None, 'guiRefreshRate', default = web.guiRefreshRate) * 1000, self.update)
+        # try:
+            # QtGui.QApplication.focusWidget().clearFocus()
+        # except:
+            # pass
         sys.exit(app.exec_())
 
     def update(self):
@@ -413,7 +423,7 @@ class MGui(QtGui.QMainWindow):
                     self.lcds[i][y].display("-")
                     
         if self.keepGoing:
-            self.timer.singleShot(web.guiRefreshRate * 1000, self.update)
+            self.timer.singleShot(web.persistentData.persistentDataAccess(None, 'guiRefreshRate',default = 1) * 1000, self.update)
         return
 
 

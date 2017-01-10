@@ -5,12 +5,14 @@ from functools import partial
 from dataChestWrapper import dataChestWrapper
 import traceback
 from MPopUp import PopUp
-
+import atexit
 
 class DataSetConfigGUI(QtGui.QDialog):
     """Allows user to create custom data logs."""
     def __init__(self, parent = None):
         super(DataSetConfigGUI, self).__init__(parent)
+        atexit.register(self.saveState)
+
         #Save initial state just in case changes are canceled
         self.initialStates = []
         for device in web.devices:
@@ -18,8 +20,8 @@ class DataSetConfigGUI(QtGui.QDialog):
        # print self.initialStates
         #Create a tab for new dataset settings
         mainTabWidget = QtGui.QTabWidget()
-        self.advancedSettingsWidget = DataSetSettings(advanced = True)
-        self.simpleSettingsWidget = DataSetSettings(advanced = False)
+        self.advancedSettingsWidget = DataSetSettings(self, advanced = True)
+        self.simpleSettingsWidget = DataSetSettings(self, advanced = False)
         
         mainTabWidget.addTab(self.simpleSettingsWidget, "Basic")
         mainTabWidget.addTab(self.advancedSettingsWidget, "Advanced")
@@ -45,10 +47,17 @@ class DataSetConfigGUI(QtGui.QDialog):
         mainLayout.addLayout(buttonLayout)
         self.setLayout(mainLayout)
         self.setWindowTitle("DataChest Config")
+    
+    def saveState(self):
+       pass
+
+    
     def okClicked(self):
         # Take a look at what changed
         root = os.environ['DATA_CHEST_ROOT']
+      
         for i,device in enumerate(web.devices):
+            print "Data logging info:",device.getFrame().DataLoggingInfo()
             # If any changes were made, reinitialize the datalogger.
             #print "initial: ",self.initialStates[i]
             #print "final: ",device.getFrame().DataLoggingInfo()
@@ -56,14 +65,14 @@ class DataSetConfigGUI(QtGui.QDialog):
             
         
             if self.initialStates[i] != device.getFrame().DataLoggingInfo():
-                print "some info was changed"
+               # print "some info was changed"
                 try:
                     device.getFrame().DataLoggingInfo()['chest'].configureDataSets()
                 except Exception as e:
                     traceback.print_exc()
                     self.cancel()
-            for device in web.devices:
-                for i,checkbox in enumerate(self.settingsWidget.checkboxes):
+            for y,device in enumerate(web.devices):
+                for i,checkbox in enumerate(self.advancedSettingsWidget.checkboxes[y]):
                     device.getFrame().DataLoggingInfo()['channels'][device.getFrame()
                         .getNicknames()[i]] = (checkbox.checkState() != 0)
             self.close()
@@ -84,12 +93,13 @@ class DataSetConfigGUI(QtGui.QDialog):
 
          self.close()
 class DataSetSettings(QtGui.QWidget):
-    def __init__(self, parent = None, **kwargs):
+    def __init__(self, configGui, parent = None,  **kwargs):
         super(DataSetSettings, self).__init__(parent)
         isAdvanced = kwargs.get('advanced', False)
+        self.configGui = configGui
         font = QtGui.QFont()
         font.setPointSize(14)
-        
+        self.locationLabels=[]
         hbox = QtGui.QHBoxLayout()
         mainLayout = QtGui.QVBoxLayout()
         self.checkboxes = []
@@ -101,7 +111,7 @@ class DataSetSettings(QtGui.QWidget):
         rootlbl.setFont(font)
         hbox.addWidget(rootlbl)
         hbox.addWidget(QtGui.QLabel("\t"+str(os.environ['DATA_CHEST_ROOT'])))
-        
+        #self.checkboxes.append([])
        # grid.addWidget(QtGui.QLabel("Data Log Locations: "),1,0,1,2)
         
         if not isAdvanced:
@@ -118,27 +128,34 @@ class DataSetSettings(QtGui.QWidget):
             grid.addLayout(buttonHbox, 0, 3)
             buttonHbox.addStretch(0)
             buttonHbox.addWidget(button)
+            
+            defaultButton = QtGui.QPushButton("Automatically Configure Data Sets", self)
+            defaultButton.clicked.connect(partial(self.resetToDefault,grid))
+            mainLayout.addWidget(defaultButton)
+            mainLayout.addStretch(0)
         else:
             row = 2
-            for device in web.devices:
+            for y,device in enumerate(web.devices):
                 row += 1
                 title = QtGui.QLabel(str(device)+": ")
                 title.setFont(font)
                 grid.addWidget(title,row,0)
-                grid.addWidget(QtGui.QLabel(str(device.getFrame()
-                    .DataLoggingInfo()['location'])),row,1)
+                location = QtGui.QLabel(str(device.getFrame()
+                    .DataLoggingInfo()['location']))
+                self.locationLabels.append(location)
+                grid.addWidget(location,row,1)
                 button = QtGui.QPushButton("Browse...",self)
                 button.clicked.connect(partial(self.openFileDialog, device, grid, row))
                 buttonHbox = QtGui.QHBoxLayout()
                 grid.addLayout(buttonHbox, row, 3)
                 buttonHbox.addStretch(0)
                 buttonHbox.addWidget(button)
-
+                self.checkboxes.append([])
                 for nickname in device.getFrame().getNicknames():
                     row += 1
                     #hBox = QtGui.QHBoxLayout()
                     checkbox = QtGui.QCheckBox(self)
-                    self.checkboxes.append(checkbox)
+                    self.checkboxes[y].append(checkbox)
                     checkbox.setChecked(device.getFrame().DataLoggingInfo()['channels'][nickname])
                     #grid.addLayout(hBox, row, 0)
                     grid.addWidget(QtGui.QLabel(nickname), row, 0)
@@ -146,19 +163,39 @@ class DataSetSettings(QtGui.QWidget):
                     #hBox.addWidget(checkbox)
                     #hBox.addWidget(QtGui.QLabel(nickname))
                     #hBox.addStretch(0)
+    def resetToDefault(self,grid):
+
+        for i,device in enumerate(web.devices):
+            device.getFrame().DataLoggingInfo()['name'] = device.getFrame().getTitle()
+            device.getFrame().DataLoggingInfo()['location'] = None
+            try:
+                device.getFrame().DataLoggingInfo()['chest'].configureDataSets()
+            except Exception as e:
+                traceback.print_exc()
+            location = device.getFrame().DataLoggingInfo()['location']
+            self.configGui.advancedSettingsWidget.locationLabels[i].setText(location)
+        
+           
+        grid.itemAtPosition(0, 1).widget().setText(location)
+        
     def openFileDialog(self, device, grid,  row):
         root = os.environ['DATA_CHEST_ROOT']
         if device!=None:
             name =   device.getFrame().DataLoggingInfo()['name']
-        dir = QtGui.QFileDialog.getSaveFileName(self, "Save New Data Set...", 
-            web.devices[0].getFrame().DataLoggingInfo()['location']+"\\"+name , "")
-             
+            dir = QtGui.QFileDialog.getSaveFileName(self, "Save New Data Set...", 
+                web.devices[0].getFrame().DataLoggingInfo()['location'], "")
+            dir = os.path.abspath(dir).rsplit('\\',1)
+            location = dir[0]
+            name = dir[1]
+        else:
+            dir = QtGui.QFileDialog.getExistingDirectory(self, "Save Data In...",
+                web.devices[0].getFrame().DataLoggingInfo()['location'])
+            location = os.path.abspath(str(dir))
         #print dir
         
-        dir = os.path.abspath(dir).rsplit('\\',1)
-        location = dir[0]
-        name = dir[1]
-        
+       
+        #print "root:", root
+        #print "location:",location
         if not root in location:
                 print "ERROR"
                 errorMsg = PopUp(str(
@@ -176,13 +213,16 @@ class DataSetSettings(QtGui.QWidget):
             relativePath =  os.path.relpath(location, root)
             if device != None:
             
-                print "New path for", str(device)+":", location
+                #print "New path for", str(device)+":", location
                 device.getFrame().DataLoggingInfo()['name'] = name
                 device.getFrame().DataLoggingInfo()['location'] = location
             else:
-                for device in web.devices:
+                #print "location labels size : ",len(self.configGui.advancedSettingsWidget.locationLabels)
+                #print "location labels: ",self.configGui.advancedSettingsWidget.locationLabels
+                for i,device in enumerate(web.devices):
                     device.getFrame().DataLoggingInfo()['name'] = device.getFrame().getTitle()
-                    device.  device.getFrame().DataLoggingInfo()['location'] = location
+                    device.getFrame().DataLoggingInfo()['location'] = location
+                    self.configGui.advancedSettingsWidget.locationLabels[i].setText(location)
             grid.itemAtPosition(row, 1).widget().setText(location)
         # else:
             # print "DATA_CHEST_ROOT Directory must be a parent directory of datalogging location."

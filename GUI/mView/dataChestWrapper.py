@@ -26,7 +26,7 @@ import atexit
 import threading
 import datetime as dt
 from PyQt4 import QtCore, QtGui
-
+from MWeb import web
 
 from dateStamp import *
 from dataChest import *
@@ -55,11 +55,43 @@ class dataChestWrapper:
         self.hasData = False
         self.keepLoggingNan = True
         self.dStamp = dateStamp()
+        self.restoreState()
+        atexit.register(self.saveState)
+    def restoreState(self):
+        dataname = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device), 'name')
+        channels = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device), 'channels')
+        location = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device),  'location')
+        #Do a sanity check
+        print "device:", self.device
+        for nickname in self.device.getFrame().getNicknames():
+            if channels == None or nickname not in channels.keys():
+                channels = self.device.getFrame().DataLoggingInfo()['channels']
+                print "Error when retreiving logged channels in config file, restoring to", channels
+        if dataname is None:
+            dataname = self.device.getFrame().getTitle()
+
+        self.device.getFrame().DataLoggingInfo()['name'] = dataname
+        self.device.getFrame().DataLoggingInfo()['channels'] = channels
+        self.device.getFrame().DataLoggingInfo()['location'] = location
+    def saveState(self):
+        #print "saving"
+        
+        
+            #web.persistentData.persistentDataAccess(device.getFrame().DataLoggingInfo(),"DataLoggingInfo", str(device))
+
+        dataname = self.device.getFrame().DataLoggingInfo()['name']
+        channels = self.device.getFrame().DataLoggingInfo()['channels']
+        location = self.device.getFrame().DataLoggingInfo()['location']
+        web.persistentData.persistentDataAccess(dataname, 'DataLoggingInfo', str(self.device), 'name')
+        web.persistentData.persistentDataAccess(channels, 'DataLoggingInfo', str(self.device), 'channels')
+        web.persistentData.persistentDataAccess(location, 'DataLoggingInfo', str(self.device), 'location')
+        
     def configureDataSets(self):
         """
         Initialize the datalogger, if datasets already exist, use them.
         Otherwise create new ones.
         """
+        print "configuring data"
         now = dt.datetime.now()
         self.hasData = True
         # Generate a title for the dataset. NOTE: if 
@@ -87,17 +119,17 @@ class dataChestWrapper:
                 if relativePath == '.':
                     raise IOError("Cannot create dataset directly under DATA_CHEST_ROOT.")
                     
-                print "Root Location:", root
-                print "relativePath:", relativePath
+                #print "Root Location:", root
+                #print "relativePath:", relativePath
                 path = relativePath.split("\\")
-                print "path:",path
+                #print "path:",path
                 #self.dataSet.cd('')
                 self.dataSet = dataChest(path[0])
                 self.dataSet.cd('')
-                print "self.dataSet.pwd():", self.dataSet.pwd().replace("/","\\")
-                print "location:",location
+                #print "self.dataSet.pwd():", self.dataSet.pwd().replace("/","\\")
+                #print "location:",location
                 relativepath = os.path.relpath(location, self.dataSet.pwd().replace("/","\\"))
-                print "second relative path:", relativePath
+                #print "second relative path:", relativePath
                
                 path = relativePath.split("\\")
                 

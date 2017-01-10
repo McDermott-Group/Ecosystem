@@ -126,13 +126,13 @@ class nViewer:
                 "You are about to turn the compressor on.",
                 "start", None)
         Compressor.addParameter("Input Water Temperature",
-                "temperaturesforgui", None, 0, 'degC', 1)
+                "current_temperatures_only", None, 0, 'degC', 1)
         Compressor.addParameter("Output Water Temperature",
-                "temperaturesforgui", None, 1, 'degC', 1)
+                "current_temperatures_only", None, 1, 'degC', 1)
         Compressor.addParameter("Helium Temperature",
-                "temperaturesforgui", None, 2, 'degC', 1)
+                "current_temperatures_only", None, 2, 'degC', 1)
         Compressor.addParameter("Oil Temperature",
-                "temperaturesforgui", None, 3, 'degC', 1)
+                "current_temperatures_only", None, 3, 'degC', 1)
         Compressor.selectDeviceCommand("select_device", 0)
         Compressor.setYLabel("Temperature")
         Compressor.addPlot()
@@ -149,10 +149,6 @@ class nViewer:
         Flow.begin()
         self.devices.append(Flow)
 
-        # Start the datalogger. This line can be commented
-        # out if no datalogging is required.
-        self.chest = dataChestWrapper(self.devices)
-        
         # Create the gui.
         self.gui = MGui.MGui()
         self.gui.startGui(self.devices, 'Leiden DR GUI', 'Leiden Data',

@@ -2,33 +2,31 @@
 S'Vacuum:IVC Pressure'
 p2
 (lp3
-I01
-aF0
-aF30
+I00
+aS''
+aS''
 acsip
 _unpickle_type
 p4
 (S'PyQt4.QtCore'
 p5
 S'QString'
-(VIVAN_EMAIL
-p6
-ttRp7
+(V
+ttRp6
 asS'Compressor:Output Water Temperature'
-p8
-(lp9
-I01
-aF10
-aF60
+p7
+(lp8
+I00
+aS''
+aS''
 ag4
 (g5
 S'QString'
-(VIVAN_EMAIL
-p10
-ttRp11
+(V
+ttRp9
 asS'Dilution Unit Temperatures:Mix Temperature'
-p12
-(lp13
+p10
+(lp11
 I00
 aS''
 aS''
@@ -36,10 +34,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp14
+ttRp12
 asS'Dilution Unit Temperatures:Exchange Temperature'
-p15
-(lp16
+p13
+(lp14
 I00
 aS''
 aS''
@@ -47,10 +45,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp17
+ttRp15
 asS'Mix Pt1000 Temperature:Mix Temperature'
-p18
-(lp19
+p16
+(lp17
 I00
 aS''
 aS''
@@ -58,20 +56,30 @@ ag4
 (g5
 S'QString'
 (V
-ttRp20
+ttRp18
 asS'Water Temperature:Exteranal Water Temperature'
-p21
-(lp22
+p19
+(lp20
 I00
-aF1
-aF20
+aS''
+aS''
 ag4
 (g5
 S'QString'
-(VIVAN_EMAIL
-p23
-ttRp24
+(V
+ttRp21
 asS'Compressor:Helium Temperature'
+p22
+(lp23
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp24
+asS'Water Flow:External Water Flow Rate'
 p25
 (lp26
 I00
@@ -82,21 +90,9 @@ ag4
 S'QString'
 (V
 ttRp27
-asS'Water Flow:External Water Flow Rate'
+asS'Vacuum:Still Pressure'
 p28
 (lp29
-I00
-aF1.3999999999999999
-aF100
-ag4
-(g5
-S'QString'
-(VIVAN_EMAIL
-p30
-ttRp31
-asS'Vacuum:Still Pressure'
-p32
-(lp33
 I00
 aS''
 aS''
@@ -104,32 +100,52 @@ ag4
 (g5
 S'QString'
 (V
-ttRp34
+ttRp30
 asS'Vacuum:OVC Pressure'
-p35
-(lp36
-I01
-aF0
-aF1
-ag4
-(g5
-S'QString'
-(VIVAN_EMAIL
-p37
-ttRp38
-asS'Dilution Unit Temperatures:Still Temperature'
-p39
-(lp40
+p31
+(lp32
 I00
-aF1
-aF500
+aS''
+aS''
 ag4
 (g5
 S'QString'
-(VIVAN_EMAIL
-p41
-ttRp42
+(V
+ttRp33
+asS'Dilution Unit Temperatures:Still Temperature'
+p34
+(lp35
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp36
 asS'50K and 3K Pt1000 Temperatures:3K Stage Temperature'
+p37
+(lp38
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp39
+asS'50K and 3K Pt1000 Temperatures:50K Stage Temperature'
+p40
+(lp41
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp42
+asS'Compressor:Input Water Temperature'
 p43
 (lp44
 I00
@@ -140,7 +156,7 @@ ag4
 S'QString'
 (V
 ttRp45
-asS'50K and 3K Pt1000 Temperatures:50K Stage Temperature'
+asS'Compressor:Oil Temperature'
 p46
 (lp47
 I00
@@ -151,28 +167,4 @@ ag4
 S'QString'
 (V
 ttRp48
-asS'Compressor:Input Water Temperature'
-p49
-(lp50
-I01
-aF1
-aF22
-ag4
-(g5
-S'QString'
-(VIVAN_EMAIL
-p51
-ttRp52
-asS'Compressor:Oil Temperature'
-p53
-(lp54
-I01
-aF10
-aF50
-ag4
-(g5
-S'QString'
-(VIVAN_EMAIL
-p55
-ttRp56
 as.
