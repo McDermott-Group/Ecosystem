@@ -2,6 +2,8 @@ from PyQt4 import QtGui, QtCore
 import sys
 import time
 import gc
+from functools import partial
+from MNodes.MVirtualDeviceNode import MVirtualDeviceNode
 app = QtGui.QApplication([])
 
 
@@ -29,10 +31,17 @@ class NodeGui(QtGui.QDialog):
         view.setInteractive(True)
         self.backgroundBrush = QtGui.QBrush(QtGui.QColor(70, 80, 88))
         view.setBackgroundBrush(self.backgroundBrush)
+        
         # for device in self.devices:
             # self.scene.addItem(MNode(device, self.scene, mode = 'labrad_device'))
             # self.scene.addItem(MNode(device, self.scene, mode = 'output'))
         mainLayout.addWidget(view)
+        addVirtualDeviceButton = QtGui.QPushButton("New Virtual Device")
+        addVirtualDeviceButton.clicked.connect(self.addVirtualDevice)
+        mainLayout.addWidget(addVirtualDeviceButton)
         self.setLayout(mainLayout)
+    def addVirtualDevice(self):
+        self.tree.addNode(MVirtualDeviceNode())
+        
        # view.show()
     

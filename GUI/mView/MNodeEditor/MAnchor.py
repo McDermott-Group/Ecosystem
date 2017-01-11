@@ -2,6 +2,7 @@ from PyQt4 import QtGui, QtCore
 from MPipe import MPipe
 class MAnchor(QtGui.QGraphicsItem):
     def __init__(self, name, scene, tree, index,  parent = None, **kwargs):
+        
         # Get the keyword arguments
         self.type = kwargs.get('type', 'output')
         # get the tree
@@ -24,10 +25,10 @@ class MAnchor(QtGui.QGraphicsItem):
             # Configure the brush
             self.nodeBrush = QtGui.QBrush(QtGui.QColor(52, 73, 94))
             # Bounding rectangle of the anchor
-            self.rect = QtCore.QRectF(175, 40+40*self.index,20, 20)
+            self.rect = QtCore.QRectF(175, 90+40*self.index,20, 20)
         elif self.type == 'input':
             self.nodeBrush = QtGui.QBrush(QtGui.QColor(52, 73, 94))
-            self.rect = QtCore.QRectF(-10, 40+40*self.index,20, 20)
+            self.rect = QtCore.QRectF(-10, 90+40*self.index,20, 20)
         # The QPen
         self.textPen = QtGui.QPen()
         self.textPen.setStyle(2);
@@ -42,6 +43,11 @@ class MAnchor(QtGui.QGraphicsItem):
         self.width = QtGui.QFontMetrics(self.font).boundingRect(label).width()
         #self.update(self.rect)
         self.prepareGeometryChange()
+    def parentNode(self):
+        return self.parent
+    def setParentNode(self, node):
+        self.setParentItem(node)
+        self.parent  = node
     def getLabel(self):
         return self.label
     def setLabel(self, label):
@@ -71,9 +77,9 @@ class MAnchor(QtGui.QGraphicsItem):
         return loc
     def getLocalLocation(self):
         if self.type == 'output':
-            loc =  QtCore.QPoint(185,50+40*self.index)
+            loc =  QtCore.QPoint(185,100+40*self.index)
         elif self.type == 'input':
-            loc = QtCore.QPoint(0,50+40*self.index)
+            loc = QtCore.QPoint(0,100+40*self.index)
         return loc
     def connect(self, pipe):
         self.pipe = pipe
@@ -91,12 +97,14 @@ class MAnchor(QtGui.QGraphicsItem):
         #self.label = self.getLocalLocation
         if self.label is None:
             self.label = 'New Pipe'
-        painter.drawText(150-self.width, 55+40*self.index, self.label)
+        painter.drawText(150-self.width, 105+40*self.index, self.label)
+        painter.drawRect(self.rect)
         self.e = painter.drawEllipse(self.getLocalLocation(), 10, 10)
     def boundingRect(self):
         return self.rect
 
     def mousePressEvent(self, event):
+        print "Anchor clicked!"
         if self.isConnected():
             self.disconnect()
             print "disconnecting ", self.param

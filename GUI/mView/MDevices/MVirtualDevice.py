@@ -24,18 +24,19 @@ __status__ = "Beta"
 import MDevice
 from MWeb import web
 class MVirtualDevice(MDevice.MDevice):
-     def __init__(self, *args):
-         super(Device, self).__init__(*args)
-         self.frame.setTitle = args[0]
+    def __init__(self, *args):
+         super(MVirtualDevice, self).__init__(*args)
+         self.frame.setTitle(args[0])
          web.virtualDevices.append(self)
-     def addParameter(self, *args, **kwargs)
+         
+
+    def addParameter(self, *args, **kwargs):
         name = args[0]
         units = kwargs.get("units", None)
         precision = kwargs.get("precision", 2)
-        
-        self.nicknames.append(name)
-        elf.settingUnits.append(units)
-        self.precisions.append(precision)
+        self.frame.nicknames.append(name)
+        self.frame.units.append(units)
+        self.frame.precisions.append(precision)
     def addButton(self, *args, **kwargs):
         pass
     def setYLabel(self, yLbl, **kwargs):

@@ -45,9 +45,9 @@ class web:
 
     # List of virtual devices
     virtualDevices = []
-
+    gui = None
     title = None
-
+    
 
     persistentData = None
     

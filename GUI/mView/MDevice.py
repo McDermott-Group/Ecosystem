@@ -26,7 +26,7 @@ class MDevice(object):
     def __init__(self, name):
 
         self.frame = MFrame()
-
+        self.frame.setTitle(name)
         # Datachest wrapper.
        # Dictionary holding datalogging settings
          # Datalogging disabled by default
@@ -68,6 +68,15 @@ class MDevice(object):
     def getFrame(self):
         """Return the device's frame."""
         return self.frame
+    def stop(self):
+        self.keepGoing = False
+    def begin(self):
+      
+        self.frame.setNicknames(self.nicknames)
+        self.frame.setReadingIndices(self.settingResultIndices)
+        self.frame.DataLoggingInfo()['name'] = self.frame.getTitle()
+        self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self)
+        self.datachest = self.frame.DataLoggingInfo()['chest']
         
     def logData(self, b, channels = None):
         self.frame.DataLoggingInfo['channels'] = channels

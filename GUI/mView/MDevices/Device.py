@@ -81,9 +81,7 @@ class Device(MDevice):
         
         self.frame.setTitle(self.name)
         
-    def stop(self):
-        self.keepGoing = False
-        
+
     def setServerName(self, name):
         self.serverName = name
         

@@ -1,5 +1,5 @@
 from MPipe import MPipe
-from MNode import MNode
+#from MNode import MNode
 class NodeTree:
     scene = None
     pipes = []
@@ -52,14 +52,19 @@ class NodeTree:
             startAnchor.setLabel(self.pipes[-1].getLabel())
         startAnchor.connect(self.pipes[-1])
         endAnchor.connect(self.pipes[-1])
-     
-    def newNode(self,  tree, **kwargs):
-        newNode = MNode(self.scene, tree, **kwargs)
+        startAnchor.parentItem().pipeConneted(startAnchor, self.pipes[-1])
+        endAnchor.parentItem().pipeConneted(startAnchor, self.pipes[-1])
+    def addNode(self, node):
+        print "adding node to scene:",self.scene
+        node.setScene(self.scene)
+        node.setTree(self)
+        node.begin()
+        #newNode = MNode(self.scene, self, **kwargs)
        # print newNode
-        self.scene.addItem(newNode)
-        self.nodes.append(newNode)
+        self.nodes.append(node)
+        
        # print self.nodes[-1]
-        return newNode
+        return node
         
     def getNodes(self):
         return self.nodes

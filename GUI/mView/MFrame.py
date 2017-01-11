@@ -30,13 +30,13 @@ class MFrame:
         # Name of device's server.
         self.serverTitle = None
         # Parameter names to be displayed on the GUI.
-        self.nicknames = None
+        self.nicknames = []
         # Settings which are called by the GUI.
         self.serverSettings = None
         # Device readings.
         self.readings = None
         # Precisions.
-        self.precisions = None
+        self.precisions = []
         # Errors.
         self.error = False
         # Error messages.

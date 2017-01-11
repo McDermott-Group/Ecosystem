@@ -75,7 +75,7 @@ class MGui(QtGui.QMainWindow):
     # Used to allow query to keep calling itself.
     keepGoing = True
     
-    
+
     def initGui(self, devices, parent=None):
         """Configure all GUI elements."""
         QtGui.QWidget.__init__(self, parent)
@@ -83,7 +83,7 @@ class MGui(QtGui.QMainWindow):
         QtGui.QApplication.setStyle(QtGui.QStyleFactory.create('plastique'))
         # On GUI exit, run stop function.
         atexit.register(self.stop)
-        
+        web.gui = self
         # Make the GUI fullscreen.
         self.showMaximized()
        
@@ -138,20 +138,30 @@ class MGui(QtGui.QMainWindow):
         VirtualDevicesMenu.addAction(virtualDevicesConfigAction)
         # Keeps track of the number of widgets, used for placing tiles
         # into the correct column.
+        self.neh = MNodeEditorHandler(self)
         numWidgets = 0
         # Configure the size policy of all tiles.
-        frameSizePolicy = QtGui.QSizePolicy()
-        frameSizePolicy.setVerticalPolicy(4)
-        frameSizePolicy.setHorizontalPolicy(QtGui.QSizePolicy.Preferred)
+        self.frameSizePolicy = QtGui.QSizePolicy()
+        self.frameSizePolicy.setVerticalPolicy(4)
+        self.frameSizePolicy.setHorizontalPolicy(QtGui.QSizePolicy.Preferred)
         # Configure the layouts.
         self.mainVBox.append(QtGui.QVBoxLayout())
         self.mainVBox.append(QtGui.QVBoxLayout())
         self.mainHBox.addLayout(self.mainVBox[0])
         self.mainHBox.addLayout(self.mainVBox[1])
         # Which column are we adding a tile to next.
-        self.VBoxColumn = 0
+        devices = web.devices
+        self.index = 0
+        for i,device in enumerate(devices):
+            self.addDevice(device)
+        self.mainVBox[0].addStretch(0)
+        self.mainVBox[1].addStretch(0)
+        print("GUI initialized.")
         
-       
+    def addDevice(self, device):
+        
+        if device not in web.devices:
+            web.devices.append(device)
         devices = web.devices
         buttons = self.buttons
         titles = self.titles
@@ -159,136 +169,133 @@ class MGui(QtGui.QMainWindow):
         tiles = self.tiles
         lcds = self.lcds
         params = self.parameters
-        
-        self.neh = MNodeEditorHandler(self)
+        self.VBoxColumn = 0
+       
         # Do for each device.
-        for i in range(len(devices)):
-            # Add a QFrame, this is the border, and the parent of all
-            # GUI elements that go inside.
-            tiles.append(QtGui.QFrame(self))
-            # Switch off adding tiles to columns.
-            if self.VBoxColumn == 0:
-                self.VBoxColumn = 1
-            else:
-                self.VBoxColumn = 0
-            self.mainVBox[self.VBoxColumn].addWidget(tiles[i])
-            # Add new titles, grids, parameters, 
-            # and lcds for the new parameter.
-            titles.append(QtGui.QLabel(tiles[i]))
-            grids.append(QtGui.QGridLayout())
-            params.append([])
-            lcds.append([])
-            self.units.append([])
-            self.buttons.append([])
-            # Configure grid layout.
-            grids[i].setSpacing(10)
-            grids[i].addWidget(titles[i], 1, 0)
-            grids[i].setColumnStretch(0, 1)
-            # Configure the tile (the box surrounding 
-            # information for each device).
-            tiles[i].setSizePolicy(frameSizePolicy)
-            tiles[i].setStyleSheet("background: rgb(52, 73, 94)")
-            tiles[i].setFrameShape(QtGui.QFrame.Panel)
-            tiles[i].setFrameShadow(QtGui.QFrame.Plain)
-            tiles[i].setSizePolicy(QtGui.QSizePolicy.Preferred,
-                    QtGui.QSizePolicy.Preferred)
-            # Used for dpi scaling (works pretty well but not amazing).
-            if self.scrnWidth > self.scrnHeight:
-                web.ratio = float(self.scrnWidth) / 1800 + 1
-            else:
-                web.ratio = float(self.scrnHeight) / 1800 + 1
-            tiles[i].setLineWidth(web.ratio)
-            tiles[i].setLayout(grids[i])
-            # Configure the layout of the buttons within the grid.
-            buttonLayout = QtGui.QHBoxLayout()
-            grids[i].addLayout(buttonLayout, 1, 1)
-            # Create all buttons.
-            deviceFrameButtons = devices[i].getFrame().getButtons()
-            if deviceFrameButtons[0]:
-                for b in range(len(deviceFrameButtons)):
-                    # Append a new button to the array of buttons and
-                    # set the parent as the current frame.
-                    buttons[i].append(QtGui.QPushButton(tiles[i]))
-                    # Set the text of the button to the name specified 
-                    # when the device was initialized.
-                    buttons[i][b].setText(deviceFrameButtons[b][0])
-                    # Add the button to the screen.
-                    buttonLayout.addWidget(buttons[i][b])
-                    # Connect the button to function, 
-                    # passing the number of the button that was clicked.
-                    buttons[i][b].clicked.connect(
-                            partial(devices[i].prompt, b))
-                    # Make the button pretty.
-                    buttons[i][b].setStyleSheet("color:rgb(189, 195, 199); "
-                            "background:rgb(70, 80, 88)")
-                    buttons[i][b].setFont(self.font)   
-            # Make the titles look nice.
-            titles[i].setStyleSheet("color:rgb(189, 195, 199);")
-            self.font.setPointSize(18)
-            titles[i].setFont(self.font)
-            self.font.setPointSize(12)
-            # Get the title of the device.
-            titles[i].setText(devices[i].getFrame().getTitle())
-            titles[i].setGeometry(QtCore.QRect(10, 10,
-                    titles[i].fontMetrics().boundingRect(
-                    titles[i].text()).width(), 40))
-            nicknames = devices[i].getFrame().getNicknames()
-            for y in range(len(nicknames)):
-                # Add a new parameter to the current device.
-                params[i].append(QtGui.QLabel(tiles[i]))
-                self.units[i].append(QtGui.QLabel(tiles[i]))
-                # Get the width of the text.
-                params[i][y].setFont(self.font)
-                params[i][y].setAlignment(QtCore.Qt.AlignLeft)
-                self.units[i][y].setFont(self.font)
-                self.units[i][y].setAlignment(QtCore.Qt.AlignRight)
-                # Configure the QLCDnumber widgets that display
-                # information.
-                lcds[i].append(QtGui.QLCDNumber())
-                lcds[i][y].setNumDigits(11)
-                lcds[i][y].setSegmentStyle(QtGui.QLCDNumber.Outline)
-                lcds[i][y].display("-")
-                lcds[i][y].setFrameShape(QtGui.QFrame.Panel)
-                lcds[i][y].setFrameShadow(QtGui.QFrame.Plain)
-                lcds[i][y].setLineWidth(web.ratio)
-                lcds[i][y].setMidLineWidth(100)
-                lcds[i][y].setStyleSheet("color:rgb(189, 195, 199);\n")
-                lcds[i][y].setFixedHeight(self.scrnHeight / 30)
-                lcds[i][y].setMinimumWidth(self.scrnWidth / 7)
-                # Make the parameters pretty.
-                params[i][y].setWordWrap(True)
-                params[i][y].setStyleSheet("color:rgb(189, 195, 199);")    
-                # Hide everything until we know that it should be
-                # displayed. This is essential to be able to handle
-                # arrays.
-                params[i][y].hide()
-                lcds[i][y].hide()
-                self.units[i][y].hide()
-                # If a nickname for the setting has been defined, 
-                # go ahead and display whatever is necessary.
-                if nicknames[y] is not None:
-                    params[i][y].show()
-                    lcds[i][y].show()
-                    self.units[i][y].show()
-                    params[i][y].setText(nicknames[y])
-                    grids[i].addWidget(params[i][y], y + 2, 0)
-                    lcdHBoxLayout = QtGui.QHBoxLayout()
-                    lcdHBoxLayout.addStretch(1)
-                    lcdHBoxLayout.addWidget(lcds[i][y])
-                    
-                    grids[i].addLayout(lcdHBoxLayout, y + 2, 1)
-                    grids[i].addWidget(self.units[i][y], y + 2, 2)
-            # Configure the plots.
-            if devices[i].getFrame().isPlot():
-                dc = MGrapher.mGraph(devices[i])
-                yPos = len(nicknames) + 3
-                devices[i].getFrame().setPlot(dc)
-                grids[i].addWidget(dc, yPos, 0, yPos, 3)
+    
+        # Add a QFrame, this is the border, and the parent of all
+        # GUI elements that go inside.
+        tiles.append(QtGui.QFrame(self))
+        # Switch off adding tiles to columns.
+        if self.VBoxColumn == 0:
+            self.VBoxColumn = 1
+        else:
+            self.VBoxColumn = 0
+        self.mainVBox[self.VBoxColumn].addWidget(tiles[self.index])
+        # Add new titles, grids, parameters, 
+        # and lcds for the new parameter.
+        titles.append(QtGui.QLabel(tiles[self.index]))
+        grids.append(QtGui.QGridLayout())
+        params.append([])
+        lcds.append([])
+        self.units.append([])
+        self.buttons.append([])
+        # Configure grid layout.
+        grids[self.index].setSpacing(10)
+        grids[self.index].addWidget(titles[self.index], 1, 0)
+        grids[self.index].setColumnStretch(0, 1)
+        # Configure the tile (the box surrounding 
+        # information for each device).
+        tiles[self.index].setSizePolicy(self.frameSizePolicy)
+        tiles[self.index].setStyleSheet("background: rgb(52, 73, 94)")
+        tiles[self.index].setFrameShape(QtGui.QFrame.Panel)
+        tiles[self.index].setFrameShadow(QtGui.QFrame.Plain)
+        tiles[self.index].setSizePolicy(QtGui.QSizePolicy.Preferred,
+                QtGui.QSizePolicy.Preferred)
+        # Used for dpi scaling (works pretty well but not amazing).
+        if self.scrnWidth > self.scrnHeight:
+            web.ratio = float(self.scrnWidth) / 1800 + 1
+        else:
+            web.ratio = float(self.scrnHeight) / 1800 + 1
+        tiles[self.index].setLineWidth(web.ratio)
+        tiles[self.index].setLayout(grids[self.index])
+        # Configure the layout of the buttons within the grid.
+        buttonLayout = QtGui.QHBoxLayout()
+        grids[self.index].addLayout(buttonLayout, 1, 1)
+        # Create all buttons.
+        deviceFrameButtons = devices[self.index].getFrame().getButtons()
+        if deviceFrameButtons[0]:
+            for b in range(len(deviceFrameButtons)):
+                # Append a new button to the array of buttons and
+                # set the parent as the current frame.
+                buttons[self.index].append(QtGui.QPushButton(tiles[self.index]))
+                # Set the text of the button to the name specified 
+                # when the device was initialized.
+                buttons[self.index][b].setText(deviceFrameButtons[b][0])
+                # Add the button to the screen.
+                buttonLayout.addWidget(buttons[self.index][b])
+                # Connect the button to function, 
+                # passing the number of the button that was clicked.
+                buttons[self.index][b].clicked.connect(
+                        partial(devices[self.index].prompt, b))
+                # Make the button pretty.
+                buttons[self.index][b].setStyleSheet("color:rgb(189, 195, 199); "
+                        "background:rgb(70, 80, 88)")
+                buttons[self.index][b].setFont(self.font)   
+        # Make the titles look nice.
+        titles[self.index].setStyleSheet("color:rgb(189, 195, 199);")
+        self.font.setPointSize(18)
+        titles[self.index].setFont(self.font)
+        self.font.setPointSize(12)
+        # Get the title of the device.
+        print "New device:", device
+        titles[self.index].setText(devices[self.index].getFrame().getTitle())
+        titles[self.index].setGeometry(QtCore.QRect(10, 10,
+                titles[self.index].fontMetrics().boundingRect(
+                titles[self.index].text()).width(), 40))
+        nicknames = devices[self.index].getFrame().getNicknames()
+        for y in range(len(nicknames)):
+            # Add a new parameter to the current device.
+            params[self.index].append(QtGui.QLabel(tiles[self.index]))
+            self.units[self.index].append(QtGui.QLabel(tiles[self.index]))
+            # Get the width of the text.
+            params[self.index][y].setFont(self.font)
+            params[self.index][y].setAlignment(QtCore.Qt.AlignLeft)
+            self.units[self.index][y].setFont(self.font)
+            self.units[self.index][y].setAlignment(QtCore.Qt.AlignRight)
+            # Configure the QLCDnumber widgets that display
+            # information.
+            lcds[self.index].append(QtGui.QLCDNumber())
+            lcds[self.index][y].setNumDigits(11)
+            lcds[self.index][y].setSegmentStyle(QtGui.QLCDNumber.Outline)
+            lcds[self.index][y].display("-")
+            lcds[self.index][y].setFrameShape(QtGui.QFrame.Panel)
+            lcds[self.index][y].setFrameShadow(QtGui.QFrame.Plain)
+            lcds[self.index][y].setLineWidth(web.ratio)
+            lcds[self.index][y].setMidLineWidth(100)
+            lcds[self.index][y].setStyleSheet("color:rgb(189, 195, 199);\n")
+            lcds[self.index][y].setFixedHeight(self.scrnHeight / 30)
+            lcds[self.index][y].setMinimumWidth(self.scrnWidth / 7)
+            # Make the parameters pretty.
+            params[self.index][y].setWordWrap(True)
+            params[self.index][y].setStyleSheet("color:rgb(189, 195, 199);")    
+            # Hide everything until we know that it should be
+            # displayed. This is essential to be able to handle
+            # arrays.
+            params[self.index][y].hide()
+            lcds[self.index][y].hide()
+            self.units[self.index][y].hide()
+            # If a nickname for the setting has been defined, 
+            # go ahead and display whatever is necessary.
+            if nicknames[y] is not None:
+                params[self.index][y].show()
+                lcds[self.index][y].show()
+                self.units[self.index][y].show()
+                params[self.index][y].setText(nicknames[y])
+                grids[self.index].addWidget(params[self.index][y], y + 2, 0)
+                lcdHBoxLayout = QtGui.QHBoxLayout()
+                lcdHBoxLayout.addStretch(1)
+                lcdHBoxLayout.addWidget(lcds[self.index][y])
                 
-        self.mainVBox[0].addStretch(0)
-        self.mainVBox[1].addStretch(0)
-        print("GUI initialized.")
-
+                grids[self.index].addLayout(lcdHBoxLayout, y + 2, 1)
+                grids[self.index].addWidget(self.units[self.index][y], y + 2, 2)
+        # Configure the plots.
+        if devices[self.index].getFrame().isPlot():
+            dc = MGrapher.mGraph(devices[self.index])
+            yPos = len(nicknames) + 3
+            devices[self.index].getFrame().setPlot(dc)
+            grids[self.index].addWidget(dc, yPos, 0, yPos, 3)
+        self.index+=1
     def mousePressEvent(self, event):
         
         focused_widget = QtGui.QApplication.focusWidget()
