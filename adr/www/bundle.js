@@ -166,12 +166,12 @@ var Temp = function Temp(props) {
         arrow = ' ';
         rate = 'NaN';
     } else {
-        rate = Math.abs(rate).toFixed(3);
+        rate = Math.abs(parseFloat(rate)).toFixed(3);
     }
     // no idea why this is needed.  toPrecision was throwing error, but then
     // still working, so ???
     try {
-        var temp = props.temp.toPrecision(4);
+        var temp = parseFloat(props.temp).toPrecision(4);
     } catch (err) {
         //console.log([props.label,props.temp])
         var temp = props.temp;
@@ -238,7 +238,7 @@ var Status = function Status(props) {
         React.createElement(
             'div',
             { style: { color: props.color, display: 'inline-block', width: '50%' } },
-            "" + props.value.toFixed(3) + " " + props.units
+            "" + parseFloat(props.value).toFixed(3) + " " + props.units
         )
     );
 };
@@ -594,8 +594,8 @@ ReactDOM.render(React.createElement(
 var d3 = Plotly.d3;
 
 window.onload = function () {
-    //ws = new WebSocket("ws://localhost:9876/ws");
-    ws = new WebSocket("ws://24.177.124.174:9876/ws");
+    ws = new WebSocket("ws://10.0.1.13:9876/ws");
+    //ws = new WebSocket("ws://24.177.124.174:9876/ws");
     //var s = new WebSocket("ws://localhost:1025/");
     ws.onopen = function (e) {
         console.log("socket opened");

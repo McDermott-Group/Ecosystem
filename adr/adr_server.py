@@ -279,7 +279,7 @@ class ADRServer(DeviceServer):
         root.putChild(u"ws", resource)
 
         site = Site(root)
-        reactor.listenTCP(9876, site)
+        reactor.listenTCP(9876, site, interface='0.0.0.0')
 
         try:
             yield self.client.registry.cd(self.ADRSettingsPath)

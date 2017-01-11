@@ -1,4 +1,4 @@
-// "compile" with command: browserify -t [ babelify ] index.js -o bundle.js
+// "compile" with command: browserify -t [ babelify ] main.js -o bundle.js
 // var React = require('react');
 // var ReactDOM = require('react-dom');
 // var Plotly = require('plotly.js');
@@ -419,8 +419,8 @@ ReactDOM.render(<Provider store={ store }>
 var d3 = Plotly.d3;
 
 window.onload = function(){
-    //ws = new WebSocket("ws://localhost:9876/ws");
-    ws = new WebSocket("ws://24.177.124.174:9876/ws");
+    ws = new WebSocket("ws://10.0.1.13:9876/ws");
+    //ws = new WebSocket("ws://24.177.124.174:9876/ws");
     //var s = new WebSocket("ws://localhost:1025/");
     ws.onopen = function(e) { console.log("socket opened"); }
     ws.onclose = function(e) { console.log("socket closed"); }
