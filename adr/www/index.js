@@ -134,11 +134,11 @@ const Temp = (props) => {
         arrow = ' ';
         rate = 'NaN'
     }
-    else { rate = Math.abs(rate).toFixed(3); }
+    else { rate = Math.abs(parseFloat(rate)).toFixed(3); }
     // no idea why this is needed.  toPrecision was throwing error, but then
     // still working, so ???
     try {
-        var temp = props.temp.toPrecision(4);
+        var temp = parseFloat(props.temp).toPrecision(4);
     } catch(err) {
         //console.log([props.label,props.temp])
         var temp = props.temp;
@@ -177,7 +177,7 @@ const Status = (props) => {
     return(
         <div style={{border:'3px solid '+props.color}}>
           <div style={{color:'white', backgroundColor:props.color, display: 'inline-block', width:'50%'}}>{props.label}</div>
-          <div style={{color:props.color, display: 'inline-block', width:'50%'}}>{""+props.value.toFixed(3)+" "+props.units}</div>
+          <div style={{color:props.color, display: 'inline-block', width:'50%'}}>{""+parseFloat(props.value).toFixed(3)+" "+props.units}</div>
         </div>
     )
 };
