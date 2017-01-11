@@ -24,6 +24,8 @@ class Main(QtGui.QWidget):
         self.setWindowIcon(QtGui.QIcon('rabi.jpg'))
         
         self.root = os.environ["DATA_CHEST_ROOT"]
+        if "\\" in self.root:
+            self.root = self.root.replace("\\", '/')
         self.pathRoot=QtCore.QString(self.root)
 
         self.filters =QtCore.QStringList()
