@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = SIM928
-version = 2.4.2
+version = 2.4.3
 description = Server interface for the SIM928 Isolated Voltage Source.
 instancename = SIM928
 
@@ -56,7 +56,7 @@ class SIM928Wrapper(GPIBDeviceWrapper):
             self.voltage = (yield self.query('VOLT?').addCallback(float)) * V
         except:
             print('Failed attempt to read the voltage.')
-            yield self.getVoltage()
+            self.voltage = yield self.getVoltage()
         returnValue(self.voltage)
     
     @inlineCallbacks
@@ -65,7 +65,7 @@ class SIM928Wrapper(GPIBDeviceWrapper):
             self.output = yield self.query('EXON?').addCallback(int).addCallback(bool)
         except:
             print('Failed attempt to read the output state.')
-            yield self.getOutput()
+            self.output = yield self.getOutput()
         returnValue(self.output)
 
     @inlineCallbacks
