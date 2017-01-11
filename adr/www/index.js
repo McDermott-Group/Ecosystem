@@ -1,3 +1,4 @@
+// "compile" with command: browserify -t [ babelify ] index.js -o bundle.js
 // var React = require('react');
 // var ReactDOM = require('react-dom');
 // var Plotly = require('plotly.js');

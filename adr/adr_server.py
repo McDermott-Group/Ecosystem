@@ -41,8 +41,7 @@ ADR_SETTINGS_BASE_PATH = ['','ADR Settings'] # path in registry
 DEFAULT_ADR = 'ADR3' # name of ADR in registry
 AVAILABLE_ADRS = ['ADR1','ADR2','ADR3']
 
-import matplotlib as mpl
-import numpy, pylab
+import numpy
 import datetime, struct
 from labrad.server import (LabradServer, setting,
                            inlineCallbacks, returnValue)
@@ -92,7 +91,7 @@ class MyServerProtocol(WebSocketServerProtocol):
             'PSCurrent': state['PSCurrent']['A'],
             'PSVoltage': state['PSVoltage']['V'],
             'log':[{
-                'datetime':(log[0]-datetime.datetime(1970,1,1)).total_seconds(), 
+                'datetime':(log[0]-datetime.datetime(1970,1,1)).total_seconds(),
                 'message':log[1],
                 'alert':log[2]} for log in backLogs]
         })
@@ -271,7 +270,8 @@ class ADRServer(DeviceServer):
 
         # Web Socket Update Stuff:
         log.startLogging(sys.stdout)
-        root = File("C:\\Users\\McDermott\\Desktop\\Git Repositories\\servers\\adr\\www")
+        # root = File("C:\\Users\\McDermott\\Desktop\\Git Repositories\\servers\\adr\\www")
+        root = File("./www")
 
         self.factory = MyFactory(u"ws://127.0.0.1:9876/",adrServer=self)
         self.factory.protocol = MyServerProtocol
