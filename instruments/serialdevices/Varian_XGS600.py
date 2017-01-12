@@ -16,7 +16,7 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Varian Guage Controlelr
+name = Varian Guage Controller
 version = 1.0.1
 description = Controls vacuum cart
 
@@ -113,7 +113,6 @@ class VarianControllerServer(DeviceServer):
         ans = [np.nan if not self.isFloat(val) else float(val) for val in ans ]
         
         unit = yield self.getUnits(dev)
-        print unit
         if unit == '00':
            # print "torr"
             ans = ans * units.torr

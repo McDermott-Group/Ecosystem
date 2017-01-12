@@ -262,7 +262,7 @@ var AllStatuses = function AllStatuses(_ref2) {
         React.createElement(Status, { label: 'PS Voltage', color: 'grey', value: PSVoltage, units: "V" }),
         React.createElement(Status, { label: 'PS Current', color: 'grey', value: PSCurrent, units: "A" }),
         React.createElement(Status, { label: 'Back EMF', color: 'grey', value: backEMF, units: "V" }),
-        React.createElement(Status, { label: 'Pressure', color: 'grey', value: pressure, units: "mTorr" })
+        React.createElement(Status, { label: 'Pressure', color: 'grey', value: pressure.toExponential(), units: "Torr" })
     );
 };
 var StatusDisplay = connect(mapStateToStatusProps)(AllStatuses);
@@ -594,7 +594,7 @@ ReactDOM.render(React.createElement(
 var d3 = Plotly.d3;
 
 window.onload = function () {
-    ws = new WebSocket("ws://10.0.1.13:9876/ws");
+    ws = new WebSocket("ws://10.128.226.104:9876/ws");
     //ws = new WebSocket("ws://24.177.124.174:9876/ws");
     //var s = new WebSocket("ws://localhost:1025/");
     ws.onopen = function (e) {

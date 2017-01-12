@@ -84,7 +84,7 @@ class MyServerProtocol(WebSocketServerProtocol):
                                     'connected':status[1] }
                                 for (name,status) in self.adrServer.getInstrumentState('bla')},
             'compressorOn':state['CompressorStatus'],
-            'pressure':None,
+            'pressure': state['Pressure']['torr'],
             'isMaggingUp': state['maggingUp'],
             'isRegulating': state['regulating'],
             'backEMF': state['magnetV']['V'],
@@ -198,6 +198,7 @@ class ADRServer(DeviceServer):
                 'T_GGG': numpy.NaN * units.K,
                 'T_3K' : numpy.NaN * units.K,
                 'T_60K': numpy.NaN * units.K,
+                'Pressure': 760 * units.torr,
                 'datetime' : datetime.datetime.utcnow(),
                 'cycle': 0,
                 'magnetV': numpy.NaN * units.V,
@@ -234,14 +235,16 @@ class ADRServer(DeviceServer):
                 'Diode Temperature Monitor':['SIM922','addr'],
                 'Magnet Voltage Monitor':['SIM922','addr'],
                 'Heat Switch':['Heat Switch','addr'],
-                'Compressor':['CP2800 Compressor','addr']
+                'Compressor':['CP2800 Compressor','addr'],
+                'Pressure Guage':['Varian Guage Controller','addr']
         }
         self.instruments = {'Power Supply':'None',
                             'Ruox Temperature Monitor':'None',
                             'Diode Temperature Monitor':'None',
                             'Magnet Voltage Monitor':'None',
                             'Heat Switch':'None',
-                            'Compressor':'None'}
+                            'Compressor':'None',
+                            'Pressure Guage':'None'}
         self.startDatetime = datetime.datetime.utcnow()
         self.tempDataChest = dataChest(['ADR Logs',self.name])
         dts = dateStamp()
@@ -559,6 +562,9 @@ class ADRServer(DeviceServer):
                         self._refreshInstruments()
                 except AttributeError:
                     pass # in case instrument didn't initialize properly and is None
+            # pressure
+            pressures = yield instruments['Pressure Guage'].get_pressures()
+            self.state['Pressure'] = pressures[0]
             # update relevant files
             try:
                 newTemps = [self.state[t]['K'] for t in ['T_60K','T_3K','T_GGG','T_FAA']]
@@ -579,7 +585,7 @@ class ADRServer(DeviceServer):
                                         'connected':status[1] }
                                     for (name,status) in self.getInstrumentState('bla')},
                 'compressorOn':self.state['CompressorStatus'],
-                'pressure':None,
+                'pressure':self.state['Pressure']['torr'],
                 'isMaggingUp': self.state['maggingUp'],
                 'isRegulating': self.state['regulating'],
                 'backEMF': self.state['magnetV']['V'],

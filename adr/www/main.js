@@ -65,7 +65,7 @@ const stateReducer = (state={
         'Power Supply': {server: false, connected: false},
         'Magnet Voltage Monitor': {server: false, connected: false},
         'Heat Switch': {server: false, connected: false},
-        'Pump Cart Pressure': {server: false, connected: false}
+        'Pressure Guage': {server: false, connected: false}
     },
     log:[],
     isMaggingUp:true,
@@ -195,7 +195,7 @@ const AllStatuses = ({pressure,PSVoltage,PSCurrent,backEMF}) => {
             <Status label="PS Voltage" color="grey" value={PSVoltage} units={"V"} />
             <Status label="PS Current" color="grey" value={PSCurrent} units={"A"} />
             <Status label="Back EMF" color="grey" value={backEMF} units={"V"} />
-            <Status label="Pressure" color="grey" value={pressure} units={"mTorr"} />
+            <Status label="Pressure" color="grey" value={pressure.toExponential()} units={"Torr"} />
         </div>
     )
 };
