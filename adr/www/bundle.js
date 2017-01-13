@@ -227,7 +227,7 @@ var AllTemps = function AllTemps(_ref) {
 var TempDisplay = connect(mapStateToTempProps)(AllTemps);
 
 var Status = function Status(props) {
-    val = typeof props.value == 'number' ? parseFloat(props.value).toFixed(3) : props.value;
+    var val = typeof props.value == 'number' ? parseFloat(props.value).toFixed(3) : props.value;
     return React.createElement(
         'div',
         { style: { border: '3px solid ' + props.color } },
@@ -595,7 +595,7 @@ ReactDOM.render(React.createElement(
 var d3 = Plotly.d3;
 
 window.onload = function () {
-    ws = new WebSocket("ws://10.0.1.13:9876/ws");
+    ws = new WebSocket("ws://10.128.226.104:9876/ws");
     //ws = new WebSocket("ws://24.177.124.174:9876/ws");
     //var s = new WebSocket("ws://localhost:1025/");
     ws.onopen = function (e) {

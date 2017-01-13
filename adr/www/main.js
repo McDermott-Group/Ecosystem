@@ -174,7 +174,7 @@ const AllTemps = ({temps}) => {
 const TempDisplay = connect(mapStateToTempProps)(AllTemps);
 
 const Status = (props) => {
-    val = typeof(props.value) == 'number' ? parseFloat(props.value).toFixed(3) : props.value;
+    var val = typeof(props.value) == 'number' ? parseFloat(props.value).toFixed(3) : props.value;
     return(
         <div style={{border:'3px solid '+props.color}}>
           <div style={{color:'white', backgroundColor:props.color, display: 'inline-block', width:'50%'}}>{props.label}</div>
