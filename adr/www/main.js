@@ -174,10 +174,11 @@ const AllTemps = ({temps}) => {
 const TempDisplay = connect(mapStateToTempProps)(AllTemps);
 
 const Status = (props) => {
+    val = typeof(props.value) == 'number' ? parseFloat(props.value).toFixed(3) : props.value;
     return(
         <div style={{border:'3px solid '+props.color}}>
           <div style={{color:'white', backgroundColor:props.color, display: 'inline-block', width:'50%'}}>{props.label}</div>
-          <div style={{color:props.color, display: 'inline-block', width:'50%'}}>{""+parseFloat(props.value).toFixed(3)+" "+props.units}</div>
+          <div style={{color:props.color, display: 'inline-block', width:'50%'}}>{""+val+" "+props.units}</div>
         </div>
     )
 };
