@@ -600,9 +600,16 @@ class BoardGroup(object):
             # Lock just one page.
             page = self.pageNums.next()
             pageLocks = [self.pageLocks[page]]
+            if not hasattr(self, '_previousPagingStatus') or \
+                    not self._previousPagingStatus:
+                print('Paging on.')
+                self._previousPagingStatus = True
         else:
             # Start on page 0 and set pageLocks to all pages.
-            print 'Paging off: SRAM too long.'
+            if not hasattr(self, '_previousPagingStatus') or \
+                    self._previousPagingStatus:
+                print('Paging off: SRAM too long.')
+                self._previousPagingStatus = False
             page = 0
             pageLocks = self.pageLocks
 
