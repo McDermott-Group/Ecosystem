@@ -1,12 +1,15 @@
 from PyQt4 import QtGui, QtCore
 from MPipe import MPipe
+import time
 class MAnchor(QtGui.QGraphicsItem):
-    def __init__(self, name, scene, tree, index,  parent = None, **kwargs):
-        
+    def __init__(self, name, node, index,  parent = None, **kwargs):
         # Get the keyword arguments
         self.type = kwargs.get('type', 'output')
+        self.node = node
         # get the tree
-        self.tree = tree
+        self.tree = node.tree
+        self.nodeLayout = node.getNodeLayout()
+        self.nodeFrame= node.getNodeWidget()
         # Initialize the base class
         super(MAnchor, self).__init__()
         # Anchor is not connected to any pipe by default
@@ -17,18 +20,29 @@ class MAnchor(QtGui.QGraphicsItem):
         # What number the anchor is in the node
         self.index = index
         # The QGraphics scene
-        self.scene  = scene
+        self.scene  = node.scene
         # Add the anchor to the scene
         self.scene.addItem(self)
         # Configure the anchor based on its type
+        self.setParentItem(node)
+        self.parent = node
+        # Configure the brush
+        self.nodeBrush = QtGui.QBrush(QtGui.QColor(*node.getColor()))
+        
+        self.posY = 70+30*self.index
         if self.type == 'output':
-            # Configure the brush
-            self.nodeBrush = QtGui.QBrush(QtGui.QColor(52, 73, 94))
             # Bounding rectangle of the anchor
-            self.rect = QtCore.QRectF(175, 90+40*self.index,20, 20)
+            self.posX = self.nodeFrame.width()
+          
         elif self.type == 'input':
-            self.nodeBrush = QtGui.QBrush(QtGui.QColor(52, 73, 94))
-            self.rect = QtCore.QRectF(-10, 90+40*self.index,20, 20)
+            self.posX = -20
+        print "self.posX", self.posX
+        print "width:", self.nodeFrame.width()
+        self.rect = QtCore.QRectF(self.posX,  self.posY, 20, 20)
+        
+        #print "posX1", self.posX
+
+       
         # The QPen
         self.textPen = QtGui.QPen()
         self.textPen.setStyle(2);
@@ -42,7 +56,16 @@ class MAnchor(QtGui.QGraphicsItem):
         self.label = QtCore.QString(self.param)
         self.width = QtGui.QFontMetrics(self.font).boundingRect(label).width()
         #self.update(self.rect)
+        labelWidget = QtGui.QLabel(self.label, self.nodeFrame)
+        labelWidget.setStyleSheet("color:rgb(189, 195, 199)")
+        self.nodeLayout.addWidget(labelWidget, self.index+1, 0)
+        self.lcd = QtGui.QLCDNumber(self.nodeFrame)
+        self.lcd.setSegmentStyle(QtGui.QLCDNumber.Flat)
+        self.lcd.setStyleSheet("color:rgb(189, 195, 199);\n")
+        self.nodeLayout.addWidget(self.lcd, self.index+1, 1)
         self.prepareGeometryChange()
+    def getLcd(self):
+        return self.lcd
     def parentNode(self):
         return self.parent
     def setParentNode(self, node):
@@ -76,11 +99,7 @@ class MAnchor(QtGui.QGraphicsItem):
             loc = QtCore.QPoint(self.getLocalLocation().x()+self.scenePos().x(),self.getLocalLocation().y()+self.scenePos().y())
         return loc
     def getLocalLocation(self):
-        if self.type == 'output':
-            loc =  QtCore.QPoint(185,100+40*self.index)
-        elif self.type == 'input':
-            loc = QtCore.QPoint(0,100+40*self.index)
-        return loc
+        return QtCore.QPoint(self.posX+10,self.posY+10)
     def connect(self, pipe):
         self.pipe = pipe
         self.update()
@@ -89,6 +108,12 @@ class MAnchor(QtGui.QGraphicsItem):
     def isConnected(self):
         return not self.getPipe() == None
     def paint(self, painter, option, widget):
+        if self.type == 'output':
+            # Bounding rectangle of the anchor
+            self.posX = self.nodeFrame.width()
+          
+        elif self.type == 'input':
+            self.posX = -20
         painter.setBrush(self.nodeBrush)
         painter.setPen(self.textPen)
         painter.setFont(self.font)
@@ -97,9 +122,14 @@ class MAnchor(QtGui.QGraphicsItem):
         #self.label = self.getLocalLocation
         if self.label is None:
             self.label = 'New Pipe'
-        painter.drawText(150-self.width, 105+40*self.index, self.label)
-        painter.drawRect(self.rect)
-        self.e = painter.drawEllipse(self.getLocalLocation(), 10, 10)
+        
+        #painter.drawText(150-self.width, 105+40*self.index, self.label)
+        self.rect.moveTo(self.posX, self.posY)
+        
+        #painter.drawRect(self.rect)
+        #print "posX", self.posX
+        
+        painter.drawEllipse(self.posX,  self.posY, 20, 20)
     def boundingRect(self):
         return self.rect
 

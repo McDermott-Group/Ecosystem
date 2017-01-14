@@ -42,6 +42,20 @@ class nViewer:
         LeidenDRTemperature.begin()
         self.devices.append(LeidenDRTemperature)
 
+        localTemp = Device("Local Temperatures")
+        localTemp.connection(cxn)
+        localTemp.setServerName("my_server2")
+        localTemp.addParameter("Outside Temperature", "temperature", None)
+        localTemp.addButton("Madison Weather",  None, "changeLocation", 53715)
+        localTemp.addButton("St. Paul Weather", None,  "changeLocation", 55118)
+
+        localTemp.addPlot()
+        localTemp.setPlotRefreshRate(2)
+        localTemp.setRefreshRate(2)
+        localTemp.setYLabel("Temperature")
+        localTemp.begin()
+        self.devices.append(localTemp)
+        
         
         # Start the datalogger. This line can be commented
         # out if no datalogging is required.

@@ -102,8 +102,8 @@ class Device(MDevice):
 
     def addButton(self, name, msg, action, arg=None):
         self.buttons.append([])
-        i = len(self.buttons) - 1
-        button = self.buttons[i]
+        #i = len(self.buttons) - 1
+        button = self.buttons[-1]
         button.append(name)
         button.append(action)
         button.append(msg)
@@ -180,9 +180,10 @@ class Device(MDevice):
         # self.frame.enableDataLogging(b)
 
     def prompt(self, button):
-        """If a button is clicked, handle it."""
+        """If a button is clicked, handle it."""#name action msg arg
         try:
-            actual_button = self.frame.getButtons()[button]
+            print button
+            actual_button = button
             # If the button has a warning message attatched.
             if actual_button[2] is not None:
                 # Create a new popup.
@@ -195,7 +196,7 @@ class Device(MDevice):
                     # has an argument for the setting.
                     if actual_button[3] is not None:
                         getattr(self.deviceServer,
-                                actual_button[1])(actual_button[4])
+                                actual_button[1])(actual_button[3])
                     # If just the setting needs to be run.
                     else:
                         getattr(self.deviceServer, actual_button[1])
@@ -206,7 +207,7 @@ class Device(MDevice):
                 # the setting.
                 if actual_button[3] is not None:
                     getattr(self.deviceServer,
-                            actual_button[1])(actual_button[4])
+                            actual_button[1])(actual_button[3])
                 else:
                     getattr(self.deviceServer, actual_button[1])
         except:
@@ -215,7 +216,8 @@ class Device(MDevice):
 
     def query(self):
         """Query the device for readings."""
-        # If the device is attatched.
+        # If the device is attached.
+        #print "querying device"
         if not self.isDevice:
             # Try to connect again, if the value changes, then we know 
             # that the device has connected.
@@ -240,7 +242,7 @@ class Device(MDevice):
                     if isinstance(reading, Value):
                         pass
                     # If the reading is an array of values and units.
-                    elif isinstance(reading, ValueArray):
+                    if isinstance(reading, ValueArray):
                         indices = self.settingResultIndices
                         if indices != None and \
                                 isinstance(reading[indices[i]], Value):
@@ -251,11 +253,13 @@ class Device(MDevice):
                             reading = reading[i]
                             
                     if isinstance(reading, Value):
+                        #print "Received labrad Value type"
                         preferredUnits = self.settingUnits[i]
                         if preferredUnits is not None and \
                                 reading.isCompatible(preferredUnits):
                             reading = reading.inUnitsOf(preferredUnits)
                         u = reading.units
+                        #print "units:", u
                         readings.append(reading[u])
                         units.append(u)
                         precisions.append(self.precisions[i])
@@ -286,6 +290,7 @@ class Device(MDevice):
                                   %str(type(reading)))
                 # Pass the readings and units to the frame.
                 self.frame.setReadings(readings)
+                #print "setting units"
                 self.frame.setUnits(units)
                 self.frame.setPrecisions(precisions)
                 # Save the data.
@@ -308,6 +313,8 @@ class Device(MDevice):
                 self.isDevice = False
         # Query calls itself again, this keeps the thread alive.
         if self.keepGoing:
+            
+            self.updateContainer()
             threading.Timer(self.frame.getRefreshRate(),
                     self.query).start()
         return

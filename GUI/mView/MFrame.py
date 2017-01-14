@@ -81,7 +81,7 @@ class MFrame:
             self.datalogsettingsDict = restoredSettings
         # Is there a reading out of range?
         self.outOfRange = {}
-       
+        self.node = None
     def setTitle(self, title):
        # print "Set title:", title
         self.serverTitle = title
@@ -227,5 +227,11 @@ class MFrame:
     def disableRange(self):
       self.outOfRange = {key: False for key in self.outOfRange}
     
+    def setNode(self, node):
+        self.node = node
+        
+    def getNode(self):
+        return self.node
+        
     def setNode(self, node):
         self.node = node

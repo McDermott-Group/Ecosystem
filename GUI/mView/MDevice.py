@@ -22,8 +22,11 @@ __status__ = "Beta"
 import atexit
 
 from MFrame import MFrame
-class MDevice(object):
+from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QThread
+class MDevice(QThread):
+    updateSignal = pyqtSignal()
     def __init__(self, name):
+        super(MDevice, self).__init__()
 
         self.frame = MFrame()
         self.frame.setTitle(name)
@@ -36,6 +39,17 @@ class MDevice(object):
         self.plotRefreshRate = 1
         # RefreshRate for the device.
         self.refreshRate = 1
+        self.container = None
+       
+        
+    def setContainer(self, container):
+        self.container = container
+    def getContainer(self):
+        return self.container
+    def updateContainer(self):
+        if self.container != None:
+           self.updateSignal.emit()
+            
     def addParameter(self, *args):
         print ("ERROR: Child of MDevice must "
             "implement MDevice.addParameter().")
@@ -70,6 +84,7 @@ class MDevice(object):
         return self.frame
     def stop(self):
         self.keepGoing = False
+        
     def begin(self):
       
         self.frame.setNicknames(self.nicknames)

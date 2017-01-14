@@ -44,6 +44,10 @@ class MVirtualDevice(MDevice.MDevice):
         self.frame.setYLabel(yLbl, units)
     def query(self, *args):
         pass
+        #self.datachest.save()
+        
+    def retrieveFromNode(self, *args):
+        self.getFrame().setReadings(args[0])
     def setRefreshRate(self, *args):
         self.frame.setRefreshRate(period)
     def setPlotRefreshRate(self, period):

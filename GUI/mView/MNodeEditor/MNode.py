@@ -6,29 +6,38 @@ from MWeb import web
 class MNode(QtGui.QGraphicsItem):
     def __init__(self, parent = None, *args, **kwargs):
         QtGui.QGraphicsItem.__init__(self,parent)
-        #default color
+        #default color'
+        self.nodeFrame = QtGui.QFrame()
         self.title = "New MNode"
         self.color = (50,50,50)
+        self.device = parent
+        #self.nodeFrame.setStyleSheet(".QFrame{background:rgba"+str(self.color[0])+','+str(self.color[1])+','+str(self.color[2])+', 20)'+
+         #                                                                   "; border:rgba(189, 195, 199)")
     def begin(self,   **kwargs):
         ''' Create a new node'''
-        print "self.scene:",self.scene
+        #print "self.scene:",self.scene
         # Get keyword args from constructor
+        print "newNode"
         self.scene.addItem(self)
-        nodeLayout = QtGui.QGraphicsGridLayout()
+        self.nodeLayout = QtGui.QGridLayout()
         #self.setLayout(nodeLayout)
         self.font = QtGui.QFont()
         self.font.setPointSize(15)
         
-        nodeFrame = QtGui.QFrame()
-        nodeLayout = QtGui.QVBoxLayout(nodeFrame)
-        self.label = QtGui.QLabel(self.title,nodeFrame)
+       
+        #self.nodeLayout = QtGui.QVBoxLayout(self.nodeFrame)
+        self.label = QtGui.QLabel(self.title,self.nodeFrame)
         self.label.setFont(self.font)
-        nodeLayout.addWidget(self.label)
-        nodeLayout.addWidget(QtGui.QCheckBox(nodeFrame))
-        nodeFrame.setLayout(nodeLayout)
-        nodeFrame.setStyleSheet("background:rgba(0, 0, 88, 0)")
+        self.label.setStyleSheet("color:rgb(189,195,199)")
+        self.nodeLayout.addWidget(self.label, 0, 0)
+        
+        #nodeLayout.addWidget(QtGui.QCheckBox(nodeFrame))
+        self.nodeFrame.setLayout(self.nodeLayout)
+     
+        
+        
         pProxy = QtGui.QGraphicsProxyWidget(self)
-        pProxy.setWidget(nodeFrame)
+        pProxy.setWidget(self.nodeFrame)
         #self.mode = kwargs.get('mode', 'operator')
         
         # Initialize the parent class
@@ -45,7 +54,7 @@ class MNode(QtGui.QGraphicsItem):
         self.setFlag(QtGui.QGraphicsItem.ItemIsFocusable, True)
         self.setAcceptsHoverEvents(True)
         # Bounding rectangles
-        self.rect = QtCore.QRectF(0, 0, 180, 180)
+        self.rect = QtCore.QRectF(0, 0, self.nodeFrame.width(),self.nodeFrame.height())
         self.rect2 = QtCore.QRectF(-20, -20, 220,220)
         # The pen, for painting the borders
         self.textPen = QtGui.QPen()
@@ -63,8 +72,19 @@ class MNode(QtGui.QGraphicsItem):
         # self.nodeThread.daemon = True
         # # Start the thread
         # self.nodeThread.start()
+    def getDevice(self):
+        return self.device
+    def setDevice(self, device):
+        self.device = device
+    def getNodeWidget(self):
+        return self.nodeFrame
+    def getNodeLayout(self):
+        return self.nodeLayout
     def setColor(self,r, g, b):
             self.color = (r, g, b)
+            self.nodeFrame.setStyleSheet(".QFrame{background:rgba("+str(r)+','+str(g)+','+str(b)+', 20)}')
+    def getColor(self):
+        return self.color
     def setScene(self, scene):
         self.scene = scene
     def setTree(self, tree):
@@ -87,10 +107,12 @@ class MNode(QtGui.QGraphicsItem):
             type = kwargs.get('type', None)
             if name == None or type == None:
                 raise RuntimeError("If no anchor is passed to MNode.addAnchor(), then \'name\', \'type\' keyword arguments must be given.")
-            anchor = MAnchor(name, self.scene, self.tree, len(self.anchors)-1, type = type)
+            anchor = MAnchor(name, self, len(self.anchors), type = type)
+            
         self.anchors.append(anchor)
-        self.anchors[-1].setParentNode(self)
         self.anchorAdded(anchor)
+        self.rect = QtCore.QRectF(0, 0, self.nodeFrame.width(),self.nodeFrame.height())
+        self.rect2 = QtCore.QRectF(0, 0,self.nodeFrame.width(),self.nodeFrame.height())
         return self.anchors[-1]
         
     def pipeConnected(self, anchor, pipe):
@@ -121,12 +143,16 @@ class MNode(QtGui.QGraphicsItem):
         
     def paint(self, painter, option, widget):
         # self.prepareGeometryChange()
-        
+        self.rect2.setHeight(self.nodeFrame.height())
+        self.rect2.setWidth(self.nodeFrame.width())
+
         painter.setBrush(self.nodeBrush)
         painter.setPen(self.textPen)
         painter.setFont(self.font)
-        painter.drawRect(self.rect)
+        painter.drawRect(self.rect2)
+        #painter.drawRect(self.rect)
+    def refreshData(self):
+        pass
+
         #painter.drawText(5, 30, self.title)
         
-    def getType(self):
-        raise notimplementederror("MNode->getType must be implemented.")
