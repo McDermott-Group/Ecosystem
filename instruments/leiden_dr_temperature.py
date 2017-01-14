@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Leiden DR Temperature
-version = 0.4.1
+version = 0.4.2
 description =  Gives access to Leiden DR temperatures.
 instancename = Leiden DR Temperature
 
@@ -171,12 +171,12 @@ class LeidenDRPseudoserver(LabradServer):
             Tmean = np.sum(weight * filtered) / np.sum(weight)
             Tmed = np.median(raw)
             
-            if Tmean > 1.2 * Tmed or Tmean < 0.8 * Tmed:
+            if Tmean > 1.3 * Tmed or Tmean < 0.7 * Tmed:
                 T = Tmed
             else:
                 T = Tmean 
-            lower_threshold = np.max([lower_threshold, 0.8 * T])
-            upper_threshold = np.min([upper_threshold, 1.2 * T])
+            lower_threshold = np.max([lower_threshold, 0.7 * T])
+            upper_threshold = np.min([upper_threshold, 1.3 * T])
             mask = np.logical_and(np.less(array, upper_threshold),
                                   np.greater(array, lower_threshold))
             fine = array[mask]
@@ -220,17 +220,17 @@ class LeidenDRPseudoserver(LabradServer):
     @setting(21, 'Still Temperature', returns='v[mK]')
     def still_temperature(self, c):
         """Return the still chamber temperature."""
-        return self.filteredTemperature(self._arr_still, 1, 2e4) * mK
+        return self.filteredTemperature(self._arr_still, 1, 1.1e4) * mK
 
     @setting(22, 'Exchange Temperature', returns='v[mK]')
     def exchange_temperature(self, c):
         """Return the exchange chamber temperature."""
-        return self.filteredTemperature(self._arr_exch, 1, 2e4) * mK
+        return self.filteredTemperature(self._arr_exch, 1, 1.1e4) * mK
         
     @setting(23, 'Mix Temperature', returns='v[mK]')
     def mix_temperature(self, c):
         """Return the mix chamber temperature."""
-        return self.filteredTemperature(self._arr_mix, 1, 2e4) * mK
+        return self.filteredTemperature(self._arr_mix, 1, 1.1e4) * mK
         
     @setting(24, 'Mix Temperature Pt1000', returns='v[K]')
     def mix_temperature_pt1000(self, c):
