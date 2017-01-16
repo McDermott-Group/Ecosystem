@@ -174,7 +174,7 @@ class LeidenDRPseudoserver(LabradServer):
             if Tmean > 1.3 * Tmed or Tmean < 0.7 * Tmed:
                 T = Tmed
             else:
-                T = Tmean 
+                T = Tmean
             lower_threshold = np.max([lower_threshold, 0.7 * T])
             upper_threshold = np.min([upper_threshold, 1.3 * T])
             mask = np.logical_and(np.less(array, upper_threshold),
