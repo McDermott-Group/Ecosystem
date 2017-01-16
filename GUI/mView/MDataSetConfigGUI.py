@@ -121,7 +121,6 @@ class DataSetSettings(QtGui.QWidget):
             title.setFont(font)
             grid.addWidget(title,0,0)
             location =  QtGui.QLabel(web.devices[0].getFrame().DataLoggingInfo()['location'])
-            
             grid.addWidget(location, 0, 1)
             button = QtGui.QPushButton("Browse...",self)
             button.clicked.connect(partial(self.openFileDialog, None, grid, 0))

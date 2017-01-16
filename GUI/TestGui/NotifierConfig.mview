@@ -13,9 +13,20 @@ p5
 S'QString'
 (V
 ttRp6
-asS'Random:Random Pressure'
+asS'Local Temperatures:Outside Temperature'
 p7
 (lp8
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp9
+asS'Random:Random Pressure'
+p10
+(lp11
 I01
 aF1
 aF2
@@ -23,5 +34,5 @@ ag4
 (g5
 S'QString'
 (V
-ttRp9
+ttRp12
 as.

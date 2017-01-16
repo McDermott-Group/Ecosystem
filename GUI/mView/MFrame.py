@@ -25,19 +25,18 @@ from MWeb import web
 class MFrame:
   
     def __init__(self):
-
         """This class acts as the interface between the devices and all
     classes which use the device or any of its parameters."""
         # Name of device's server.
         self.serverTitle = None
         # Parameter names to be displayed on the GUI.
-        self.nicknames = None
+        self.nicknames = []
         # Settings which are called by the GUI.
         self.serverSettings = None
         # Device readings.
         self.readings = None
         # Precisions.
-        self.precisions = None
+        self.precisions = []
         # Errors.
         self.error = False
         # Error messages.
@@ -82,7 +81,7 @@ class MFrame:
             self.datalogsettingsDict = restoredSettings
         # Is there a reading out of range?
         self.outOfRange = {}
-       
+        self.node = None
     def setTitle(self, title):
        # print "Set title:", title
         self.serverTitle = title
@@ -227,4 +226,12 @@ class MFrame:
 
     def disableRange(self):
       self.outOfRange = {key: False for key in self.outOfRange}
-      
+    
+    def setNode(self, node):
+        self.node = node
+        
+    def getNode(self):
+        return self.node
+        
+    def setNode(self, node):
+        self.node = node

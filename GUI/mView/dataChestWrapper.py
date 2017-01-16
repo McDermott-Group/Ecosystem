@@ -198,7 +198,7 @@ class dataChestWrapper:
                     # the same name displayed on the GUI except without 
                     # non-alphanumerical characters. Use regular
                     # expressions to do this.
-                    paramName = str(nicknames[y]).replace(" ","")
+                    paramName = str(nicknames[y]).replace(" ","_")
                     paramName = re.sub(r'\W+', '', paramName)
                     # Create the tuple that defines the parameter.
                     tup = (paramName, [1], "float64",

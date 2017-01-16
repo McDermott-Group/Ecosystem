@@ -42,7 +42,13 @@ class web:
     telecomm = None
     # DPI scaling ratio.
     ratio = 1
+    scrnHeight = None
+    scrnWidth = None
+    # List of virtual devices
+    virtualDevices = []
+    gui = None
     title = None
+    
 
     persistentData = None
     
