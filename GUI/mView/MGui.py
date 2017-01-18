@@ -83,8 +83,7 @@ class MGui(QtGui.QMainWindow):
         QtGui.QWidget.__init__(self, parent)
         app.setActiveWindow(self)
         QtGui.QApplication.setStyle(QtGui.QStyleFactory.create('plastique'))
-        # On GUI exit, run stop function.
-        atexit.register(self.stop)
+        
         web.gui = self
         # Make the GUI fullscreen.
         self.showMaximized()
@@ -180,12 +179,10 @@ class MGui(QtGui.QMainWindow):
             focused_widget.clearFocus()
         QtGui.QMainWindow.mousePressEvent(self, event)
 
-    def stop(self):
-        """Stop and close mView cleanly."""
+    def closeEvent(self, event):
         print("Closing mView...")
-        self.keepGoing = False
+        self.stop()
         exit()
-        
     def openNotifierSettings(self):
         
         """Open the notifier settings GUI."""
@@ -241,7 +238,8 @@ class MGui(QtGui.QMainWindow):
         self.timer = QtCore.QTimer(self)
         # Update the GUI every so often. This CAN ONLY be done 
         # in the main thread.
-        self.timer.singleShot(web.persistentData.persistentDataAccess(None, 'guiRefreshRate', default = web.guiRefreshRate) * 1000, self.update)
+        if self.keepGoing:
+            self.timer.singleShot(web.persistentData.persistentDataAccess(None, 'guiRefreshRate', default = web.guiRefreshRate) * 1000, self.update)
         # try:
             # QtGui.QApplication.focusWidget().clearFocus()
         # except:

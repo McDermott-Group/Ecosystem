@@ -1,6 +1,5 @@
 from PyQt4 import QtGui, QtCore
 from MAnchor import MAnchor
-import threading
 import traceback
 from MWeb import web
 class MNode(QtGui.QGraphicsItem):
@@ -11,6 +10,7 @@ class MNode(QtGui.QGraphicsItem):
         self.title = "New MNode"
         self.color = (50,50,50)
         self.device = parent
+        self.isDevice = False
         #self.nodeFrame.setStyleSheet(".QFrame{background:rgba"+str(self.color[0])+','+str(self.color[1])+','+str(self.color[2])+', 20)'+
          #                                                                   "; border:rgba(189, 195, 199)")
     def begin(self,   **kwargs):
@@ -75,6 +75,7 @@ class MNode(QtGui.QGraphicsItem):
     def getDevice(self):
         return self.device
     def setDevice(self, device):
+        self.isDevice = True
         self.device = device
     def getNodeWidget(self):
         return self.nodeFrame

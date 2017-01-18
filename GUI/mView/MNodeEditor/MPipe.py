@@ -5,7 +5,7 @@ class MPipe(QtGui.QGraphicsPathItem):
         QtGui.QGraphicsPathItem.__init__(self, parent = None)
         self.scene = scene
         self.label = None
-
+        startAnchor.parentNode().pipeConnected(startAnchor, self)
         # Create a new painter path starting at the location of the first anchor
         self.path = QtGui.QPainterPath(startAnchor.getGlobalLocation())
         self.pen = QtGui.QPen()
@@ -26,9 +26,12 @@ class MPipe(QtGui.QGraphicsPathItem):
     def connect(self, endAnchor):
         '''Connect the other end of the pipe.'''
         self.inputAnchor = endAnchor
+        self.outputAnchor = self.startAnchor
+        endAnchor.parentNode().pipeConnected(endAnchor, self)
         if endAnchor.getType()== 'output':
             self.label = endAnchor.getLabel()
             self.inputAnchor = self.startAnchor
+            self.outputAnchor = self.endAnchor
         print "on connect, input anchor:", self.inputAnchor
         self.endAnchor = endAnchor
         self.update()
@@ -69,10 +72,15 @@ class MPipe(QtGui.QGraphicsPathItem):
         
     def setData(self, data):
         self.data = data
-        print "self.inputAnchor:", self.inputAnchor
+        #print "self.inputAnchor:", self.inputAnchor
         if self.inputAnchor != None:
             self.inputAnchor.parentNode().refreshData()
-            self.inputAnchor.parentNode().getDevice().updateContainer()
+            if self.inputAnchor.parentNode().isDevice:
+                self.inputAnchor.parentNode().getDevice().updateContainer()
+        if self.inputAnchor != None:
+            self.inputAnchor .getLcd().display(self.data)
+        if self.outputAnchor != None:
+            self.outputAnchor .getLcd().display(self.data)
 
     def sceneMouseMove(self, event):
         print "Scene mouse move"

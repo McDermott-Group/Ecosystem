@@ -103,9 +103,9 @@ class MDeviceContainerWidget(QtGui.QFrame):
     def update(self):
         #print "updating frame"
         frame = self.device.getFrame()
-        print "updating data 1",self.device.getFrame().getTitle()
+        #print "updating data 1",self.device.getFrame().getTitle()
         frame.getNode().refreshData()
-        print "updating data 2",self.device.getFrame().getTitle()
+        #print "updating data 2",self.device.getFrame().getTitle()
 
         if not frame.isError():
             readings = frame.getReadings()

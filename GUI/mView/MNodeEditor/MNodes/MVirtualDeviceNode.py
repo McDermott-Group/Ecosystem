@@ -20,16 +20,18 @@ class MVirtualDeviceNode(MNode):
         self.associatedDevice.addPlot()
         self.associatedDevice.addParameter(self.getAnchors()[0].getLabel())
         self.associatedDevice.getFrame().setNode(self)
-        web.gui.color = (52, 73, 94)
+        web.gui.color = (52,94,73)
         web.gui.addDevice(self.associatedDevice)
         
     def refreshData(self):
-        print "virtual device refreshing data"
+        #print "virtual device refreshing data"
         
         reading = []
+        print "anchors:", self.getAnchors()
         for anchor in self.getAnchors():
-            reading.append(anchor.getPipe().getData())
-            anchor.getLcd().display(reading[-1])
+            if anchor.getPipe():
+                reading.append(anchor.getPipe().getData())
+          #  anchor.getLcd().display(reading[-1])
         
         self.getDevice().retrieveFromNode(reading)
         
@@ -37,4 +39,5 @@ class MVirtualDeviceNode(MNode):
         '''called when a pipe is added'''
         print "pipeConnected called"
         self.addAnchor(name = '', type = 'input')
+        self.associatedDevice.addParameter(self.getAnchors()[-1].getLabel())
         pass

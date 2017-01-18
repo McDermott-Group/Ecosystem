@@ -21,7 +21,7 @@ __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
 import atexit
-import traceback
+
 
 import labrad
 from labrad.units import Value, ValueArray
@@ -31,7 +31,9 @@ from dataChestWrapper import dataChestWrapper
 import MPopUp
 from MDevice import MDevice
 import threading
+
 from MWeb import web
+import traceback
 class Device(MDevice):
     """The device class handles a LabRAD device."""
     def __init__(self, *args):

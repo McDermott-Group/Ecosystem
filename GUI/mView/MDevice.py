@@ -83,8 +83,9 @@ class MDevice(QThread):
         """Return the device's frame."""
         return self.frame
     def stop(self):
+        print "stopping device thread..."
         self.keepGoing = False
-        
+        print "device thread stopped."
     def begin(self):
       
         self.frame.setNicknames(self.nicknames)
