@@ -31,6 +31,7 @@ class MNode(QtGui.QGraphicsItem):
         self.label.setStyleSheet("color:rgb(189,195,199)")
         self.nodeLayout.addWidget(self.label, 0, 0)
         
+       
         #nodeLayout.addWidget(QtGui.QCheckBox(nodeFrame))
         self.nodeFrame.setLayout(self.nodeLayout)
      
@@ -63,15 +64,7 @@ class MNode(QtGui.QGraphicsItem):
         self.textPen.setColor(QtGui.QColor(189, 195, 199))
         
         self.nodeBrush = QtGui.QBrush(QtGui.QColor(*self.color))
-        # Based on the mode, set up the node
-       
-         
-    
-        # self.nodeThread = threading.Thread(target = self.refreshData, args=[])
-        # # If the main thread stops, stop the child thread
-        # self.nodeThread.daemon = True
-        # # Start the thread
-        # self.nodeThread.start()
+
     def getDevice(self):
         return self.device
     def setDevice(self, device):
@@ -115,7 +108,13 @@ class MNode(QtGui.QGraphicsItem):
         self.rect = QtCore.QRectF(0, 0, self.nodeFrame.width(),self.nodeFrame.height())
         self.rect2 = QtCore.QRectF(0, 0,self.nodeFrame.width(),self.nodeFrame.height())
         return self.anchors[-1]
-        
+    def removeAnchor(self, anchor = None, **kwargs):
+        print "specified anchor:", anchor
+        if anchor == None:
+            print "deleting last anchor"
+            self.anchors[-1].delete()
+    def pipeDisconnected(self, anchor, pipe):
+        pass
     def pipeConnected(self, anchor, pipe):
        pass
     def anchorAdded(self, anchor):

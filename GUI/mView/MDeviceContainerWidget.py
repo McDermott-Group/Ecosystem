@@ -99,7 +99,7 @@ class MDeviceContainerWidget(QtGui.QFrame):
             yPos = len(self.nicknames)+1
             device.getFrame().setPlot(dc)
             grid.addWidget(dc, yPos,0,yPos,3)
-        
+
     def update(self):
         #print "updating frame"
         frame = self.device.getFrame()
@@ -124,22 +124,21 @@ class MDeviceContainerWidget(QtGui.QFrame):
                     if len(self.unitLabels)>y:
                         self.unitLabels[y].setStyleSheet(color)
                     self.nicknameLabels[y].setStyleSheet(color)
-                for y in range(len(nicknames)):
+                    self.nicknameLabels[y].setText(nicknames[y])
+                for y in range(len(readings)):
                     try:
                         format = "%." + str(int(precisions[y])) + "f"
+                        #print "readings:",readings
                         if not math.isnan(readings[y]):
                             self.lcds[y].display(format %readings[y])
                         else:
                             self.lcds[y].display("---")
                     except TypeError:
                         pass
-                   # print "len(self.unitLabels)>y", len(self.unitLabels)>y
                     if len(self.unitLabels)>y:
-                        #print "getting units:", frame.getUnits()
                         unit = frame.getUnits()[y]
                         if unit != None:
                             self.unitLabels[y].setText(unit)
-                        #self.unitLabels[y].setFont(self.font)
             else:
                 for lcd in self.lcds:
                     lcd.display("-")

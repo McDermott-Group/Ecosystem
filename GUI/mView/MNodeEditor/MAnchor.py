@@ -37,8 +37,8 @@ class MAnchor(QtGui.QGraphicsItem):
           
         elif self.type == 'input':
             self.posX = -20
-        print "self.posX", self.posX
-        print "width:", self.nodeFrame.width()
+        #print "self.posX", self.posX
+        #print "width:", self.nodeFrame.width()
         self.anchorSize = int(8*web.ratio)
         self.rect = QtCore.QRectF(self.posX,  self.posY, self.anchorSize,  self.anchorSize)
         
@@ -75,8 +75,9 @@ class MAnchor(QtGui.QGraphicsItem):
         self.parent  = node
     def getLabel(self):
         return self.label
-    def setLabel(self, label):
-        self.label = label
+    def setLabel(self, text):
+        self.label = text
+        self.labelWidget.setText(text)
         # Repaint the scene
         self.update()
     def getType(self):
@@ -85,9 +86,14 @@ class MAnchor(QtGui.QGraphicsItem):
     def getPipe(self):
         '''Get the pipe connected to the anchor'''
         return self.pipe
-
+    def delete(self):
+        print "deleting anchor"
+        self.disconnect()
+        self.setParentItem(None)
+        
     def disconnect(self):
         '''Disconnect and delete the pipe'''
+        #self.parentNode().pipeDisconnected(self, self.pipe)
         self.tree.deletePipe(self.pipe)
         self.pipe = None
     def setColor(self, color):
@@ -101,8 +107,8 @@ class MAnchor(QtGui.QGraphicsItem):
     def getLocalLocation(self):
         return QtCore.QPoint(self.posX+10,self.posY+10)
     def connect(self, pipe):
+        print "connect function called"
         self.pipe = pipe
-        self.parentNode().pipeConnected(self, pipe)
         self.update()
 
     def isConnected(self):
@@ -114,16 +120,19 @@ class MAnchor(QtGui.QGraphicsItem):
             
         elif self.type == 'input':
             self.posX = -20
+        if self.isConnected():
+            self.nodeBrush = QtGui.QBrush(QtGui.QColor(200,0,0))
         self.posY = self.labelWidget.mapToGlobal(self.labelWidget.rect().topLeft()).y()
         
         painter.setBrush(self.nodeBrush)
         painter.setPen(self.textPen)
         painter.setFont(self.font)
-        if self.isConnected():
-            self.label = self.getPipe().getLabel()
-        #self.label = self.getLocalLocation
-        if self.label is None:
-            self.label = 'New Pipe'
+        
+            
+            # self.label = self.getPipe().getLabel()
+        # #self.label = self.getLocalLocation
+        # if self.label is None:
+            # self.label = 'New Pipe'
         
         #painter.drawText(150-self.width, 105+40*self.index, self.label)
         self.rect.moveTo(self.posX, self.posY)

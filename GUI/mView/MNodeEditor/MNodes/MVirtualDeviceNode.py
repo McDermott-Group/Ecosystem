@@ -1,7 +1,9 @@
+from PyQt4 import QtCore, QtGui
 from MNodeEditor.MNode import MNode
 from MNodeEditor.MAnchor import MAnchor
 from MDevices.MVirtualDevice import MVirtualDevice
 from MWeb import web
+from functools import partial
 class MVirtualDeviceNode(MNode):
     def __init__(self, *args, **kwargs):
        
@@ -20,6 +22,9 @@ class MVirtualDeviceNode(MNode):
         self.associatedDevice.addPlot()
         self.associatedDevice.addParameter(self.getAnchors()[0].getLabel())
         self.associatedDevice.getFrame().setNode(self)
+        editButton = QtGui.QPushButton("Edit")
+        self.nodeLayout.addWidget(editButton, 0, 1)
+        editButton.clicked.connect(self.openVirtualDeviceGui)
         web.gui.color = (52,94,73)
         web.gui.addDevice(self.associatedDevice)
         
@@ -27,7 +32,7 @@ class MVirtualDeviceNode(MNode):
         #print "virtual device refreshing data"
         
         reading = []
-        print "anchors:", self.getAnchors()
+        #print "anchors:", self.getAnchors()
         for anchor in self.getAnchors():
             if anchor.getPipe():
                 reading.append(anchor.getPipe().getData())
@@ -41,3 +46,40 @@ class MVirtualDeviceNode(MNode):
         self.addAnchor(name = '', type = 'input')
         self.associatedDevice.addParameter(self.getAnchors()[-1].getLabel())
         pass
+    def pipeDisconnected(self, anchor, pipe):
+       print "pipeDisconnected called"
+       self.removeAnchor()
+       
+    def openVirtualDeviceGui(self):
+        dialog = MVirtualDeviceGui(self.associatedDevice, self)
+        dialog.exec_()
+        
+class MVirtualDeviceGui(QtGui.QDialog):
+    def __init__(self,associatedDevice,node,  parent = None):
+        super(MVirtualDeviceGui, self).__init__(parent)
+        self.node = node
+        self.associatedDevice = associatedDevice
+        layout = QtGui.QFormLayout()
+        self.btns = []
+        for i, nickname in enumerate(self.associatedDevice.getFrame().getNicknames()):
+            btn = QtGui.QPushButton("Edit")
+            lbl = QtGui.QLabel(nickname)
+            btn.clicked.connect(partial(self.getName, "New Name:", i, lbl))
+            layout.addRow(lbl, btn)
+            self.btns.append(btn)
+        closebtn = QtGui.QPushButton("close")
+        closebtn.clicked.connect(self.close)
+        layout.addRow(closebtn)
+        self.setLayout(layout)
+        
+    def getName(self, name, index, label, anchor):
+        text, ok = QtGui.QInputDialog.getText(self, "Virtual Device Name Editor", name)
+        if ok:
+            nicknames = self.associatedDevice.getFrame().getNicknames()
+            nicknames[index] = text
+            self.associatedDevice.getFrame().setNicknames(nicknames)
+            self.associatedDevice.getContainer().nicknameLabels[index].setText(text)
+            self.node.getAnchors()[index].setLabel(text)
+            label.setText(text)
+        return text
+        

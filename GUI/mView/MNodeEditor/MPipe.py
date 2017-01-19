@@ -5,7 +5,7 @@ class MPipe(QtGui.QGraphicsPathItem):
         QtGui.QGraphicsPathItem.__init__(self, parent = None)
         self.scene = scene
         self.label = None
-        startAnchor.parentNode().pipeConnected(startAnchor, self)
+        #startAnchor.parentNode().pipeConnected(startAnchor, self)
         # Create a new painter path starting at the location of the first anchor
         self.path = QtGui.QPainterPath(startAnchor.getGlobalLocation())
         self.pen = QtGui.QPen()
@@ -20,6 +20,7 @@ class MPipe(QtGui.QGraphicsPathItem):
         self.startAnchor = startAnchor
         self.endAnchor = None
         self.inputAnchor = None
+        self.outputAnchor = None
         if startAnchor.getType()== 'output':
             self.label = startAnchor.getLabel()
         self.data = None
@@ -27,12 +28,12 @@ class MPipe(QtGui.QGraphicsPathItem):
         '''Connect the other end of the pipe.'''
         self.inputAnchor = endAnchor
         self.outputAnchor = self.startAnchor
-        endAnchor.parentNode().pipeConnected(endAnchor, self)
+        #endAnchor.parentNode().pipeConnected(endAnchor, self)
         if endAnchor.getType()== 'output':
             self.label = endAnchor.getLabel()
             self.inputAnchor = self.startAnchor
             self.outputAnchor = self.endAnchor
-        print "on connect, input anchor:", self.inputAnchor
+       # print "on connect, input anchor:", self.inputAnchor
         self.endAnchor = endAnchor
         self.update()
         
@@ -53,6 +54,7 @@ class MPipe(QtGui.QGraphicsPathItem):
             path2.lineTo(self.endAnchor.getGlobalLocation())
             painter.setPen(self.pen)
             painter.drawPath(path2)
+            
            # painter.drawText(self.startAnchor.getGlobalLocation(), self.label)
             #painter.drawRect(self.bound)
     def getStartAnchor(self):
