@@ -4,6 +4,8 @@ import time
 import gc
 from functools import partial
 from MNodes.MVirtualDeviceNode import MVirtualDeviceNode
+from MNodes.MCompare import MCompare
+
 app = QtGui.QApplication([])
 
 
@@ -39,9 +41,14 @@ class NodeGui(QtGui.QDialog):
         addVirtualDeviceButton = QtGui.QPushButton("New Virtual Device")
         addVirtualDeviceButton.clicked.connect(self.addVirtualDevice)
         mainLayout.addWidget(addVirtualDeviceButton)
+        
+        addComparatorButton = QtGui.QPushButton("New Comparator")
+        addComparatorButton.clicked.connect(self.addComparator)
+        mainLayout.addWidget(addComparatorButton)
         self.setLayout(mainLayout)
     def addVirtualDevice(self):
         self.tree.addNode(MVirtualDeviceNode())
-        
+    def addComparator(self):
+        self.tree.addNode(MCompare())
        # view.show()
     

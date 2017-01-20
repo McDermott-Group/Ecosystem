@@ -1,5 +1,6 @@
 from PyQt4 import QtGui, QtCore
 from MPipe import MPipe
+from MWeb import web
 import time
 class MAnchor(QtGui.QGraphicsItem):
     def __init__(self, name, node, index,  parent = None, **kwargs):
@@ -36,9 +37,10 @@ class MAnchor(QtGui.QGraphicsItem):
           
         elif self.type == 'input':
             self.posX = -20
-        print "self.posX", self.posX
-        print "width:", self.nodeFrame.width()
-        self.rect = QtCore.QRectF(self.posX,  self.posY, 20, 20)
+        #print "self.posX", self.posX
+        #print "width:", self.nodeFrame.width()
+        self.anchorSize = int(8*web.ratio)
+        self.rect = QtCore.QRectF(self.posX,  self.posY, self.anchorSize,  self.anchorSize)
         
         #print "posX1", self.posX
 
@@ -46,7 +48,7 @@ class MAnchor(QtGui.QGraphicsItem):
         # The QPen
         self.textPen = QtGui.QPen()
         self.textPen.setStyle(2);
-        self.textPen.setWidth(3)
+        self.textPen.setWidth(2)
         self.textPen.setColor(QtGui.QColor(189, 195, 199))
         # Name displayed next to the anchor
         self.param = name
@@ -56,9 +58,9 @@ class MAnchor(QtGui.QGraphicsItem):
         self.label = QtCore.QString(self.param)
         self.width = QtGui.QFontMetrics(self.font).boundingRect(label).width()
         #self.update(self.rect)
-        labelWidget = QtGui.QLabel(self.label, self.nodeFrame)
-        labelWidget.setStyleSheet("color:rgb(189, 195, 199)")
-        self.nodeLayout.addWidget(labelWidget, self.index+1, 0)
+        self.labelWidget = QtGui.QLabel(self.label, self.nodeFrame)
+        self.labelWidget.setStyleSheet("color:rgb(189, 195, 199)")
+        self.nodeLayout.addWidget(self.labelWidget, self.index+1, 0)
         self.lcd = QtGui.QLCDNumber(self.nodeFrame)
         self.lcd.setSegmentStyle(QtGui.QLCDNumber.Flat)
         self.lcd.setStyleSheet("color:rgb(189, 195, 199);\n")
@@ -73,8 +75,9 @@ class MAnchor(QtGui.QGraphicsItem):
         self.parent  = node
     def getLabel(self):
         return self.label
-    def setLabel(self, label):
-        self.label = label
+    def setLabel(self, text):
+        self.label = text
+        self.labelWidget.setText(text)
         # Repaint the scene
         self.update()
     def getType(self):
@@ -83,13 +86,20 @@ class MAnchor(QtGui.QGraphicsItem):
     def getPipe(self):
         '''Get the pipe connected to the anchor'''
         return self.pipe
-    def connect(self, pipe):
-        '''Set the anchor's pipe'''
+    def setPipe(self, pipe):
         self.pipe = pipe
+    def delete(self):
+        print "deleting anchor"
+        self.scene.removeItem(self)
+        self.setParentItem(None)
+        self.nodeLayout.removeWidget(self.lcd)
+        self.nodeLayout.removeWidget(self.labelWidget)
+        self.lcd.deleteLater()
+        self.lcd = None
     def disconnect(self):
         '''Disconnect and delete the pipe'''
+        #self.parentNode().pipeDisconnected(self, self.pipe)
         self.tree.deletePipe(self.pipe)
-        self.pipe = None
     def setColor(self, color):
         self.nodeBrush = QtGui.QBrush(color)
     def getGlobalLocation(self):
@@ -101,27 +111,36 @@ class MAnchor(QtGui.QGraphicsItem):
     def getLocalLocation(self):
         return QtCore.QPoint(self.posX+10,self.posY+10)
     def connect(self, pipe):
+        print "connect function called"
         self.pipe = pipe
         self.update()
-    def getPipe(self):
-        return self.pipe
+
     def isConnected(self):
         return not self.getPipe() == None
+        
     def paint(self, painter, option, widget):
         if self.type == 'output':
             # Bounding rectangle of the anchor
             self.posX = self.nodeFrame.width()
-          
+            
         elif self.type == 'input':
             self.posX = -20
+        #print "pipe:", self.pipe
+        if self.pipe != None:
+            self.nodeBrush = QtGui.QBrush(QtGui.QColor(200,0,0))
+        else:
+            self.nodeBrush = QtGui.QBrush(QtGui.QColor(*self.node.getColor()))
+        self.posY = self.labelWidget.mapToGlobal(self.labelWidget.rect().topLeft()).y()
+        
         painter.setBrush(self.nodeBrush)
         painter.setPen(self.textPen)
         painter.setFont(self.font)
-        if self.isConnected():
-            self.label = self.getPipe().getLabel()
-        #self.label = self.getLocalLocation
-        if self.label is None:
-            self.label = 'New Pipe'
+        
+            
+            # self.label = self.getPipe().getLabel()
+        # #self.label = self.getLocalLocation
+        # if self.label is None:
+            # self.label = 'New Pipe'
         
         #painter.drawText(150-self.width, 105+40*self.index, self.label)
         self.rect.moveTo(self.posX, self.posY)
@@ -129,25 +148,18 @@ class MAnchor(QtGui.QGraphicsItem):
         #painter.drawRect(self.rect)
         #print "posX", self.posX
         
-        painter.drawEllipse(self.posX,  self.posY, 20, 20)
+        painter.drawEllipse(self.posX,  self.posY, self.anchorSize,  self.anchorSize)
     def boundingRect(self):
         return self.rect
 
     def mousePressEvent(self, event):
-        print "Anchor clicked!"
+       # print "Anchor clicked!"
         if self.isConnected():
-            self.disconnect()
-            print "disconnecting ", self.param
-        elif len(self.tree.getPipes()) == 0:
-             self.pipe = self.tree.addPipe(MPipe(self, self.scene))
+            self.tree.deletePipe(self.pipe)
         else:
-            if self.tree.getPipes()[-1].isUnconnected():
-                print "using existing pipe"
-                self.tree.getPipes()[-1].connect(self)
-                self.pipe =  self.tree.getPipes()[-1]
-            else:
-                self.pipe = self.tree.addPipe(MPipe(self, self.scene))
-            self.pipe = self.tree.getPipes()[-1]
+            self.tree.connect(self)
+            #print "disconnecting ", self.param
+
             
         self.update()
         self.setSelected(True)

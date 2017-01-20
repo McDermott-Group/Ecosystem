@@ -233,5 +233,3 @@ class MFrame:
     def getNode(self):
         return self.node
         
-    def setNode(self, node):
-        self.node = node

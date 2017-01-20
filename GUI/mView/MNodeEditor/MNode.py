@@ -1,6 +1,5 @@
 from PyQt4 import QtGui, QtCore
 from MAnchor import MAnchor
-import threading
 import traceback
 from MWeb import web
 class MNode(QtGui.QGraphicsItem):
@@ -11,6 +10,7 @@ class MNode(QtGui.QGraphicsItem):
         self.title = "New MNode"
         self.color = (50,50,50)
         self.device = parent
+        self.isDevice = False
         #self.nodeFrame.setStyleSheet(".QFrame{background:rgba"+str(self.color[0])+','+str(self.color[1])+','+str(self.color[2])+', 20)'+
          #                                                                   "; border:rgba(189, 195, 199)")
     def begin(self,   **kwargs):
@@ -31,6 +31,7 @@ class MNode(QtGui.QGraphicsItem):
         self.label.setStyleSheet("color:rgb(189,195,199)")
         self.nodeLayout.addWidget(self.label, 0, 0)
         
+       
         #nodeLayout.addWidget(QtGui.QCheckBox(nodeFrame))
         self.nodeFrame.setLayout(self.nodeLayout)
      
@@ -63,18 +64,11 @@ class MNode(QtGui.QGraphicsItem):
         self.textPen.setColor(QtGui.QColor(189, 195, 199))
         
         self.nodeBrush = QtGui.QBrush(QtGui.QColor(*self.color))
-        # Based on the mode, set up the node
-       
-         
-    
-        # self.nodeThread = threading.Thread(target = self.refreshData, args=[])
-        # # If the main thread stops, stop the child thread
-        # self.nodeThread.daemon = True
-        # # Start the thread
-        # self.nodeThread.start()
+
     def getDevice(self):
         return self.device
     def setDevice(self, device):
+        self.isDevice = True
         self.device = device
     def getNodeWidget(self):
         return self.nodeFrame
@@ -114,7 +108,15 @@ class MNode(QtGui.QGraphicsItem):
         self.rect = QtCore.QRectF(0, 0, self.nodeFrame.width(),self.nodeFrame.height())
         self.rect2 = QtCore.QRectF(0, 0,self.nodeFrame.width(),self.nodeFrame.height())
         return self.anchors[-1]
-        
+    def removeAnchor(self, anchor = None, **kwargs):
+        print "specified anchor:", anchor
+        if anchor == None:
+            print "deleting last anchor"
+            self.anchors[-1].delete()
+        else:
+            anchor.delete()
+    def pipeDisconnected(self):
+        pass
     def pipeConnected(self, anchor, pipe):
        pass
     def anchorAdded(self, anchor):

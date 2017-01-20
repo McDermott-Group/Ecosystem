@@ -40,8 +40,9 @@ class MPersistentData:
 
     def saveState(self):
         #print self.persistentDataDict
+        print "Pickling and saving data to file..."
         pickle.dump(self.persistentDataDict, open(os.path.join(self.location, self.name), 'wb'))
-        
+        print "data pickled and saved."
     def restoreState(self):
         
         self.persistentDataDict = pickle.load(open(os.path.join(self.location, self.name), 'rb'))

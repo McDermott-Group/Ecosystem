@@ -17,6 +17,7 @@ class MDeviceContainerWidget(QtGui.QFrame):
         self.device = device
         
         grid = QtGui.QGridLayout(self)
+        self.grid = grid
         self.setLayout(grid)
         
         self.frameSizePolicy = QtGui.QSizePolicy()
@@ -95,17 +96,48 @@ class MDeviceContainerWidget(QtGui.QFrame):
                 lcdHBox.addWidget(lcd)
                 grid.addLayout(lcdHBox, y, 1)
         if device.getFrame().isPlot():
-            dc = MGrapher.mGraph(device)
+            self.dc = MGrapher.mGraph(device)
             yPos = len(self.nicknames)+1
-            device.getFrame().setPlot(dc)
-            grid.addWidget(dc, yPos,0,yPos,3)
+            device.getFrame().setPlot(self.dc)
+            grid.addWidget(self.dc, yPos,0,yPos,3)
+    def addParameter(self):
+        label = QtGui.QLabel('Untitled', self)
+        label.setFont(self.font)
+        label.setWordWrap(True)
+        label.setStyleSheet("color:rgb(189, 195, 199);")
+        self.grid.addWidget(label,self.grid.rowCount(), 0)
+        self.nicknameLabels.append(label)
         
+      
+        units = QtGui.QLabel('')
+        self.grid.addWidget(units, self.grid.rowCount()-1, 3)
+        
+        units.setFont(self.fontBig)
+        self.unitLabels.append(units)
+        lcd = QtGui.QLCDNumber(self)
+        self.lcds.append(lcd)
+        lcd.setNumDigits(11)
+        lcd.setSegmentStyle(QtGui.QLCDNumber.Flat)
+        lcd.display("-")
+        lcd.setFrameShape(QtGui.QFrame.Panel)
+        lcd.setFrameShadow(QtGui.QFrame.Plain)
+        lcd.setLineWidth(web.ratio)
+        lcd.setMidLineWidth(100)
+        lcd.setStyleSheet("color:rgb(189, 195, 199);\n")
+        lcd.setFixedHeight(web.scrnHeight / 30)
+        lcd.setMinimumWidth(web.scrnWidth / 7)
+        lcdHBox = QtGui.QHBoxLayout(self)
+        lcdHBox.addStretch(0)
+        lcdHBox.addWidget(lcd)
+        self.grid.removeWidget(self.dc)
+        self.grid.addLayout(lcdHBox, self.grid.rowCount()-1, 1)
+        self.grid.addWidget(self.dc, self.grid.rowCount(), 0, 1, 3)
     def update(self):
         #print "updating frame"
         frame = self.device.getFrame()
-        print "updating data 1",self.device.getFrame().getTitle()
+        #print "updating data 1",self.device.getFrame().getTitle()
         frame.getNode().refreshData()
-        print "updating data 2",self.device.getFrame().getTitle()
+        #print "updating data 2",self.device.getFrame().getTitle()
 
         if not frame.isError():
             readings = frame.getReadings()
@@ -124,22 +156,25 @@ class MDeviceContainerWidget(QtGui.QFrame):
                     if len(self.unitLabels)>y:
                         self.unitLabels[y].setStyleSheet(color)
                     self.nicknameLabels[y].setStyleSheet(color)
-                for y in range(len(nicknames)):
+                    self.nicknameLabels[y].setText(nicknames[y])
+                while len(readings) > len(self.lcds):
+                        self.addParameter()
+                        
+                for y in range(len(readings)):
+                   
                     try:
                         format = "%." + str(int(precisions[y])) + "f"
+                        #print "readings:",readings
                         if not math.isnan(readings[y]):
                             self.lcds[y].display(format %readings[y])
                         else:
                             self.lcds[y].display("---")
                     except TypeError:
                         pass
-                   # print "len(self.unitLabels)>y", len(self.unitLabels)>y
                     if len(self.unitLabels)>y:
-                        #print "getting units:", frame.getUnits()
                         unit = frame.getUnits()[y]
                         if unit != None:
                             self.unitLabels[y].setText(unit)
-                        #self.unitLabels[y].setFont(self.font)
             else:
                 for lcd in self.lcds:
                     lcd.display("-")

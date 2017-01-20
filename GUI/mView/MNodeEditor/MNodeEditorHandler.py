@@ -16,7 +16,7 @@ class MNodeEditorHandler:
         self.scene = self.nodeTree.getScene()
         # We need a reference to the main gui that allows us to manipulate mView
         #self.mainGui = mainGui
-        atexit.register(self.stop)
+        #atexit.register(self.stop)
         # Create a new node to represent each device in the node tree
         for dev in web.devices:
             newNode = MLabradNode(dev)
@@ -39,4 +39,4 @@ class MNodeEditorHandler:
     def stop(self):
         print "stopping handler"
         web.keepGoing = False
-        exit()
+        

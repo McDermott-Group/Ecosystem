@@ -16,18 +16,17 @@ class NodeTree:
         '''Delete pipe from tree'''
         # Connect both ends of the pipe to nothing
         pipeToDel.setLabel(None)
-        if pipeToDel.getStartAnchor().getType() == 'input':
-             pipeToDel.getStartAnchor().setLabel('Output')
-        else:
-            pipeToDel.getEndAnchor().setLabel('Output')
-        pipeToDel.getStartAnchor().connect(None)
-        pipeToDel.getEndAnchor().connect(None)
+        start = pipeToDel.getStartAnchor()
+        end = pipeToDel.getEndAnchor()
+        start.connect(None)
+        end.connect(None)
+        self.scene.removeItem(pipeToDel)
         for i,pipe in enumerate(self.pipes):
             if pipe is pipeToDel:
-                pipe.destruct()
-                del pipe
                 self.pipes[i] = None
                 del self.pipes[i]
+        start.parentNode().pipeDisconnected()
+        end.parentNode().pipeDisconnected()
                 
     def setScene(self, scene):
         self.scene = scene
@@ -35,25 +34,37 @@ class NodeTree:
     def getScene(self):
         return self.scene
         
-    def connect(self, startAnchor, endAnchor):
-        '''Connect two anchors with a pipe.'''
-        self.pipes.append(MPipe(startAnchor, self.scene))
-        self.pipes[-1].connect(endAnchor)
+    def connect(self, anchor, endAnchor = None):
+        '''Connect anchors with a pipe.'''
+        print "endAnchor:", endAnchor
+        print "anchor:", anchor
+        if endAnchor != None:
+            self.pipes.append(MPipe(anchor, self.scene))
+            self.pipes[-1].connect(endAnchor)
+            endAnchor.connect(self.pipes[-1])
         # If the start anchor of the pipe is and output
-        if startAnchor.getType() == 'output':
-            #print "output label:", startAnchor.getLabel()
-            # The pipe label should be the label of the start anchor
-            self.pipes[-1].setLabel(startAnchor.getLabel())
-            # The end anchor's label should be the same as the pipe's
-            endAnchor.setLabel(self.pipes[-1].getLabel())
+            endAnchor.parentItem().pipeConnected(endAnchor, self.pipes[-1])
+
         else:
-            #print "output label:", endAnchor.getLabel()
-            self.pipes[-1].setLabel(endAnchor.getLabel())
-            startAnchor.setLabel(self.pipes[-1].getLabel())
-        startAnchor.connect(self.pipes[-1])
-        endAnchor.connect(self.pipes[-1])
-        startAnchor.parentItem().pipeConneted(startAnchor, self.pipes[-1])
-        endAnchor.parentItem().pipeConneted(startAnchor, self.pipes[-1])
+            if len(self.getPipes()) == 0:
+                self.pipe = self.addPipe(MPipe(anchor, self.scene))
+                
+            else:
+                if self.getPipes()[-1].isUnconnected():
+                    #print "using existing pipe"
+                    self.getPipes()[-1].connect(anchor)
+                    self.pipe =  self.getPipes()[-1]
+                else:
+                    self.pipe = self.addPipe(MPipe(anchor, self.scene))
+                self.pipe = self.getPipes()[-1]
+        
+        anchor.parentItem().pipeConnected(anchor, self.pipes[-1])
+        
+        anchor.connect(self.pipes[-1])
+        
+        
+        
+       
         
     def addNode(self, node):
         #print "adding node to scene:",self.scene
