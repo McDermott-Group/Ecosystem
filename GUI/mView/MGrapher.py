@@ -99,23 +99,26 @@ class mGraph(QtGui.QWidget):
         # clicked.
         NavigationToolbar.home = self.enableAutoScaling
         self.toolbar = NavigationToolbar(self.canvas, self)
+        
         self.cid = self.canvas.mpl_connect('button_press_event',
                 self.disableAutoScaling)
         self.setStyleSheet("QPushButton{\
                     color:rgb(189,195, 199); \
                     background:rgb(70, 80, 88)};")
+        self.fullGraphBtn = QtGui.QPushButton("Show Interactive Graph")
+        self.fullGraphBtn.clicked.connect(self.openFullGraphGui)
         self.toolbarFrame = QtGui.QFrame()
         toolbarFrameLayout = QtGui.QVBoxLayout()
         toolbarFrameLayout.addWidget(self.toolbar)
         self.toolbar.setParent(None)
         self.toolbarFrame.setLayout(toolbarFrameLayout)
         self.toolbarFrame.setStyleSheet("\
-                    border:2px solid rgb(0,0,0);\
-                    color:rgb(189,195,199); \
-                    background:rgb(70, 80, 88);")
+                   border:2px solid rgb(0,0,0);\
+                   color:rgb(189,195,199); \
+                   background:rgb(70, 80, 88);")
         self.toolbar.setStyleSheet("\
-                    border:0px solid rgb(0,0,0);\
-                    QDialog{background:rgb(250, 80, 88)}")
+                   border:0px solid rgb(0,0,0);\
+                   QDialog{background:rgb(250, 80, 88)}")
         self.matPlotInfo = QtGui.QLabel()
         self.alertFont = QtGui.QFont()
         self.alertFont.setPointSize(12)
@@ -167,6 +170,7 @@ class mGraph(QtGui.QWidget):
         # Set the layout.
         buttonLayout1 = QtGui.QHBoxLayout()
         buttonLayout1.addWidget(self.hideButton)
+        buttonLayout1.addWidget(self.fullGraphBtn)
         buttonLayout1.addStretch(0)
         buttonLayout2 = QtGui.QHBoxLayout()
         settingsbuttons1 = QtGui.QHBoxLayout()
@@ -306,7 +310,17 @@ class mGraph(QtGui.QWidget):
             return data
         else:
             return None
-
+            
+    def openFullGraphGui(self):
+        print "opening full graph gui."
+        dataSet = self.device.getFrame().getDataSet().getData()
+        #print dataSet
+        times = [dt.datetime.fromtimestamp(elem[0]) for elem in dataSet]
+        vars = self.device.getFrame().getDataSet().getVariables()
+        
+        self.fullgraphcont = fullGraphContainer(times, vars, dataSet)
+        self.fullgraphcont.show()
+        
     def plot(self, time):
             times = None
             self.changeIndependenVarRange(time)
@@ -371,3 +385,40 @@ class mGraph(QtGui.QWidget):
                 self.canvas.update()
                 
                 self.canvas.flush_events()
+class fullGraphContainer(QtGui.QWidget):
+    def __init__(self, times, vars, dataSet, parent = None):
+        QtGui.QWidget.__init__(self, parent)
+        depvars = vars[1::]
+        layout = QtGui.QVBoxLayout()
+        data = {}
+        self.line = []
+        varNames = [vars[1][i][0] for i in range(len(vars[1]))]
+        self.figure = plt.figure()
+        self.canvas = FigureCanvas(self.figure)
+        self.ax = self.figure.add_subplot(111)
+        for i,name in enumerate(varNames):
+            
+            data[name] = None
+            column =[elem[i+1] for elem in dataSet]
+            data[name] = column
+            set = self.ax.plot(times,column, label = name)[0]
+            set.set_visible(True)
+
+            self.line.append(set)
+            
+            print name
+       
+        self.toolbar = NavigationToolbar(self.canvas, self)
+        self.legend = self.ax.legend(loc='upper left')
+        self.ax.set_xlabel("Time")
+
+        locator = AutoDateLocator()
+
+        self.ax.xaxis.set_major_locator(locator)
+        self.ax.xaxis.set_major_formatter(DateFormatter('%m/%d %H:%M:%S'))
+        self.figure.autofmt_xdate()
+
+        layout.addWidget(self.canvas)
+        layout.addWidget(self.toolbar)
+        self.setLayout(layout)
+        self.canvas.draw()
