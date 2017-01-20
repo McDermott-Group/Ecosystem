@@ -86,16 +86,20 @@ class MAnchor(QtGui.QGraphicsItem):
     def getPipe(self):
         '''Get the pipe connected to the anchor'''
         return self.pipe
+    def setPipe(self, pipe):
+        self.pipe = pipe
     def delete(self):
         print "deleting anchor"
-        self.disconnect()
+        self.scene.removeItem(self)
         self.setParentItem(None)
-        
+        self.nodeLayout.removeWidget(self.lcd)
+        self.nodeLayout.removeWidget(self.labelWidget)
+        self.lcd.deleteLater()
+        self.lcd = None
     def disconnect(self):
         '''Disconnect and delete the pipe'''
         #self.parentNode().pipeDisconnected(self, self.pipe)
         self.tree.deletePipe(self.pipe)
-        self.pipe = None
     def setColor(self, color):
         self.nodeBrush = QtGui.QBrush(color)
     def getGlobalLocation(self):
@@ -113,6 +117,7 @@ class MAnchor(QtGui.QGraphicsItem):
 
     def isConnected(self):
         return not self.getPipe() == None
+        
     def paint(self, painter, option, widget):
         if self.type == 'output':
             # Bounding rectangle of the anchor
@@ -120,8 +125,11 @@ class MAnchor(QtGui.QGraphicsItem):
             
         elif self.type == 'input':
             self.posX = -20
-        if self.isConnected():
+        #print "pipe:", self.pipe
+        if self.pipe != None:
             self.nodeBrush = QtGui.QBrush(QtGui.QColor(200,0,0))
+        else:
+            self.nodeBrush = QtGui.QBrush(QtGui.QColor(*self.node.getColor()))
         self.posY = self.labelWidget.mapToGlobal(self.labelWidget.rect().topLeft()).y()
         
         painter.setBrush(self.nodeBrush)
@@ -147,18 +155,11 @@ class MAnchor(QtGui.QGraphicsItem):
     def mousePressEvent(self, event):
        # print "Anchor clicked!"
         if self.isConnected():
-            self.disconnect()
-            #print "disconnecting ", self.param
-        elif len(self.tree.getPipes()) == 0:
-             self.pipe = self.tree.addPipe(MPipe(self, self.scene))
+            self.tree.deletePipe(self.pipe)
         else:
-            if self.tree.getPipes()[-1].isUnconnected():
-                #print "using existing pipe"
-                self.tree.getPipes()[-1].connect(self)
-                self.pipe =  self.tree.getPipes()[-1]
-            else:
-                self.pipe = self.tree.addPipe(MPipe(self, self.scene))
-            self.pipe = self.tree.getPipes()[-1]
+            self.tree.connect(self)
+            #print "disconnecting ", self.param
+
             
         self.update()
         self.setSelected(True)

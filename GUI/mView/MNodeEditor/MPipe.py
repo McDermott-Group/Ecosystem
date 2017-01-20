@@ -42,8 +42,9 @@ class MPipe(QtGui.QGraphicsPathItem):
         
     def destruct(self):
         '''This is where the pipe destroys itself :(. '''
-        self.scene.removeItem(self)
-        
+        pass
+        #self.setParentItem(None)
+        #self = None
     def paint(self, painter, option, widget):
         self.prepareGeometryChange()
         if not self.isUnconnected():

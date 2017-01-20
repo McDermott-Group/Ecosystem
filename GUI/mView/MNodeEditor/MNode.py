@@ -113,7 +113,9 @@ class MNode(QtGui.QGraphicsItem):
         if anchor == None:
             print "deleting last anchor"
             self.anchors[-1].delete()
-    def pipeDisconnected(self, anchor, pipe):
+        else:
+            anchor.delete()
+    def pipeDisconnected(self):
         pass
     def pipeConnected(self, anchor, pipe):
        pass

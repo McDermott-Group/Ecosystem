@@ -43,10 +43,10 @@ class MVirtualDeviceNode(MNode):
     def pipeConnected(self, anchor, pipe):
         '''called when a pipe is added'''
         print "pipeConnected called"
-        self.addAnchor(name = '', type = 'input')
+        self.addAnchor(name = 'New Input', type = 'input')
         self.associatedDevice.addParameter(self.getAnchors()[-1].getLabel())
         pass
-    def pipeDisconnected(self, anchor, pipe):
+    def pipeDisconnected(self):
        print "pipeDisconnected called"
        self.removeAnchor()
        
