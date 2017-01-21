@@ -104,6 +104,9 @@ var stateReducer = function stateReducer() {
             }); // actually want reverse chronological
             return Object.assign({}, state, { log: newLog });
         case UPDATE_STATE:
+            if (action.newState == null) {
+                action.newState = NaN;
+            }
             return Object.assign({}, state, action.newState);
         case UPDATE_TEMPS:
             return Object.assign({}, state, { temps: {
@@ -198,7 +201,7 @@ var Temp = function Temp(props) {
                 { style: { verticalAlign: 'bottom' } },
                 '[',
                 arrow + rate,
-                'K/sec]'
+                'mK/sec]'
             )
         )
     );
@@ -212,9 +215,17 @@ var AllTemps = function AllTemps(_ref) {
     var temps = _ref.temps;
 
     var end = temps.tFAA.length - 1;
-    var rate = function rate(tempList) {
-        return (tempList[tempList.length - 1] - tempList[tempList.length - 2]) / (temps.timeStamps[tempList.length - 1] - temps.timeStamps[tempList.length - 2]) * 1000;
+    const mean = (array) => {
+        if (array.length > 0) {
+            return array.reduce((a, b) => a + b) / array.length;
+        }
+        else {
+            return NaN;
+        }
     };
+    var rate = (tempList) => 1000*( mean( tempList.slice(-5) ) - mean( tempList.slice(-10,-5) ) )
+        / (temps.timeStamps.slice(-1)[0] - temps.timeStamps.slice(-6,-5)[0]);
+    
     return React.createElement(
         'div',
         null,

@@ -198,7 +198,7 @@ class ADRServer(DeviceServer):
                 'T_GGG': numpy.NaN * units.K,
                 'T_3K' : numpy.NaN * units.K,
                 'T_60K': numpy.NaN * units.K,
-                'Pressure': 760 * units.torr,
+                'Pressure': numpy.NaN * units.torr,
                 'datetime' : datetime.datetime.utcnow(),
                 'cycle': 0,
                 'magnetV': numpy.NaN * units.V,
@@ -564,7 +564,11 @@ class ADRServer(DeviceServer):
                     pass # in case instrument didn't initialize properly and is None
             # pressure
             pressures = yield instruments['Pressure Guage'].get_pressures()
-            self.state['Pressure'] = pressures[0]
+            try:
+                pressure = pressures[0]['torr'] * units.torr
+            except Exception as e:
+                pressure = numpy.nan * units.torr
+            self.state['Pressure'] = pressure
             # update relevant files
             try:
                 newTemps = [self.state[t]['K'] for t in ['T_60K','T_3K','T_GGG','T_FAA']]

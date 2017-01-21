@@ -82,6 +82,9 @@ const stateReducer = (state={
             newLog.sort( (a,b) => b.datetime - a.datetime ); // actually want reverse chronological
             return Object.assign( {}, state, {log: newLog})
         case UPDATE_STATE:
+            if (action.newState == null) {
+                action.newState = NaN;
+            }
             return Object.assign({},state,action.newState);
         case UPDATE_TEMPS:
             return Object.assign( {}, state, {temps: {
@@ -148,7 +151,7 @@ const Temp = (props) => {
           <div style={{color:'white', backgroundColor:props.color, display: 'inline-block', width:'33.333%'}}>{props.label}</div>
           <div style={{color:props.color, display: 'inline-block', width:'33.333%'}}>{temp}K</div>
           <div style={{color:props.color, display: 'inline-block', width:'33.333%', fontSize:18}}>
-            <span style={{verticalAlign:'bottom'}}>[{arrow+rate}K/sec]</span>
+            <span style={{verticalAlign:'bottom'}}>[{arrow+rate}mK/sec]</span>
           </div>
         </div>
     )
@@ -160,8 +163,9 @@ const mapStateToTempProps = (storeState,props) => {
 }
 const AllTemps = ({temps}) => {
     var end = temps.tFAA.length-1;
-    var rate = (tempList) => (tempList[tempList.length-1] - tempList[tempList.length-2])
-                            / (temps.timeStamps[tempList.length-1] - temps.timeStamps[tempList.length-2])*1000;
+    let mean = (array) => array.reduce((a, b) => a + b) / array.length;
+    var rate = (tempList) => 1000*( mean( tempList.slice(-5) ) - mean( tempList.slice(-10,-5) ) )
+        / (temps.timeStamps.slice(-1)[0] - temps.timeStamps.slice(-6,-5)[0]);
     return(
         <div>
             <Temp label="60K" color="#d62728" temp={temps.t60K[end]} rate={rate(temps.t60K)} />
