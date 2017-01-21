@@ -427,7 +427,7 @@ class Main(QtGui.QWidget):
                     ax.set_xscale('log')
                 #ax.plot(x, y, "o", label = depVars[ii][0])
                 if containsDatetime:
-                    ax.plot_date(dates, y, label = depVars[ii][0])
+                    ax.plot_date(dates, y, linestyle='-', marker=',', label = depVars[ii][0])
                     fig.autofmt_xdate()
                     fig.tight_layout()  
                 else:
