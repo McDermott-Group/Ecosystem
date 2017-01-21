@@ -20,7 +20,7 @@
 ### BEGIN NODE INFO
 [info]
 name = CP2800 Compressor
-version = 2.2.1
+version = 2.2.2
 description = Compressor for the ADR pulse tube cooler.
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -31,15 +31,17 @@ timeout = 5
 ### END NODE INFO
 """
 
+import time
+
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting, inlineCallbacks, returnValue
 import labrad.units
 from labrad.units import s, degC, K, psi, torr, min as minutes, A
-import time
+from labrad import util
 
 CACHE_TIME = 0.8
-ALLOWED_CURRENT_RANGE = [-100*A, 100*A]
-ALLOWED_TEMPERATURE_RANGE = [0* K, 500* K]
+ALLOWED_CURRENT_RANGE = [-100 * A, 100 * A]
+ALLOWED_TEMPERATURE_RANGE = [0 * K, 500 * K]
 
 # registry (for info about where to connect)
 # Servers -> CP2800 Compressor
@@ -51,16 +53,17 @@ ALLOWED_TEMPERATURE_RANGE = [0* K, 500* K]
 #      -> Vince -> {YYYY} -> {MM} -> {DD} ->
 #      -> Jules -> {YYYY} -> {MM} -> {DD} ->
 
+
 class CompressorDevice(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to a compressor device."""
-        print 'connecting to "%s" on port "%s"...' % (server.name, port),
+        print('Connecting to "%s" on port "%s"...' %(server.name, port))
         self.server = server
         self.ctx = server.context()
         self.port = port
-        # we will cache the values for many of the requests so as to reduce serial traffic
-        # status, temperatures, pressures, cpu temp, motor current
+        # Cache the values for many of the requests so as to reduce
+        # serial traffic.
         self.status, self.status_time = None, 0
         self._temperatures, self._temperatures_time = None, 0
         self._pressures, self._pressures_time = None, 0
@@ -70,10 +73,9 @@ class CompressorDevice(DeviceWrapper):
         p = self.packet()
         p.open(port)
         p.baudrate(115200)
-        p.read() # clear out the read buffer
+        p.read() # Clear out the read buffer.
         p.timeout(TIMEOUT)
         yield p.send()
-        print 'done.'
 
     def packet(self):
         """Create a packet in our private context."""
@@ -143,8 +145,8 @@ class CompressorDevice(DeviceWrapper):
         if time.time() - self._temperatures_time > CACHE_TIME:
             keys = 'TEMP_TNTH_DEG', 'TEMP_TNTH_DEG_MINS', 'TEMP_TNTH_DEG_MAXES'
             ts = yield self.readArrays(keys, 4, toTemp)
-            #if [t for t in ts if t[0]['K'] >= ALLOWED_TEMPERATURE_RANGE[0] and t[0]['K'] <= ALLOWED_TEMPERATURE_RANGE[1]]:
-            #if all([t[0]['K'] >= ALLOWED_TEMPERATURE_RANGE[0] and t[0]['K'] <= ALLOWED_TEMPERATURE_RANGE[1] for t in ts]):
+            # if [t for t in ts if t[0]['K'] >= ALLOWED_TEMPERATURE_RANGE[0] and t[0]['K'] <= ALLOWED_TEMPERATURE_RANGE[1]]:
+            # if all([t[0]['K'] >= ALLOWED_TEMPERATURE_RANGE[0] and t[0]['K'] <= ALLOWED_TEMPERATURE_RANGE[1] for t in ts]):
             self._temperatures = ts
             self._temperatures_time = time.time()
         returnValue(self._temperatures)
@@ -168,9 +170,7 @@ class CompressorServer(DeviceServer):
 
     @inlineCallbacks
     def initServer(self):
-        print 'loading config info...',
         yield self.loadConfigInfo()
-        print 'done.'
         yield DeviceServer.initServer(self)
 
     @inlineCallbacks
@@ -219,27 +219,29 @@ class CompressorServer(DeviceServer):
     @setting(1000, 'Temperatures',
              returns='*(v[K]{curr}, v[K]{min}, v[K]{max})')
     def temperatures(self, c):
-        """Get temperatures.
+        """
+        Get temperatures.
         Returns the current, min and max temperatures for the following
-        4 channels: water in, water out, helium, and oil.  The Min and Max
-        markers can be reset by calling 'Clear Markers'.
+        4 channels: water in, water out, helium, and oil. The Min and
+        Max markers can be reset by calling 'Clear Markers'.
         """
         dev = self.selectedDevice(c)
         return dev.temperatures()
 
-    @setting(1050, 'TemperaturesForGui',returns='*v[K]{curr}')
+    @setting(1050, 'Current Temperatures Only', returns='*v[K]{curr}')
     def temperaturesForGui(self, c):
         dev = self.selectedDevice(c)
         allTemps = yield dev.temperatures()
-	#print allTemps
         temps = [i[0] for i in allTemps]
-        returnValue( temps)
+        returnValue(temps)
+
     @setting(1100, 'Pressures',
              returns='*(v[torr]{curr}, v[torr]{min}, v[torr]{max})')
     def pressures(self, c):
-        """Get pressures.
+        """
+        Get pressures.
         Returns the current, min and max pressures for the following
-        2 channels: high side, low side.  The Min and Max
+        2 channels: high side, low side. The Min and Max
         markers can be reset by calling 'Clear Markers'.
         """
         dev = self.selectedDevice(c)
@@ -258,7 +260,8 @@ class CompressorServer(DeviceServer):
         if time.time() - dev.cpu_temp_time > CACHE_TIME:
             ans = yield dev.read('CPU_TEMP')
             t = toTemp(ans)
-            if t >= ALLOWED_TEMPERATURE_RANGE[0] and t <= ALLOWED_TEMPERATURE_RANGE[1]:
+            if t >= ALLOWED_TEMPERATURE_RANGE[0] and \
+                    t <= ALLOWED_TEMPERATURE_RANGE[1]:
                 dev.cpu_temp = t
                 dev.cpu_temp_time = time.time()
         returnValue(dev.cpu_temp)
@@ -277,7 +280,8 @@ class CompressorServer(DeviceServer):
         if time.time() - dev.motor_current_time > CACHE_TIME:
             ans = yield dev.read('MOTOR_CURR_A')
             t = float(ans) * A
-            if t >= ALLOWED_CURRENT_RANGE[0] and t <= ALLOWED_CURRENT_RANGE[1]:
+            if t >= ALLOWED_CURRENT_RANGE[0] and \
+                    t <= ALLOWED_CURRENT_RANGE[1]:
                 dev.motor_current = t
                 dev.motor_current_time = time.time()
         returnValue(dev.motor_current)
@@ -288,49 +292,49 @@ class CompressorServer(DeviceServer):
         ans = yield dev.read_raw(hashcode, index)
         returnValue(ans)
 
-# compressor control protocol
+# Compressor control protocol.
 STX = 0x02
 ESC = 0x07
 ADDR = 0x10
 CR = ord('\r')
 CMD_RSP = 0x80
-RESP_LEN = 14 # 3 bytes SMDP header, 8 bytes data, 2 bytes checksum, CR
-TIMEOUT = 1*labrad.units.s # serial read timeout
+RESP_LEN = 14 # 3 bytes SMDP header, 8 bytes data, 2 bytes checksum, CR.
+TIMEOUT = 1 * labrad.units.s # Serial read timeout.
 
-# codes for compressor variables
+# Codes for compressor variables.
 HASHCODES = {
     # misc
-    'CODE_SUM': 0x2B0D, # Firmware checksum
-    'MEM_LOSS': 0x801A, # TRUE if nonvolatile memory was lost
-    'CPU_TEMP': 0x3574, # CPU temperature (0.1 C)
-    'BATT_OK': 0xA37A, # TRUE if clock OK
-    'BATT_LOW': 0x0B8B, # TRUE if clock battery low
-    'COMP_MINUTES': 0x454C, # Elapsed compressor minutes
-    'MOTOR_CURR_A': 0x638B, # Compressor motor current draw, in Amps
+    'CODE_SUM': 0x2B0D, # Firmware checksum.
+    'MEM_LOSS': 0x801A, # TRUE if nonvolatile memory was lost.
+    'CPU_TEMP': 0x3574, # CPU temperature (0.1 C).
+    'BATT_OK': 0xA37A, # TRUE if clock OK.
+    'BATT_LOW': 0x0B8B, # TRUE if clock battery low.
+    'COMP_MINUTES': 0x454C, # Elapsed compressor minutes.
+    'MOTOR_CURR_A': 0x638B, # Compressor motor current draw, in Amps.
 
     # temperatures
-    'TEMP_TNTH_DEG': 0x0D8F, # temperatures (0.1 C)
-    'TEMP_TNTH_DEG_MINS': 0x6E58, # minimum temps seen (0.1 C)
-    'TEMP_TNTH_DEG_MAXES': 0x8A1C, # maximum temps seen (0.1 C)
-    'TEMP_ERR_ANY': 0x6E2D, # TRUE if any temperature sensor has failed
+    'TEMP_TNTH_DEG': 0x0D8F, # Temperatures (0.1 C).
+    'TEMP_TNTH_DEG_MINS': 0x6E58, # Minimum temps seen (0.1 C).
+    'TEMP_TNTH_DEG_MAXES': 0x8A1C, # Maximum temps seen (0.1 C).
+    'TEMP_ERR_ANY': 0x6E2D, # TRUE if any temperature sensor has failed.
 
     # pressures
-    'PRES_TNTH_PSI': 0xAA50, # low/high side pressures (0.1 PSIA)
-    'PRES_TNTH_PSI_MINS': 0x5E0B, # minimum pressures seen (0.1 PSIA)
-    'PRES_TNTH_PSI_MAXES': 0x7A62, # maximum pressures seen (0.1 PSIA)
-    'PRES_ERR_ANY': 0xF82B, # TRUE if any pressure sensor has failed
-    'H_ALP': 0xBB94, # average low-side pressure (0.1 PSIA)
-    'H_AHP': 0x7E90, # average high-side pressure (0.1 PSIA)
-    'H_ADP': 0x319C, # average delta pressure (0.1 PSIA)
-    'H_DPAC': 0x66FA, # 1st deriv. of high side pressure, "bounce" (0.1 PSIA)
+    'PRES_TNTH_PSI': 0xAA50, # Low/high side pressures (0.1 PSI).
+    'PRES_TNTH_PSI_MINS': 0x5E0B, # Minimum pressures seen (0.1 PSI).
+    'PRES_TNTH_PSI_MAXES': 0x7A62, # Maximum pressures seen (0.1 PSI).
+    'PRES_ERR_ANY': 0xF82B, # TRUE if any pressure sensor has failed.
+    'H_ALP': 0xBB94, # Average low-side pressure (0.1 PSI).
+    'H_AHP': 0x7E90, # Average high-side pressure (0.1 PSI).
+    'H_ADP': 0x319C, # Average delta pressure (0.1 PSI).
+    'H_DPAC': 0x66FA, # 1st deriv. of high side pressure, "bounce" (0.1 PSI).
 
-    'CLR_TEMP_PRES_MMMARKERS': 0xD3DB, # reset pres/temp min/max markers
+    'CLR_TEMP_PRES_MMMARKERS': 0xD3DB, # Reset pres/temp min/max markers.
 
-    # compressor control and status
-    'EV_START_COMP_REM': 0xD501, # start compressor
-    'EV_STOP_COMP_REM': 0xC598, # stop compressor
-    'COMP_ON': 0x5F95, # TRUE if compressor is on
-    'ERR_CODE_STATUS': 0x65A4, # non-zero value indicates an error code
+    # Compressor control and status.
+    'EV_START_COMP_REM': 0xD501, # Start compressor.
+    'EV_STOP_COMP_REM': 0xC598, # Stop compressor.
+    'COMP_ON': 0x5F95, # TRUE if compressor is on.
+    'ERR_CODE_STATUS': 0x65A4 # Non-zero value indicates an error code.
     }
 
 READABLE = [
@@ -355,9 +359,8 @@ WRITEABLE = [
     'CLR_TEMP_PRES_MMMARKERS',
     ]
 
-#####
-# SMDP functions (Sycon Multi-Drop Protocol)
 
+# SMDP functions (Sycon Multi-Drop Protocol).
 def checksum(data):
     """Compute checksum for Sycon Multi Drop Protocol."""
     ck = sum(data) % 256
@@ -392,28 +395,26 @@ def unstuff(data):
     return out
 
 def pack(data):
-    """Make a packet to send data to the compressor.
-    
-    We use the Sycon Multi Drop Protocol (see docs on skynet).
+    """
+    Make a packet to send data to the compressor.
+    We use the Sycon Multi Drop Protocol.
     """
     chk = checksum([ADDR, CMD_RSP] + data)
     pkt = [ADDR, CMD_RSP] + stuff(data)
     return [STX] + pkt + chk + [CR]
 
 def unpack(response):
-    """pull binary data out of SMDP response packet"""
+    """Pull binary data out of SMDP response packet."""
     if isinstance(response, str):
         response = [ord(c) for c in response]
     if response[-1] == CR:
         response = response[:-1]
-    rsp = response[2] & 0xF # response code (see SMDP docs)
-    # drop 3 byte header (STX, ADDR, CMD_RSP) and 2 byte checksum
+    rsp = response[2] & 0xF # Response code (see SMDP docs).
+    # Drop 3 byte header (STX, ADDR, CMD_RSP) and 2 byte checksum.
     data = unstuff(response[3:-2])
     return data
 
-#####
-# Data Dictionary for CP2800 Compressor
-    
+# Data Dictionary for CP2800 Compressor.
 def read(hashcode, index=0):
     """Make a packet to read a variable."""
     return pack([0x63] + toBytes(hashcode, count=2) + [index])
@@ -444,11 +445,9 @@ def toPress(v, units=torr):
     return ((v / 10.0) * psi).inUnitsOf(units)
 
 
-#####
 # Create a server instance and run it
-
 __server__ = CompressorServer()
 
+
 if __name__ == '__main__':
-    from labrad import util
     util.runServer(__server__)

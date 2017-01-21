@@ -35,9 +35,7 @@ from MWeb import web
 class Device(MDevice):
     """The device class handles a LabRAD device."""
     def __init__(self, *args):
-
         super(Device, self).__init__(*args)
-
         # Get all the stuff from the constructor.
         # Has a the device made an appearance, this is so we dont alert
         # the user more than once if a device dissapears.
@@ -68,7 +66,6 @@ class Device(MDevice):
         self.settingArgs =[]    
         self.settingResultIndices = []
         self.frame.setYLabel(None)
-        
         # Determine which buttons get messages.
         self.buttonMessages = []
         # Setup all buttons.
@@ -78,7 +75,6 @@ class Device(MDevice):
     
         # Tells thread to keep going.
         self.keepGoing = True
-        
         self.frame.setTitle(self.name)
         
     def stop(self):
@@ -136,18 +132,16 @@ class Device(MDevice):
         self.deviceThread.start()
 
     def setRefreshRate(self, period):
-      
+        #print "title of device:",self.frame.getTitle()
         if  self.frame.getTitle()is None:
             raise IOError("Refresh Rates cannot be set until name is given to device.")
-       
-        if self.frame.getRefreshRate() == None:
-             self.frame.setRefreshRate(period)
-    def setPlotRefreshRate(self, period):
+        #self.frame.setRefreshRate(period)
 
-        if  self.frame.getTitle()is None:
+    def setPlotRefreshRate(self, period):
+        #print "title of device:",self.frame.getTitle()
+       if  self.frame.getTitle()is None:
             raise IOError("Refresh Rates cannot be set until name is given to device.")
-        if self.frame.getPlotRefreshRate() == None:
-            self.frame.setPlotRefreshRate(period)
+       #self.frame.setPlotRefreshRate(period)
 
     def addPlot(self, length=None):
         self.frame.addPlot(length)

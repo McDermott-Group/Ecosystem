@@ -1,9 +1,9 @@
 (dp1
-S'Random:Temperature'
+S'Random:Random Temperature'
 p2
 (lp3
-I01
-aF0
+I00
+aS''
 aS''
 acsip
 _unpickle_type
@@ -13,12 +13,12 @@ p5
 S'QString'
 (V
 ttRp6
-asS'Random:Pressure'
+asS'Random:Random Pressure'
 p7
 (lp8
 I01
-aF-1
-aF0
+aF1
+aF2
 ag4
 (g5
 S'QString'

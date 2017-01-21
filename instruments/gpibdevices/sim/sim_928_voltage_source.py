@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = SIM928
-version = 2.4.1
+version = 2.4.3
 description = Server interface for the SIM928 Isolated Voltage Source.
 instancename = SIM928
 
@@ -31,7 +31,6 @@ timeout = 5
 ### END NODE INFO
 """
 
-
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 from labrad.server import setting
@@ -44,7 +43,7 @@ class SIM928Wrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def initialize(self):
         self.voltage = yield self.getVoltage()
-        self.output =  yield self.getOutput()
+        self.output = yield self.getOutput()
     
     @inlineCallbacks    
     def reset(self):
@@ -56,8 +55,8 @@ class SIM928Wrapper(GPIBDeviceWrapper):
         try:
             self.voltage = (yield self.query('VOLT?').addCallback(float)) * V
         except:
-            print('Failed attempt to read the voltage')
-            self.getVoltage()
+            print('Failed attempt to read the voltage.')
+            self.voltage = yield self.getVoltage()
         returnValue(self.voltage)
     
     @inlineCallbacks
@@ -65,8 +64,8 @@ class SIM928Wrapper(GPIBDeviceWrapper):
         try:
             self.output = yield self.query('EXON?').addCallback(int).addCallback(bool)
         except:
-            print('Failed attempt to read the output state')
-            self.getOutput()
+            print('Failed attempt to read the output state.')
+            self.output = yield self.getOutput()
         returnValue(self.output)
 
     @inlineCallbacks
@@ -79,7 +78,7 @@ class SIM928Wrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def setOutput(self, on):
         if self.output != bool(on):
-            yield self.write('EXON ' + str(int(on)))
+            yield self.write('EXON %d' %int(on))
             # Ensure that the output is set properly.
             self.output = yield self.getOutput()
 
@@ -95,7 +94,7 @@ class SIM928Server(GPIBManagedServer):
         """Reset the voltage source."""
         yield self.selectedDevice(c).reset()
     
-    @setting(101, 'Voltage', v=['v[V]'], returns=['v[V]'])
+    @setting(101, 'Voltage', v='v[V]', returns='v[V]')
     def voltage(self, c, v=None):
         """Get or set the voltage."""
         dev = self.selectedDevice(c)
@@ -103,7 +102,7 @@ class SIM928Server(GPIBManagedServer):
             yield dev.setVoltage(v)
         returnValue(dev.voltage)
         
-    @setting(102, 'Output', on=['b'], returns=['b'])
+    @setting(102, 'Output', on='b', returns='b')
     def output(self, c, on=None):
         """Get or set the output (on/off)."""
         dev = self.selectedDevice(c)

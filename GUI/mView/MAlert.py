@@ -78,18 +78,18 @@ class MAlert:
                             #print "MALERT reading below min ", min
                             self.devices[i].getFrame().setOutOfRange(key)
                             self.sendMail(self.devices[i], y, reading, people, min, max)
-                            print " min sent to ", people
+                            #print " min sent to ", people
                         elif(max != None and max<reading):
                             self.devices[i].getFrame().setOutOfRange(key)
                             self.sendMail(self.devices[i], y, reading, people, min, max)      
-                            print " max sent to ", people
+                            #print " max sent to ", people
 
                         else:
                             self.devices[i].getFrame().setInRange(key)    
                     else:
                         self.devices[i].getFrame().setInRange(key)
         if(self.keepGoing):
-            threading.Timer(web.guiRefreshRate, self.monitorReadings).start()
+            threading.Timer(web.persistentData.persistentDataAccess(None, 'guiRefreshRage',default = 1), self.monitorReadings).start()
     def toFloat(self, val):
         try:
             return float(val)
