@@ -429,7 +429,7 @@ class Main(QtGui.QWidget):
                 if containsDatetime:
                     ax.plot_date(dates, y, label = depVars[ii][0])
                     fig.autofmt_xdate()
-                    fig.tight_layout()                    
+                    fig.tight_layout()  
                 else:
                     ax.plot(x, y, label = depVars[ii][0])
         ax.legend(fontsize = 10, loc = "best")

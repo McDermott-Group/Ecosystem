@@ -99,7 +99,10 @@ class dateStamp:
 
   def floatToUtcDateStr(self, utcFloat):
     if isinstance(utcFloat, float):
-      return datetime.utcfromtimestamp(utcFloat).isoformat()
+      dateStr = datetime.utcfromtimestamp(utcFloat).isoformat()
+      if len(dateStr) == 19:
+        dateStr = dateStr + ".000000"
+      return dateStr
     else:
       raise IOError("Inputs can only be of type float.")
     
