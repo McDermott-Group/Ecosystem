@@ -51,11 +51,7 @@ class nViewer:
         laser.begin()
         self.devices.append(laser)
 
-        
-        # Start the datalogger. This line can be commented
-        # out if no datalogging is required.
-        self.chest = dataChestWrapper(self.devices)
-        
+
         # Create the gui
         self.gui = MGui.MGui()
         self.gui.setRefreshRate(0.02)

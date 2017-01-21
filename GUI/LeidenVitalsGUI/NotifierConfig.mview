@@ -1,5 +1,5 @@
 (dp1
-S'50K and 3K PT1000 Temperature:50K Stage Temperature'
+S'Vacuum:IVC Pressure'
 p2
 (lp3
 I00
@@ -13,7 +13,7 @@ p5
 S'QString'
 (V
 ttRp6
-asS'Dilution Unit Temperature:Mix Temperature (TT)'
+asS'Compressor:Output Water Temperature'
 p7
 (lp8
 I00
@@ -24,7 +24,7 @@ ag4
 S'QString'
 (V
 ttRp9
-asS'Mix PT1000 Temperature:Mix Temperature (PT1000)'
+asS'Dilution Unit Temperatures:Mix Temperature'
 p10
 (lp11
 I00
@@ -35,21 +35,9 @@ ag4
 S'QString'
 (V
 ttRp12
-asS'Compressor:Oil Temperature'
+asS'Dilution Unit Temperatures:Exchange Temperature'
 p13
 (lp14
-I01
-aF10
-aF50
-ag4
-(g5
-S'QString'
-(VIVAN_EMAIL
-p15
-ttRp16
-asS'Dilution Unit Temperature:Still Temperature'
-p17
-(lp18
 I00
 aS''
 aS''
@@ -57,10 +45,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp19
-asS'50K and 3K PT1000 Temperature:3K Stage Temperature'
-p20
-(lp21
+ttRp15
+asS'Mix Pt1000 Temperature:Mix Temperature'
+p16
+(lp17
 I00
 aS''
 aS''
@@ -68,10 +56,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp22
+ttRp18
 asS'Water Temperature:Exteranal Water Temperature'
-p23
-(lp24
+p19
+(lp20
 I00
 aS''
 aS''
@@ -79,10 +67,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp25
+ttRp21
 asS'Compressor:Helium Temperature'
-p26
-(lp27
+p22
+(lp23
 I00
 aS''
 aS''
@@ -90,10 +78,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp28
+ttRp24
 asS'Water Flow:External Water Flow Rate'
-p29
-(lp30
+p25
+(lp26
 I00
 aS''
 aS''
@@ -101,46 +89,54 @@ ag4
 (g5
 S'QString'
 (V
-ttRp31
-asS'Vacuum:IVC Pressure'
-p32
-(lp33
-I01
-aF0
-aF30
+ttRp27
+asS'Vacuum:Still Pressure'
+p28
+(lp29
+I00
+aS''
+aS''
 ag4
 (g5
 S'QString'
-(VIVAN_EMAIL
-p34
-ttRp35
+(V
+ttRp30
 asS'Vacuum:OVC Pressure'
-p36
-(lp37
-I01
-aF0
-aF1
+p31
+(lp32
+I00
+aS''
+aS''
 ag4
 (g5
 S'QString'
-(VIVAN_EMAIL
-p38
+(V
+ttRp33
+asS'Dilution Unit Temperatures:Still Temperature'
+p34
+(lp35
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp36
+asS'50K and 3K Pt1000 Temperatures:3K Stage Temperature'
+p37
+(lp38
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
 ttRp39
-asS'Compressor:Output Water Temperature'
+asS'50K and 3K Pt1000 Temperatures:50K Stage Temperature'
 p40
 (lp41
-I01
-aF10
-aF60
-ag4
-(g5
-S'QString'
-(VIVAN_EMAIL
-p42
-ttRp43
-asS'Dilution Unit Temperature:Exchange Temperature'
-p44
-(lp45
 I00
 aS''
 aS''
@@ -148,22 +144,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp46
+ttRp42
 asS'Compressor:Input Water Temperature'
-p47
-(lp48
-I01
-aF1
-aF22
-ag4
-(g5
-S'QString'
-(VIVAN_EMAIL
-p49
-ttRp50
-asS'Vacuum:Still Pressure'
-p51
-(lp52
+p43
+(lp44
 I00
 aS''
 aS''
@@ -171,5 +155,16 @@ ag4
 (g5
 S'QString'
 (V
-ttRp53
+ttRp45
+asS'Compressor:Oil Temperature'
+p46
+(lp47
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp48
 as.

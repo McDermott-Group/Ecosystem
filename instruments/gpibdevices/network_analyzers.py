@@ -20,7 +20,7 @@
 ### BEGIN NODE INFO
 [info]
 name = GPIB Network Analyzers
-version = 1.4.0
+version = 1.5.0
 description = Provides basic control for network analayzers.
 
 [startup]
@@ -272,7 +272,8 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
                 yield self.write('CALC:FORM PHAS')
             yield self.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 1))
             yield self.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 2))
-            yield self.write('SENS1:SWE:TIME:AUTO ON')
+        
+        yield self.write('SENS1:SWE:TIME:AUTO ON')
         
         if trigger == 'EXT':
             yield self.write('TRIG:SOUR EXT')
@@ -282,8 +283,7 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
 
     @inlineCallbacks
     def get_data(self):
-        """Get the active trace from the network analyzer."""
-
+        """Get the active trace(s) from the network analyzer."""
         # Get list of traces in form "name, S21, name, S32,...".
         formats_s_params = yield self.query('CALC:PAR:CAT?')
         formats_s_params = formats_s_params.strip('"').split(',')
@@ -291,9 +291,9 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         # yield self.write('FORM REAL,64') # Do we need to add ',64'?
         yield self.write('FORM ASC,0')
 
-        avg_mode = yield self.average_mode(None)
+        avg_mode = yield self.average_mode()
         if avg_mode:
-            avgCount = yield self.average_points(None)
+            avgCount = yield self.average_points()
             yield self.restart_averaging()
             yield self.write('SENS:SWE:GRO:COUN %i' %avgCount)
             yield self.write('ABORT;SENS:SWE:MODE GRO')
@@ -307,15 +307,14 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         # Pull the data.
         data = ()
         pair = ()
-        unit_multipliers = {'R': 1, 'I': 1, 'P': units.deg, 'M': units.dB}
+        unit_multipliers = {'R': 1, 'I': 1,
+                'M': units.dB, 'P': units.deg}
         # The data will come in with a header in the form
         # '#[single char][number of data points][data]'.
         for idx, meas in enumerate(formats_s_params[::2]):
             yield self.write('CALC:PAR:SEL "%s"' %meas)
-            yield self.write('CALC:DATA? FDATA')
-            data_string = yield self.read()
-            d = np.array([x for x in data_string.split(',')], dtype=float)
-            # data.append(d * unit_multipliers[meas[0]])
+            data_string = yield self.query('CALC:DATA? FDATA')
+            d = np.array(data_string.split(','), dtype=float)
             pair += (d * unit_multipliers[meas[0]]),
             if idx % 2:
                 data += (pair),
@@ -333,6 +332,122 @@ class KeysightE5063ADeviceWrapper(AgilentN5230ADeviceWrapper):
     model = 'Keysight Technologies E5063A'
     available_traces = ('S11', 'S12', 'S21', 'S22')
     nPorts = 2
+
+    @inlineCallbacks
+    def measurement_setup(self, s_params=['S11'], formats=['MP'],
+            trigger='IMM'):
+        """
+        Setup the measurement.
+        
+        Accepts:
+            s_params: list of strings of the form Sxy ['S21', 'S11',...]
+                    (default: ['S11']).
+            formats: list of strings composed of 'RI' or 'MP',
+                    'RI' - for the real/imaginary returned data format,
+                    'MP' - for the magnitude/phase display format
+                    (default: ['MP']).
+            trigger: 'IMM' - for immediate triggering,
+                     'EXT' - for external triggering (default: 'IMM').
+        """
+        s_params = [S.upper() for S in s_params]
+
+        for Sp in s_params:
+            if Sp not in self.available_traces:
+                raise ValueError('Illegal S-parameter: %s.'
+                        %str(Sp))
+
+        num_params = len(s_params)
+        if num_params == 1:
+            layout = 'D1_2'
+        elif num_params == 2:
+            layout = 'D1_2_3_4'          
+        else:
+            raise ValueError('Only one or two S-parameters are allowed '
+                    'by the server implementation.')
+         
+        yield self.write('DISP:SPL D1')
+        # Set the number of traces.
+        yield self.write('CALC1:PAR:COUNT %d' %(2 * num_params))
+        # Set the graph layout.
+        yield self.write('DISP:WIND1:SPL %s' %layout)
+        # Make window 1 (channel 1) active.
+        yield self.write('DISP:WIND1:ACT')
+
+        for k, Sp in enumerate(s_params):
+            if formats[k] == 'RI':
+                # Set the measurement parameter.
+                yield self.write('CALC1:PAR%d:DEF %s' %((2 * k + 1), Sp))
+                # Make the trace active.
+                yield self.write('CALC1:PAR%d:SEL' %(2 * k + 1))
+                # Select the format.
+                yield self.write('CALC1:FORM REAL')
+                # Set the measurement parameter.
+                yield self.write('CALC1:PAR%d:DEF %s' %((2 * k + 2), Sp))
+                # Make the trace active.
+                yield self.write('CALC1:PAR%d:SEL' %(2 * k + 2))
+                # Select the format.
+                yield self.write('CALC1:FORM IMAG')
+            elif formats[k] == 'MP':
+                # Set the measurement parameter.
+                yield self.write('CALC1:PAR%d:DEF %s' %((2 * k + 1), Sp))
+                # Make the trace active.
+                yield self.write('CALC1:PAR%d:SEL' %(2 * k + 1))
+                # Select the format.
+                yield self.write('CALC1:FORM MLOG')
+                # Set the measurement parameter.
+                yield self.write('CALC1:PAR%d:DEF %s' %((2 * k + 2), Sp))
+                # Make the trace active.
+                yield self.write('CALC1:PAR%d:SEL' %(2 * k + 2))
+                # Select the format.
+                yield self.write('CALC1:FORM PHAS')
+            yield self.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 1))
+            yield self.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 2))
+        
+        yield self.write('SENS1:SWE:TIME:AUTO 1')
+        
+        if trigger == 'EXT':
+            yield self.write('TRIG:SOUR EXT')
+        else:
+            yield self.write('TRIG:SOUR INT')
+    
+    @inlineCallbacks
+    def get_data(self):
+        """Get the active trace(s) from the network analyzer."""
+        avg_mode = yield self.average_mode()
+        if avg_mode:
+            yield self.write('TRIG:AVER 1')
+        
+        # Start the measurement.
+        yield self.write('INIT1:CONT 0')
+        yield self.write('ABOR')
+        yield self.write('INIT1')
+
+        # Wait for the measurement to finish.
+        sweep_time = yield self.get_sweep_time()
+        yield sleep(sweep_time)
+
+        # Wait for the measurement to finish.
+        yield self.query('*OPC?', timeout=24*units.h)
+
+        # Pull the data.
+        yield self.write('FORM:DATA ASC')
+        data = ()
+        pair = ()
+        unit_multipliers = {'REAL': 1, 'IMAG': 1,
+                 'MLOG': units.dB, 'PHAS': units.deg}
+        num_params = yield self.query('CALC1:PAR:COUNT?')
+        for k in range(int(num_params)):
+            yield self.write('CALC1:PAR%d:SEL' %(k + 1))     
+            format = (yield self.query('CALC1:FORM?'))
+            data_string = (yield self.query('CALC1:DATA:FDAT?'))
+            d = np.array(data_string.split(','), dtype=float)
+            # Select only every other element.
+            d = d[::2]
+            pair += (d * unit_multipliers[format]),
+            if k % 2:
+                data += (pair),
+                pair = ()
+        returnValue(data)
 
 
 class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
@@ -514,10 +629,11 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
         if len(s_params) != 1:
             raise IndexError('This VNA only takes a single trace.')
         
-        mode = s_params[0] # Given a list but this VNA can only take one.
-        if mode.upper() == 'S11':
+        # Given a list but this VNA can only take one S-parameter.
+        mode = s_params[0].uppper()
+        if mode == 'S11':
             yield self.write('RFLP')
-        elif mode.upper() == 'S21':
+        elif mode == 'S21':
             yield self.write('TRAP')
         else:
             raise ValueError('Illegal S-parameter: %s.' %mode)
@@ -672,7 +788,7 @@ class VNAServer(GPIBManagedServer):
     @setting(1300, 'Get Sweep Time', returns='v[s]')
     def get_sweep_time(self, c):
         dev = self.selectedDevice(c)
-        resp = yield dev.get_sweep_time(power)
+        resp = yield dev.get_sweep_time()
         returnValue(resp)
 
     @setting(1400, 'Sweep Points', points='w', returns='w')

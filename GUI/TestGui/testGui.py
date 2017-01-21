@@ -1,7 +1,7 @@
 import sys
 sys.dont_write_bytecode = True
 import MGui             # Handles all gui operations. Independent of labrad.
-
+from MWeb import web
 #from PyQt4 import QtCore, QtGui
 
 from Device import Device
@@ -32,8 +32,8 @@ class nViewer:
         LeidenDRTemperature.connection(cxn)
 
         LeidenDRTemperature.setServerName("my_server")
-        LeidenDRTemperature.addParameter("Pressure","pressure", None)
-        LeidenDRTemperature.addParameter("Temperature", "temperature", None)
+        LeidenDRTemperature.addParameter("Random Pressure","pressure", None, log = False)
+        LeidenDRTemperature.addParameter("Random Temperature", "temperature", None)
         #LeidenDRTemperature.selectDeviceCommand("select_device", 0)
         LeidenDRTemperature.addPlot()
         LeidenDRTemperature.setPlotRefreshRate(0.5)
@@ -45,7 +45,8 @@ class nViewer:
         
         # Start the datalogger. This line can be commented
         # out if no datalogging is required.
-        self.chest = dataChestWrapper(self.devices)
+        #print self.devices
+       # self.chest = dataChestWrapper(self.devices)
         
         # Create the gui
         self.gui = MGui.MGui()

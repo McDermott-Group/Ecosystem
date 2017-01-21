@@ -16,20 +16,17 @@
 __author__ = "Noah Meltzer"
 __copyright__ = "Copyright 2016, McDermott Group"
 __license__ = "GPL"
-__version__ = "2.0.1"
+__version__ = "2.0.2"
 __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
-import sys
-import threading
-import traceback
 import numpy as np
 import datetime as dt
-import time
+import sys
 from PyQt4 import QtGui, QtCore
 from functools import partial
 import matplotlib
-from matplotlib.dates import DateFormatter, AutoDateFormatter, AutoDateLocator
+from matplotlib.dates import DateFormatter, AutoDateLocator
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
@@ -37,15 +34,13 @@ matplotlib.use('TkAgg')
 
 from dateStamp import *
 from dataChest import *
-from MWeb import web
-from MCheckableComboBoxes import  MCheckableComboBox
-
-sys.dont_write_bytecode = True
+from MCheckableComboBoxes import MCheckableComboBox
 
 
 class mGraph(QtGui.QWidget):
     def __init__(self, device, parent=None):
-        QtGui.QWidget.__init__( self,parent)
+        QtGui.QWidget.__init__(self, parent)
+        print "Starting graphing widget:", str(device)
         # Create a matplotlib figure.
         self.figure = plt.figure()
         self.figure.set_facecolor('r')
@@ -65,35 +60,35 @@ class mGraph(QtGui.QWidget):
         # This is the device we want to use.
         self.device = device
         # This sets up axis on which to plot.
-        self.ax = self.figure.add_subplot(111,
-                axisbg = (189.0/255, 195.0/255, 199.0/255))
+        color = (189./255, 195./255, 199./255)
+        self.ax = self.figure.add_subplot(111, axisbg=color)
+        ax = self.ax
         # Add the matplotlib canvas to the QFrame.
         self.matLayout.addWidget(self.canvas)
         # The following lines set up all the colors, makes it look nice.
         # The code to do it is far from pretty and I am planning
         # on cleaning this up a bit.
-        self.figure.patch.set_color((70.0/255, 80.0/255, 88.0/255))
-        self.figure.patch.set_edgecolor((70.0/255, 80.0/255, 88.0/255))
-        self.ax.spines['bottom'].set_color((189.0/255, 195.0/255, 199.0/255))
-        self.ax.spines['top'].set_color((189.0/255, 195.0/255, 199.0/255)) 
-        self.ax.spines['right'].set_color((189.0/255, 195.0/255, 199.0/255))
-        self.ax.spines['left'].set_color((189.0/255, 195.0/255, 199.0/255))
-        self.ax.tick_params(axis='x', colors=(189.0/255, 195.0/255, 199.0/255))
-        self.ax.tick_params(axis='y', colors=(189.0/255, 195.0/255, 199.0/255))
-        self.ax.title.set_color((189.0/255, 195.0/255, 199.0/255))
-        self.ax.yaxis.label.set_color((189.0/255, 195.0/255, 199.0/255))
-        self.ax.xaxis.label.set_color((189.0/255, 195.0/255, 199.0/255))
-        self.ax.xaxis.get_offset_text().set_color((189.0/255, 195.0/255, 199.0/255))
-        self.ax.yaxis.get_offset_text().set_color((189.0/255, 195.0/255, 199.0/255))
+        self.figure.patch.set_color((70./255, 80./255, 88./255))
+        self.figure.patch.set_edgecolor((70./255, 80./255, 88./255))
+        ax.spines['bottom'].set_color(color)
+        ax.spines['top'].set_color(color) 
+        ax.spines['right'].set_color(color)
+        ax.spines['left'].set_color(color)
+        ax.tick_params(axis='x', colors=color)
+        ax.tick_params(axis='y', colors=color)
+        ax.title.set_color(color)
+        ax.yaxis.label.set_color(color)
+        ax.xaxis.label.set_color(color)
+        ax.xaxis.get_offset_text().set_color(color)
+        ax.yaxis.get_offset_text().set_color(color)
         # This is an array of all the lines on the plot. A line for
         # every parameter.
         self.line = []
-        # self.legend = self.ax.legend(loc='upper left')
         self.mins = 0
         self.maxes = 1
         # Each element of line holds a plot, to be combined onto
         # the same graph.
-        self.line.append(self.ax.plot(1,1, label = "Getting Data...")[0])
+        self.line.append(ax.plot(1, 1, label="Getting Data...")[0])
 
         # In order to handle interactivity, I had to do some odd stuff
         # with the toolbar buttons: self.home holds the original
@@ -108,8 +103,7 @@ class mGraph(QtGui.QWidget):
                 self.disableAutoScaling)
         self.setStyleSheet("QPushButton{\
                     color:rgb(189,195, 199); \
-                    background:rgb(70, 80, 88)};\
-                    ")
+                    background:rgb(70, 80, 88)};")
         self.toolbarFrame = QtGui.QFrame()
         toolbarFrameLayout = QtGui.QVBoxLayout()
         toolbarFrameLayout.addWidget(self.toolbar)
@@ -118,15 +112,10 @@ class mGraph(QtGui.QWidget):
         self.toolbarFrame.setStyleSheet("\
                     border:2px solid rgb(0,0,0);\
                     color:rgb(189,195,199); \
-                    background:rgb(70, 80, 88);\
-                    ")
+                    background:rgb(70, 80, 88);")
         self.toolbar.setStyleSheet("\
                     border:0px solid rgb(0,0,0);\
-                    QDialog{background:rgb(250, 80, 88)}\
-                    ")
-        #print dir(self.toolbar)
-        #print self.toolbar.children()
-       # print self.toolbar.setPalette
+                    QDialog{background:rgb(250, 80, 88)}")
         self.matPlotInfo = QtGui.QLabel()
         self.alertFont = QtGui.QFont()
         self.alertFont.setPointSize(12)
@@ -135,6 +124,7 @@ class mGraph(QtGui.QWidget):
                                  "click HOME button to enable.")
         self.matPlotInfo.setFont(self.alertFont)
         
+        #self.refreshRateSec = device.getFrame().getPlotRefreshRate()
         self.refreshRateSec = device.getFrame().getPlotRefreshRate()
         self.timer = QtCore.QTimer(self)
         
@@ -156,24 +146,18 @@ class mGraph(QtGui.QWidget):
         self.dataOk = True
         self.hideButton = QtGui.QPushButton("Show Plot")
         self.hideButton.clicked.connect(self.togglePlot)
-        self.thrtysecButton = QtGui.QPushButton("30 Sec")
-        self.thrtysecButton.clicked.connect(partial(self.plot, 30))
-        self.twoMinButton = QtGui.QPushButton("2 Min")
-        self.twoMinButton.clicked.connect(partial(self.plot, 120))
-        self.fiveMinButton = QtGui.QPushButton("5 Min")
-        self.fiveMinButton.clicked.connect(partial(self.plot, 300))
-        self.thrtyMinButton = QtGui.QPushButton("30 Min")
-        self.thrtyMinButton.clicked.connect(partial(self.plot, 1800))
-        self.twoHrButton = QtGui.QPushButton("2 Hr")
+        self.oneMinButton = QtGui.QPushButton("1 min")
+        self.oneMinButton.clicked.connect(partial(self.plot, 60))
+        self.tenMinButton = QtGui.QPushButton("10 min")
+        self.tenMinButton.clicked.connect(partial(self.plot, 600))
+        self.twoHrButton = QtGui.QPushButton("2 hr")
         self.twoHrButton.clicked.connect(partial(self.plot, 7200))
-        self.tenHrButton = QtGui.QPushButton("10 Hr")
-        self.tenHrButton.clicked.connect(partial(self.plot, 36000))
-        self.oneDayButton = QtGui.QPushButton("24 Hr")
-        self.oneDayButton.clicked.connect(partial(self.plot, 86400))
-        self.oneWkButton = QtGui.QPushButton("1 Wk")
+        self.twelveHrButton = QtGui.QPushButton("12 hr")
+        self.twelveHrButton.clicked.connect(partial(self.plot, 43200))
+        self.threeDayButton = QtGui.QPushButton("3 day")
+        self.threeDayButton.clicked.connect(partial(self.plot, 259200))
+        self.oneWkButton = QtGui.QPushButton("1 week")
         self.oneWkButton.clicked.connect(partial(self.plot, 604800))
-        self.twoWkButton = QtGui.QPushButton("2 Wk")
-        self.twoWkButton.clicked.connect(partial(self.plot, 1209600))
         self.allButton = QtGui.QPushButton("All Time")
         self.allButton.clicked.connect(partial(self.plot, None))
 
@@ -181,35 +165,26 @@ class mGraph(QtGui.QWidget):
         self.toolbar.hide()
 
         # Set the layout.
-        buttonLayout = QtGui.QHBoxLayout()
-        buttonLayout.addWidget(self.hideButton)
-        buttonLayout.addStretch(0)
+        buttonLayout1 = QtGui.QHBoxLayout()
+        buttonLayout1.addWidget(self.hideButton)
+        buttonLayout1.addStretch(0)
         buttonLayout2 = QtGui.QHBoxLayout()
         settingsbuttons1 = QtGui.QHBoxLayout()
-        
-        buttonLayout3 = QtGui.QHBoxLayout()
 
-        buttonLayout2.addWidget(self.thrtysecButton)
-        buttonLayout2.addWidget(self.twoMinButton)
-        buttonLayout2.addWidget(self.fiveMinButton)
-        buttonLayout2.addWidget(self.thrtyMinButton)
+        buttonLayout2.addWidget(self.oneMinButton)
+        buttonLayout2.addWidget(self.tenMinButton)
         buttonLayout2.addWidget(self.twoHrButton)
+        buttonLayout2.addWidget(self.twelveHrButton)
+        buttonLayout2.addWidget(self.threeDayButton)
+        buttonLayout2.addWidget(self.oneWkButton)
+        buttonLayout2.addWidget(self.allButton)
         buttonLayout2.addStretch(0)
-        buttonLayout3.addWidget(self.tenHrButton)
-        buttonLayout3.addWidget(self.oneDayButton)
-        buttonLayout3.addWidget(self.oneWkButton)
-        buttonLayout3.addWidget(self.twoWkButton)
-        buttonLayout3.addWidget(self.allButton)
-        buttonLayout3.addStretch(0)
-        self.thrtysecButton.hide()
-        self.twoMinButton.hide()
-        self.fiveMinButton.hide()
-        self.thrtyMinButton.hide()
+        self.oneMinButton.hide()
+        self.tenMinButton.hide()
         self.twoHrButton.hide()
-        self.tenHrButton.hide()
-        self.oneDayButton.hide()
+        self.twelveHrButton.hide()
+        self.threeDayButton.hide()
         self.oneWkButton.hide()
-        self.twoWkButton.hide()
         self.allButton.hide()
         self.lineSelect.hide()
         self.matframe.hide()
@@ -223,9 +198,8 @@ class mGraph(QtGui.QWidget):
         allButtonsLayout.addLayout(timeButtonsLayout)
         layout.addLayout(allButtonsLayout)
         allButtonsLayout.addLayout(settingsbuttons1)
-        timeButtonsLayout.addLayout(buttonLayout)
+        timeButtonsLayout.addLayout(buttonLayout1)
         timeButtonsLayout.addLayout(buttonLayout2)
-        timeButtonsLayout.addLayout(buttonLayout3)
         timeButtonsLayout.addWidget(self.matPlotInfo)
         layout.addWidget(self.matframe)
         layout.addWidget(self.toolbarFrame)
@@ -233,44 +207,27 @@ class mGraph(QtGui.QWidget):
         self.setLayout(layout)
 
     def enableAutoScaling(self):
-        self.timer.start(self.refreshRateSec*1000)
-        # self.canvas.mpl_disconnect(self.cid)
-        # self.cid = self.canvas.mpl_connect('button_press_event',
-                # self.disableAutoScaling)
+        self.timer.start(self.refreshRateSec * 1000)
         self.home = True
-        self.matPlotInfo.hide()
-        # self.deviceThread = threading.Thread(target = 
-            # self.plot, args=[self.currTimeRange])
-        # If the main thread stops, stop the child thread
-        # self.deviceThread.daemon = True
-        # Start the thread.
-        # self.deviceThread.start()        
+        self.matPlotInfo.hide()        
         self.plot(self.currTimeRange)
 
     def disableAutoScaling(self, event):
         self.home = False
         self.matPlotInfo.show()
         self.canvas.update()
-        # plt.show()
-        # self.canvas.mpl_disconnect(self.cid)
-        # self.cid = self.canvas.mpl_connect('button_press_event',
-                # self.enableAutoScaling)
         self.timer.stop()
-        # self.zoom(self.toolbar)
 
     def togglePlot(self):    
         if not self.hidden:
             self.canvas.hide()
             self.toolbar.hide()
-            self.thrtysecButton.hide()
-            self.twoMinButton.hide()
-            self.fiveMinButton.hide()
-            self.thrtyMinButton.hide()
+            self.oneMinButton.hide()
+            self.tenMinButton.hide()
             self.twoHrButton.hide()
-            self.tenHrButton.hide()
-            self.oneDayButton.hide()
+            self.twelveHrButton.hide()
+            self.threeDayButton.hide()
             self.oneWkButton.hide()
-            self.twoWkButton.hide()
             self.allButton.hide()
             self.matPlotInfo.hide()
             self.matframe.hide()
@@ -279,25 +236,21 @@ class mGraph(QtGui.QWidget):
             self.timer.stop()
             self.hideButton.setText("Show Plot")
             self.hidden = True
-            
-        elif  self.hidden:
+        elif self.hidden:
             self.canvas.show()
             self.toolbar.show()
-            self.thrtysecButton.show()
-            self.twoMinButton.show()
-            self.fiveMinButton.show()
-            self.thrtyMinButton.show()
+            self.oneMinButton.show()
+            self.tenMinButton.show()
             self.twoHrButton.show()
-            self.tenHrButton.show()
-            self.oneDayButton.show()
+            self.twelveHrButton.show()
+            self.threeDayButton.show()
             self.oneWkButton.show()
-            self.twoWkButton.show()
             self.allButton.show()
             self.plot(self.currTimeRange)
             self.matframe.show()
             self.lineSelect.show()
             self.toolbarFrame.show()
-            self.timer.start(self.refreshRateSec*1000)
+            self.timer.start(self.refreshRateSec * 1000)
             self.hideButton.setText("Hide Plot")
             self.enableAutoScaling()
             self.hidden = False
@@ -309,16 +262,16 @@ class mGraph(QtGui.QWidget):
             self.dropdownFont = QtGui.QFont()
             self.dropdownFont.setPointSize(12)
         if dataSet is not None:
-             self.initialized = True
-             self.line[0].remove()
-             self.line = []
+            self.initialized = True
+            self.line[0].remove()
+            self.line = []
 
-             for i in range(len(varNames)):
-                self.line.append(self.ax.plot(1, 1, label=varNames[i])[0])
-                text = QtCore.QString(varNames[i])
-                self.lineSelect.addItem(text)
-                self.lineSelect.setFont(self.dropdownFont)
-                self.lineSelect.setChecked(i, True)
+            for i in range(len(varNames)):
+               self.line.append(self.ax.plot(1, 1, label=varNames[i])[0])
+               text = QtCore.QString(varNames[i])
+               self.lineSelect.addItem(text)
+               self.lineSelect.setFont(self.dropdownFont)
+               self.lineSelect.setChecked(i, True)
 
     def changeIndependenVarRange(self, timeRange):
         if not self.hidden:
@@ -383,22 +336,21 @@ class mGraph(QtGui.QWidget):
                         self.line[i].set_visible(False);
                     pass
                 self.ax.set_title(self.device.getFrame().getTitle(),
-                        color=(189.0/255, 195.0/255, 199.0/255))
+                        color=(189./255, 195./255, 199./255))
                 if self.home and times:
                     self.ax.set_xlim(times[0], times[-1])
                     self.ax.relim(visible_only=True)
-                    self.ax.autoscale(axis = 'y')
+                    self.ax.autoscale(axis='y')
                 
-                yLabel = self.device.getFrame().getYLabel()
+                frame = self.device.getFrame()
+                yLabel = frame.getYLabel()
                 if yLabel is not None:
-                    if self.device.getFrame().getCustomUnits():
-                        self.ax.set_ylabel(yLabel + " (" +
-                                self.device.getFrame().getCustomUnits() +
-                                ")")
-                    elif self.device.getFrame().getUnits()[i-1]:
-                        self.ax.set_ylabel(yLabel + " (" +
-                                self.device.getFrame().getUnits()[i-1] +
-                                ")")
+                    if frame.getCustomUnits():
+                        self.ax.set_ylabel("%s (%s)" %(yLabel, 
+                                frame.getCustomUnits()))
+                    elif frame.getUnits()[i-1]:
+                        self.ax.set_ylabel("%s (%s)" %(yLabel,
+                                frame.getUnits()[i-1]))
 
                 locator = AutoDateLocator()
 
@@ -410,7 +362,7 @@ class mGraph(QtGui.QWidget):
                 self.ax.draw_artist(self.ax.yaxis)
                 self.ax.draw_artist(self.ax.xaxis)
 
-                for i,line in enumerate(self.line):
+                for i, line in enumerate(self.line):
                         self.ax.draw_artist(line)   
 
                 self.ax.set_xlabel("Time")

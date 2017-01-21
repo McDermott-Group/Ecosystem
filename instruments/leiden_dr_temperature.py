@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Leiden DR Temperature
-version = 0.3.0
+version = 0.4.2
 description =  Gives access to Leiden DR temperatures.
 instancename = Leiden DR Temperature
 
@@ -32,6 +32,8 @@ timeout = 20
 """
 
 import os
+import numpy as np
+from scipy.signal import medfilt
 
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.reactor import callLater
@@ -39,8 +41,7 @@ from twisted.internet.task import LoopingCall
 
 from labrad.server import LabradServer, setting
 from labrad.units import mK, K, s
-
-import numpy as np
+from labrad import util
 
 
 class LeidenDRPseudoserver(LabradServer):
@@ -76,8 +77,15 @@ class LeidenDRPseudoserver(LabradServer):
     def initServer(self):
         """Initialize the Leiden DR Temperature Pseudoserver."""
         yield self.getRegistryKeys()
-        self._offset = 1024 # Number of bytes to read near the end 
-                            # of the log file.
+        # Number of bytes to read near the end of the log file.
+        self._offset = 1024
+        # Number of reading to hold in the memory. The filtering is
+        # based on this array.
+        array_length = 50
+        self._arr_still = np.nan * np.empty(array_length)       # mK
+        self._arr_exch = np.nan * np.empty(array_length)        # mK
+        self._arr_mix = np.nan * np.empty(array_length)         # mK
+        self._arr_mix_pt1000 = np.nan * np.empty(array_length)  # K
         yield self.readTemperatures()
         callLater(0.1, self.startRefreshing)
 
@@ -90,7 +98,8 @@ class LeidenDRPseudoserver(LabradServer):
         deferred to fire to indicate that it has terminated.
         """
         self.refresher = LoopingCall(self.readTemperatures)
-        self.refresherDone = self.refresher.start(self.refreshInterval['s'],
+        self.refresherDone = \
+                self.refresher.start(self.refreshInterval['s'],
                 now=True)
         
     @inlineCallbacks
@@ -122,51 +131,118 @@ class LeidenDRPseudoserver(LabradServer):
                 self._offset *= 2
             # Extract temperatures.
             fields = line.split('\t')
-            self._still_temp = float(fields[10]) * mK
-            self._exchange_temp = float(fields[11]) * mK
-            self._mix_temp = float(fields[12]) * mK
-            self._mix_temp_PT1000 = float(fields[13]) * K
+            raw_still = float(fields[10])         # mK
+            raw_exch = float(fields[11])          # mK
+            raw_mix = float(fields[12])           # mK
+            raw_mix_pt1000 = float(fields[13])    # K
+            
+            if self._arr_still[-1] != raw_still or \
+                    self._arr_exch[-1] != raw_exch or \
+                    self._arr_mix[-1] != raw_mix or \
+                    self._arr_mix_pt1000[-1] != raw_mix_pt1000:
                 
+                self._arr_still = np.roll(self._arr_still, -1)
+                self._arr_exch = np.roll(self._arr_exch, -1)
+                self._arr_mix = np.roll(self._arr_mix, -1)
+                self._arr_mix_pt1000 = np.roll(self._arr_mix_pt1000, -1)
+                
+                self._arr_still[-1] = raw_still
+                self._arr_exch[-1] = raw_exch
+                self._arr_mix[-1] = raw_mix
+                self._arr_mix_pt1000[-1] = raw_mix_pt1000
+    
+    def filteredTemperature(self, array, lower_threshold,
+            upper_threshold):
+        if not np.any(np.isfinite(array)):
+            return np.nan
+        # Raw thresholding.
+        array = array[np.isfinite(array)]
+        mask = np.logical_and(np.less(array, upper_threshold),
+                              np.greater(array, lower_threshold))
+        raw = array[mask]
+        
+        # Median filtering.
+        filtered = medfilt(raw, 5)
+        
+        # Fine thresholding.
+        if filtered.size:
+            weight = np.exp(-np.linspace(filtered.size / 5., 0,
+                                         filtered.size))
+            Tmean = np.sum(weight * filtered) / np.sum(weight)
+            Tmed = np.median(raw)
+            
+            if Tmean > 1.3 * Tmed or Tmean < 0.7 * Tmed:
+                T = Tmed
+            else:
+                T = Tmean
+            lower_threshold = np.max([lower_threshold, 0.7 * T])
+            upper_threshold = np.min([upper_threshold, 1.3 * T])
+            mask = np.logical_and(np.less(array, upper_threshold),
+                                  np.greater(array, lower_threshold))
+            fine = array[mask]
+            if fine.size:
+                return fine[-1]
+            else:
+                return Tmean
+        elif raw.size:
+            return raw[-1]
+        else:
+            return np.nan
+   
     @setting(1, 'Refresh Temperatures')
     def refresh_temperatures(self, c):
         """Manually refresh the temperatures."""
         self.readTemperatures()
         
-    @setting(10, 'Still Temperature', returns='v[mK]')
+    @setting(11, 'Raw Still Temperature', returns='v[mK]')
+    def raw_still_temperature(self, c):
+        """Return the raw still chamber temperature."""
+        return self._arr_still[-1] * mK
+
+    @setting(12, 'Raw Exchange Temperature', returns='v[mK]')
+    def raw_exchange_temperature(self, c):
+        """Return the raw exchange chamber temperature."""
+        return self._arr_ech[-1] * mK
+        
+    @setting(13, 'Raw Mix Temperature', returns='v[mK]')
+    def raw_mix_temperature(self, c):
+        """Return the raw mix chamber temperature."""
+        return self._arr_mix[-1] * mK
+        
+    @setting(14, 'Raw Mix Temperature Pt1000', returns='v[K]')
+    def raw_mix_temperature_pt1000(self, c):
+        """
+        Return the raw mix chamber temperature measured with the Pt1000
+        thermometer.
+        """
+        return self._arr_mix_pt1000[-1] * K
+        
+    @setting(21, 'Still Temperature', returns='v[mK]')
     def still_temperature(self, c):
         """Return the still chamber temperature."""
-        if self._still_temp > 10 * K or \
-                self._still_temp < 1 * mK:
-            return np.nan * mK
-        return self._still_temp
+        return self.filteredTemperature(self._arr_still, 1, 1.1e4) * mK
 
-    @setting(11, 'Exchange Temperature', returns='v[mK]')
+    @setting(22, 'Exchange Temperature', returns='v[mK]')
     def exchange_temperature(self, c):
         """Return the exchange chamber temperature."""
-        if self._exchange_temp > 10 * K or \
-                self._exchange_temp < 1 * mK:
-            return np.nan * mK
-        return self._exchange_temp
+        return self.filteredTemperature(self._arr_exch, 1, 1.1e4) * mK
         
-    @setting(12, 'Mix Temperature', returns='v[mK]')
+    @setting(23, 'Mix Temperature', returns='v[mK]')
     def mix_temperature(self, c):
         """Return the mix chamber temperature."""
-        if self._mix_temp > 10 * K or \
-                self._mix_temp < 1 * mK:
-            return np.nan * mK
-        return self._mix_temp
+        return self.filteredTemperature(self._arr_mix, 1, 1.1e4) * mK
         
-    @setting(13, 'Mix Temperature PT1000', returns='v[K]')
+    @setting(24, 'Mix Temperature Pt1000', returns='v[K]')
     def mix_temperature_pt1000(self, c):
-        """Return the mix chamber temperature measured with PT1000."""
-        if self._mix_temp_PT1000 > 500 * K or \
-                self._mix_temp_PT1000 < 1 * K:
-            return np.nan * mK
-        return self._mix_temp_PT1000
+        """
+        Return the raw mix chamber temperature measured with the Pt1000
+        thermometer.
+        """
+        return self.filteredTemperature(self._arr_mix_pt1000, 3, 400) * K
 
 
 __server__ = LeidenDRPseudoserver()
 
+
 if __name__ == '__main__':
-    from labrad import util
     util.runServer(__server__)

@@ -16,69 +16,79 @@
 __author__ = "Noah Meltzer"
 __copyright__ = "Copyright 2016, McDermott Group"
 __license__ = "GPL"
-__version__ = "1.5.1"
+__version__ = "1.5.2"
 __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
-
-import sys
-import MGrapher
-sys.dont_write_bytecode = True
-
+from MWeb import web
 
 class MFrame:
-    '''This class acts as the interface between the devices and all classes
-    which use the device or any of its parameters'''
-    # Name of device's server.
-    serverTitle = None
-    # Parameter names to be displayed on the GUI.
-    nicknames = None
-    # Settings which are called by the GUI.
-    serverSettings = None
-    # Device readings.
-    readings = None
-    # Precisions.
-    precisions = None
-    # Errors.
-    error = False
-    # Error messages.
-    errmsg = None
-    # Label on the y axis of the datachest dataplot.
-    yLabel = ""
-    # Units used for each parameter.
-    units = []
-    # Buttons on the GUI used to control the device.
-    buttons = [[]]
-    # Stores an index of a certain button.
-    buttonInd = None
-    # Is a specified button pushed.
-    buttonPushed = False
-    # Store the plots.
-    isPlotBool = False
-    # Just in case the user wants to label their NGui plot with
-    # custom units (note these are only the units displayed onscreen,
-    # not the units that the data is logged with).
-    custUnits = ''
-    # If the length of the graph should be plotted over a fixed interval.
-    plotLength = None
-    # Hold the datachest object.
-    dataSet = None
-    # Hold the plot.
-    plot = None
-    # Refresh rate of plot.
-    plotRefreshRate = 1
-
-    # RefreshRate for the device.
-    refreshRate = 1
-
-    # Is there a reading out of range?
+  
     def __init__(self):
+
+        """This class acts as the interface between the devices and all
+    classes which use the device or any of its parameters."""
+        # Name of device's server.
+        self.serverTitle = None
+        # Parameter names to be displayed on the GUI.
+        self.nicknames = None
+        # Settings which are called by the GUI.
+        self.serverSettings = None
+        # Device readings.
+        self.readings = None
+        # Precisions.
+        self.precisions = None
+        # Errors.
+        self.error = False
+        # Error messages.
+        self.errmsg = None
+        # Label on the y axis of the dataChest dataplot.
+        self.yLabel = ""
+        # Units used for each parameter.
+        self.units = []
+        # Buttons on the GUI used to control the device.
+        self.buttons = [[]]
+        # Stores an index of a certain button.
+        self.buttonInd = None
+        # Is a specified button pushed?
+        self.buttonPushed = False
+        # Store the plots.
+        self.isPlotBool = False
+        # Just in case the user wants to label their NGui plot with
+        # custom units (note these are only the units displayed onscreen,
+        # not the units that the data is logged with).
+        self.custUnits = ''
+        # If the length of the graph should be plotted over a fixed interval.
+        self.plotLength = None
+        # Hold the datachest object.
+        self.dataSet = None
+        # Hold the plot.
+        self.plot = None
+        # Datalogging disabled by default
+        self.logData = False
+        # Dictionary holding datalogging settings
+        self.datalogsettingsDict = {
+                "enabled"   :    self.logData,
+                "location":     None,
+                "dataset"   :     self.dataSet,
+                "channels":     {},
+                "chest"        :      None,
+                "name"           :      self.serverTitle
+                }
+
+        restoredSettings = web.persistentData.persistentDataAccess(None,"DataLoggingInfo", self.serverTitle)
+
+        if restoredSettings != None:
+            self.datalogsettingsDict = restoredSettings
+        # Is there a reading out of range?
         self.outOfRange = {}
-
+       
     def setTitle(self, title):
+       # print "Set title:", title
         self.serverTitle = title
-
+    
     def getTitle(self):
+        #print "Get Title:",self.serverTitle
         return self.serverTitle
 
     def getNicknames(self):
@@ -166,17 +176,27 @@ class MFrame:
         return self.plot
 
     def setPlotRefreshRate(self, period):
-        self.plotRefreshRate = period
-
+        if  self.getTitle()is None:
+            raise IOError("Refresh Rates cannot be set until name is given to device.")
+        web.persistentData.persistentDataAccess(period, 'deviceRefreshRates',self.getTitle(),'plot')
+      
     def getPlotRefreshRate(self):
-        return self.plotRefreshRate
-
+        #pprint.pprint(web.persistentDataDict)
+        if  self.getTitle()is None:
+            raise IOError("Refresh Rates cannot be set until name is given to device.")
+        return web.persistentData.persistentDataAccess(None, 'deviceRefreshRates',self.getTitle(),'plot', default = 1)
+        
     def setRefreshRate(self, period):
-        self.refreshRate = period
-
+        if  self.getTitle()is None:
+            raise IOError("Refresh Rates cannot be set until name is given to device.")
+        
+        web.persistentData.persistentDataAccess(period, 'deviceRefreshRates',self.getTitle(),'readings') 
+        
     def getRefreshRate(self):
-        return self.refreshRate
-
+        if  self.getTitle()is None:
+            raise IOError("Refresh Rates cannot be set until name is given to device.")
+        return web.persistentData.persistentDataAccess(None, 'deviceRefreshRates',self.getTitle(),'readings', default = 1)
+        
     def getPlotLength(self):
         return self.plotLength
 
@@ -191,6 +211,10 @@ class MFrame:
 
     def isDataLogging(self):
         return self.logData
+        
+    def DataLoggingInfo(self):
+        
+        return self.datalogsettingsDict
 
     def getOutOfRangeStatus(self): 
         return self.outOfRange
@@ -202,4 +226,5 @@ class MFrame:
         self.outOfRange[key] = False
 
     def disableRange(self):
-      self.outOfRange = {key:False for key in self.outOfRange}
+      self.outOfRange = {key: False for key in self.outOfRange}
+      

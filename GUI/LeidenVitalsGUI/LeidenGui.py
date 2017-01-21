@@ -23,13 +23,10 @@ from dataChestWrapper import *
 import MGui # Handles all GUI operations. Independent of LabRAD.
 from Device import Device
 
-sys.dont_write_bytecode = True
-
 
 class nViewer:
     gui = None
     devices =[]
-    
     def __init__(self, parent = None):
         # Establish a connection to LabRAD.
         try:
@@ -52,7 +49,7 @@ class nViewer:
             time.sleep(2)
             sys.exit(1)
 
-        PT1000s = Device("50K and 3K PT1000 Temperature")
+        PT1000s = Device("50K and 3K Pt1000 Temperatures")
         PT1000s.connection(cxn)
         PT1000s.setServerName("goldstein_s_pt1000_temperature_monitor")
         PT1000s.addParameter("50K Stage Temperature",
@@ -69,27 +66,25 @@ class nViewer:
         PT1000s.begin()
         self.devices.append(PT1000s)
 
-        LeidenDRTemperature = Device("Dilution Unit Temperature")
+        LeidenDRTemperature = Device("Dilution Unit Temperatures")
         LeidenDRTemperature.connection(cxn)
         LeidenDRTemperature.setServerName("leiden_dr_temperature")
         LeidenDRTemperature.addParameter("Still Temperature",
                 "still_temperature", None)
         LeidenDRTemperature.addParameter("Exchange Temperature",
                 "exchange_temperature", None)
-        LeidenDRTemperature.addParameter("Mix Temperature (TT)",
+        LeidenDRTemperature.addParameter("Mix Temperature",
                 "mix_temperature", None)
-        LeidenDRTemperature.selectDeviceCommand("select_device", 0)
         LeidenDRTemperature.addPlot()
         LeidenDRTemperature.begin()
         LeidenDRTemperature.setYLabel("Temperature")
         self.devices.append(LeidenDRTemperature)
         
-        LeidenDRTemperature = Device("Mix PT1000 Temperature")
+        LeidenDRTemperature = Device("Mix Pt1000 Temperature")
         LeidenDRTemperature.connection(cxn)
         LeidenDRTemperature.setServerName("leiden_dr_temperature")
-        LeidenDRTemperature.addParameter("Mix Temperature (PT1000)",
+        LeidenDRTemperature.addParameter("Mix Temperature",
                 "mix_temperature_pt1000", None)
-        LeidenDRTemperature.selectDeviceCommand("select_device", 0)
         LeidenDRTemperature.addPlot()
         LeidenDRTemperature.begin()
         LeidenDRTemperature.setYLabel("Temperature")
@@ -131,13 +126,13 @@ class nViewer:
                 "You are about to turn the compressor on.",
                 "start", None)
         Compressor.addParameter("Input Water Temperature",
-                "temperaturesforgui", None, 0, 'degC', 1)
+                "current_temperatures_only", None, 0, 'degC', 1)
         Compressor.addParameter("Output Water Temperature",
-                "temperaturesforgui", None, 1, 'degC', 1)
+                "current_temperatures_only", None, 1, 'degC', 1)
         Compressor.addParameter("Helium Temperature",
-                "temperaturesforgui", None, 2, 'degC', 1)
+                "current_temperatures_only", None, 2, 'degC', 1)
         Compressor.addParameter("Oil Temperature",
-                "temperaturesforgui", None, 3, 'degC', 1)
+                "current_temperatures_only", None, 3, 'degC', 1)
         Compressor.selectDeviceCommand("select_device", 0)
         Compressor.setYLabel("Temperature")
         Compressor.addPlot()
@@ -154,10 +149,6 @@ class nViewer:
         Flow.begin()
         self.devices.append(Flow)
 
-        # Start the datalogger. This line can be commented
-        # out if no datalogging is required.
-        self.chest = dataChestWrapper(self.devices)
-        
         # Create the gui.
         self.gui = MGui.MGui()
         self.gui.startGui(self.devices, 'Leiden DR GUI', 'Leiden Data',
