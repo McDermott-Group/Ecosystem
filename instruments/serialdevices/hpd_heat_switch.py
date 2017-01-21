@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Heat Switch
-version = 1.0
+version = 1.0.0
 description = Provides a way to open and close the Heat Switch for the Shasta ADRs.
   
 [startup]
@@ -32,6 +32,7 @@ timeout = 5
   
 from labrad.server import setting, LabradServer
 from twisted.internet.defer import inlineCallbacks, returnValue
+
 
 class HeatSwitchServer(LabradServer):
     name = 'Heat Switch' # Server name

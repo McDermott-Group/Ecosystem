@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = HP3478A
-version = 1.0
+version = 1.0.0
 description = Provides a way to control and get data from the HP3478A Temperature Monitor.
   
 [startup]
@@ -29,13 +29,15 @@ message = 987654321
 timeout = 5
 ### END NODE INFO
 """
-  
-from labrad.server import setting
-from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
-from twisted.internet.defer import inlineCallbacks, returnValue
-from labrad import units, util
+
 import math
 import numpy
+from twisted.internet.defer import inlineCallbacks, returnValue
+
+from labrad.server import setting
+from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
+from labrad import units, util
+
 
 class HP3478AServer(GPIBManagedServer):
     name = 'HP3478A' # Server name

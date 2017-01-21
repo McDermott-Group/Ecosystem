@@ -18,7 +18,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Agilent 8720ET Network Analyzer
-version = 1.2.0
+version = 1.3.0
 description = Two channel 8720ET network analyzer server
 
 [startup]
@@ -31,6 +31,8 @@ timeout = 5
 ### END NODE INFO
 """
 
+import os
+import sys
 import numpy
 from twisted.internet.defer import inlineCallbacks, returnValue
 
@@ -38,8 +40,17 @@ from labrad.gpib import GPIBManagedServer
 from labrad.server import setting
 import labrad.units as units
 
-from gpib_device_wrapper import ReadRawGPIBDeviceWrapper
-from utilities import sleep
+if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
+    SCRIPT_PATH = os.path.dirname(os.getcwd())
+else:
+    SCRIPT_PATH = os.path.dirname(__file__)
+LOCAL_PATH = SCRIPT_PATH.rsplit('instruments', 1)[0]
+INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, 'instruments')
+if INSTRUMENTS_PATH not in sys.path:
+    sys.path.append(INSTRUMENTS_PATH)
+
+from utilities.gpib_device_wrapper import ReadRawGPIBDeviceWrapper
+from utilities.sleep import sleep
 
 
 class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):

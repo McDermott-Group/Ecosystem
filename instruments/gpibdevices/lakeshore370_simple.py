@@ -40,11 +40,10 @@ from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 import labrad.units as units
 import numpy as np
 
-			
+
 class LakeshoreRuOxServer(GPIBManagedServer):
 	name = 'Lakeshore RuOx'
 	deviceName = 'LSCI MODEL370'
-	#deviceWrapper = RuOxWrapper
 
 
 	@setting(10, 'Temperatures', returns='*v[K]')

@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = GPIB RF Generators
-version = 1.0.0
+version = 1.0.1
 description = Provides basic control for microwave generators.
 
 [startup]
@@ -30,14 +30,25 @@ timeout = 5
 ### END NODE INFO
 """
 
+import os
+import sys
 import string
-
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 from labrad.server import setting
 from labrad.units import Hz, dBm
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
-from gpib_device_wrapper import ReadRawGPIBDeviceWrapper
+
+if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
+    SCRIPT_PATH = os.path.dirname(os.getcwd())
+else:
+    SCRIPT_PATH = os.path.dirname(__file__)
+LOCAL_PATH = SCRIPT_PATH.rsplit('instruments', 1)[0]
+INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, 'instruments')
+if INSTRUMENTS_PATH not in sys.path:
+    sys.path.append(INSTRUMENTS_PATH)
+
+from utilities.gpib_device_wrapper import ReadRawGPIBDeviceWrapper
 
 
 class HP83712BWrapper(GPIBDeviceWrapper):

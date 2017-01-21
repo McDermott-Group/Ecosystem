@@ -30,8 +30,10 @@ timeout = 20
 ### END NODE INFO
 """
 
-from twisted.internet.defer import inlineCallbacks, returnValue
+import os
+import sys
 import numpy as np
+from twisted.internet.defer import inlineCallbacks, returnValue
 
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting
@@ -39,7 +41,16 @@ import labrad.units as units
 from labrad import util
 import csv
 
-from utilities import sleep
+if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
+    SCRIPT_PATH = os.path.dirname(os.getcwd())
+else:
+    SCRIPT_PATH = os.path.dirname(__file__)
+LOCAL_PATH = SCRIPT_PATH.rsplit('instruments', 1)[0]
+INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, 'instruments')
+if INSTRUMENTS_PATH not in sys.path:
+    sys.path.append(INSTRUMENTS_PATH)
+
+from utilities.sleep import sleep
 
 
 class goldsteinsLaserEndpointMonitorWrapper(DeviceWrapper):
