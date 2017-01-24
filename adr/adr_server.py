@@ -571,7 +571,7 @@ class ADRServer(DeviceServer):
             self.state['Pressure'] = pressure
             # update relevant files
             try:
-                newTemps = [self.state[t]['K'] for t in ['T_60K','T_3K','T_GGG','T_FAA']]
+                newTemps = [numpy.float16(self.state[t]['K']) for t in ['T_60K','T_3K','T_GGG','T_FAA']]
                 timestamp = deltaT(self.state['datetime'] - datetime.datetime(1970, 1, 1))
                 self.tempDataChest.addData( [[timestamp] + newTemps] )
             except Exception as e:
