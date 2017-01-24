@@ -252,8 +252,8 @@ class ADRServer(DeviceServer):
         dtstamp = dts.dateStamp(iso)
         self.tempDataChest.createDataset("temperatures",
                 [('time',[1],'utc_datetime','')],
-                [('temp60K',[1],'float64','Kelvin'),('temp03K',[1],'float64','Kelvin'),
-                 ('tempGGG',[1],'float64','Kelvin'),('tempFAA',[1],'float64','Kelvin')],
+                [('temp60K',[1],'float16','Kelvin'),('temp03K',[1],'float16','Kelvin'),
+                 ('tempGGG',[1],'float16','Kelvin'),('tempFAA',[1],'float16','Kelvin')],
                  dateStamp=dtstamp)
         self.tempDataChest.addParameter("X Label", "Time")
         self.tempDataChest.addParameter("Y Label", "Temperature")
