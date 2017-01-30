@@ -13,7 +13,12 @@ class MLabradNode(MNode):
         # should be the same as the title of the device
         self.setTitle(self.device.getFrame().getTitle())
         # The color of a device node is blue
-       
+        self.showOnGui = QtGui.QCheckBox("Show", self.nodeFrame)
+        self.showOnGui.setStyleSheet("color:rgb(189,195,199);\n background:rgb(52,73,94,0)")
+        self.showOnGui.setChecked(True)
+        self.nodeLayout.addWidget(self.showOnGui, 1, 0)
+        self.showOnGui.clicked.connect(partial(self.device.getFrame().getContainer().visible))
+
         for i,param in enumerate(self.device.getFrame().getNicknames()):
             self.addAnchor(MAnchor(param,self,  i, type = 'output'))
             
