@@ -60,11 +60,11 @@ class MAnchor(QtGui.QGraphicsItem):
         #self.update(self.rect)
         self.labelWidget = QtGui.QLabel(self.label, self.nodeFrame)
         self.labelWidget.setStyleSheet("color:rgb(189, 195, 199)")
-        self.nodeLayout.addWidget(self.labelWidget, self.index+1, 0)
+        self.nodeLayout.addWidget(self.labelWidget, self.index+2, 0)
         self.lcd = QtGui.QLCDNumber(self.nodeFrame)
         self.lcd.setSegmentStyle(QtGui.QLCDNumber.Flat)
         self.lcd.setStyleSheet("color:rgb(189, 195, 199);\n")
-        self.nodeLayout.addWidget(self.lcd, self.index+1, 1)
+        self.nodeLayout.addWidget(self.lcd, self.index+2, 1)
         self.prepareGeometryChange()
     def getLcd(self):
         return self.lcd
@@ -90,12 +90,17 @@ class MAnchor(QtGui.QGraphicsItem):
         self.pipe = pipe
     def delete(self):
         print "deleting anchor"
-        self.scene.removeItem(self)
-        self.setParentItem(None)
+        
+
+        
         self.nodeLayout.removeWidget(self.lcd)
         self.nodeLayout.removeWidget(self.labelWidget)
+        
+        self.labelWidget.deleteLater()
         self.lcd.deleteLater()
-        self.lcd = None
+        
+        self.setParentItem(None)
+        self.scene.removeItem(self)
     def disconnect(self):
         '''Disconnect and delete the pipe'''
         #self.parentNode().pipeDisconnected(self, self.pipe)

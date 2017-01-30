@@ -5,7 +5,9 @@ import gc
 from functools import partial
 from MNodes.MVirtualDeviceNode import MVirtualDeviceNode
 from MNodes.MCompare import MCompare
-
+from MWeb import web
+import importlib
+import inspect
 app = QtGui.QApplication([])
 
 
@@ -38,17 +40,39 @@ class NodeGui(QtGui.QDialog):
             # self.scene.addItem(MNode(device, self.scene, mode = 'labrad_device'))
             # self.scene.addItem(MNode(device, self.scene, mode = 'output'))
         mainLayout.addWidget(view)
-        addVirtualDeviceButton = QtGui.QPushButton("New Virtual Device")
-        addVirtualDeviceButton.clicked.connect(self.addVirtualDevice)
-        mainLayout.addWidget(addVirtualDeviceButton)
+
+
+        addDeviceBtn = QtGui.QPushButton("Add Device")
+        addDeviceBtn.clicked.connect(self.addDevice)
         
-        addComparatorButton = QtGui.QPushButton("New Comparator")
-        addComparatorButton.clicked.connect(self.addComparator)
-        mainLayout.addWidget(addComparatorButton)
+        mainLayout.addWidget(addDeviceBtn)
         self.setLayout(mainLayout)
-    def addVirtualDevice(self):
-        self.tree.addNode(MVirtualDeviceNode())
-    def addComparator(self):
-        self.tree.addNode(MCompare())
-       # view.show()
-    
+
+    def addDevice(self):
+        items = web.nodeFilenames
+        formattedItems = []
+        for i,item in enumerate(items):
+            item  = item.replace(".py","")
+            if item == '__init__' or item == 'MLabradNode':
+                pass
+            else: 
+                formattedItems.append(item)
+        item, ok = QtGui.QInputDialog.getItem(self, "Add Node", "Select Node:", formattedItems, editable = False)
+        
+        if ok:  
+           #import MNodes.MCompare
+           newNodeModule = importlib.import_module(str('MNodeEditor.MNodes.'+str(item)))
+           print "newNodeModule:", newNodeModule
+           
+           for name, obj in inspect.getmembers(newNodeModule):
+                #print obj.__dict__
+                if inspect.isclass(obj):
+                    print "looking at:", item, obj.__name__
+                if inspect.isclass(obj) and item == obj.__name__:
+                    newNodeClass = obj
+                    print "obj:", obj
+                    self.tree.addNode(obj())
+                    print "importing type:", str(newNodeClass)
+                    break
+
+                    

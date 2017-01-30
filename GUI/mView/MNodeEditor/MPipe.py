@@ -26,8 +26,12 @@ class MPipe(QtGui.QGraphicsPathItem):
         self.data = None
     def connect(self, endAnchor):
         '''Connect the other end of the pipe.'''
+        if endAnchor.getType() == self.startAnchor.getType():
+            print "Cannot connect two", endAnchor.getType(), "anchors together."
+            raise ValueError("Invalid pipe connection.")
         self.inputAnchor = endAnchor
         self.outputAnchor = self.startAnchor
+        
         #endAnchor.parentNode().pipeConnected(endAnchor, self)
         if endAnchor.getType()== 'output':
             self.label = endAnchor.getLabel()

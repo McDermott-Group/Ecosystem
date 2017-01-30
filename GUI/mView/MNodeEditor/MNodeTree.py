@@ -1,10 +1,23 @@
 from MPipe import MPipe
-#from MNode import MNode
+import os
+import sys, inspect
+from glob import glob
+from MWeb import web
+
 class NodeTree:
     scene = None
     pipes = []
     #def __init__(self):
     nodes = []
+    print os.getcwd()
+    path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) 
+    
+    os.chdir(path+"\MNodes")
+    print os.getcwd()
+    for file in glob("*.py"):
+        web.nodeFilenames.append(file)
+        print file
+
     def getPipes(self):
         return self.pipes
         
@@ -19,14 +32,16 @@ class NodeTree:
         start = pipeToDel.getStartAnchor()
         end = pipeToDel.getEndAnchor()
         start.connect(None)
-        end.connect(None)
+        if end != None:
+            end.connect(None)
         self.scene.removeItem(pipeToDel)
         for i,pipe in enumerate(self.pipes):
             if pipe is pipeToDel:
                 self.pipes[i] = None
                 del self.pipes[i]
         start.parentNode().pipeDisconnected()
-        end.parentNode().pipeDisconnected()
+        if end != None:
+            end.parentNode().pipeDisconnected()
                 
     def setScene(self, scene):
         self.scene = scene
@@ -36,31 +51,36 @@ class NodeTree:
         
     def connect(self, anchor, endAnchor = None):
         '''Connect anchors with a pipe.'''
-        print "endAnchor:", endAnchor
-        print "anchor:", anchor
-        if endAnchor != None:
-            self.pipes.append(MPipe(anchor, self.scene))
-            self.pipes[-1].connect(endAnchor)
-            endAnchor.connect(self.pipes[-1])
-        # If the start anchor of the pipe is and output
-            endAnchor.parentItem().pipeConnected(endAnchor, self.pipes[-1])
+        try:
+            print "endAnchor:", endAnchor
+            print "anchor:", anchor
+            if endAnchor != None:
+                self.pipes.append(MPipe(anchor, self.scene))
+                self.pipes[-1].connect(endAnchor)
+                endAnchor.connect(self.pipes[-1])
+            # If the start anchor of the pipe is and output
+                endAnchor.parentItem().pipeConnected(endAnchor, self.pipes[-1])
 
-        else:
-            if len(self.getPipes()) == 0:
-                self.pipe = self.addPipe(MPipe(anchor, self.scene))
-                
             else:
-                if self.getPipes()[-1].isUnconnected():
-                    #print "using existing pipe"
-                    self.getPipes()[-1].connect(anchor)
-                    self.pipe =  self.getPipes()[-1]
-                else:
+                if len(self.getPipes()) == 0:
                     self.pipe = self.addPipe(MPipe(anchor, self.scene))
-                self.pipe = self.getPipes()[-1]
-        
-        anchor.parentItem().pipeConnected(anchor, self.pipes[-1])
-        
-        anchor.connect(self.pipes[-1])
+                    
+                else:
+                    if self.getPipes()[-1].isUnconnected():
+                        #print "using existing pipe"
+                        self.getPipes()[-1].connect(anchor)
+                        self.pipe =  self.getPipes()[-1]
+                    else:
+                        self.pipe = self.addPipe(MPipe(anchor, self.scene))
+                    self.pipe = self.getPipes()[-1]
+            
+            anchor.parentItem().pipeConnected(anchor, self.pipes[-1])
+            
+            anchor.connect(self.pipes[-1])
+        except  ValueError, e:
+            print "ERROR:",e
+            self.deletePipe(self.pipes[-1])
+
         
         
         

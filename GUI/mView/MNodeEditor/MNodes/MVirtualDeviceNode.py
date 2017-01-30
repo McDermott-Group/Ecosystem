@@ -23,11 +23,16 @@ class MVirtualDeviceNode(MNode):
         self.associatedDevice.addParameter(self.getAnchors()[0].getLabel())
         self.associatedDevice.getFrame().setNode(self)
         editButton = QtGui.QPushButton("Edit")
+        self.showOnGui = QtGui.QCheckBox("Show", self.nodeFrame)
+        self.showOnGui.setStyleSheet("color:rgb(189,195,199);\n background:rgb(52,94,73,0)")
+        self.showOnGui.setChecked(True)
         self.nodeLayout.addWidget(editButton, 0, 1)
+        self.nodeLayout.addWidget(self.showOnGui, 1, 0)
         editButton.clicked.connect(self.openVirtualDeviceGui)
         web.gui.color = (52,94,73)
         web.gui.addDevice(self.associatedDevice)
-        
+        self.showOnGui.clicked.connect(partial(self.associatedDevice.getFrame().getContainer().visible))
+
     def refreshData(self):
         #print "virtual device refreshing data"
         

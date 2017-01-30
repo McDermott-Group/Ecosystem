@@ -18,6 +18,7 @@ class MNodeEditorHandler:
         #self.mainGui = mainGui
         #atexit.register(self.stop)
         # Create a new node to represent each device in the node tree
+    def begin(self):
         for dev in web.devices:
             newNode = MLabradNode(dev)
             self.nodeTree.addNode(newNode)

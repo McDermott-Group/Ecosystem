@@ -3,6 +3,8 @@ from MAnchor import MAnchor
 import traceback
 from MWeb import web
 class MNode(QtGui.QGraphicsItem):
+    # Attribute that lets MView find this MNode
+    
     def __init__(self, parent = None, *args, **kwargs):
         QtGui.QGraphicsItem.__init__(self,parent)
         #default color'
@@ -11,8 +13,8 @@ class MNode(QtGui.QGraphicsItem):
         self.color = (50,50,50)
         self.device = parent
         self.isDevice = False
-        #self.nodeFrame.setStyleSheet(".QFrame{background:rgba"+str(self.color[0])+','+str(self.color[1])+','+str(self.color[2])+', 20)'+
-         #                                                                   "; border:rgba(189, 195, 199)")
+        
+        
     def begin(self,   **kwargs):
         ''' Create a new node'''
         #print "self.scene:",self.scene
@@ -30,6 +32,8 @@ class MNode(QtGui.QGraphicsItem):
         self.label.setFont(self.font)
         self.label.setStyleSheet("color:rgb(189,195,199)")
         self.nodeLayout.addWidget(self.label, 0, 0)
+        
+
         
        
         #nodeLayout.addWidget(QtGui.QCheckBox(nodeFrame))
@@ -101,7 +105,7 @@ class MNode(QtGui.QGraphicsItem):
             type = kwargs.get('type', None)
             if name == None or type == None:
                 raise RuntimeError("If no anchor is passed to MNode.addAnchor(), then \'name\', \'type\' keyword arguments must be given.")
-            anchor = MAnchor(name, self, len(self.anchors), type = type)
+            anchor = MAnchor(name, self, len(self.anchors), type = type) # adds itself
             
         self.anchors.append(anchor)
         self.anchorAdded(anchor)
@@ -113,8 +117,12 @@ class MNode(QtGui.QGraphicsItem):
         if anchor == None:
             print "deleting last anchor"
             self.anchors[-1].delete()
+            del self.anchors[-1]
         else:
             anchor.delete()
+            for i, anc in enumerate(self.anchors):
+                if anc is anchor:
+                    del anchor[i]
     def pipeDisconnected(self):
         pass
     def pipeConnected(self, anchor, pipe):
