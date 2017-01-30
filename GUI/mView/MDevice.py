@@ -44,6 +44,7 @@ class MDevice(QThread):
         
     def setContainer(self, container):
         self.container = container
+        self.frame.setContainer(container)
     def getContainer(self):
         return self.container
     def updateContainer(self):

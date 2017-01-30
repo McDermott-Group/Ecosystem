@@ -48,7 +48,7 @@ class web:
     virtualDevices = []
     gui = None
     title = None
-    
+    nodeFilenames = []
 
     persistentData = None
     

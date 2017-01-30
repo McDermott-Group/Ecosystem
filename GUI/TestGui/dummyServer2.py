@@ -13,11 +13,27 @@ class MyServer2(LabradServer):
 
     start = t.time() 
     zip = 10
+    prev0 = 0 
+    prev1 = 0
+    prev2 = 0 
     @setting(10, returns='v[degF]')
     def Temperature(self, c):
-      
-        return random.random()*self.zip*units.degF
+        new =  self.prev2 + self.zip*(random.random()-0.5)
+        self.prev2 = new
+        return new*units.degF
        # return 0.5
+    @setting(100, returns='v[bar]')
+    def pressure(self, c):
+       
+        new =  self.prev1 + self.zip*(random.random()-0.5)
+        self.prev1 = new
+        return new*units.bar
+    @setting(200, returns='v[g]')
+    def moisture(self, c):
+       
+        new =  self.prev0 + self.zip*(random.random()-0.5)
+        self.prev0 = new
+        return new*units.g
     @setting(11, zip = 'i')
     def changeLocation(self, ctx, zip):
         self.zip = zip

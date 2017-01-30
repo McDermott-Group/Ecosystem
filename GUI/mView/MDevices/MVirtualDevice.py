@@ -53,9 +53,9 @@ class MVirtualDevice(MDevice.MDevice):
     def setPlotRefreshRate(self, period):
         self.frame.setPlotRefreshRate(period)
     def addPlot(self, length=None):
-        self.frame.addPlot(length)
+        #self.frame.addPlot(length)
         # Datalogging must be enabled if we want to plot data.
-        self.frame.enableDataLogging(True)
+        self.frame.enableDataLogging(False)
         return self.frame.getPlot()
     def query(self):
         pass

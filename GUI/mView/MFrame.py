@@ -82,6 +82,7 @@ class MFrame:
         # Is there a reading out of range?
         self.outOfRange = {}
         self.node = None
+        self.container = None
     def setTitle(self, title):
        # print "Set title:", title
         self.serverTitle = title
@@ -233,3 +234,8 @@ class MFrame:
     def getNode(self):
         return self.node
         
+    def setContainer(self, container):
+        self.container = container
+        
+    def getContainer(self):
+        return self.container

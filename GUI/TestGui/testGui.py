@@ -46,8 +46,11 @@ class nViewer:
         localTemp.connection(cxn)
         localTemp.setServerName("my_server2")
         localTemp.addParameter("Outside Temperature", "temperature", None)
-        localTemp.addButton("Madison Weather",  None, "changeLocation", 53715)
-        localTemp.addButton("St. Paul Weather", None,  "changeLocation", 55118)
+        localTemp.addParameter("Outside pressure", "pressure", None)
+        localTemp.addParameter("Humidity", "moisture", None)
+        
+        localTemp.addButton("Madison Weather",  None, "changeLocation", 5)
+        localTemp.addButton("St. Paul Weather", None,  "changeLocation", 2)
 
         localTemp.addPlot()
         localTemp.setPlotRefreshRate(2)
