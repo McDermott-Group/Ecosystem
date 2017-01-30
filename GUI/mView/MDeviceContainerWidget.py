@@ -15,6 +15,7 @@ class MDeviceContainerWidget(QtGui.QFrame):
         self.unitLabels = []
         self.lcds = []
         self.device = device
+        self.dc = None
         
         grid = QtGui.QGridLayout(self)
         self.grid = grid
@@ -51,7 +52,9 @@ class MDeviceContainerWidget(QtGui.QFrame):
 
         buttonLayout = QtGui.QHBoxLayout(self)
         buttons = device.getFrame().getButtons()
-
+        
+        self.hidden = False
+        
         for button in buttons:
             if button != []:
 
@@ -100,6 +103,7 @@ class MDeviceContainerWidget(QtGui.QFrame):
             yPos = len(self.nicknames)+1
             device.getFrame().setPlot(self.dc)
             grid.addWidget(self.dc, yPos,0,yPos,3)
+
     def addParameter(self):
         label = QtGui.QLabel('Untitled', self)
         label.setFont(self.font)
@@ -129,16 +133,28 @@ class MDeviceContainerWidget(QtGui.QFrame):
         lcdHBox = QtGui.QHBoxLayout(self)
         lcdHBox.addStretch(0)
         lcdHBox.addWidget(lcd)
-        self.grid.removeWidget(self.dc)
         self.grid.addLayout(lcdHBox, self.grid.rowCount()-1, 1)
-        self.grid.addWidget(self.dc, self.grid.rowCount(), 0, 1, 3)
+        if self.dc != None:
+            self.grid.removeWidget(self.dc)
+            self.grid.addWidget(self.dc, self.grid.rowCount(), 0, 1, 3)
+        
+    def visible(self, show = None):
+        if self.hidden:
+            self.show()
+            self.hidden = False
+            print "showing"
+        else:
+            self.hide()
+            self.hidden = True
+            print "hidden"
     def update(self):
         #print "updating frame"
         frame = self.device.getFrame()
         #print "updating data 1",self.device.getFrame().getTitle()
         frame.getNode().refreshData()
         #print "updating data 2",self.device.getFrame().getTitle()
-
+        if self.device.getFrame().isPlot():
+            self.device.getFrame().getPlot().plot(time = 'last_valid')
         if not frame.isError():
             readings = frame.getReadings()
             #print "readings:", readings
