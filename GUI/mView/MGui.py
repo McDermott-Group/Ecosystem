@@ -77,7 +77,10 @@ class MGui(QtGui.QMainWindow):
     # Used to allow query to keep calling itself.
     keepGoing = True
     
-
+    # splash_pix = QtGui.QPixmap('logo.png')
+    # splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
+    # splash.show()
+    
     def initGui(self, devices, parent=None):
         """Configure all GUI elements."""
         QtGui.QWidget.__init__(self, parent)
@@ -236,6 +239,7 @@ class MGui(QtGui.QMainWindow):
         # Show the GUI.
         self.show()
         self.timer = QtCore.QTimer(self)
+        self.neh.begin()
         # Update the GUI every so often. This CAN ONLY be done 
         # in the main thread.
         if self.keepGoing:
