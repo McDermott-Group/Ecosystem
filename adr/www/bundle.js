@@ -265,13 +265,17 @@ var AllStatuses = function AllStatuses(_ref2) {
         PSCurrent = _ref2.PSCurrent,
         backEMF = _ref2.backEMF;
 
+    var pText = 'NaN';
+    if (pressure != null) {
+        pText = pressure.toExponential();
+    }
     return React.createElement(
         'div',
         null,
         React.createElement(Status, { label: 'PS Voltage', color: 'grey', value: PSVoltage, units: "V" }),
         React.createElement(Status, { label: 'PS Current', color: 'grey', value: PSCurrent, units: "A" }),
         React.createElement(Status, { label: 'Back EMF', color: 'grey', value: backEMF, units: "V" }),
-        React.createElement(Status, { label: 'Pressure', color: 'grey', value: pressure.toExponential(), units: "Torr" })
+        React.createElement(Status, { label: 'Pressure', color: 'grey', value: pText, units: "Torr" })
     );
 };
 var StatusDisplay = connect(mapStateToStatusProps)(AllStatuses);
@@ -424,19 +428,19 @@ var RegulateButton = connect(mapStateToRegulateProps)(function (_ref7) {
         isRegulating = _ref7.isRegulating;
 
     if (isRegulating) {
-        var buttonStyle = { width: "calc(70% - 10px)", borderTopRightRadius: '0', borderBottomRightRadius: '0' };
+        var buttonStyle = { width: "calc(70% - 10px)", borderTopRightRadius: '0px', borderBottomRightRadius: '0px' };
         var text = 'Stop Regulating';
         var buttonClick = function buttonClick(e) {
             return ws.send(JSON.stringify({ command: 'Stop Regulating' }));
         };
     } else if (isMaggingUp) {
-        var buttonStyle = { width: "calc(70% - 10px)", borderTopRightRadius: '0', borderBottomRightRadius: '0', color: 'grey' };
+        var buttonStyle = { width: "calc(70% - 10px)", borderTopRightRadius: '0px', borderBottomRightRadius: '0px', color: 'grey' };
         var text = 'Regulate';
         var buttonClick = function buttonClick(e) {
             return null;
         };
     } else {
-        var buttonStyle = { width: "calc(70% - 10px)", borderTopRightRadius: '0', borderBottomRightRadius: '0' };
+        var buttonStyle = { width: "calc(70% - 10px)", borderTopRightRadius: '0px', borderBottomRightRadius: '0px' };
         var text = 'Regulate';
         var buttonClick = function buttonClick(e) {
             var tempInput = document.getElementById("regTempField");
@@ -613,7 +617,7 @@ window.onload = function () {
         console.log("socket closed");
     };
     ws.onmessage = function (e) {
-        var newState = JSON.parse(e.data);
+        var newState = JSON.parse(e.data.replace(/NaN/g, 'null'));
         if (newState.hasOwnProperty('temps')) {
             dispatch(updateTemps(newState.temps));
             delete newState.temps;

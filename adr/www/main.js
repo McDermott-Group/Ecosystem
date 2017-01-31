@@ -200,12 +200,16 @@ const mapStateToStatusProps = (storeState,props) => {
     }
 }
 const AllStatuses = ({pressure,PSVoltage,PSCurrent,backEMF}) => {
+    var pText = 'NaN'
+    if (pressure != null) {
+        pText = pressure.toExponential();
+    }
     return(
         <div>
             <Status label="PS Voltage" color="grey" value={PSVoltage} units={"V"} />
             <Status label="PS Current" color="grey" value={PSCurrent} units={"A"} />
             <Status label="Back EMF" color="grey" value={backEMF} units={"V"} />
-            <Status label="Pressure" color="grey" value={pressure.toExponential()} units={"Torr"} />
+            <Status label="Pressure" color="grey" value={pText} units={"Torr"} />
         </div>
     )
 };
@@ -311,17 +315,17 @@ const MagUpButton = connect(mapStateToMagUpProps)( ({isMaggingUp,isRegulating}) 
 });
 const RegulateButton = connect(mapStateToRegulateProps)( ({isMaggingUp,isRegulating}) => {
     if (isRegulating) {
-        var buttonStyle = {width:"calc(70% - 10px)", borderTopRightRadius:'0', borderBottomRightRadius:'0'};
+        var buttonStyle = {width:"calc(70% - 10px)", borderTopRightRadius:'0px', borderBottomRightRadius:'0px'};
         var text = 'Stop Regulating';
         var buttonClick = (e) => ws.send(JSON.stringify({command:'Stop Regulating'}));
     }
     else if (isMaggingUp) {
-        var buttonStyle = {width:"calc(70% - 10px)", borderTopRightRadius:'0', borderBottomRightRadius:'0', color: 'grey'};
+        var buttonStyle = {width:"calc(70% - 10px)", borderTopRightRadius:'0px', borderBottomRightRadius:'0px', color: 'grey'};
         var text = 'Regulate';
         var buttonClick = (e) => (null);
     }
     else {
-        var buttonStyle = {width:"calc(70% - 10px)", borderTopRightRadius:'0', borderBottomRightRadius:'0'};
+        var buttonStyle = {width:"calc(70% - 10px)", borderTopRightRadius:'0px', borderBottomRightRadius:'0px'};
         var text = 'Regulate';
         var buttonClick = (e) => {
             var tempInput = document.getElementById("regTempField");
@@ -435,7 +439,7 @@ window.onload = function(){
     ws.onopen = function(e) { console.log("socket opened"); }
     ws.onclose = function(e) { console.log("socket closed"); }
     ws.onmessage = function(e) {
-        const newState = JSON.parse(e.data);
+        const newState = JSON.parse(e.data.replace(/NaN/g,'null'));
         if (newState.hasOwnProperty('temps')) {
             dispatch(updateTemps(newState.temps));
             delete newState.temps;
