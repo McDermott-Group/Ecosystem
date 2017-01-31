@@ -195,14 +195,10 @@ var Temp = function Temp(props) {
         ),
         React.createElement(
             'div',
-            { style: { color: props.color, display: 'inline-block', width: '33.333%', fontSize: 18 } },
-            React.createElement(
-                'span',
-                { style: { verticalAlign: 'bottom' } },
-                '[',
-                arrow + rate,
-                'mK/sec]'
-            )
+            { style: { color: props.color, display: 'inline-block', width: '33.333%', fontSize: '1vw', verticalAlign: 'middle', lineHeight: '100%' } },
+            '[',
+            arrow + rate,
+            'mK/sec]'
         )
     );
 };
@@ -215,17 +211,18 @@ var AllTemps = function AllTemps(_ref) {
     var temps = _ref.temps;
 
     var end = temps.tFAA.length - 1;
-    const mean = (array) => {
+    var mean = function mean(array) {
         if (array.length > 0) {
-            return array.reduce((a, b) => a + b) / array.length;
-        }
-        else {
+            return array.reduce(function (a, b) {
+                return a + b;
+            }) / array.length;
+        } else {
             return NaN;
         }
     };
-    var rate = (tempList) => 1000*( mean( tempList.slice(-5) ) - mean( tempList.slice(-10,-5) ) )
-        / (temps.timeStamps.slice(-1)[0] - temps.timeStamps.slice(-6,-5)[0]);
-    
+    var rate = function rate(tempList) {
+        return 1000 * (mean(tempList.slice(-5)) - mean(tempList.slice(-10, -5))) / (temps.timeStamps.slice(-1)[0] - temps.timeStamps.slice(-6, -5)[0]);
+    };
     return React.createElement(
         'div',
         null,
@@ -349,12 +346,12 @@ var OpenHSButton = connect(mapStateToOpenHSProps)(function (_ref4) {
     var instruments = _ref4.instruments;
 
     if (instruments['Heat Switch'].server == true) {
-        var buttonStyle = { width: '45%' };
+        var buttonStyle = { width: 'calc(50% - 16px)' };
         var buttonClick = function buttonClick(e) {
             return ws.send(JSON.stringify({ command: 'Open Heat Switch' }));
         };
     } else {
-        var buttonStyle = { width: '45%', color: 'grey' };
+        var buttonStyle = { width: 'calc(50% - 16px)', color: 'grey' };
         var buttonClick = function buttonClick(e) {
             return null;
         };
@@ -371,12 +368,12 @@ var CloseHSButton = connect(mapStateToCloseHSProps)(function (_ref5) {
     var instruments = _ref5.instruments;
 
     if (instruments['Heat Switch'].server == true) {
-        var buttonStyle = { width: '45%' };
+        var buttonStyle = { width: 'calc(50% - 6px)' };
         var buttonClick = function buttonClick(e) {
             return ws.send(JSON.stringify({ command: 'Close Heat Switch' }));
         };
     } else {
-        var buttonStyle = { width: '45%', color: 'grey' };
+        var buttonStyle = { width: 'calc(50% - 6px)', color: 'grey' };
         var buttonClick = function buttonClick(e) {
             return null;
         };
@@ -427,19 +424,19 @@ var RegulateButton = connect(mapStateToRegulateProps)(function (_ref7) {
         isRegulating = _ref7.isRegulating;
 
     if (isRegulating) {
-        var buttonStyle = { width: "70%" };
+        var buttonStyle = { width: "calc(70% - 10px)", borderTopRightRadius: '0', borderBottomRightRadius: '0' };
         var text = 'Stop Regulating';
         var buttonClick = function buttonClick(e) {
             return ws.send(JSON.stringify({ command: 'Stop Regulating' }));
         };
     } else if (isMaggingUp) {
-        var buttonStyle = { width: "70%", color: 'grey' };
+        var buttonStyle = { width: "calc(70% - 10px)", borderTopRightRadius: '0', borderBottomRightRadius: '0', color: 'grey' };
         var text = 'Regulate';
         var buttonClick = function buttonClick(e) {
             return null;
         };
     } else {
-        var buttonStyle = { width: "70%" };
+        var buttonStyle = { width: "calc(70% - 10px)", borderTopRightRadius: '0', borderBottomRightRadius: '0' };
         var text = 'Regulate';
         var buttonClick = function buttonClick(e) {
             var tempInput = document.getElementById("regTempField");
@@ -460,7 +457,7 @@ var RegulateButton = connect(mapStateToRegulateProps)(function (_ref7) {
         ),
         React.createElement('input', { type: 'text',
             id: 'regTempField',
-            style: { width: "calc(30% - 30px)", height: 50, fontSize: 30, textAlign: "center" },
+            style: { width: "calc(30% - 40px)", height: 50, fontSize: 30, textAlign: "center", verticalAlign: "middle", borderTopRightRadius: '15px', borderBottomRightRadius: '15px' },
             placeholder: 'T',
             value: 0 }),
         'K'
@@ -606,7 +603,7 @@ ReactDOM.render(React.createElement(
 var d3 = Plotly.d3;
 
 window.onload = function () {
-    ws = new WebSocket("ws://10.128.226.104:9876/ws");
+    ws = new WebSocket("ws://mcd-adr3.physics.wisc.edu:9876/ws");
     //ws = new WebSocket("ws://24.177.124.174:9876/ws");
     //var s = new WebSocket("ws://localhost:1025/");
     ws.onopen = function (e) {
