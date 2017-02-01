@@ -13,25 +13,36 @@
     height: 150px;
     border: solid 1px blue;
   }
+  #tempDisplay {
+      font-size:30px;
+  }
   #mainContent {
     width: 70%;
     height: 100%;
     min-width: 300px;
-    float: left;
+    float: right;
     display: inline-block;
     /*This way the mainContent div is always 60% of the width of its
         parent container, which in this case is the  tag that defaults to
         100% page width anyway */
     background: #999999;
 }
-#tempDisplay {
-    font-size:30px;
-}
 #sideContentWrapper {
   width: 30%;
-  min-width: 300px;
+  /* min-width: 300px; */
   float: right;
   display: inline-block;
+}
+@media only screen and (max-width: 1000px) {
+  /* for widths less than or equal to 629 pixels */
+  #mainContent {
+    float: none ;
+    width: 100% ;
+  }
+  #sideContentWrapper {
+    float: none ;
+    width: 100% ;
+  }
 }
 #sideContent {
   margin-right: 20px;
