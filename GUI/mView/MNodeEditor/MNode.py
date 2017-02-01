@@ -103,9 +103,11 @@ class MNode(QtGui.QGraphicsItem):
         if anchor == None:
             name = kwargs.get('name', None)
             type = kwargs.get('type', None)
+            suggestedData = kwargs.get('data', None)
             if name == None or type == None:
                 raise RuntimeError("If no anchor is passed to MNode.addAnchor(), then \'name\', \'type\' keyword arguments must be given.")
-            anchor = MAnchor(name, self, len(self.anchors), type = type) # adds itself
+            print "MNode addanchor kwargs:", kwargs
+            anchor = MAnchor(name, self, len(self.anchors), type = type, data = suggestedData) # adds itself
             
         self.anchors.append(anchor)
         self.anchorAdded(anchor)

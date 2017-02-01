@@ -2,10 +2,15 @@ from PyQt4 import QtGui, QtCore
 from MPipe import MPipe
 from MWeb import web
 import time
+from functools import partial
+import traceback
 class MAnchor(QtGui.QGraphicsItem):
     def __init__(self, name, node, index,  parent = None, **kwargs):
         # Get the keyword arguments
+        print "all kwargs:", kwargs
         self.type = kwargs.get('type', 'output')
+        self.suggestedDataType = kwargs.get('data', None)
+        print "suggested type:", self.suggestedDataType
         self.node = node
         # get the tree
         self.tree = node.tree
@@ -31,12 +36,18 @@ class MAnchor(QtGui.QGraphicsItem):
         self.nodeBrush = QtGui.QBrush(QtGui.QColor(*node.getColor()))
         
         self.posY = 70+30*self.index
+        self.directInput = None
+        self.okDirectInput = None
+        self.directInputLayout = None
+        self.directInputData = 0
         if self.type == 'output':
             # Bounding rectangle of the anchor
             self.posX = self.nodeFrame.width()
           
         elif self.type == 'input':
             self.posX = -20
+
+
         #print "self.posX", self.posX
         #print "width:", self.nodeFrame.width()
         self.anchorSize = int(8*web.ratio)
@@ -65,7 +76,49 @@ class MAnchor(QtGui.QGraphicsItem):
         self.lcd.setSegmentStyle(QtGui.QLCDNumber.Flat)
         self.lcd.setStyleSheet("color:rgb(189, 195, 199);\n")
         self.nodeLayout.addWidget(self.lcd, self.index+2, 1)
+        if self.suggestedDataType == 'float':
+           
+            self.directInput = QtGui.QLineEdit(str(self.directInputData),self.nodeFrame)
+            self.directInput.setValidator(QtGui.QDoubleValidator())
+            self.directInput.textEdited.connect(partial(self.directInput.setStyleSheet, "background:rgb(0,255,0);"))
+            self.directInputLayout = QtGui.QHBoxLayout()
+            
+            self.okDirectInput = QtGui.QPushButton("Set", self.nodeFrame)
+            self.okDirectInput.clicked.connect(partial(self.directInputHandler, 'float',  self.directInput.text))
+            width = self.okDirectInput.fontMetrics().boundingRect("Set").width()
+            height = self.okDirectInput.fontMetrics().boundingRect("Set").height()
+            self.okDirectInput.setMaximumWidth(width+10)
+            self.okDirectInput.setMaximumHeight(height+5)
+            self.lcd.hide()
+        if self.directInput != None:
+            self.directInputLayout.addWidget(self.directInput)
+            self.directInputLayout.addWidget(self.okDirectInput)
+            self.nodeLayout.addLayout(self.directInputLayout, self.index+2, 1)
+        
+
+
         self.prepareGeometryChange()
+    def validate(self, type, val):
+        if type == 'float':
+                value = float(str(val))
+                return value
+        return None
+    def directInputHandler(self, type,  callback):
+        print "type:", type
+        try:
+            value = self.validate(type, callback())
+        except:
+             self.directInput.setStyleSheet( "background:rgb(255,0,0);")
+             traceback.print_exc()
+             return
+        print "value:", value
+        self.directInput.setStyleSheet( "background:rgb(255,255,255);")
+
+        if self.pipe != None and self.type == 'output':
+            self.pipe.setData(value)
+        else:
+            self.directInputData = value
+        self.parentNode().refreshData()
     def getLcd(self):
         return self.lcd
     def parentNode(self):
@@ -86,6 +139,18 @@ class MAnchor(QtGui.QGraphicsItem):
     def getPipe(self):
         '''Get the pipe connected to the anchor'''
         return self.pipe
+    def getData(self):
+        pipe = self.getPipe()
+        if pipe != None:
+            return self.getPipe().getData()
+        else:
+            return self.directInputData
+    def setData(self, data):
+        pipe = self.getPipe()
+        if pipe != None:
+            pipe.setData(data)
+        
+        self.lcd.display(data)
     def setPipe(self, pipe):
         self.pipe = pipe
     def delete(self):
@@ -161,8 +226,16 @@ class MAnchor(QtGui.QGraphicsItem):
        # print "Anchor clicked!"
         if self.isConnected():
             self.tree.deletePipe(self.pipe)
+            if self.directInput != None:
+                self.directInput.show()
+                self.okDirectInput.show()
+                self.lcd.hide()
         else:
             self.tree.connect(self)
+            if self.directInput != None:
+                self.directInput.hide()
+                self.okDirectInput.hide()
+                self.lcd.show()
             #print "disconnecting ", self.param
 
             

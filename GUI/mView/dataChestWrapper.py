@@ -24,7 +24,7 @@ import re
 import atexit
 
 import datetime as dt
-from PyQt4 import QtCore, QtGui
+#from PyQt4 import QtCore, QtGui
 from MWeb import web
 
 from dateStamp import *
