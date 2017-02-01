@@ -195,14 +195,10 @@ var Temp = function Temp(props) {
         ),
         React.createElement(
             'div',
-            { style: { color: props.color, display: 'inline-block', width: '33.333%', fontSize: 18 } },
-            React.createElement(
-                'span',
-                { style: { verticalAlign: 'bottom' } },
-                '[',
-                arrow + rate,
-                'mK/sec]'
-            )
+            { style: { color: props.color, display: 'inline-block', width: '33.333%', fontSize: '1vw', verticalAlign: 'middle', lineHeight: '100%' } },
+            '[',
+            arrow + rate,
+            'mK/sec]'
         )
     );
 };
@@ -215,17 +211,18 @@ var AllTemps = function AllTemps(_ref) {
     var temps = _ref.temps;
 
     var end = temps.tFAA.length - 1;
-    const mean = (array) => {
+    var mean = function mean(array) {
         if (array.length > 0) {
-            return array.reduce((a, b) => a + b) / array.length;
-        }
-        else {
+            return array.reduce(function (a, b) {
+                return a + b;
+            }) / array.length;
+        } else {
             return NaN;
         }
     };
-    var rate = (tempList) => 1000*( mean( tempList.slice(-5) ) - mean( tempList.slice(-10,-5) ) )
-        / (temps.timeStamps.slice(-1)[0] - temps.timeStamps.slice(-6,-5)[0]);
-    
+    var rate = function rate(tempList) {
+        return 1000 * (mean(tempList.slice(-5)) - mean(tempList.slice(-10, -5))) / (temps.timeStamps.slice(-1)[0] - temps.timeStamps.slice(-6, -5)[0]);
+    };
     return React.createElement(
         'div',
         null,
@@ -268,13 +265,17 @@ var AllStatuses = function AllStatuses(_ref2) {
         PSCurrent = _ref2.PSCurrent,
         backEMF = _ref2.backEMF;
 
+    var pText = 'NaN';
+    if (pressure != null) {
+        pText = pressure.toExponential();
+    }
     return React.createElement(
         'div',
         null,
         React.createElement(Status, { label: 'PS Voltage', color: 'grey', value: PSVoltage, units: "V" }),
         React.createElement(Status, { label: 'PS Current', color: 'grey', value: PSCurrent, units: "A" }),
         React.createElement(Status, { label: 'Back EMF', color: 'grey', value: backEMF, units: "V" }),
-        React.createElement(Status, { label: 'Pressure', color: 'grey', value: pressure.toExponential(), units: "Torr" })
+        React.createElement(Status, { label: 'Pressure', color: 'grey', value: pText, units: "Torr" })
     );
 };
 var StatusDisplay = connect(mapStateToStatusProps)(AllStatuses);
@@ -349,12 +350,12 @@ var OpenHSButton = connect(mapStateToOpenHSProps)(function (_ref4) {
     var instruments = _ref4.instruments;
 
     if (instruments['Heat Switch'].server == true) {
-        var buttonStyle = { width: '45%' };
+        var buttonStyle = { width: 'calc(50% - 16px)' };
         var buttonClick = function buttonClick(e) {
             return ws.send(JSON.stringify({ command: 'Open Heat Switch' }));
         };
     } else {
-        var buttonStyle = { width: '45%', color: 'grey' };
+        var buttonStyle = { width: 'calc(50% - 16px)', color: 'grey' };
         var buttonClick = function buttonClick(e) {
             return null;
         };
@@ -371,12 +372,12 @@ var CloseHSButton = connect(mapStateToCloseHSProps)(function (_ref5) {
     var instruments = _ref5.instruments;
 
     if (instruments['Heat Switch'].server == true) {
-        var buttonStyle = { width: '45%' };
+        var buttonStyle = { width: 'calc(50% - 6px)' };
         var buttonClick = function buttonClick(e) {
             return ws.send(JSON.stringify({ command: 'Close Heat Switch' }));
         };
     } else {
-        var buttonStyle = { width: '45%', color: 'grey' };
+        var buttonStyle = { width: 'calc(50% - 6px)', color: 'grey' };
         var buttonClick = function buttonClick(e) {
             return null;
         };
@@ -427,19 +428,19 @@ var RegulateButton = connect(mapStateToRegulateProps)(function (_ref7) {
         isRegulating = _ref7.isRegulating;
 
     if (isRegulating) {
-        var buttonStyle = { width: "70%" };
+        var buttonStyle = { width: "calc(70% - 10px)", borderTopRightRadius: '0px', borderBottomRightRadius: '0px' };
         var text = 'Stop Regulating';
         var buttonClick = function buttonClick(e) {
             return ws.send(JSON.stringify({ command: 'Stop Regulating' }));
         };
     } else if (isMaggingUp) {
-        var buttonStyle = { width: "70%", color: 'grey' };
+        var buttonStyle = { width: "calc(70% - 10px)", borderTopRightRadius: '0px', borderBottomRightRadius: '0px', color: 'grey' };
         var text = 'Regulate';
         var buttonClick = function buttonClick(e) {
             return null;
         };
     } else {
-        var buttonStyle = { width: "70%" };
+        var buttonStyle = { width: "calc(70% - 10px)", borderTopRightRadius: '0px', borderBottomRightRadius: '0px' };
         var text = 'Regulate';
         var buttonClick = function buttonClick(e) {
             var tempInput = document.getElementById("regTempField");
@@ -460,7 +461,7 @@ var RegulateButton = connect(mapStateToRegulateProps)(function (_ref7) {
         ),
         React.createElement('input', { type: 'text',
             id: 'regTempField',
-            style: { width: "calc(30% - 30px)", height: 50, fontSize: 30, textAlign: "center" },
+            style: { width: "calc(30% - 40px)", height: 50, fontSize: 30, textAlign: "center", verticalAlign: "middle", borderTopRightRadius: '15px', borderBottomRightRadius: '15px' },
             placeholder: 'T',
             value: 0 }),
         'K'
@@ -606,7 +607,7 @@ ReactDOM.render(React.createElement(
 var d3 = Plotly.d3;
 
 window.onload = function () {
-    ws = new WebSocket("ws://10.128.226.104:9876/ws");
+    ws = new WebSocket("ws://mcd-adr3.physics.wisc.edu:9876/ws");
     //ws = new WebSocket("ws://24.177.124.174:9876/ws");
     //var s = new WebSocket("ws://localhost:1025/");
     ws.onopen = function (e) {
@@ -616,7 +617,7 @@ window.onload = function () {
         console.log("socket closed");
     };
     ws.onmessage = function (e) {
-        var newState = JSON.parse(e.data);
+        var newState = JSON.parse(e.data.replace(/NaN/g, 'null'));
         if (newState.hasOwnProperty('temps')) {
             dispatch(updateTemps(newState.temps));
             delete newState.temps;

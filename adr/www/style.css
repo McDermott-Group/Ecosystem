@@ -42,11 +42,15 @@
   min-height: 200px;
 }
 .button {
-    width: 100%;
+    width: calc(100% - 26px);
     display: inline-block;
     min-height: 50px;
     padding: 0px;
+    margin:3px;
     font-size:30px;
+    background:#b7b5b5;
+    border-radius:15px;
+    vertical-align:middle;
 }
 .button:hover {
     background: #888888;

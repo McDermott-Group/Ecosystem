@@ -150,9 +150,7 @@ const Temp = (props) => {
         <div style={{border:'3px solid '+props.color}}>
           <div style={{color:'white', backgroundColor:props.color, display: 'inline-block', width:'33.333%'}}>{props.label}</div>
           <div style={{color:props.color, display: 'inline-block', width:'33.333%'}}>{temp}K</div>
-          <div style={{color:props.color, display: 'inline-block', width:'33.333%', fontSize:18}}>
-            <span style={{verticalAlign:'bottom'}}>[{arrow+rate}mK/sec]</span>
-          </div>
+          <div style={{color:props.color, display: 'inline-block', width:'33.333%', fontSize:'1vw', verticalAlign:'middle', lineHeight:'100%'}}>[{arrow+rate}mK/sec]</div>
         </div>
     )
 };
@@ -163,7 +161,14 @@ const mapStateToTempProps = (storeState,props) => {
 }
 const AllTemps = ({temps}) => {
     var end = temps.tFAA.length-1;
-    let mean = (array) => array.reduce((a, b) => a + b) / array.length;
+    const mean = (array) => {
+        if (array.length > 0) {
+            return array.reduce((a, b) => a + b) / array.length;
+        }
+        else {
+            return NaN;
+        }
+    };
     var rate = (tempList) => 1000*( mean( tempList.slice(-5) ) - mean( tempList.slice(-10,-5) ) )
         / (temps.timeStamps.slice(-1)[0] - temps.timeStamps.slice(-6,-5)[0]);
     return(
@@ -195,12 +200,16 @@ const mapStateToStatusProps = (storeState,props) => {
     }
 }
 const AllStatuses = ({pressure,PSVoltage,PSCurrent,backEMF}) => {
+    var pText = 'NaN'
+    if (pressure != null) {
+        pText = pressure.toExponential();
+    }
     return(
         <div>
             <Status label="PS Voltage" color="grey" value={PSVoltage} units={"V"} />
             <Status label="PS Current" color="grey" value={PSCurrent} units={"A"} />
             <Status label="Back EMF" color="grey" value={backEMF} units={"V"} />
-            <Status label="Pressure" color="grey" value={pressure.toExponential()} units={"Torr"} />
+            <Status label="Pressure" color="grey" value={pText} units={"Torr"} />
         </div>
     )
 };
@@ -262,10 +271,10 @@ const mapStateToCompressorProps = (storeState,props) => {
 
 const OpenHSButton = connect(mapStateToOpenHSProps)( ({instruments}) => {
     if (instruments['Heat Switch'].server == true) {
-        var buttonStyle = {width:'45%'};
+        var buttonStyle = {width:'calc(50% - 16px)'};
         var buttonClick = (e) => ws.send(JSON.stringify({command:'Open Heat Switch'}));
     } else {
-        var buttonStyle = {width:'45%', color: 'grey'};
+        var buttonStyle = {width:'calc(50% - 16px)', color: 'grey'};
         var buttonClick = (e) => (null);
     }
     return(
@@ -274,10 +283,10 @@ const OpenHSButton = connect(mapStateToOpenHSProps)( ({instruments}) => {
 });
 const CloseHSButton = connect(mapStateToCloseHSProps)( ({instruments}) => {
     if (instruments['Heat Switch'].server == true) {
-        var buttonStyle = {width:'45%'};
+        var buttonStyle = {width:'calc(50% - 6px)'};
         var buttonClick = (e) => ws.send(JSON.stringify({command:'Close Heat Switch'}));
     } else {
-        var buttonStyle = {width:'45%', color: 'grey'};
+        var buttonStyle = {width:'calc(50% - 6px)', color: 'grey'};
         var buttonClick = (e) => (null);
     }
     return(
@@ -306,17 +315,17 @@ const MagUpButton = connect(mapStateToMagUpProps)( ({isMaggingUp,isRegulating}) 
 });
 const RegulateButton = connect(mapStateToRegulateProps)( ({isMaggingUp,isRegulating}) => {
     if (isRegulating) {
-        var buttonStyle = {width:"70%"};
+        var buttonStyle = {width:"calc(70% - 10px)", borderTopRightRadius:'0px', borderBottomRightRadius:'0px'};
         var text = 'Stop Regulating';
         var buttonClick = (e) => ws.send(JSON.stringify({command:'Stop Regulating'}));
     }
     else if (isMaggingUp) {
-        var buttonStyle = {width:"70%", color: 'grey'};
+        var buttonStyle = {width:"calc(70% - 10px)", borderTopRightRadius:'0px', borderBottomRightRadius:'0px', color: 'grey'};
         var text = 'Regulate';
         var buttonClick = (e) => (null);
     }
     else {
-        var buttonStyle = {width:"70%"};
+        var buttonStyle = {width:"calc(70% - 10px)", borderTopRightRadius:'0px', borderBottomRightRadius:'0px'};
         var text = 'Regulate';
         var buttonClick = (e) => {
             var tempInput = document.getElementById("regTempField");
@@ -328,7 +337,7 @@ const RegulateButton = connect(mapStateToRegulateProps)( ({isMaggingUp,isRegulat
             <div className='button' style={buttonStyle} onClick={(e) => buttonClick(e)}> {text} </div>
             <input type="text"
                     id="regTempField"
-                    style={{width:"calc(30% - 30px)", height:50,fontSize:30, textAlign:"center"}}
+                    style={{width:"calc(30% - 40px)", height:50, fontSize:30, textAlign:"center", verticalAlign:"middle", borderTopRightRadius:'15px', borderBottomRightRadius:'15px'}}
                     placeholder="T"
                     value={0} />
             K
@@ -424,13 +433,13 @@ ReactDOM.render(<Provider store={ store }>
 var d3 = Plotly.d3;
 
 window.onload = function(){
-    ws = new WebSocket("ws://10.0.1.13:9876/ws");
+    ws = new WebSocket("ws://mcd-adr3.physics.wisc.edu:9876/ws");
     //ws = new WebSocket("ws://24.177.124.174:9876/ws");
     //var s = new WebSocket("ws://localhost:1025/");
     ws.onopen = function(e) { console.log("socket opened"); }
     ws.onclose = function(e) { console.log("socket closed"); }
     ws.onmessage = function(e) {
-        const newState = JSON.parse(e.data);
+        const newState = JSON.parse(e.data.replace(/NaN/g,'null'));
         if (newState.hasOwnProperty('temps')) {
             dispatch(updateTemps(newState.temps));
             delete newState.temps;
