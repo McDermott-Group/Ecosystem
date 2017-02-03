@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Goldstein's PT1000 Temperature Monitor
-version = 1.2.0
+version = 1.3.0
 description = Monitors temperature of PT1000
 
 [startup]
@@ -31,6 +31,7 @@ timeout = 20
 """
 
 import os
+import sys
 import traceback
 import numpy as np
 from twisted.internet.defer import inlineCallbacks, returnValue
@@ -40,7 +41,16 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
-from utilities import sleep
+if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
+    SCRIPT_PATH = os.path.dirname(os.getcwd())
+else:
+    SCRIPT_PATH = os.path.dirname(__file__)
+LOCAL_PATH = SCRIPT_PATH.rsplit('instruments', 1)[0]
+INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, 'instruments')
+if INSTRUMENTS_PATH not in sys.path:
+    sys.path.append(INSTRUMENTS_PATH)
+
+from utilities.sleep import sleep
 
 
 class goldsteinsPT1000TemperatureMonitorWrapper(DeviceWrapper):

@@ -17,11 +17,13 @@
 ### BEGIN NODE INFO
 [info]
 name = Cold Switch Server
-version = 1.1
+version = 1.1.0
 description = 
+
 [startup]
 cmdline = %PYTHON% %FILE%
 timeout = 20
+
 [shutdown]
 message = 987654321
 timeout = 20

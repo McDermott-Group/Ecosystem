@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Agilent 6641A PS
-version = 1.0
+version = 1.0.0
 description = Power supply for the ADR magnet.
 
 [startup]
@@ -33,6 +33,7 @@ timeout = 5
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from labrad.server import setting, returnValue
 import labrad.units as units
+
 
 class AgilentPSServer(GPIBManagedServer):
     name = 'Agilent 6641A PS'

@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Keithley 2000 DMM
-version = 1.0
+version = 1.0.0
 description = 
   
 [startup]
@@ -29,14 +29,16 @@ message = 987654321
 timeout = 5
 ### END NODE INFO
 """
-  
+
+import math
+import numpy
+from twisted.internet.defer import inlineCallbacks, returnValue
+
 from labrad.server import setting
 from labrad.gpib import GPIBManagedServer
 from labrad import units
-from twisted.internet.defer import inlineCallbacks, returnValue
-import numpy
-import math
-  
+
+
 class KeithleyServer(GPIBManagedServer):
     name = 'Keithley 2000 DMM' # Server name
     deviceName = ['KEITHLEY INSTRUMENTS INC. MODEL 2000', 'KEITHLEY INSTRUMENTS INC. MODEL 2100']

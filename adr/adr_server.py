@@ -41,8 +41,7 @@ ADR_SETTINGS_BASE_PATH = ['','ADR Settings'] # path in registry
 DEFAULT_ADR = 'ADR3' # name of ADR in registry
 AVAILABLE_ADRS = ['ADR1','ADR2','ADR3']
 
-import matplotlib as mpl
-import numpy, pylab
+import numpy
 import datetime, struct
 from labrad.server import (LabradServer, setting,
                            inlineCallbacks, returnValue)
@@ -52,7 +51,105 @@ from labrad.types import Error as LRError
 from pyvisa.errors import VisaIOError
 from dataChest import dataChest
 from dateStamp import dateStamp
-import sys
+import sys, os
+import json
+from twisted.web.static import File
+from twisted.python import log
+from twisted.web.server import Site
+from twisted.internet import reactor
+
+from autobahn.twisted.websocket import WebSocketServerFactory, \
+    WebSocketServerProtocol
+
+from autobahn.twisted.resource import WebSocketResource
+
+
+class MyServerProtocol(WebSocketServerProtocol):
+    def onOpen(self):
+        self.adrServer = self.factory.register(self)
+        print('new connection')
+        # probably only need to get the last 30 log messages
+        backLogs = self.adrServer.getLog(None,30)
+        # initial values
+        state = self.adrServer.state
+        text = json.dumps({
+            'temps': {
+                'timeStamps':[(state['datetime']-datetime.datetime(1970,1,1)).total_seconds()],
+                't60K': [state['T_60K']['K']],
+                't03K': [state['T_3K']['K']],
+                'tGGG': [state['T_GGG']['K']],
+                'tFAA': [state['T_FAA']['K']]
+            },
+            'instruments': { name:{'server':status[0],
+                                    'connected':status[1] }
+                                for (name,status) in self.adrServer.getInstrumentState('bla')},
+            'compressorOn':state['CompressorStatus'],
+            'pressure': state['Pressure']['torr'],
+            'isMaggingUp': state['maggingUp'],
+            'isRegulating': state['regulating'],
+            'backEMF': state['magnetV']['V'],
+            'PSCurrent': state['PSCurrent']['A'],
+            'PSVoltage': state['PSVoltage']['V'],
+            'log':[{
+                'datetime':(log[0]-datetime.datetime(1970,1,1)).total_seconds(),
+                'message':log[1],
+                'alert':log[2]} for log in backLogs]
+        })
+        self.sendMessage(text)
+
+    def connectionLost(self, reason):
+        self.factory.unregister(self)
+        print('connection lost')
+
+    def onMessage(self, payload, isBinary):
+        message = json.loads(payload)
+        print(message)
+        if   message['command'] == 'Open Heat Switch':
+            self.adrServer.openHeatSwitch(None)
+        elif message['command'] == 'Close Heat Switch':
+            self.adrServer.closeHeatSwitch(None)
+        elif message['command'] == 'Mag Up':
+            self.adrServer._magUp()
+        elif message['command'] == 'Stop Magging Up':
+            self.adrServer._cancelMagUp()
+        elif message['command'] == 'Regulate':
+            try:
+                temp = float(message['temp'])
+                self.adrServer._regulate(temp)
+            except:
+                self.adrServer.logMessage('Could not convert input to temperature.',alert=True)
+        elif message['command'] == 'Stop Regulating':
+            self.adrServer._cancelRegulate()
+        elif message['command'] == 'Set Compressor State':
+            if message['on']: self.adrServer.startCompressor(None)
+            else: self.adrServer.stopCompressor(None)
+        elif message['command'] == 'Refresh Instruments':
+            self.adrServer.refreshInstruments(None)
+        elif message['command'] == 'Add To Log':
+            if message['text'] is not None:
+                self.adrServer.logMessage(message['text'])
+
+
+class MyFactory(WebSocketServerFactory):
+    def __init__(self, *args, **kwargs):
+        self.adrServer = kwargs['adrServer']
+        del kwargs['adrServer']
+        super(MyFactory, self).__init__(*args, **kwargs)
+        self.clients = {}
+
+    def register(self, client):
+        self.clients[client.peer] = client
+        return self.adrServer
+
+    def unregister(self, client):
+        self.clients.pop(client.peer)
+
+    def sendMessageToAll(self, message):
+        text = json.dumps(message)
+        text = text.replace('NaN','null') # apparently JSON does not support nan
+        for c in self.clients.keys():
+            self.clients[c].sendMessage(text)
+
 
 def deltaT(dT):
     """
@@ -101,6 +198,7 @@ class ADRServer(DeviceServer):
                 'T_GGG': numpy.NaN * units.K,
                 'T_3K' : numpy.NaN * units.K,
                 'T_60K': numpy.NaN * units.K,
+                'Pressure': numpy.NaN * units.torr,
                 'datetime' : datetime.datetime.utcnow(),
                 'cycle': 0,
                 'magnetV': numpy.NaN * units.V,
@@ -137,14 +235,16 @@ class ADRServer(DeviceServer):
                 'Diode Temperature Monitor':['SIM922','addr'],
                 'Magnet Voltage Monitor':['SIM922','addr'],
                 'Heat Switch':['Heat Switch','addr'],
-                'Compressor':['CP2800 Compressor','addr']
+                'Compressor':['CP2800 Compressor','addr'],
+                'Pressure Guage':['Varian Guage Controller','addr']
         }
         self.instruments = {'Power Supply':'None',
                             'Ruox Temperature Monitor':'None',
                             'Diode Temperature Monitor':'None',
                             'Magnet Voltage Monitor':'None',
                             'Heat Switch':'None',
-                            'Compressor':'None'}
+                            'Compressor':'None',
+                            'Pressure Guage':'None'}
         self.startDatetime = datetime.datetime.utcnow()
         self.tempDataChest = dataChest(['ADR Logs',self.name])
         dts = dateStamp()
@@ -152,8 +252,8 @@ class ADRServer(DeviceServer):
         dtstamp = dts.dateStamp(iso)
         self.tempDataChest.createDataset("temperatures",
                 [('time',[1],'utc_datetime','')],
-                [('temp60K',[1],'float64','Kelvin'),('temp03K',[1],'float64','Kelvin'),
-                 ('tempGGG',[1],'float64','Kelvin'),('tempFAA',[1],'float64','Kelvin')],
+                [('temp60K',[1],'float16','Kelvin'),('temp03K',[1],'float16','Kelvin'),
+                 ('tempGGG',[1],'float16','Kelvin'),('tempFAA',[1],'float16','Kelvin')],
                  dateStamp=dtstamp)
         self.tempDataChest.addParameter("X Label", "Time")
         self.tempDataChest.addParameter("Y Label", "Temperature")
@@ -170,6 +270,20 @@ class ADRServer(DeviceServer):
         connect/disconnect messages.
         """
         yield DeviceServer.initServer(self)
+
+        # Web Socket Update Stuff:
+        log.startLogging(sys.stdout)
+        # root = File("C:\\Users\\McDermott\\Desktop\\Git Repositories\\servers\\adr\\www")
+        root = File("./www")
+
+        self.factory = MyFactory(u"ws://127.0.0.1:9876/",adrServer=self)
+        self.factory.protocol = MyServerProtocol
+        resource = WebSocketResource(self.factory)
+        root.putChild(u"ws", resource)
+
+        site = Site(root)
+        reactor.listenTCP(9876, site, interface='0.0.0.0')
+
         try:
             yield self.client.registry.cd(self.ADRSettingsPath)
             self.file_path = yield self.client.registry.get('Log Path')
@@ -199,6 +313,7 @@ class ADRServer(DeviceServer):
                                          ID = self.ID)
         except Exception as e:
             print str(e)
+
         self.updateState()
 
     @inlineCallbacks
@@ -341,6 +456,13 @@ class ADRServer(DeviceServer):
         except Exception as e:
             self.logMessage("Could not write to log file: " + str(e) + '.')
         print '[log] '+ message
+        self.factory.sendMessageToAll({
+            'log': [{
+                'datetime':(dt-datetime.datetime(1970,1,1)).total_seconds(),
+                'message':message,
+                'alert':alert
+            }]
+        })
         self.client.manager.send_named_message('Log Changed', (dt,message,alert))
 
     @inlineCallbacks
@@ -360,7 +482,7 @@ class ADRServer(DeviceServer):
             if hasattr(instruments['Compressor'],'connected') \
                     and instruments['Compressor'].connected:
                 try:
-                    self.state['CompressorStatus'] = instruments['Compressor'].status()
+                    self.state['CompressorStatus'] = yield instruments['Compressor'].status()
                 except Exception as e:
                     print 'could not read compressor status', str(e)
             # diode temps
@@ -440,6 +562,13 @@ class ADRServer(DeviceServer):
                         self._refreshInstruments()
                 except AttributeError:
                     pass # in case instrument didn't initialize properly and is None
+            # pressure
+            pressures = yield instruments['Pressure Guage'].get_pressures()
+            try:
+                pressure = pressures[0]['torr'] * units.torr
+            except Exception as e:
+                pressure = numpy.nan * units.torr
+            self.state['Pressure'] = pressure
             # update relevant files
             try:
                 newTemps = [self.state[t]['K'] for t in ['T_60K','T_3K','T_GGG','T_FAA']]
@@ -448,8 +577,26 @@ class ADRServer(DeviceServer):
             except Exception as e:
                 self.logMessage('Temperature recording failed: %s.' %str(e) )
             cycleLength = deltaT(datetime.datetime.utcnow() - cycleStartTime)
+            self.factory.sendMessageToAll({
+                'temps': {
+                    'timeStamps':[(self.state['datetime']-datetime.datetime(1970,1,1)).total_seconds()],
+                    't60K': [self.state['T_60K']['K']],
+                    't03K': [self.state['T_3K']['K']],
+                    'tGGG': [self.state['T_GGG']['K']],
+                    'tFAA': [self.state['T_FAA']['K']]
+                },
+                'instruments': { name:{'server':status[0],
+                                        'connected':status[1] }
+                                    for (name,status) in self.getInstrumentState('bla')},
+                'compressorOn':self.state['CompressorStatus'],
+                'pressure':self.state['Pressure']['torr'],
+                'isMaggingUp': self.state['maggingUp'],
+                'isRegulating': self.state['regulating'],
+                'backEMF': self.state['magnetV']['V'],
+                'PSCurrent': self.state['PSCurrent']['A'],
+                'PSVoltage': self.state['PSVoltage']['V']
+            })
             self.client.manager.send_named_message('State Changed', 'state changed')
-            #self.stateChanged('state changed')
             yield util.wakeupCall( max(0,self.ADRSettings['step_length']-cycleLength) )
 
     def _cancelMagUp(self):
@@ -457,7 +604,9 @@ class ADRServer(DeviceServer):
         self.state['maggingUp'] = False
         self.logMessage( 'Magging up stopped at a current of ' +
                 str(self.state['PSCurrent']) + '.' )
-        #self.magUpStopped('cancel') #signal
+        self.factory.sendMessageToAll({
+            'isMaggingUp': self.state['maggingUp']
+        })
         self.client.manager.send_named_message('MagUp Stopped', 'cancel')
 
     @inlineCallbacks
@@ -491,10 +640,13 @@ class ADRServer(DeviceServer):
                             for i in range(len(deviceNames))]))
             self.logMessage(message, alert=True)
             return
+        self.state['maggingUp'] = True
+        self.factory.sendMessageToAll({
+            'isMaggingUp': self.state['maggingUp']
+        })
         self.client.manager.send_named_message('MagUp Started', 'start')
         self.logMessage('Beginning to mag up to ' +
                 str(settings['current_limit']) + ' A.')
-        self.state['maggingUp'] = True
         while self.state['maggingUp']:
             startTime = datetime.datetime.utcnow()
             dI = self.state['PSCurrent'] - self.lastState['PSCurrent']
@@ -515,6 +667,9 @@ class ADRServer(DeviceServer):
             else:
                 self.logMessage( 'Finished magging up. %s reached.'%str(self.state['PSCurrent']) )
                 self.state['maggingUp'] = False
+                self.factory.sendMessageToAll({
+                    'isMaggingUp': self.state['maggingUp']
+                })
                 self.client.manager.send_named_message('MagUp Stopped', 'done')
 
     def _cancelRegulate(self):
@@ -522,7 +677,9 @@ class ADRServer(DeviceServer):
         self.state['regulating'] = False
         self.logMessage( 'PID Control stopped at a current of ' +
                 str(self.state['PSCurrent']) + '.' )
-        #self.regulationStopped('cancel')
+        self.factory.sendMessageToAll({
+            'isRegulating': self.state['regulating']
+        })
         self.client.manager.send_named_message('Regulation Stopped', 'cancel')
 
     @inlineCallbacks
@@ -549,6 +706,9 @@ class ADRServer(DeviceServer):
                     for i in range(len(deviceNames))]))
             self.logMessage(message, alert=True)
             return
+        self.factory.sendMessageToAll({
+            'isRegulating': self.state['regulating']
+        })
         self.client.manager.send_named_message('Regulation Started', 'start')
         self.logMessage( 'Starting regulation to '+str(self.state['regulationTemp'])
                         +' K from '+str(self.state['PSCurrent'])+'.' )
@@ -619,7 +779,9 @@ class ADRServer(DeviceServer):
             else:
                 self.logMessage( 'Regulation has completed. Mag up and try again.' )
                 self.state['regulating'] = False
-                #self.regulationStopped('done') #signal
+                self.factory.sendMessageToAll({
+                    'isRegulating': self.state['regulating']
+                })
                 self.client.manager.send_named_message('Regulation Stopped', 'done')
 
     @setting(101, 'Get Settings Path', returns=['*s'])

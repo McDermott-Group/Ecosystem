@@ -20,7 +20,7 @@
 ### BEGIN NODE INFO
 [info]
 name = GPIB Network Analyzers
-version = 1.5.0
+version = 1.6.0
 description = Provides basic control for network analayzers.
 
 [startup]
@@ -33,6 +33,8 @@ timeout = 5
 ### END NODE INFO
 """
 
+import os
+import sys
 import numpy as np
 from twisted.internet.defer import inlineCallbacks, returnValue
 
@@ -40,9 +42,18 @@ from labrad import util
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from labrad.server import setting
 import labrad.units as units
-from gpib_device_wrapper import ReadRawGPIBDeviceWrapper
 
-from utilities import sleep
+if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
+    SCRIPT_PATH = os.path.dirname(os.getcwd())
+else:
+    SCRIPT_PATH = os.path.dirname(__file__)
+LOCAL_PATH = SCRIPT_PATH.rsplit('instruments', 1)[0]
+INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, 'instruments')
+if INSTRUMENTS_PATH not in sys.path:
+    sys.path.append(INSTRUMENTS_PATH)
+
+from utilities.gpib_device_wrapper import ReadRawGPIBDeviceWrapper
+from utilities.sleep import sleep
 
 
 class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):

@@ -1,13 +1,14 @@
-#some text
 """
 ### BEGIN NODE INFO
 [info]
 name = Tektronix CSA Server
 version = 1.0
 description = 
+
 [startup]
 cmdline = %PYTHON% %FILE%
 timeout = 20
+
 [shutdown]
 message = 987654321
 timeout = 5

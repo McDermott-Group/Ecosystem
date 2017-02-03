@@ -30,11 +30,12 @@ timeout = 5
 ### END NODE INFO
 """
 
+import numpy as np
+from twisted.internet.defer import returnValue
+
 from labrad.server import setting
 from labrad.gpib import GPIBManagedServer
 from labrad import units
-from twisted.internet.defer import returnValue
-import numpy as np
 
 
 class Tektronix11801CServer(GPIBManagedServer):
