@@ -47,6 +47,7 @@ class mGraph(QtGui.QWidget):
         data = None
         self.viewboxes = []
         self.lastValidTime = 60
+        
         pg.setConfigOption('background', (189, 195, 199))
         pg.setConfigOption('foreground', (0, 0, 0))
         
@@ -57,12 +58,14 @@ class mGraph(QtGui.QWidget):
         self.frame.setStyleSheet(".QFrame{background-color: rgb(70,80,88); "
                 "margin:0px; border:2px solid rgb(0, 0, 0);}")
         self.win = pg.GraphicsWindow()
+        
         frameLayout.addWidget(self.win)
         
         self.p = self.win.addPlot(title = device.getFrame().getTitle(), axisItems={'bottom': TimeAxisItem(orientation='bottom')})
+        
         self.p.addLegend()
         self.p.showGrid(x=True, y=True, alpha = 0.5)
-       
+        
                     
                 
 
@@ -150,6 +153,16 @@ class mGraph(QtGui.QWidget):
         mainLayout.addWidget(self.frame)
         frameLayout.addWidget(self.buttonFrame)
         self.setLayout(mainLayout)
+        
+        self.installEventFilter(self)
+    def eventFilter(self, receiver, event):
+        '''Filter out scroll events so that only pyqtgraph catches them'''
+        if(event.type() == QtCore.QEvent.Wheel):
+            print "scroll detected"
+            return True
+        else:
+            #print "scroll not detected"
+            return False
     def initialize(self):
         
         varNames = self.device.getFrame().getDataSet().getVariables()
@@ -326,6 +339,7 @@ class TimeAxisItem(pg.AxisItem):
 TS_MULT_us = 1e6    
 def int2dt(ts, ts_mult=TS_MULT_us):
     return(datetime.datetime.utcfromtimestamp(float(ts)))
+    
 
                 
 
