@@ -7,10 +7,8 @@ import traceback
 class MAnchor(QtGui.QGraphicsItem):
     def __init__(self, name, node, index,  parent = None, **kwargs):
         # Get the keyword arguments
-        print "all kwargs:", kwargs
         self.type = kwargs.get('type', 'output')
         self.suggestedDataType = kwargs.get('data', None)
-        print "suggested type:", self.suggestedDataType
         self.node = node
         # get the tree
         self.tree = node.tree

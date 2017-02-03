@@ -21,7 +21,7 @@ __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
 import re
-import atexit
+
 
 import datetime as dt
 #from PyQt4 import QtCore, QtGui
@@ -45,17 +45,18 @@ class dataChestWrapper:
         # Create a devices reference that can be accessed 
         # outside of this scope.
         self.device = device
+        self.device.getFrame().setDataChestWrapper(self)
         # These arrays will hold all dataChest data sets.
         self.dataSet = None
         self.hasData = None
         # The done function must be called when the GUI exits.
-        atexit.register(self.done)
+        
         self.dataSet = None
         self.hasData = False
         self.keepLoggingNan = True
         self.dStamp = dateStamp()
         self.restoreState()
-        atexit.register(self.saveState)
+        
     def restoreState(self):
         dataname = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device), 'name')
         channels = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device), 'channels')
@@ -90,7 +91,7 @@ class dataChestWrapper:
         Initialize the datalogger, if datasets already exist, use them.
         Otherwise create new ones.
         """
-        print "configuring data"
+        
         now = dt.datetime.now()
         self.hasData = True
         # Generate a title for the dataset. NOTE: if 

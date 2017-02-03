@@ -40,7 +40,6 @@ from MCheckableComboBoxes import MCheckableComboBox
 class mGraph(QtGui.QWidget):
     def __init__(self, device, parent=None):
         QtGui.QWidget.__init__(self, parent)
-        print "Starting graphing widget:", str(device)
         # Create a matplotlib figure.
         self.figure = plt.figure()
         self.figure.set_facecolor('r')

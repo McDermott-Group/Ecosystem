@@ -1,22 +1,22 @@
 import MNodeEditor
 import MAnchor
 import MNodeTree
-import atexit
+
 from MWeb import web
 from MNodes.MLabradNode import MLabradNode
 from MNodes.MVirtualDeviceNode import MVirtualDeviceNode
 
 class MNodeEditorHandler:
-    def __init__(self, mainGui):
+    def __init__(self):
         # Create a nodeTree
         self.nodeTree = MNodeTree.NodeTree()
       
         # Create a nodeEditor GUI window
-        self.nodeEditor = MNodeEditor.NodeGui(mainGui.devices, self.nodeTree)
+        self.nodeEditor = MNodeEditor.NodeGui(web.devices, self.nodeTree)
         self.scene = self.nodeTree.getScene()
         # We need a reference to the main gui that allows us to manipulate mView
         #self.mainGui = mainGui
-        #atexit.register(self.stop)
+
         # Create a new node to represent each device in the node tree
     def begin(self):
         for dev in web.devices:
@@ -34,7 +34,7 @@ class MNodeEditorHandler:
             self.scene = self.nodeTree.getScene()
               
     def showEditor(self):
-        self.nodeEditor.exec_()
+        self.nodeEditor.show()
     def getTree(self):
         return self.nodeTree
     def stop(self):

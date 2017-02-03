@@ -50,7 +50,7 @@ class MDeviceContainerWidget(QtGui.QFrame):
         titleWidget.setStyleSheet("color:rgb(189, 195, 199);")
         grid.addWidget(titleWidget,0,0)
 
-        buttonLayout = QtGui.QHBoxLayout(self)
+        buttonLayout = QtGui.QHBoxLayout()
         buttons = device.getFrame().getButtons()
         
         self.hidden = False
@@ -64,7 +64,9 @@ class MDeviceContainerWidget(QtGui.QFrame):
                 button[-1].setFont(self.font)   
                 buttonLayout.addWidget(button[-1])
                 button[-1].clicked.connect(partial(device.prompt, button))
+
         grid.addLayout(buttonLayout, 0, 1, 1 , 2)
+
         self.nicknames = device.getFrame().getNicknames()
         for i, nickname in enumerate(self.nicknames):
             if nickname != None:
@@ -94,10 +96,12 @@ class MDeviceContainerWidget(QtGui.QFrame):
                 lcd.setStyleSheet("color:rgb(189, 195, 199);\n")
                 lcd.setFixedHeight(web.scrnHeight / 30)
                 lcd.setMinimumWidth(web.scrnWidth / 7)
-                lcdHBox = QtGui.QHBoxLayout(self)
+                lcdHBox = QtGui.QHBoxLayout()
                 lcdHBox.addStretch(0)
                 lcdHBox.addWidget(lcd)
+
                 grid.addLayout(lcdHBox, y, 1)
+
         if device.getFrame().isPlot():
             self.dc = MGrapher.mGraph(device)
             yPos = len(self.nicknames)+1
@@ -133,7 +137,9 @@ class MDeviceContainerWidget(QtGui.QFrame):
         lcdHBox = QtGui.QHBoxLayout(self)
         lcdHBox.addStretch(0)
         lcdHBox.addWidget(lcd)
+
         self.grid.addLayout(lcdHBox, self.grid.rowCount()-1, 1)
+
         if self.dc != None:
             self.grid.removeWidget(self.dc)
             self.grid.addWidget(self.dc, self.grid.rowCount(), 0, 1, 3)

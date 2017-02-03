@@ -19,7 +19,6 @@ __license__ = "GPL"
 __version__ = "1.0.2"
 __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
-import atexit
 
 from MFrame import MFrame
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QThread
@@ -34,7 +33,7 @@ class MDevice(QThread):
        # Dictionary holding datalogging settings
          # Datalogging disabled by default
 
-        atexit.register(self.stop)
+
        # Refresh rate of plot.
         self.plotRefreshRate = 1
         # RefreshRate for the device.

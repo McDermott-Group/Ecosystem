@@ -19,7 +19,7 @@ class MNode(QtGui.QGraphicsItem):
         ''' Create a new node'''
         #print "self.scene:",self.scene
         # Get keyword args from constructor
-        print "newNode"
+        
         self.scene.addItem(self)
         self.nodeLayout = QtGui.QGridLayout()
         #self.setLayout(nodeLayout)

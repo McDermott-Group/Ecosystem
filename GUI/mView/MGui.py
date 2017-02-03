@@ -50,8 +50,6 @@ class MGui(QtGui.QMainWindow):
     tiles = []
     # All layouts for each device.
     grids = []
-    # All devices connected and not connected to the GUI.
-    devices = None
     # The main vertical box layout for the GUI.
     mainVBox = [QtGui.QVBoxLayout()]
     # The main horizontal box layout for the GUI.
@@ -80,7 +78,8 @@ class MGui(QtGui.QMainWindow):
     # splash_pix = QtGui.QPixmap('logo.png')
     # splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
     # splash.show()
-    
+    def __init__(self):
+        atexit.register(self.stop)
     def initGui(self, devices, parent=None):
         """Configure all GUI elements."""
         QtGui.QWidget.__init__(self, parent)
@@ -142,7 +141,7 @@ class MGui(QtGui.QMainWindow):
         VirtualDevicesMenu.addAction(virtualDevicesConfigAction)
         # Keeps track of the number of widgets, used for placing tiles
         # into the correct column.
-        self.neh = MNodeEditorHandler(self)
+        self.neh = MNodeEditorHandler()
         numWidgets = 0
         # Configure the size policy of all tiles.
         self.frameSizePolicy = QtGui.QSizePolicy()
@@ -165,6 +164,17 @@ class MGui(QtGui.QMainWindow):
         #self.mainVBox[0].addStretch(0)
         #self.mainVBox[1].addStretch(0)
         print("GUI initialized.")
+    def stop(self):
+        '''Stop MView.'''
+        print "Shutting down MView."
+        print "all devices:", web.devices
+        for device in web.devices:
+            print "stopping", str(device)
+            device.stop()
+            device.getFrame().getDataChestWrapper().done()
+            device.getFrame().getDataChestWrapper().saveState()
+        web.persistentData.saveState()
+        self.neh.stop()
         
     def addDevice(self, device):
         if self.VBoxColumn == 0:

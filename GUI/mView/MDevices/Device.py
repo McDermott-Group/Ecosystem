@@ -20,7 +20,7 @@ __version__ = "2.0.2"
 __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
-import atexit
+
 
 
 import labrad

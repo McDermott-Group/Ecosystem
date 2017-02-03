@@ -23,7 +23,7 @@ __status__ = "Beta"
 import cPickle as pickle
 import traceback 
 import os
-import atexit
+
 
 class MPersistentData:
 
@@ -36,7 +36,7 @@ class MPersistentData:
             self.restoreState()
         except:
             print "The mview.config file was not found."
-        atexit.register(self.saveState)
+
 
     def saveState(self):
         #print self.persistentDataDict

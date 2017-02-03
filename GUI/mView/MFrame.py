@@ -65,6 +65,8 @@ class MFrame:
         self.plot = None
         # Datalogging disabled by default
         self.logData = False
+        #Datachest wrapper class
+        self.dataChestWrapper = None
         # Dictionary holding datalogging settings
         self.datalogsettingsDict = {
                 "enabled"   :    self.logData,
@@ -205,7 +207,10 @@ class MFrame:
 
     def getDataSet(self):
         return self.dataSet
-
+    def getDataChestWrapper(self):
+        return self.dataChestWrapper
+    def setDataChestWrapper(self, wrapper):
+        self.dataChestWrapper = wrapper
     def enableDataLogging(self, b):
         self.logData = b
 

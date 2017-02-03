@@ -37,7 +37,6 @@ import  datetime
 class mGraph(QtGui.QWidget):
     def __init__(self, device, parent=None):
         QtGui.QWidget.__init__(self, parent)
-        print "Starting graphing widget:", str(device)
         # Create a matplotlib figure.
       
         # This is the device we want to use.
@@ -155,6 +154,7 @@ class mGraph(QtGui.QWidget):
         self.setLayout(mainLayout)
         
         self.installEventFilter(self)
+        self.togglePlot()
     def eventFilter(self, receiver, event):
         '''Filter out scroll events so that only pyqtgraph catches them'''
         if(event.type() == QtCore.QEvent.Wheel):
@@ -178,8 +178,6 @@ class mGraph(QtGui.QWidget):
         frame = device.getFrame()
         yLabel = frame.getYLabel()
         units = frame.getUnits()
-        print "units:", units
-        print "frame.getUnits():", frame.getTitle(), frame.getUnits()
         if frame.getCustomUnits():
             #self.p.getAxis('left').setLabel(text = yLabel, units = frame.getCustomUnits())
             self.p.setLabel('left', text = yLabel, units = frame.getCustomUnits())
@@ -199,7 +197,6 @@ class mGraph(QtGui.QWidget):
             #axes[-1].setLabel(text= "Test", units = "test units")
 
             for unit in frame.getUnits():
-                print "found unit:", unit
                 if unit not in units:
                     print "found new unit:", unit
                     
@@ -248,7 +245,7 @@ class mGraph(QtGui.QWidget):
                 pen = pg.mkPen(cosmetic=True, width=2, color=(np.random.random()*200, np.random.random()*200, np.random.random()*200))
                 varNames = self.device.getFrame().getDataSet().getVariables()
                 varNames = [varNames[1][y][0] for y in range(len(varNames[1]))]
-                self.curves.append(self.p.plot([0], pen = pen, name = varNames[i]))
+                self.curves.append(self.p.plot([0], pen = pen, name = varNames[i].replace('_', ' ')))
                 i = i+1
             currMax = None
             currMin = None
@@ -271,7 +268,8 @@ class mGraph(QtGui.QWidget):
                 try:
                     self.p.setRange(xRange=[times[0],times[-1]], yRange = [currMin, currMax])
                 except:
-                    traceback.print_exc()
+                    pass
+                    #traceback.print_exc()
             self.processRangeChangeSig = True
 
                     #self.p.setYRange()
