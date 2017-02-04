@@ -4,7 +4,7 @@ import MGui             # Handles all gui operations. Independent of labrad.
 from MWeb import web
 #from PyQt4 import QtCore, QtGui
 
-from Device import Device
+from MDevices.Device import Device
 from multiprocessing.pool import ThreadPool
 import threading
 import labrad
@@ -42,6 +42,23 @@ class nViewer:
         LeidenDRTemperature.begin()
         self.devices.append(LeidenDRTemperature)
 
+        localTemp = Device("Local Temperatures")
+        localTemp.connection(cxn)
+        localTemp.setServerName("my_server2")
+        localTemp.addParameter("Outside Temperature", "temperature", None)
+        localTemp.addParameter("Outside pressure", "pressure", None)
+        localTemp.addParameter("Humidity", "moisture", None)
+        
+        localTemp.addButton("Madison Weather",  None, "changeLocation", 5)
+        localTemp.addButton("St. Paul Weather", None,  "changeLocation", 2)
+
+        localTemp.addPlot()
+        localTemp.setPlotRefreshRate(2)
+        localTemp.setRefreshRate(2)
+        localTemp.setYLabel("Temperature")
+        localTemp.begin()
+        self.devices.append(localTemp)
+        
         
         # Start the datalogger. This line can be commented
         # out if no datalogging is required.

@@ -20,8 +20,8 @@ __version__ = "2.0.2"
 __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
-import atexit
-import traceback
+
+
 
 import labrad
 from labrad.units import Value, ValueArray
@@ -31,11 +31,15 @@ from dataChestWrapper import dataChestWrapper
 import MPopUp
 from MDevice import MDevice
 import threading
+
 from MWeb import web
+import traceback
 class Device(MDevice):
     """The device class handles a LabRAD device."""
     def __init__(self, *args):
+
         super(Device, self).__init__(*args)
+
         # Get all the stuff from the constructor.
         # Has a the device made an appearance, this is so we dont alert
         # the user more than once if a device dissapears.
@@ -66,6 +70,7 @@ class Device(MDevice):
         self.settingArgs =[]    
         self.settingResultIndices = []
         self.frame.setYLabel(None)
+        
         # Determine which buttons get messages.
         self.buttonMessages = []
         # Setup all buttons.
@@ -75,11 +80,10 @@ class Device(MDevice):
     
         # Tells thread to keep going.
         self.keepGoing = True
+        
         self.frame.setTitle(self.name)
         
-    def stop(self):
-        self.keepGoing = False
-        
+
     def setServerName(self, name):
         self.serverName = name
         
@@ -100,8 +104,8 @@ class Device(MDevice):
 
     def addButton(self, name, msg, action, arg=None):
         self.buttons.append([])
-        i = len(self.buttons) - 1
-        button = self.buttons[i]
+        #i = len(self.buttons) - 1
+        button = self.buttons[-1]
         button.append(name)
         button.append(action)
         button.append(msg)
@@ -132,16 +136,18 @@ class Device(MDevice):
         self.deviceThread.start()
 
     def setRefreshRate(self, period):
-        #print "title of device:",self.frame.getTitle()
+      
         if  self.frame.getTitle()is None:
             raise IOError("Refresh Rates cannot be set until name is given to device.")
-        #self.frame.setRefreshRate(period)
-
+       
+        if self.frame.getRefreshRate() == None:
+             self.frame.setRefreshRate(period)
     def setPlotRefreshRate(self, period):
-        #print "title of device:",self.frame.getTitle()
-       if  self.frame.getTitle()is None:
+
+        if  self.frame.getTitle()is None:
             raise IOError("Refresh Rates cannot be set until name is given to device.")
-       #self.frame.setPlotRefreshRate(period)
+        if self.frame.getPlotRefreshRate() == None:
+            self.frame.setPlotRefreshRate(period)
 
     def addPlot(self, length=None):
         self.frame.addPlot(length)
@@ -176,9 +182,10 @@ class Device(MDevice):
         # self.frame.enableDataLogging(b)
 
     def prompt(self, button):
-        """If a button is clicked, handle it."""
+        """If a button is clicked, handle it."""#name action msg arg
         try:
-            actual_button = self.frame.getButtons()[button]
+            print button
+            actual_button = button
             # If the button has a warning message attatched.
             if actual_button[2] is not None:
                 # Create a new popup.
@@ -191,7 +198,7 @@ class Device(MDevice):
                     # has an argument for the setting.
                     if actual_button[3] is not None:
                         getattr(self.deviceServer,
-                                actual_button[1])(actual_button[4])
+                                actual_button[1])(actual_button[3])
                     # If just the setting needs to be run.
                     else:
                         getattr(self.deviceServer, actual_button[1])
@@ -202,7 +209,7 @@ class Device(MDevice):
                 # the setting.
                 if actual_button[3] is not None:
                     getattr(self.deviceServer,
-                            actual_button[1])(actual_button[4])
+                            actual_button[1])(actual_button[3])
                 else:
                     getattr(self.deviceServer, actual_button[1])
         except:
@@ -211,7 +218,8 @@ class Device(MDevice):
 
     def query(self):
         """Query the device for readings."""
-        # If the device is attatched.
+        # If the device is attached.
+        #print "querying device"
         if not self.isDevice:
             # Try to connect again, if the value changes, then we know 
             # that the device has connected.
@@ -236,7 +244,7 @@ class Device(MDevice):
                     if isinstance(reading, Value):
                         pass
                     # If the reading is an array of values and units.
-                    elif isinstance(reading, ValueArray):
+                    if isinstance(reading, ValueArray):
                         indices = self.settingResultIndices
                         if indices != None and \
                                 isinstance(reading[indices[i]], Value):
@@ -247,11 +255,13 @@ class Device(MDevice):
                             reading = reading[i]
                             
                     if isinstance(reading, Value):
+                        #print "Received labrad Value type"
                         preferredUnits = self.settingUnits[i]
                         if preferredUnits is not None and \
                                 reading.isCompatible(preferredUnits):
                             reading = reading.inUnitsOf(preferredUnits)
                         u = reading.units
+                        #print "units:", u
                         readings.append(reading[u])
                         units.append(u)
                         precisions.append(self.precisions[i])
@@ -282,6 +292,7 @@ class Device(MDevice):
                                   %str(type(reading)))
                 # Pass the readings and units to the frame.
                 self.frame.setReadings(readings)
+                #print "setting units"
                 self.frame.setUnits(units)
                 self.frame.setPrecisions(precisions)
                 # Save the data.
@@ -304,6 +315,8 @@ class Device(MDevice):
                 self.isDevice = False
         # Query calls itself again, this keeps the thread alive.
         if self.keepGoing:
+            
+            self.updateContainer()
             threading.Timer(self.frame.getRefreshRate(),
                     self.query).start()
         return

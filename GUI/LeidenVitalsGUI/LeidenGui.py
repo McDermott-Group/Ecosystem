@@ -21,7 +21,7 @@ import labrad
 
 from dataChestWrapper import *
 import MGui # Handles all GUI operations. Independent of LabRAD.
-from Device import Device
+from MDevices.Device import Device
 
 
 class nViewer:

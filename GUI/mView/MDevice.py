@@ -19,17 +19,37 @@ __license__ = "GPL"
 __version__ = "1.0.2"
 __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
-import atexit
 
 from MFrame import MFrame
-class MDevice(object):
+from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QThread
+class MDevice(QThread):
+    updateSignal = pyqtSignal()
     def __init__(self, name):
+        super(MDevice, self).__init__()
 
         self.frame = MFrame()
-
+        self.frame.setTitle(name)
         # Datachest wrapper.
+       # Dictionary holding datalogging settings
+         # Datalogging disabled by default
+
+
+       # Refresh rate of plot.
+        self.plotRefreshRate = 1
+        # RefreshRate for the device.
+        self.refreshRate = 1
+        self.container = None
        
-        atexit.register(self.stop)
+        
+    def setContainer(self, container):
+        self.container = container
+        self.frame.setContainer(container)
+    def getContainer(self):
+        return self.container
+    def updateContainer(self):
+        if self.container != None:
+           self.updateSignal.emit()
+            
     def addParameter(self, *args):
         print ("ERROR: Child of MDevice must "
             "implement MDevice.addParameter().")
@@ -62,6 +82,17 @@ class MDevice(object):
     def getFrame(self):
         """Return the device's frame."""
         return self.frame
+    def stop(self):
+        print "stopping device thread..."
+        self.keepGoing = False
+        print "device thread stopped."
+    def begin(self):
+      
+        self.frame.setNicknames(self.nicknames)
+        self.frame.setReadingIndices(self.settingResultIndices)
+        self.frame.DataLoggingInfo()['name'] = self.frame.getTitle()
+        self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self)
+        self.datachest = self.frame.DataLoggingInfo()['chest']
         
     def logData(self, b, channels = None):
         self.frame.DataLoggingInfo['channels'] = channels

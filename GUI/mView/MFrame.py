@@ -25,19 +25,18 @@ from MWeb import web
 class MFrame:
   
     def __init__(self):
-
         """This class acts as the interface between the devices and all
     classes which use the device or any of its parameters."""
         # Name of device's server.
         self.serverTitle = None
         # Parameter names to be displayed on the GUI.
-        self.nicknames = None
+        self.nicknames = []
         # Settings which are called by the GUI.
         self.serverSettings = None
         # Device readings.
         self.readings = None
         # Precisions.
-        self.precisions = None
+        self.precisions = []
         # Errors.
         self.error = False
         # Error messages.
@@ -66,6 +65,8 @@ class MFrame:
         self.plot = None
         # Datalogging disabled by default
         self.logData = False
+        #Datachest wrapper class
+        self.dataChestWrapper = None
         # Dictionary holding datalogging settings
         self.datalogsettingsDict = {
                 "enabled"   :    self.logData,
@@ -82,7 +83,8 @@ class MFrame:
             self.datalogsettingsDict = restoredSettings
         # Is there a reading out of range?
         self.outOfRange = {}
-       
+        self.node = None
+        self.container = None
     def setTitle(self, title):
        # print "Set title:", title
         self.serverTitle = title
@@ -205,7 +207,10 @@ class MFrame:
 
     def getDataSet(self):
         return self.dataSet
-
+    def getDataChestWrapper(self):
+        return self.dataChestWrapper
+    def setDataChestWrapper(self, wrapper):
+        self.dataChestWrapper = wrapper
     def enableDataLogging(self, b):
         self.logData = b
 
@@ -227,4 +232,15 @@ class MFrame:
 
     def disableRange(self):
       self.outOfRange = {key: False for key in self.outOfRange}
-      
+    
+    def setNode(self, node):
+        self.node = node
+        
+    def getNode(self):
+        return self.node
+        
+    def setContainer(self, container):
+        self.container = container
+        
+    def getContainer(self):
+        return self.container

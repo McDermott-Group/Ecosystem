@@ -21,11 +21,10 @@ __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
 import re
-import atexit
 
-import threading
+
 import datetime as dt
-from PyQt4 import QtCore, QtGui
+#from PyQt4 import QtCore, QtGui
 from MWeb import web
 
 from dateStamp import *
@@ -46,17 +45,18 @@ class dataChestWrapper:
         # Create a devices reference that can be accessed 
         # outside of this scope.
         self.device = device
+        self.device.getFrame().setDataChestWrapper(self)
         # These arrays will hold all dataChest data sets.
         self.dataSet = None
         self.hasData = None
         # The done function must be called when the GUI exits.
-        atexit.register(self.done)
+        
         self.dataSet = None
         self.hasData = False
         self.keepLoggingNan = True
         self.dStamp = dateStamp()
         self.restoreState()
-        atexit.register(self.saveState)
+        
     def restoreState(self):
         dataname = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device), 'name')
         channels = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device), 'channels')
@@ -78,20 +78,20 @@ class dataChestWrapper:
         
         
             #web.persistentData.persistentDataAccess(device.getFrame().DataLoggingInfo(),"DataLoggingInfo", str(device))
-
+        print "saving datachest state to persistent data..."
         dataname = self.device.getFrame().DataLoggingInfo()['name']
         channels = self.device.getFrame().DataLoggingInfo()['channels']
         location = self.device.getFrame().DataLoggingInfo()['location']
         web.persistentData.persistentDataAccess(dataname, 'DataLoggingInfo', str(self.device), 'name')
         web.persistentData.persistentDataAccess(channels, 'DataLoggingInfo', str(self.device), 'channels')
         web.persistentData.persistentDataAccess(location, 'DataLoggingInfo', str(self.device), 'location')
-        
+        print "datachest persistent data saved."
     def configureDataSets(self):
         """
         Initialize the datalogger, if datasets already exist, use them.
         Otherwise create new ones.
         """
-        print "configuring data"
+        
         now = dt.datetime.now()
         self.hasData = True
         # Generate a title for the dataset. NOTE: if 
@@ -198,7 +198,7 @@ class dataChestWrapper:
                     # the same name displayed on the GUI except without 
                     # non-alphanumerical characters. Use regular
                     # expressions to do this.
-                    paramName = str(nicknames[y]).replace(" ","")
+                    paramName = str(nicknames[y]).replace(" ","_")
                     paramName = re.sub(r'\W+', '', paramName)
                     # Create the tuple that defines the parameter.
                     tup = (paramName, [1], "float64",
