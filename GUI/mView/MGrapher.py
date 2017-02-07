@@ -333,7 +333,7 @@ class TimeAxisItem(pg.AxisItem):
     def tickStrings(self, values, scale, spacing):
         # PySide's QTime() initialiser fails miserably and dismisses args/kwargs
         #return [QTime().addMSecs(value).toString('mm:ss') for value in values]
-        return [int2dt(value).strftime("%x %H:%M:%S.%f") for value in values]
+        return [int2dt(value).strftime("%x %X") for value in values]
 TS_MULT_us = 1e6    
 def int2dt(ts, ts_mult=TS_MULT_us):
     return(datetime.datetime.utcfromtimestamp(float(ts)))
