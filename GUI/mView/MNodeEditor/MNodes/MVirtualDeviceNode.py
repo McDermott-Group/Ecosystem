@@ -14,7 +14,8 @@ class MVirtualDeviceNode(MNode):
     def begin(self, *args, **kwargs):
         super( MVirtualDeviceNode, self).begin()
         #print "initializing MVirtualDeviceNode"
-        self.addAnchor(name = 'input 1', type = 'input')
+        self.addAnchor(name = 'Self', type = 'output')
+        self.addAnchor(name = 'New Input', type = 'input')
         self.setTitle("Virtual Device")
         #print "creating new virtual device named", self.getTitle()
         self.associatedDevice = MVirtualDevice(self.getTitle())
@@ -48,8 +49,11 @@ class MVirtualDeviceNode(MNode):
     def pipeConnected(self, anchor, pipe):
         '''called when a pipe is added'''
         print "pipeConnected called"
-        self.addAnchor(name = 'New Input', type = 'input')
-        self.associatedDevice.addParameter(self.getAnchors()[-1].getLabel())
+        if anchor.getType() == 'input':
+            self.addAnchor(name = 'New Input', type = 'input')
+            self.associatedDevice.addParameter(self.getAnchors()[-1].getLabel())
+        elif anchor.getLabel() == 'Self':
+            anchor.setData(self.getDevice())
         pass
     def pipeDisconnected(self):
        print "pipeDisconnected called"
