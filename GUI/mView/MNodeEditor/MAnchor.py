@@ -4,6 +4,7 @@ from MWeb import web
 import time
 from functools import partial
 import traceback
+from MReadout import MReadout
 class MAnchor(QtGui.QGraphicsItem):
     def __init__(self, name, node, index,  parent = None, **kwargs):
         # Get the keyword arguments
@@ -32,7 +33,7 @@ class MAnchor(QtGui.QGraphicsItem):
         self.parent = node
         # Configure the brush
         self.nodeBrush = QtGui.QBrush(QtGui.QColor(*node.getColor()))
-        
+        self.data = None
         self.posY = 70+30*self.index
         self.directInput = None
         self.okDirectInput = None
@@ -70,8 +71,8 @@ class MAnchor(QtGui.QGraphicsItem):
         self.labelWidget = QtGui.QLabel(self.label, self.nodeFrame)
         self.labelWidget.setStyleSheet("color:rgb(189, 195, 199)")
         self.nodeLayout.addWidget(self.labelWidget, self.index+2, 0)
-        self.lcd = QtGui.QLCDNumber(self.nodeFrame)
-        self.lcd.setSegmentStyle(QtGui.QLCDNumber.Flat)
+        self.lcd = MReadout(self.nodeFrame)
+        
         self.lcd.setStyleSheet("color:rgb(189, 195, 199);\n")
         self.nodeLayout.addWidget(self.lcd, self.index+2, 1)
         if self.suggestedDataType == 'float':
@@ -116,6 +117,7 @@ class MAnchor(QtGui.QGraphicsItem):
             self.pipe.setData(value)
         else:
             self.directInputData = value
+        self.data = directInputData
         self.parentNode().refreshData()
     def getLcd(self):
         return self.lcd
@@ -125,7 +127,7 @@ class MAnchor(QtGui.QGraphicsItem):
         self.setParentItem(node)
         self.parent  = node
     def getLabel(self):
-        return self.label
+        return str(self.label)
     def setLabel(self, text):
         self.label = text
         self.labelWidget.setText(text)
@@ -137,17 +139,33 @@ class MAnchor(QtGui.QGraphicsItem):
     def getPipe(self):
         '''Get the pipe connected to the anchor'''
         return self.pipe
+    def pipeConnected(self, pipe):
+        print "anchor->pipeConnected:", self.data
+        self.setPipe(pipe)
+        if self.getType() == 'output':
+            self.setData(self.data)
+        else:
+            self.data = pipe.getData()
+    def update(self):
+        #self.parentNode().refreshData()
+        if self.parentNode().isDevice:
+                self.parentNode().getDevice().updateContainer()
+        self.getLcd().display(self.data)
     def getData(self):
         pipe = self.getPipe()
         if pipe != None:
             return self.getPipe().getData()
         else:
-            return self.directInputData
+            return self.data 
+            
+            
     def setData(self, data):
         pipe = self.getPipe()
-        if pipe != None:
+        if pipe != None and self.type == 'output':
             pipe.setData(data)
-        
+        elif self.parentNode().isDevice:
+            self.parentNode().getDevice().updateContainer()
+        self.data = data
         self.lcd.display(data)
     def setPipe(self, pipe):
         self.pipe = pipe

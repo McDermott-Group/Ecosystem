@@ -113,7 +113,7 @@ class MNode(QtGui.QGraphicsItem):
         self.anchorAdded(anchor)
         self.rect = QtCore.QRectF(0, 0, self.nodeFrame.width(),self.nodeFrame.height())
         self.rect2 = QtCore.QRectF(0, 0,self.nodeFrame.width(),self.nodeFrame.height())
-        return self.anchors[-1]
+        return anchor
     def removeAnchor(self, anchor = None, **kwargs):
         print "specified anchor:", anchor
         if anchor == None:
