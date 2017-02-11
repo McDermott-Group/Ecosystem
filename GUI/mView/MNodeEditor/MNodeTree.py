@@ -60,7 +60,7 @@ class NodeTree:
                 endAnchor.connect(self.pipes[-1])
             # If the start anchor of the pipe is and output
                 endAnchor.parentItem().pipeConnected(endAnchor, self.pipes[-1])
-
+                endAnchor.pipeConnected(self.pipes[-1])
             else:
                 if len(self.getPipes()) == 0:
                     self.pipe = self.addPipe(MPipe(anchor, self.scene))
@@ -73,8 +73,8 @@ class NodeTree:
                     else:
                         self.pipe = self.addPipe(MPipe(anchor, self.scene))
                     self.pipe = self.getPipes()[-1]
-            
-            anchor.parentItem().pipeConnected(anchor, self.pipes[-1])
+            anchor.pipeConnected(self.pipe)
+            anchor.parentItem().pipeConnected(anchor, self.pipe)
             
             anchor.connect(self.pipes[-1])
         except  ValueError, e:

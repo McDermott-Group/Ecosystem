@@ -101,13 +101,22 @@ class MDeviceContainerWidget(QtGui.QFrame):
                 lcdHBox.addWidget(lcd)
 
                 grid.addLayout(lcdHBox, y, 1)
-
+        self.topHBox = QtGui.QHBoxLayout()
+        yPos = len(self.nicknames)
+        grid.addLayout(self.topHBox, yPos+1, 0, yPos+1, 3)
         if device.getFrame().isPlot():
             self.dc = MGrapher.mGraph(device)
-            yPos = len(self.nicknames)+1
+            yPos = len(self.nicknames)+2
             device.getFrame().setPlot(self.dc)
             grid.addWidget(self.dc, yPos,0,yPos,3)
-
+        self.bottomHBox = QtGui.QHBoxLayout()
+      
+        
+        grid.addLayout(self.bottomHBox, yPos+1, 0, yPos+1, 3)
+    def getBottomHBox(self):
+        return self.BottomHBox
+    def getTopHBox(self):
+        return self.topHBox
     def addParameter(self):
         label = QtGui.QLabel('Untitled', self)
         label.setFont(self.font)

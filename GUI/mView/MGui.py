@@ -185,6 +185,12 @@ class MGui(QtGui.QMainWindow):
         container = MDeviceContainerWidget(device, self)
         self.deviceWidgets.append(container)
         self.mainVBox[self.VBoxColumn].addWidget(container)
+    def addWidget(self, widget):
+        if self.VBoxColumn == 0:
+            self.VBoxColumn = 1
+        else:
+            self.VBoxColumn = 0
+        self.mainVBox[self.VBoxColumn].addWidget(widget)
     def mousePressEvent(self, event):
         
         focused_widget = QtGui.QApplication.focusWidget()
@@ -221,7 +227,7 @@ class MGui(QtGui.QMainWindow):
         self.Config = ConfigGui(self)
         self.Config.exec_()
 
-    def startGui(self, devices, title, dataTitle, tele):
+    def startGui(self, devices, title, dataTitle, tele, autostart = True):
         """Start the GUI."""
         print "Starting GUI."
         # Used as the name of the dataChest data title.
@@ -258,6 +264,12 @@ class MGui(QtGui.QMainWindow):
             # QtGui.QApplication.focusWidget().clearFocus()
         # except:
             # pass
+        # Now that the gui is mostly loaded, all of teh onLoad functions can be called
+        for device in web.devices:
+            device.onLoad()
+        if autostart:
+            self.showGui()
+    def showGui(self):
         sys.exit(app.exec_())
 
     def update(self):

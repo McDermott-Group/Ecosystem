@@ -275,14 +275,17 @@ class ADRServer(DeviceServer):
         log.startLogging(sys.stdout)
         # root = File("C:\\Users\\McDermott\\Desktop\\Git Repositories\\servers\\adr\\www")
         root = File("./www")
+        
+        adrN = int(self.deviceName[-1])
+        port = 9879 - adrN
 
-        self.factory = MyFactory(u"ws://127.0.0.1:9876/",adrServer=self)
+        self.factory = MyFactory(u"ws://127.0.0.1:%i/"%port,adrServer=self)
         self.factory.protocol = MyServerProtocol
         resource = WebSocketResource(self.factory)
         root.putChild(u"ws", resource)
 
         site = Site(root)
-        reactor.listenTCP(9876, site, interface='0.0.0.0')
+        reactor.listenTCP(port, site, interface='0.0.0.0')
 
         try:
             yield self.client.registry.cd(self.ADRSettingsPath)
@@ -571,7 +574,7 @@ class ADRServer(DeviceServer):
             self.state['Pressure'] = pressure
             # update relevant files
             try:
-                newTemps = [self.state[t]['K'] for t in ['T_60K','T_3K','T_GGG','T_FAA']]
+                newTemps = [numpy.float16(self.state[t]['K']) for t in ['T_60K','T_3K','T_GGG','T_FAA']]
                 timestamp = deltaT(self.state['datetime'] - datetime.datetime(1970, 1, 1))
                 self.tempDataChest.addData( [[timestamp] + newTemps] )
             except Exception as e:

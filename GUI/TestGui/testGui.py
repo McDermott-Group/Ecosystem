@@ -5,6 +5,7 @@ from MWeb import web
 #from PyQt4 import QtCore, QtGui
 
 from MDevices.Device import Device
+from MDevices.Mhdf5Device import Mhdf5Device
 from multiprocessing.pool import ThreadPool
 import threading
 import labrad
@@ -59,7 +60,12 @@ class nViewer:
         localTemp.begin()
         self.devices.append(localTemp)
         
+        grapher = Mhdf5Device("Grapher")
+        grapher.addButton("Load Data Set")
+        grapher.addPlot()
+        grapher.begin()
         
+        self.devices.append(grapher)
         # Start the datalogger. This line can be commented
         # out if no datalogging is required.
         #print self.devices

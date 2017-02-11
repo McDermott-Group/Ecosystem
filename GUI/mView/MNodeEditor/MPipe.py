@@ -38,6 +38,7 @@ class MPipe(QtGui.QGraphicsPathItem):
             self.inputAnchor = self.startAnchor
             self.outputAnchor = self.endAnchor
        # print "on connect, input anchor:", self.inputAnchor
+       
         self.endAnchor = endAnchor
         self.update()
         
@@ -79,15 +80,21 @@ class MPipe(QtGui.QGraphicsPathItem):
         
     def setData(self, data):
         self.data = data
+        
         #print "self.inputAnchor:", self.inputAnchor
+        # if self.inputAnchor != None:
+            # self.inputAnchor.parentNode().refreshData()
+            # if self.inputAnchor.parentNode().isDevice:
+                # self.inputAnchor.parentNode().getDevice().updateContainer()
+        # if self.inputAnchor != None:
+            # self.inputAnchor .getLcd().display(self.data)
+        # if self.outputAnchor != None:
+            # self.outputAnchor .getLcd().display(self.data) 
         if self.inputAnchor != None:
-            self.inputAnchor.parentNode().refreshData()
-            if self.inputAnchor.parentNode().isDevice:
-                self.inputAnchor.parentNode().getDevice().updateContainer()
-        if self.inputAnchor != None:
-            self.inputAnchor .getLcd().display(self.data)
-        if self.outputAnchor != None:
-            self.outputAnchor .getLcd().display(self.data)
+            self.inputAnchor.setData(data)
+
+        # if self.outputAnchor != None:
+            # self.outputAnchor .update()
 
     def sceneMouseMove(self, event):
         print "Scene mouse move"

@@ -22,6 +22,7 @@ __status__ = "Beta"
 
 from MFrame import MFrame
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QThread
+import threading
 class MDevice(QThread):
     updateSignal = pyqtSignal()
     def __init__(self, name):
@@ -39,9 +40,12 @@ class MDevice(QThread):
         # RefreshRate for the device.
         self.refreshRate = 1
         self.container = None
-       
-        
+        self.nicknames = []
+        self.settingResultIndices = []
+    def doNotLog(self, log):
+        self.noLogging = log
     def setContainer(self, container):
+
         self.container = container
         self.frame.setContainer(container)
     def getContainer(self):
@@ -51,34 +55,23 @@ class MDevice(QThread):
            self.updateSignal.emit()
             
     def addParameter(self, *args):
-        print ("ERROR: Child of MDevice must "
-            "implement MDevice.addParameter().")
-        exit(1)
-        
+            pass
     def addButton(self, *args):
-        print("ERROR: Child of MDevice must "
-            "implement MDevice.addButton().")
-        exit(1)
+        pass
     def query(self, *args):
-        print("ERROR: Child of MDevice must "
-            "implement MDevice.query().")
-        exit(1)
+        pass    
     def setYLabel(self, *args):
-        print("ERROR: Child of MDevice must "
-            "implement MDevice.setYLabel().")
-        exit(1)
+        pass
     def setRefreshRate(self, *args):
-        print("ERROR: Child of MDevice must "
-            "implement MDevice.setRefreshRate().")
-        exit(1)
+        pass
     def setPlotRefreshRate(self, *args):
-         print("ERROR: Child of MDevice must "
-            "implement MDevice.setPlotRefreshRate().")
-         exit(1)
-    def addPlot(self, *args):
-        print("ERROR: Child of MDevice must "
-            "implement MDevice.addplot().")
-        exit(1)
+        pass
+    def addPlot(self, length = None, *args):
+
+        self.frame.addPlot(length)
+        # Datalogging must be enabled if we want to plot data.
+        self.frame.enableDataLogging(True)
+        return self.frame.getPlot()
     def getFrame(self):
         """Return the device's frame."""
         return self.frame
@@ -88,12 +81,29 @@ class MDevice(QThread):
         print "device thread stopped."
     def begin(self):
       
+        # self.frame.setNicknames(self.nicknames)
+        # self.frame.setReadingIndices(self.settingResultIndices)
+        # self.frame.DataLoggingInfo()['name'] = self.frame.getTitle()
+        # self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self)
+        # self.datachest = self.frame.DataLoggingInfo()['chest']
+        
         self.frame.setNicknames(self.nicknames)
         self.frame.setReadingIndices(self.settingResultIndices)
-        self.frame.DataLoggingInfo()['name'] = self.frame.getTitle()
-        self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self)
-        self.datachest = self.frame.DataLoggingInfo()['chest']
+        if not self.noLogging:
+            self.frame.DataLoggingInfo()['name'] = self.name
+            self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self)
+            self.datachest = self.frame.DataLoggingInfo()['chest']
+        # Each device NEEDS to run on a different thread 
+        # than the main thread (which ALWAYS runs the GUI).
+        # This thread is responsible for querying the devices.
+        self.deviceThread = threading.Thread(target=self.query, args=[])
+        # If the main thread stops, stop the child thread.
+        self.deviceThread.daemon = True
+        # Start the thread.
+        self.deviceThread.start()
         
+    def onLoad(self):
+        pass
     def logData(self, b, channels = None):
         self.frame.DataLoggingInfo['channels'] = channels
         self.frame.enableDataLogging(b)
