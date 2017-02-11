@@ -275,14 +275,17 @@ class ADRServer(DeviceServer):
         log.startLogging(sys.stdout)
         # root = File("C:\\Users\\McDermott\\Desktop\\Git Repositories\\servers\\adr\\www")
         root = File("./www")
+        
+        adrN = int(self.deviceName[-1])
+        port = 9879 - adrN
 
-        self.factory = MyFactory(u"ws://127.0.0.1:9876/",adrServer=self)
+        self.factory = MyFactory(u"ws://127.0.0.1:%i/"%port,adrServer=self)
         self.factory.protocol = MyServerProtocol
         resource = WebSocketResource(self.factory)
         root.putChild(u"ws", resource)
 
         site = Site(root)
-        reactor.listenTCP(9876, site, interface='0.0.0.0')
+        reactor.listenTCP(port, site, interface='0.0.0.0')
 
         try:
             yield self.client.registry.cd(self.ADRSettingsPath)
