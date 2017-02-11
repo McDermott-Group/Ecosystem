@@ -17,9 +17,6 @@ class MCompare(MNode):
     def refreshData(self):
         print "refreshing data"
         anchors = self.getAnchors()
-        goodToGo = True
-        
-
        
         data1 = anchors[0].getData()
         data2 = anchors [1].getData()

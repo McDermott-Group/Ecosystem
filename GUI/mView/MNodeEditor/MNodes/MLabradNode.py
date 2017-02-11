@@ -21,23 +21,26 @@ class MLabradNode(MNode):
         self.showOnGui.setChecked(True)
         self.nodeLayout.addWidget(self.showOnGui, 1, 0)
         self.showOnGui.clicked.connect(partial(self.device.getFrame().getContainer().visible))
-
+        devAnchor = self.addAnchor(name = 'Self', type = 'output')
+        devAnchor.setData(self.getDevice())
+        
         for i,param in enumerate(self.device.getFrame().getNicknames()):
-            self.addAnchor(MAnchor(param,self,  i, type = 'output'))
-            
+            self.addAnchor(MAnchor(param,self,  i+1, type = 'output'))
+
     def refreshData(self):
         index = 0
         #print "refreshing Data"
         try:
-                for i, anchor in enumerate(self.getAnchors()):
-                    reading = self.device.getFrame().getReadings()[i] 
-                    anchor.getLcd().display(reading)
-                    if(anchor.getType() == 'output' and anchor.getPipe() is not None):
-                        
-                        anchor.getPipe().setData(reading )
-                       
-                        #print anchor.getPipe().getData()
-                        index = index + 1
+                for i, anchor in enumerate(self.getAnchors()[1::]):
+                    if anchor.getType() == 'output':
+                        reading = self.device.getFrame().getReadings()[i] 
+                        anchor.getLcd().display(reading)
+                        if(anchor.getPipe() is not None):
+                            
+                            anchor.setData(reading )
+                           
+                            #print anchor.getPipe().getData()
+                            index = index + 1
             # if web.keepGoing:
                 # pass
                 # threading.Timer(1, self.refreshData).start()
