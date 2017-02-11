@@ -188,7 +188,8 @@ class mGraph(QtGui.QWidget):
             units.append(frame.getUnits()[0])
             
             axes.append(self.p.getAxis('left'))
-            axes[-1].setLabel(text = yLabel, units = units[0])
+            #print "grapher y axis units:", units[0]
+            axes[-1].setLabel(text = str(yLabel+"("+units[0]+")"))
             # units.append(units[0])
             # self.p.showAxis('right')
             
