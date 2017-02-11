@@ -264,6 +264,9 @@ class MGui(QtGui.QMainWindow):
             # QtGui.QApplication.focusWidget().clearFocus()
         # except:
             # pass
+        # Now that the gui is mostly loaded, all of teh onLoad functions can be called
+        for device in web.devices:
+            device.onLoad()
         if autostart:
             self.showGui()
     def showGui(self):

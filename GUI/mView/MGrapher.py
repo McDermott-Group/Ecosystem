@@ -37,8 +37,7 @@ import  datetime
 class mGraph(QtGui.QWidget):
     def __init__(self, device, parent=None):
         QtGui.QWidget.__init__(self, parent)
-        # Create a matplotlib figure.
-      
+
         # This is the device we want to use.
         self.device = device
         # This sets up axis on which to plot.
@@ -87,19 +86,19 @@ class mGraph(QtGui.QWidget):
         self.hideButton = QtGui.QPushButton("Hide Plot")
         self.hideButton.clicked.connect(self.togglePlot)
         self.oneMinButton = QtGui.QPushButton("1 min")
-        self.oneMinButton.clicked.connect(partial(self.plot, time = 60))
+        self.oneMinButton.clicked.connect(partial(self.plot, time = 60, autoRange = True))
         self.tenMinButton = QtGui.QPushButton("10 min")
-        self.tenMinButton.clicked.connect(partial(self.plot,  time = 600))
+        self.tenMinButton.clicked.connect(partial(self.plot,  time = 600, autoRange = True))
         self.twoHrButton = QtGui.QPushButton("2 hr")
-        self.twoHrButton.clicked.connect(partial(self.plot, time =  7200))
+        self.twoHrButton.clicked.connect(partial(self.plot, time =  7200, autoRange = True))
         self.twelveHrButton = QtGui.QPushButton("12 hr")
-        self.twelveHrButton.clicked.connect(partial(self.plot,  time = 43200))
+        self.twelveHrButton.clicked.connect(partial(self.plot,  time = 43200, autoRange = True))
         self.threeDayButton = QtGui.QPushButton("3 day")
-        self.threeDayButton.clicked.connect(partial(self.plot, time = 259200))
+        self.threeDayButton.clicked.connect(partial(self.plot, time = 259200, autoRange = True))
         self.oneWkButton = QtGui.QPushButton("1 week")
-        self.oneWkButton.clicked.connect(partial(self.plot,  time = 604800))
+        self.oneWkButton.clicked.connect(partial(self.plot,  time = 604800, autoRange = True))
         self.allButton = QtGui.QPushButton("All Time")
-        self.allButton.clicked.connect(partial(self.plot, time =  None))
+        self.allButton.clicked.connect(partial(self.plot, time =  None, autoRange = True))
         self.lineSelect = MCheckableComboBox()
         self.lineSelect.setSizeAdjustPolicy(0)
         
@@ -168,7 +167,7 @@ class mGraph(QtGui.QWidget):
         varNames = self.device.getFrame().getDataSet().getVariables()
         varNames = [varNames[1][i][0] for i in range(len(varNames[1]))]
         for i,var in enumerate(varNames):
-            Qvar = QtCore.QString(var)
+            Qvar = QtCore.QString(var.replace('_',' '))
             self.lineSelect.addItem(Qvar)
             self.lineSelect.setFont(self.dropdownFont)
             self.lineSelect.setChecked(i, True)
@@ -218,7 +217,7 @@ class mGraph(QtGui.QWidget):
 
     def plot(self, **kwargs):
 
-            self.processRangeChangeSig = False
+           
           
             if not self.initialized:
                 self.initialize()
@@ -227,6 +226,10 @@ class mGraph(QtGui.QWidget):
                 pa.setGeometry(self.p.vb.sceneBoundingRect())
                 pa.linkedViewChanged(self.p.vb, pa.XAxis)
             maxtime = kwargs.get('time', None)
+            autoRange = kwargs.get('autoRange', False)
+            
+            # If time was specified, then autorange
+            
             if maxtime == 'last_valid':
                 maxtime = self.lastValidTime
             data = self.device.getFrame().getDataSet().getData()
@@ -251,7 +254,7 @@ class mGraph(QtGui.QWidget):
             currMin = None
             for i,col in enumerate(data[1:]):
                 if self.lineSelect.isChecked(i):
-                    self.curves[i].setData(times, col, antialias = True)
+                    self.curves[i].setData(times, col, antialias = False)
                     self.curves[i].setVisible(True)
                     thisMax = max(col)
                     thisMin = min(col)
@@ -265,12 +268,17 @@ class mGraph(QtGui.QWidget):
             self.currMax = currMax
             if self.autoscaleCheckBox.isChecked():
                 #self.p.setXRange(times[0],times[-1], padding=0)
-                try:
-                    self.p.setRange(xRange=[times[0],times[-1]], yRange = [currMin, currMax])
-                except:
-                    pass
+                for pa in self.viewboxes:
+                    pa.autoRange(items = self.curves)
+                    pa.enableAutoRange(True)
+                self.autoscaleCheckBox.setChecked(True)
+                self.processRangeChangeSig = False
+                # try:
+                    # self.p.setRange(xRange=[times[0],times[-1]], yRange = [currMin, currMax])
+                # except:
+                    # pass
                     #traceback.print_exc()
-            self.processRangeChangeSig = True
+
 
                     #self.p.setYRange()
                 #print "col:", col
@@ -288,9 +296,12 @@ class mGraph(QtGui.QWidget):
             #self.changeIndependenVarRange(time)
     def rangeChanged(self):
         if self.processRangeChangeSig:
-            if self.lockYAx.isChecked():
-                self.yAxTo100()
             self.autoscaleCheckBox.setChecked(False)
+        if self.lockYAx.isChecked():
+            self.yAxTo100()
+            
+   
+            
     def yAxTo100(self):
         self.p.enableAutoRange(axis = 'y')
     def togglePlot(self):    
@@ -328,12 +339,16 @@ class mGraph(QtGui.QWidget):
 class TimeAxisItem(pg.AxisItem):
     def __init__(self, *args, **kwargs):
         #  super().__init__(*args, **kwargs)
+        
         super(TimeAxisItem, self).__init__(*args, **kwargs)
-
+        # Timezone correction
+        self.timeOffset = -6*60*60
+        
     def tickStrings(self, values, scale, spacing):
         # PySide's QTime() initialiser fails miserably and dismisses args/kwargs
         #return [QTime().addMSecs(value).toString('mm:ss') for value in values]
-        return [int2dt(value).strftime("%x %X") for value in values]
+        
+        return [int2dt(value+self.timeOffset).strftime("%x %X") for value in values]
 TS_MULT_us = 1e6    
 def int2dt(ts, ts_mult=TS_MULT_us):
     return(datetime.datetime.utcfromtimestamp(float(ts)))

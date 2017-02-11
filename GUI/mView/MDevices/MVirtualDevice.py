@@ -57,5 +57,3 @@ class MVirtualDevice(MDevice.MDevice):
         # Datalogging must be enabled if we want to plot data.
         self.frame.enableDataLogging(False)
         return self.frame.getPlot()
-    def query(self):
-        pass

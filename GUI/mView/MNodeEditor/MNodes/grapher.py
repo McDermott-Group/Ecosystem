@@ -16,9 +16,23 @@ class grapher(MNode):
         self.setTitle("Grapher")
     def pipeConnected(self,anchor, pipe):
         print "device connected to grapher:", anchor.getData()
-        self.graph = MGrapher(anchor.getData())
-        web.gui.addWidget(self.graph)
-        self.graph.show()
+        self.frame = QtGui.QFrame()
+        
+        self.frameSizePolicy = QtGui.QSizePolicy()
+        self.frameSizePolicy.setVerticalPolicy(4)
+        self.frameSizePolicy.setHorizontalPolicy(QtGui.QSizePolicy.Preferred)
+        self.frame.setSizePolicy(self.frameSizePolicy)
+        self.frame.setStyleSheet("background: rgb(52, 73, 94)")
+        self.frame.setFrameShape(QtGui.QFrame.Panel)
+        self.frame.setFrameShadow(QtGui.QFrame.Plain)
+        self.frame.setLineWidth(web.ratio)
+        
+        self.layout = QtGui.QHBoxLayout()
+        self.graph = MGrapher(anchor.getData(), self.frame)
+        self.frame.setLayout(self.layout)
+        self.layout.addWidget(self.graph)
+        web.gui.addWidget(self.frame)
+        self.frame.show()
         self.timer.timeout.connect(self.refreshPlot)
         self.timer.start(2000)
 
