@@ -111,7 +111,7 @@ ttRp37
 asS'Vacuum:OVC Pressure'
 p38
 (lp39
-I00
+I01
 aF0
 aF0.10000000000000001
 ag4
@@ -135,17 +135,18 @@ ttRp45
 asS'50K and 3K Pt1000 Temperatures:3K Stage Temperature'
 p46
 (lp47
-I00
-aS''
-aS''
+I01
+aF0
+aF100
 ag4
 (g5
 S'QString'
-(V
-ttRp48
+(VIVAN_EMAIL
+p48
+ttRp49
 asS'50K and 3K Pt1000 Temperatures:50K Stage Temperature'
-p49
-(lp50
+p50
+(lp51
 I00
 aS''
 aS''
@@ -153,10 +154,10 @@ ag4
 (g5
 S'QString'
 (V
-ttRp51
+ttRp52
 asS'Compressor:Input Water Temperature'
-p52
-(lp53
+p53
+(lp54
 I01
 aF1
 aF20
@@ -164,11 +165,11 @@ ag4
 (g5
 S'QString'
 (VIVAN_EMAIL
-p54
-ttRp55
+p55
+ttRp56
 asS'Compressor:Oil Temperature'
-p56
-(lp57
+p57
+(lp58
 I01
 aF1
 aF50
@@ -176,6 +177,6 @@ ag4
 (g5
 S'QString'
 (VIVAN_EMAIL
-p58
-ttRp59
+p59
+ttRp60
 as.
