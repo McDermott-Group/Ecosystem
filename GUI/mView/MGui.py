@@ -227,7 +227,7 @@ class MGui(QtGui.QMainWindow):
         self.Config = ConfigGui(self)
         self.Config.exec_()
 
-    def startGui(self, devices, title, dataTitle, tele, autostart = True):
+    def startGui(self, devices, title, tele, autostart = True):
         """Start the GUI."""
         print "Starting GUI."
         # Used as the name of the dataChest data title.

@@ -315,6 +315,12 @@ class TektronixTDSServer(GPIBManagedServer):
         answer = yield dev.getChannelState(channelNum, allChannelsFlag)
         returnValue(answer)
 
+    @setting(210, 'getRecordLength', returns='w')#def getChannelState(self, channelNum, allChannelsFlag = None)
+    def getRecordLength(self, c):
+        dev = self.selectedDevice(c)
+        recordLength = yield dev.getRecLength()
+        returnValue(recordLength)
+
     @setting(113, 'getWaveFormData', returns='?')
     def getWaveFormData(self, c): #waveforms should only be output upon trig ready
         dev = self.selectedDevice(c)
