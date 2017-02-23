@@ -231,7 +231,7 @@ class MGui(QtGui.QMainWindow):
         """Start the GUI."""
         print "Starting GUI."
         # Used as the name of the dataChest data title.
-        self.dataTitle = dataTitle
+
         web.devices = devices
         # Start the notifier.
         web.telecomm = tele
