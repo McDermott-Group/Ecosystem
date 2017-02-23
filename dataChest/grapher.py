@@ -5,13 +5,14 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
-from matplotlib.dates import (MonthLocator, DateFormatter,
-                              WeekdayLocator, MONDAY)
+from matplotlib.dates import DateFormatter, AutoDateLocator, date2num
 import matplotlib.cm as cm
 import matplotlib as mpl
 from functools import partial
+from datetime import datetime
 
 from dataChest import *
+from dataChest import dateStamp
 
 mpl.rcParams['agg.path.chunksize'] = 10000
 
@@ -24,16 +25,18 @@ class Main(QtGui.QWidget):
         self.setWindowIcon(QtGui.QIcon('rabi.jpg'))
         
         self.root = os.environ["DATA_CHEST_ROOT"]
+        if "\\" in self.root:
+            self.root = self.root.replace("\\", '/')
         self.pathRoot=QtCore.QString(self.root)
 
         self.filters =QtCore.QStringList()
         self.filters.append("*.hdf5")
 
-        self.dataChest = dataChest(None, True)
+        self.dataChest = dataChest("", os.environ["DATA_CHEST_ROOT"])
 
         # Directory browser configuration.
         self.model = QtGui.QFileSystemModel(self)
-        self.model.setRootPath(self.pathRoot)
+        self.model.setRootPath(QtCore.QString(self.root))
         self.model.setNameFilterDisables(False)
         self.model.nameFilterDisables()
         self.model.setNameFilters(self.filters)
@@ -401,16 +404,19 @@ class Main(QtGui.QWidget):
                     # Only works when all dims are same => perform checks.
                     y = dataset[::,1+ii].flatten()
                     if containsDatetime:
-                        months = MonthLocator(range(1, 13), bymonthday=1, interval=3)
-                        monthsFmt = DateFormatter("%b %d %Y %H:%M:%S")
-                        mondays = WeekdayLocator(MONDAY)
-                        ax.plot_date(x, y)
-                        ax.xaxis.set_major_locator(months)
-                        ax.xaxis.set_major_formatter(monthsFmt)
+                        dStamp = dateStamp()
+                        dates = []
+                        for jj in range(0, len(y)):
+                            dates.append(datetime.strptime(dStamp.floatToUtcDateStr(x[jj]), '%Y-%m-%dT%H:%M:%S.%f'))
+                        dates = np.asarray(dates)
+                        dates = date2num(dates)
+                        dateFmt = DateFormatter("%m/%d/%Y %H:%M:%S")
+                        auto = AutoDateLocator()
+                        ax.xaxis.set_major_locator(auto)
+                        ax.xaxis.set_major_formatter(dateFmt)
+                        ax.tick_params(axis='x', labelsize=9)
                         ax.grid(True)
-                        ax.xaxis.set_minor_locator(mondays)
                         ax.autoscale_view()
-                        fig.autofmt_xdate()
                 elif scanType == "Lin":
                     y = np.asarray(dataset[0][1+ii])
                     # Only one row of data for this and log type supported.
@@ -419,9 +425,14 @@ class Main(QtGui.QWidget):
                     y = dataset[0][1+ii]
                     x = np.logspace(np.log10(dataset[0][0][0]), np.log10(dataset[0][0][1]), num = len(y))
                     ax.set_xscale('log')
-                ax.plot(x, y, "o", label = depVars[ii][0])
-                #ax.plot(x, y, label = depVars[ii][0])
-        ax.legend(fontsize = 10)
+                #ax.plot(x, y, "o", label = depVars[ii][0])
+                if containsDatetime:
+                    ax.plot_date(dates, y, linestyle='-', marker=',', label = depVars[ii][0])
+                    fig.autofmt_xdate()
+                    fig.tight_layout()  
+                else:
+                    ax.plot(x, y, label = depVars[ii][0])
+        ax.legend(fontsize = 10, loc = "best")
         return fig
 
     def basic1DHistogram(self, dataset, variables, varsToIgnore):

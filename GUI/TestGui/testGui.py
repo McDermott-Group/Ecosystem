@@ -1,10 +1,11 @@
 import sys
 sys.dont_write_bytecode = True
 import MGui             # Handles all gui operations. Independent of labrad.
-
+from MWeb import web
 #from PyQt4 import QtCore, QtGui
 
-from Device import Device
+from MDevices.Device import Device
+from MDevices.Mhdf5Device import Mhdf5Device
 from multiprocessing.pool import ThreadPool
 import threading
 import labrad
@@ -32,8 +33,8 @@ class nViewer:
         LeidenDRTemperature.connection(cxn)
 
         LeidenDRTemperature.setServerName("my_server")
-        LeidenDRTemperature.addParameter("Pressure","pressure", None)
-        LeidenDRTemperature.addParameter("Temperature", "temperature", None)
+        LeidenDRTemperature.addParameter("Random Pressure","pressure", None, log = False)
+        LeidenDRTemperature.addParameter("Random Temperature", "temperature", None)
         #LeidenDRTemperature.selectDeviceCommand("select_device", 0)
         LeidenDRTemperature.addPlot()
         LeidenDRTemperature.setPlotRefreshRate(0.5)
@@ -42,10 +43,33 @@ class nViewer:
         LeidenDRTemperature.begin()
         self.devices.append(LeidenDRTemperature)
 
+        localTemp = Device("Local Temperatures")
+        localTemp.connection(cxn)
+        localTemp.setServerName("my_server2")
+        localTemp.addParameter("Outside Temperature", "temperature", None)
+        localTemp.addParameter("Outside pressure", "pressure", None)
+        localTemp.addParameter("Humidity", "moisture", None)
         
+        localTemp.addButton("Madison Weather",  None, "changeLocation", 5)
+        localTemp.addButton("St. Paul Weather", None,  "changeLocation", 2)
+
+        localTemp.addPlot()
+        localTemp.setPlotRefreshRate(2)
+        localTemp.setRefreshRate(2)
+        localTemp.setYLabel("Temperature")
+        localTemp.begin()
+        self.devices.append(localTemp)
+        
+        grapher = Mhdf5Device("Grapher")
+        grapher.addButton("Load Data Set")
+        grapher.addPlot()
+        grapher.begin()
+        
+        self.devices.append(grapher)
         # Start the datalogger. This line can be commented
         # out if no datalogging is required.
-        self.chest = dataChestWrapper(self.devices)
+        #print self.devices
+       # self.chest = dataChestWrapper(self.devices)
         
         # Create the gui
         self.gui = MGui.MGui()

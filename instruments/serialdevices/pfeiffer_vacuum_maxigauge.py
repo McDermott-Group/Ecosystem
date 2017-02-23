@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Pfeiffer Vacuum MaxiGauge
-version = 1.0.15
+version = 1.1.0
 description = Monitors vacuum system
 
 [startup]
@@ -30,6 +30,8 @@ timeout = 20
 ### END NODE INFO
 """
 
+import os
+import sys
 import time
 # The LoopingCall function allows a function to be called periodically
 # on a time interval.
@@ -42,7 +44,20 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
-from utilities import sleep
+if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
+    SCRIPT_PATH = os.path.dirname(os.getcwd())
+else:
+    SCRIPT_PATH = os.path.dirname(__file__)
+LOCAL_PATH = SCRIPT_PATH.rsplit('instruments', 1)[0]
+INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, 'instruments')
+if INSTRUMENTS_PATH not in sys.path:
+    sys.path.append(INSTRUMENTS_PATH)
+
+from utilities.gpib_device_wrapper import ReadRawGPIBDeviceWrapper
+from utilities.sleep import sleep
+
+mbar = units.Unit('mbar')
+
 
 class PfeifferVacuumControlWrapper(DeviceWrapper):
     @inlineCallbacks
@@ -125,11 +140,11 @@ class PfeifferVacuumControlServer(DeviceServer):
         # know that a sensor is not connected because the unit sometimes
         # misreports status codes. This makes it seem as though a sensor
         # is connected, and a 'don't-care' value is treated as an error.
-        self.thresholdMax = [1e-2, 1e-2, 1e-2, 5e-7, 5e-7, 1e-4] * units.bar
+        self.thresholdMax = [1500, 1500, 1500, 5e-4, 5e-4, 1e-1] * mbar
         # Set the minimum acceptible pressures.
-        self.thresholdMin = [0, 0, 0, 5E-8, 5E-8, 5E-8] * units.bar
+        self.thresholdMin = [0, 0, 0, 5E-5, 5E-5, 5E-5] * mbar
         self.alertInterval = 10 # seconds
-        self.measurements = [0, 0, 0, 0, 0, 0] * units.bar
+        self.measurements = [0, 0, 0, 0, 0, 0] * mbar
         self.statusCodes = [0, 0, 0, 0, 0, 0]
         self.t1 = [0,0,0,0,0,0]
         self.t2 = [0,0,0,0,0,0]
@@ -158,7 +173,7 @@ class PfeifferVacuumControlServer(DeviceServer):
         callLater(0.1, self.startRefreshing)
         return True
 
-    @setting(10, 'Set Thresholds', low='*v[bar]', high='*v[bar]')
+    @setting(10, 'Set Thresholds', low='*v[mbar]', high='*v[mbar]')
     def setThresholds(self, ctx, low, high):
         """
         This setting configures the trigger thresholds.
@@ -167,13 +182,13 @@ class PfeifferVacuumControlServer(DeviceServer):
         if not (len(low) == 6) or not (len(high) == 6):
             raise Exception("The 'low' and 'high' parameters must be "
                     "lists of exactly 6 elements.")
-        for i in range(0, 6):
+        for i in range(6):
             if low[i] > high[i]:
                 raise Exception("The minimum threshold cannot be "
                         "greater than the maximum threshold for "
                         "sensor %d." %(i + 1))
-            self.thresholdMax[i] = high[i] * units.bar
-            self.thresholdMin[i] = low[i] * units.bar
+            self.thresholdMax[i] = high[i]
+            self.thresholdMin[i] = low[i]
         return True
 
     @setting(11, 'Set Alert Interval', interval='v[s]')
@@ -181,7 +196,7 @@ class PfeifferVacuumControlServer(DeviceServer):
         """Configure the alert interval."""
         self.alertInterval = interval['s']
     
-    @setting(12, 'Get Pressures', returns='?')
+    @setting(12, 'Get Pressures', returns='*v[mbar]')
     def pressure(self, c):
         """Setting that returns an array of pressures"""
         t1 = time.time()
@@ -213,7 +228,7 @@ class PfeifferVacuumControlServer(DeviceServer):
             response = response.rsplit(',')
             pressure = response[1]
             status = response[0]
-            self.measurements[i-1] = 1e-3 * float(response[1]) * units.bar
+            self.measurements[i-1] = float(response[1]) * mbar
             self.statusCodes[i-1] = response[0]
         
     @inlineCallbacks
@@ -221,7 +236,7 @@ class PfeifferVacuumControlServer(DeviceServer):
         """Make sure the pressure is within range."""
         # Update the measuremets list by calling the getPressures method.
         yield self.getPressures(self.dev)
-        for i in range(0, 6):
+        for i in range(6):
             if not self.statusCodes[i] == '5':
                 if self.measurements[i] > self.thresholdMax[i]:                    
                     self.sendAlert(str(self.measurements[i]),

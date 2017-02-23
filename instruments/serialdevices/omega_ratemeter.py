@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Omega Ratemeter
-version = 1.0.16
+version = 1.1.0
 description = Monitors water flow
 
 [startup]
@@ -30,6 +30,8 @@ timeout = 20
 ### END NODE INFO
 """
 
+import os
+import sys
 import time
 # The LoopingCall function allows a function to be called periodically
 # on a time interval.
@@ -42,7 +44,17 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
-from utilities import sleep
+if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
+    SCRIPT_PATH = os.path.dirname(os.getcwd())
+else:
+    SCRIPT_PATH = os.path.dirname(__file__)
+LOCAL_PATH = SCRIPT_PATH.rsplit('instruments', 1)[0]
+INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, 'instruments')
+if INSTRUMENTS_PATH not in sys.path:
+    sys.path.append(INSTRUMENTS_PATH)
+
+from utilities.gpib_device_wrapper import ReadRawGPIBDeviceWrapper
+from utilities.sleep import sleep
 
 
 class OmegaRatemeterWrapper(DeviceWrapper):
@@ -154,8 +166,8 @@ class OmegaRatemeterServer(DeviceServer):
         """Setting that returns rate"""
         self.dev = self.selectedDevice(ctx)
         rate = yield self.getRate(self.dev)
-        if(rate is None):
-            rate = 0*units.galUS/units.min
+        if rate is None:
+            rate = 0 * units.galUS/units.min
         returnValue(rate)
         
     @inlineCallbacks
@@ -179,7 +191,6 @@ class OmegaRatemeterServer(DeviceServer):
             # Convert the reading to the correct units.
             gal = units.WithUnit(1, 'gal')
             output = reading * gal / units.min
-            #print(output)
             returnValue(output)
 
     @inlineCallbacks

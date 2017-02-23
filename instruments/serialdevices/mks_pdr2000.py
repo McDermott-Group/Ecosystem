@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = MKS PDR2000
-version = 1.0.15
+version = 1.1.0
 description = Monitors vacuum system
 
 [startup]
@@ -29,14 +29,18 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
+
 import time
+import numpy as np
+from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
+from functools import partial
+
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting
 import labrad.units as u
 from labrad import util
-import numpy as np
-from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
-from functools import partial
+
+
 class MKSPDR2000Wrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):

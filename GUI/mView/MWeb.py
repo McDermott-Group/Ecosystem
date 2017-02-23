@@ -12,27 +12,45 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 __author__ = "Noah Meltzer"
 __copyright__ = "Copyright 2016, McDermott Group"
 __license__ = "GPL"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
-"""
-description = Organizes global variables. Allows all other classes to easily access important parameters central to mView. 
-                    Stores and opens all data.
-"""
+import traceback
+import inspect
+import MPersistentData
 class web:
-    # Store minimum and maximum values for all readings. MAlert uses this to check
-    # if readings are still in bounds
+    """
+    Organizes global variables. Allows all other classes to easily
+    access important parameters central to mView. Stores and opens all
+    data.
+    """
+    # Store minimum and maximum values for all readings. MAlert uses
+    # this to check if readings are still in bounds.
+    
+    
     limitDict = {}
-    # All Devices
+    # All devices.
     devices = []
-    # The default refresh GUI Rate
+    # The default refresh GUI rate.
     guiRefreshRate = 1
-    # Holds reference to the telecomm server
+    # Holds reference to the telecomm server.
     telecomm = None
-    # DPI scaling ratio
+    # DPI scaling ratio.
     ratio = 1
+    scrnHeight = None
+    scrnWidth = None
+    # List of virtual devices
+    virtualDevices = []
+    gui = None
+    title = None
+    nodeFilenames = []
+
+    persistentData = None
+    
+   
     

@@ -16,8 +16,8 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Varian Guage Controlelr
-version = 1.0.1
+name = Varian Guage Controller
+version = 1.0.2
 description = Controls vacuum cart
 
 [startup]
@@ -30,25 +30,37 @@ timeout = 20
 ### END NODE INFO
 """
 
-from labrad.devices import DeviceServer, DeviceWrapper
-from labrad.server import setting
-import labrad.units as units
-from labrad import util
-
-from utilities import sleep
+import os
+import sys
+import numpy as np
+from functools import partial
+import time
 
 from twisted.internet.task import LoopingCall
 from twisted.internet.reactor import callLater
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock
 
-from functools import partial
-import time
+from labrad.devices import DeviceServer, DeviceWrapper
+from labrad.server import setting
+import labrad.units as units
+from labrad import util
 
-import numpy as np
+if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
+    SCRIPT_PATH = os.path.dirname(os.getcwd())
+else:
+    SCRIPT_PATH = os.path.dirname(__file__)
+LOCAL_PATH = SCRIPT_PATH.rsplit('instruments', 1)[0]
+INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, 'instruments')
+if INSTRUMENTS_PATH not in sys.path:
+    sys.path.append(INSTRUMENTS_PATH)
+
+from utilities.sleep import sleep
+
+
 class VarianControllerWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
-        '''Connect the the guage controller'''
+        """Connect the the guage controller."""
         print('Connecting to "%s" on port "%s"...' %(server.name, port))
         self.server = server
         self.ctx = server.context()
@@ -70,10 +82,10 @@ class VarianControllerWrapper(DeviceWrapper):
     def packet(self):
         """Create a packet in our private context."""
         return self.server.packet(context=self.ctx)
+
     def shutdown(self):
         """Disconnect from the serial port when we shut down."""
         return self.packet().close().send()
-        
 
     def rw_line(self, code):
         # Don't allow two concurrent read/write calls. Use deferred locking to
@@ -83,12 +95,13 @@ class VarianControllerWrapper(DeviceWrapper):
 
     @inlineCallbacks
     def _rw_line(self, code):
-        '''Write data to the device.'''
+        """Write data to the device."""
         yield self.server.write_line(code, context=self.ctx)
-        time.sleep(0.1)
+        yield sleep(0.1)
         ans = yield self.server.read(context=self.ctx)
         returnValue(ans)
-        
+
+
 class VarianControllerServer(DeviceServer):
     devicename = 'Varian Guage Controller'
     name = 'Varian Guage Controller'
@@ -96,7 +109,7 @@ class VarianControllerServer(DeviceServer):
     
     @inlineCallbacks
     def initServer(self):
-        '''Initialize the server'''
+        """Initialize the server."""
         print "Server Initializing"
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
@@ -109,13 +122,10 @@ class VarianControllerServer(DeviceServer):
         ans = ans.replace('>','')
         ans = ans.rsplit(',')
         ans = [val.strip() for val in ans]
-        #print ans
         ans = [np.nan if not self.isFloat(val) else float(val) for val in ans ]
         
         unit = yield self.getUnits(dev)
-        print unit
         if unit == '00':
-           # print "torr"
             ans = ans * units.torr
         elif unit == '01':
             ans = [(val/1000) for val in ans]
@@ -127,13 +137,15 @@ class VarianControllerServer(DeviceServer):
         
     @setting(100, 'emission_on', sensor = 's')
     def emissionOn(self, c, sensor):
-        '''Turns emmissionOn for given sensor
-    args:
-    sensor  The name of the sensor to be turned off.'''
-        print sensor
+        """
+        Turns emmissionOn for given sensor
+            args:
+                sensor  The name of the sensor to be turned off.
+        """
+        print(sensor)
         dev = self.selectedDevice(c)
         yield dev.rw_line('#0031U'+sensor+'\r')
-        #returnValue(None)
+
     @setting(200, 'emission_off', sensor = 's')
     def emissionOff(self, c, sensor):
         '''Turns emmissionOn for given sensor
@@ -142,15 +154,12 @@ class VarianControllerServer(DeviceServer):
         print sensor
         dev = self.selectedDevice(c)
         yield dev.rw_line('#0030U'+sensor+'\r')
-        #returnValue(None)
         
     @inlineCallbacks
     def getPressures(self, dev):
-        
         ans = yield dev.rw_line("#000F\r")
         # Replace > symbol
-        
-        returnValue( ans)
+        returnValue(ans)
         
     @inlineCallbacks
     def getUnits(self, dev):
@@ -164,6 +173,7 @@ class VarianControllerServer(DeviceServer):
             return True
         except:
             return False
+
     @inlineCallbacks
     def loadConfigInfo(self):
         """Load configuration information from the registry."""

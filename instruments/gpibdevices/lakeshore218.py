@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = LakeShore 218
-version = 1.0
+version = 1.0.0
 description = Provides a way to control and get data from the LakeShore 218 Temperature Monitor.
   
 [startup]
@@ -29,11 +29,13 @@ message = 987654321
 timeout = 5
 ### END NODE INFO
 """
-  
+
+from twisted.internet.defer import inlineCallbacks, returnValue
+
 from labrad.server import setting
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
-from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad import units
+
 
 class Lakeshore218Wrapper(GPIBDeviceWrapper):
   
