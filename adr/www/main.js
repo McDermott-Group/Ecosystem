@@ -6,6 +6,12 @@ var Redux = require('redux');
 var ReactRedux = require('react-redux');
 
 var ws; //websocket
+var adrN = 3;
+const href = window.location.href;
+if (href.toLowerCase().includes('?adr=3')) { adrN = 3; }
+else if (href.toLowerCase().includes('?adr=2')) { adrN = 2; }
+else if (href.toLowerCase().includes('?adr=1')) { adrN = 1; }
+document.getElementById("adrSelect").selectedIndex = adrN-1;
 /**************
 ACTIONS/data to update:
 temps
@@ -433,7 +439,17 @@ ReactDOM.render(<Provider store={ store }>
 var d3 = Plotly.d3;
 
 window.onload = function(){
-    ws = new WebSocket("ws://mcd-adr3.physics.wisc.edu:9876/ws");
+    var adrCompAddress = ''
+    if (adrN == 1) {
+        adrCompAddress = "ws://mcd-adr1.physics.wisc.edu:";
+    }
+    else if (adrN == 2) {
+        adrCompAddress = "ws://mcd-adr1.physics.wisc.edu:";
+    }
+    else if (adrN == 3) {
+        adrCompAddress = "ws://mcd-adr3.physics.wisc.edu:";
+    }
+    ws = new WebSocket(adrCompAddress+(9879-adrN)+"/ws");
     //ws = new WebSocket("ws://24.177.124.174:9876/ws");
     //var s = new WebSocket("ws://localhost:1025/");
     ws.onopen = function(e) { console.log("socket opened"); }
