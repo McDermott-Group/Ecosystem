@@ -37,14 +37,19 @@ class nViewer:
             time.sleep(2)
             sys.exit(1)
         try:
-            cxn = labrad.connect()
+            cxn = labrad.connect() # Attempt to establish a labrad connection.
         except:
+            # If no connection can be made, abort with an error message.
             print("Please start the LabRAD manager")
             time.sleep(2)
             sys.exit(0)
         try:
+            # As of writing, there is one class in MView itself that is dependent
+            # on LabRad, and it requires the telecomm server to be running. 
+            # This is subject to change.
             tele = cxn.telecomm_server
         except:
+            # If no connection can be made, abort with an error message.
             print("Please start the telecomm server")
             time.sleep(2)
             sys.exit(1)
@@ -138,7 +143,7 @@ class nViewer:
         Compressor.addPlot()
         Compressor.begin()
         self.devices.append(Compressor)
-        
+
         Flow = Device("Water Flow")
         Flow.connection(cxn)
         Flow.setServerName("omega_ratemeter")
@@ -151,7 +156,7 @@ class nViewer:
 
         # Create the gui.
         self.gui = MGui.MGui()
-        self.gui.startGui(self.devices, 'Leiden DR GUI', 'Leiden Data',
+        self.gui.startGui(self.devices, 'Leiden DR GUI',
                 tele)
 
 

@@ -74,7 +74,7 @@ class nViewer:
         # Create the gui
         self.gui = MGui.MGui()
         self.gui.setRefreshRate(0.5)
-        self.gui.startGui(self.devices, 'Leiden Gui', 'Leiden Data', tele)
+        self.gui.startGui(self.devices, 'Leiden Gui',tele)
         
         
 # In phython, the main class's __init__() IS NOT automatically called
