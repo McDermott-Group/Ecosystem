@@ -51,6 +51,7 @@
       proportionally. */
   background: #cccccc;
   min-height: 200px;
+  width: 100%;
 }
 .button {
     width: calc(100% - 26px);
