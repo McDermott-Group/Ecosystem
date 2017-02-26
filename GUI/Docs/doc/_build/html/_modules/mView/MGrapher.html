@@ -1,0 +1,446 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mView.MGrapher &#8212; GUI  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mView.MGrapher</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016 Noah Meltzer</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 2 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2016, McDermott Group&quot;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s2">&quot;GPL&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;2.0.2&quot;</span>
+<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__status__</span> <span class="o">=</span> <span class="s2">&quot;Beta&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">PyQt4</span> <span class="k">import</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCore</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+<span class="kn">import</span> <span class="nn">pyqtgraph</span> <span class="k">as</span> <span class="nn">pg</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">dateStamp</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">dataChest</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">MCheckableComboBoxes</span> <span class="k">import</span> <span class="n">MCheckableComboBox</span>
+<span class="kn">import</span>  <span class="nn">datetime</span>
+
+<div class="viewcode-block" id="mGraph"><a class="viewcode-back" href="../../mView.MGrapher.html#mView.MGrapher.mGraph">[docs]</a><span class="k">class</span> <span class="nc">mGraph</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QWidget</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+
+        <span class="c1"># This is the device we want to use.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="c1"># This sets up axis on which to plot.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hidden</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewboxes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lastValidTime</span> <span class="o">=</span> <span class="mi">60</span>
+        
+        <span class="n">pg</span><span class="o">.</span><span class="n">setConfigOption</span><span class="p">(</span><span class="s1">&#39;background&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">189</span><span class="p">,</span> <span class="mi">195</span><span class="p">,</span> <span class="mi">199</span><span class="p">))</span>
+        <span class="n">pg</span><span class="o">.</span><span class="n">setConfigOption</span><span class="p">(</span><span class="s1">&#39;foreground&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">frameLayout</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setFrameShape</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QFrame</span><span class="o">.</span><span class="n">Panel</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setFrameShadow</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QFrame</span><span class="o">.</span><span class="n">Plain</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">&quot;.QFrame{background-color: rgb(70,80,88); &quot;</span>
+                <span class="s2">&quot;margin:0px; border:2px solid rgb(0, 0, 0);}&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">win</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">GraphicsWindow</span><span class="p">()</span>
+        
+        <span class="n">frameLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">win</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">win</span><span class="o">.</span><span class="n">addPlot</span><span class="p">(</span><span class="n">title</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">(),</span> <span class="n">axisItems</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;bottom&#39;</span><span class="p">:</span> <span class="n">TimeAxisItem</span><span class="p">(</span><span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">)})</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">addLegend</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">showGrid</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">)</span>
+        
+                    
+                
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">sigRangeChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rangeChanged</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processRangeChangeSig</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">pen</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">mkPen</span><span class="p">(</span><span class="n">cosmetic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span><span class="o">*</span><span class="mi">255</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span><span class="o">*</span><span class="mi">255</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span><span class="o">*</span><span class="mi">255</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">textPen</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPen</span><span class="p">()</span>
+
+
+        <span class="c1">#self.curve1 = self.p1.plot([0], pen = pen)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curves</span> <span class="o">=</span> <span class="p">[]</span>
+      
+        <span class="bp">self</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">&quot;QPushButton{</span><span class="se">\</span>
+<span class="s2">                    color:rgb(189,195, 199); </span><span class="se">\</span>
+<span class="s2">                    background:rgb(70, 80, 88)};</span><span class="se">\</span>
+<span class="s2">                    &quot;</span><span class="p">)</span>
+        <span class="c1">#frame.setStyleSheet(&quot;.QPushButton{color:rgb(52, 73, 94)}&quot;)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">hideButton</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Hide Plot&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hideButton</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">togglePlot</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">oneMinButton</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;1 min&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">oneMinButton</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">,</span> <span class="n">time</span> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span> <span class="n">autoRange</span> <span class="o">=</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tenMinButton</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;10 min&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tenMinButton</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">,</span>  <span class="n">time</span> <span class="o">=</span> <span class="mi">600</span><span class="p">,</span> <span class="n">autoRange</span> <span class="o">=</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">twoHrButton</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;2 hr&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">twoHrButton</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">,</span> <span class="n">time</span> <span class="o">=</span>  <span class="mi">7200</span><span class="p">,</span> <span class="n">autoRange</span> <span class="o">=</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">twelveHrButton</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;12 hr&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">twelveHrButton</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">,</span>  <span class="n">time</span> <span class="o">=</span> <span class="mi">43200</span><span class="p">,</span> <span class="n">autoRange</span> <span class="o">=</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threeDayButton</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;3 day&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threeDayButton</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">,</span> <span class="n">time</span> <span class="o">=</span> <span class="mi">259200</span><span class="p">,</span> <span class="n">autoRange</span> <span class="o">=</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">oneWkButton</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;1 week&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">oneWkButton</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">,</span>  <span class="n">time</span> <span class="o">=</span> <span class="mi">604800</span><span class="p">,</span> <span class="n">autoRange</span> <span class="o">=</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allButton</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;All Time&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allButton</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">,</span> <span class="n">time</span> <span class="o">=</span>  <span class="kc">None</span><span class="p">,</span> <span class="n">autoRange</span> <span class="o">=</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lineSelect</span> <span class="o">=</span> <span class="n">MCheckableComboBox</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lineSelect</span><span class="o">.</span><span class="n">setSizeAdjustPolicy</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">(</span><span class="s2">&quot;Autoscale&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setY100</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;100% Y Axis&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setY100</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">yAxTo100</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lockYAx</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">(</span><span class="s2">&quot;Lock Y Axis&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lockYAx</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="n">buttonLayout1</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">buttonLayout1</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hideButton</span><span class="p">)</span>
+        <span class="n">buttonLayout1</span><span class="o">.</span><span class="n">addStretch</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">buttonLayout1</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lineSelect</span><span class="p">)</span>
+        
+        <span class="n">buttonLayout2</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">buttonLayout2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">oneMinButton</span><span class="p">)</span>
+        <span class="n">buttonLayout2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tenMinButton</span><span class="p">)</span>
+        <span class="n">buttonLayout2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">twoHrButton</span><span class="p">)</span>
+        <span class="n">buttonLayout2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">twelveHrButton</span><span class="p">)</span>
+        <span class="n">buttonLayout2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">threeDayButton</span><span class="p">)</span>
+        <span class="n">buttonLayout2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">oneWkButton</span><span class="p">)</span>
+        <span class="n">buttonLayout2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">allButton</span><span class="p">)</span>
+        <span class="n">buttonLayout2</span><span class="o">.</span><span class="n">addStretch</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        
+        <span class="n">buttonLayout3</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">buttonLayout3</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span><span class="p">)</span>
+        <span class="n">buttonLayout3</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lockYAx</span><span class="p">)</span>
+        <span class="n">buttonLayout3</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">setY100</span><span class="p">)</span>
+        <span class="n">buttonLayout3</span><span class="o">.</span><span class="n">addStretch</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttonFrame</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFrame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttonFrame</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">buttonLayout3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttonFrame</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">&quot;.QPushButton{background:rgb(70,80,88)}&quot;</span>
+                <span class="s2">&quot;QCheckBox{color:rgb(189,195, 199)}&quot;</span>
+                <span class="s2">&quot;.QFrame{background-color: rgb(52, 73, 94); &quot;</span>
+                <span class="s2">&quot;margin:0px; border:2px solid rgb(0, 0, 0);}&quot;</span><span class="p">)</span>
+                
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropdownFont</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFont</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropdownFont</span><span class="o">.</span><span class="n">setPointSize</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dropdownFont</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lockYAx</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dropdownFont</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setY100</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dropdownFont</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">False</span>
+        
+        <span class="n">mainLayout</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">mainLayout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">buttonLayout1</span><span class="p">)</span>
+        <span class="n">mainLayout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">buttonLayout2</span><span class="p">)</span>
+        
+        <span class="n">mainLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="p">)</span>
+        <span class="n">frameLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buttonFrame</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">mainLayout</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">installEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">togglePlot</span><span class="p">()</span>
+<div class="viewcode-block" id="mGraph.eventFilter"><a class="viewcode-back" href="../../mView.MGrapher.html#mView.MGrapher.mGraph.eventFilter">[docs]</a>    <span class="k">def</span> <span class="nf">eventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">receiver</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Filter out scroll events so that only pyqtgraph catches them&#39;&#39;&#39;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QEvent</span><span class="o">.</span><span class="n">Wheel</span><span class="p">):</span>
+            <span class="nb">print</span> <span class="s2">&quot;scroll detected&quot;</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1">#print &quot;scroll not detected&quot;</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+<div class="viewcode-block" id="mGraph.initialize"><a class="viewcode-back" href="../../mView.MGrapher.html#mView.MGrapher.mGraph.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="n">varNames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getDataSet</span><span class="p">()</span><span class="o">.</span><span class="n">getVariables</span><span class="p">()</span>
+        <span class="n">varNames</span> <span class="o">=</span> <span class="p">[</span><span class="n">varNames</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">varNames</span><span class="p">[</span><span class="mi">1</span><span class="p">]))]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">var</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">varNames</span><span class="p">):</span>
+            <span class="n">Qvar</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QString</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span><span class="s1">&#39; &#39;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lineSelect</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">Qvar</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lineSelect</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dropdownFont</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lineSelect</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span>
+        <span class="n">yLabel</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">getYLabel</span><span class="p">()</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">getUnits</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">frame</span><span class="o">.</span><span class="n">getCustomUnits</span><span class="p">():</span>
+            <span class="c1">#self.p.getAxis(&#39;left&#39;).setLabel(text = yLabel, units = frame.getCustomUnits())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">setLabel</span><span class="p">(</span><span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="n">yLabel</span><span class="p">,</span> <span class="n">units</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">getCustomUnits</span><span class="p">())</span>
+       
+        <span class="k">elif</span> <span class="n">frame</span><span class="o">.</span><span class="n">getUnits</span><span class="p">()</span> <span class="o">!=</span> <span class="p">[]:</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">viewboxes</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">getUnits</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+            
+            <span class="n">axes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">getAxis</span><span class="p">(</span><span class="s1">&#39;left&#39;</span><span class="p">))</span>
+            <span class="c1">#print &quot;grapher y axis units:&quot;, units[0]</span>
+            <span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">setLabel</span><span class="p">(</span><span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">yLabel</span><span class="o">+</span><span class="s2">&quot;(&quot;</span><span class="o">+</span><span class="n">units</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;)&quot;</span><span class="p">))</span>
+            <span class="c1"># units.append(units[0])</span>
+            <span class="c1"># self.p.showAxis(&#39;right&#39;)</span>
+            
+            <span class="c1">#axes.append(self.p.getAxis(&#39;right&#39;))</span>
+            <span class="c1">#axes[-1].setLabel(text= &quot;Test&quot;, units = &quot;test units&quot;)</span>
+
+            <span class="k">for</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">getUnits</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">units</span><span class="p">:</span>
+                    <span class="nb">print</span> <span class="s2">&quot;found new unit:&quot;</span><span class="p">,</span> <span class="n">unit</span>
+                    
+                    <span class="n">pa</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">ViewBox</span><span class="p">()</span>
+                    <span class="n">ax</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">AxisItem</span><span class="p">(</span><span class="s1">&#39;right&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">units</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">scene</span><span class="p">()</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">pa</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">linkToView</span><span class="p">(</span><span class="n">pa</span><span class="p">)</span>
+                    <span class="n">pa</span><span class="o">.</span><span class="n">setXLink</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
+                 
+                    <span class="bp">self</span><span class="o">.</span><span class="n">viewboxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pa</span><span class="p">)</span>
+                    <span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+                    <span class="n">axes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">setZValue</span><span class="p">(</span><span class="o">-</span><span class="mi">10000</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">setLabel</span><span class="p">(</span><span class="n">text</span><span class="o">=</span> <span class="s2">&quot;Test&quot;</span><span class="p">,</span> <span class="n">units</span> <span class="o">=</span> <span class="s2">&quot;test units&quot;</span><span class="p">)</span>
+                    <span class="n">pa</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">vb</span><span class="o">.</span><span class="n">sigResized</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mGraph.plot"><a class="viewcode-back" href="../../mView.MGrapher.html#mView.MGrapher.mGraph.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+           
+          
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">pa</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">viewboxes</span><span class="p">:</span>
+                <span class="n">pa</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">vb</span><span class="o">.</span><span class="n">sceneBoundingRect</span><span class="p">())</span>
+                <span class="n">pa</span><span class="o">.</span><span class="n">linkedViewChanged</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">vb</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">XAxis</span><span class="p">)</span>
+            <span class="n">maxtime</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">autoRange</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;autoRange&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            
+            <span class="c1"># If time was specified, then autorange</span>
+            
+            <span class="k">if</span> <span class="n">maxtime</span> <span class="o">==</span> <span class="s1">&#39;last_valid&#39;</span><span class="p">:</span>
+                <span class="n">maxtime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastValidTime</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getDataSet</span><span class="p">()</span><span class="o">.</span><span class="n">getData</span><span class="p">()</span>
+            
+            <span class="k">if</span> <span class="n">maxtime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lastValidTime</span> <span class="o">=</span> <span class="n">maxtime</span>
+                <span class="n">abstime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span> <span class="n">maxtime</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">elem</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">data</span> <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;</span><span class="n">abstime</span><span class="p">]</span>
+            <span class="n">times</span> <span class="o">=</span> <span class="p">[</span><span class="n">elem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+            
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">curves</span><span class="p">)</span><span class="o">&lt;</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="c1">#self.p.plot()</span>
+                
+                <span class="n">pen</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">mkPen</span><span class="p">(</span><span class="n">cosmetic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span><span class="o">*</span><span class="mi">200</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span><span class="o">*</span><span class="mi">200</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span><span class="o">*</span><span class="mi">200</span><span class="p">))</span>
+                <span class="n">varNames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getDataSet</span><span class="p">()</span><span class="o">.</span><span class="n">getVariables</span><span class="p">()</span>
+                <span class="n">varNames</span> <span class="o">=</span> <span class="p">[</span><span class="n">varNames</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">y</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">varNames</span><span class="p">[</span><span class="mi">1</span><span class="p">]))]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">curves</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">pen</span> <span class="o">=</span> <span class="n">pen</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">varNames</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)))</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+            <span class="n">currMax</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">currMin</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">col</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineSelect</span><span class="o">.</span><span class="n">isChecked</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">curves</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">setData</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">antialias</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">curves</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">thisMax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+                    <span class="n">thisMin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">thisMax</span> <span class="o">&gt;</span> <span class="n">currMax</span> <span class="ow">or</span> <span class="n">currMax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">currMax</span> <span class="o">=</span> <span class="n">thisMax</span>
+                    <span class="k">if</span> <span class="n">thisMin</span> <span class="o">&lt;</span> <span class="n">currMin</span> <span class="ow">or</span> <span class="n">currMin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">currMin</span> <span class="o">=</span> <span class="n">thisMin</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">curves</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">currMin</span> <span class="o">=</span> <span class="n">currMin</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">currMax</span> <span class="o">=</span> <span class="n">currMax</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+                <span class="c1">#self.p.setXRange(times[0],times[-1], padding=0)</span>
+                <span class="k">for</span> <span class="n">pa</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">viewboxes</span><span class="p">:</span>
+                    <span class="n">pa</span><span class="o">.</span><span class="n">autoRange</span><span class="p">(</span><span class="n">items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curves</span><span class="p">)</span>
+                    <span class="n">pa</span><span class="o">.</span><span class="n">enableAutoRange</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">processRangeChangeSig</span> <span class="o">=</span> <span class="kc">False</span></div>
+                <span class="c1"># try:</span>
+                    <span class="c1"># self.p.setRange(xRange=[times[0],times[-1]], yRange = [currMin, currMax])</span>
+                <span class="c1"># except:</span>
+                    <span class="c1"># pass</span>
+                    <span class="c1">#traceback.print_exc()</span>
+
+
+                    <span class="c1">#self.p.setYRange()</span>
+                <span class="c1">#print &quot;col:&quot;, col</span>
+                <span class="c1">#print &quot;times:&quot;,times</span>
+            <span class="c1">#self.curve1.setData(times, data, antialias = False)</span>
+            
+            <span class="c1">#times = [dt.datetime.fromtimestamp(elem[0]) for elem in data]</span>
+            <span class="c1">#print &quot;data[0]:&quot;, data[0]</span>
+       
+            
+           
+           
+           <span class="c1"># print &quot;data:\n&quot;, data</span>
+            
+            <span class="c1">#self.changeIndependenVarRange(time)</span>
+<div class="viewcode-block" id="mGraph.rangeChanged"><a class="viewcode-back" href="../../mView.MGrapher.html#mView.MGrapher.mGraph.rangeChanged">[docs]</a>    <span class="k">def</span> <span class="nf">rangeChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">processRangeChangeSig</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lockYAx</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">yAxTo100</span><span class="p">()</span></div>
+            
+   
+            
+<div class="viewcode-block" id="mGraph.yAxTo100"><a class="viewcode-back" href="../../mView.MGrapher.html#mView.MGrapher.mGraph.yAxTo100">[docs]</a>    <span class="k">def</span> <span class="nf">yAxTo100</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">enableAutoRange</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="s1">&#39;y&#39;</span><span class="p">)</span></div>
+<div class="viewcode-block" id="mGraph.togglePlot"><a class="viewcode-back" href="../../mView.MGrapher.html#mView.MGrapher.mGraph.togglePlot">[docs]</a>    <span class="k">def</span> <span class="nf">togglePlot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>    
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">win</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">oneMinButton</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tenMinButton</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">twoHrButton</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">twelveHrButton</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">threeDayButton</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">oneWkButton</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">allButton</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lineSelect</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hideButton</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">&quot;Show Plot&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hidden</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">buttonFrame</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">win</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">oneMinButton</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tenMinButton</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">twoHrButton</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">twelveHrButton</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">threeDayButton</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">oneWkButton</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">allButton</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span> <span class="o">=</span> <span class="s1">&#39;last_valid&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lineSelect</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hideButton</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">&quot;Hide Plot&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hidden</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">buttonFrame</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div></div>
+<div class="viewcode-block" id="TimeAxisItem"><a class="viewcode-back" href="../../mView.MGrapher.html#mView.MGrapher.TimeAxisItem">[docs]</a><span class="k">class</span> <span class="nc">TimeAxisItem</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">AxisItem</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1">#  super().__init__(*args, **kwargs)</span>
+        
+        <span class="nb">super</span><span class="p">(</span><span class="n">TimeAxisItem</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># Timezone correction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeOffset</span> <span class="o">=</span> <span class="o">-</span><span class="mi">6</span><span class="o">*</span><span class="mi">60</span><span class="o">*</span><span class="mi">60</span>
+        
+<div class="viewcode-block" id="TimeAxisItem.tickStrings"><a class="viewcode-back" href="../../mView.MGrapher.html#mView.MGrapher.TimeAxisItem.tickStrings">[docs]</a>    <span class="k">def</span> <span class="nf">tickStrings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">spacing</span><span class="p">):</span>
+        <span class="c1"># PySide&#39;s QTime() initialiser fails miserably and dismisses args/kwargs</span>
+        <span class="c1">#return [QTime().addMSecs(value).toString(&#39;mm:ss&#39;) for value in values]</span>
+        
+        <span class="k">return</span> <span class="p">[</span><span class="n">int2dt</span><span class="p">(</span><span class="n">value</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">timeOffset</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%x</span><span class="s2"> </span><span class="si">%X</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span></div></div>
+<span class="n">TS_MULT_us</span> <span class="o">=</span> <span class="mf">1e6</span>    
+<div class="viewcode-block" id="int2dt"><a class="viewcode-back" href="../../mView.MGrapher.html#mView.MGrapher.int2dt">[docs]</a><span class="k">def</span> <span class="nf">int2dt</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="n">ts_mult</span><span class="o">=</span><span class="n">TS_MULT_us</span><span class="p">):</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">ts</span><span class="p">)))</span></div>
+    
+
+                
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

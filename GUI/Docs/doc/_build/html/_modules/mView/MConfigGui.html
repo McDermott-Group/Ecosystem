@@ -1,0 +1,241 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mView.MConfigGui &#8212; GUI  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mView.MConfigGui</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016 Noah Meltzer</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 2 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2016, Noah Meltzer, McDermott Group&quot;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s2">&quot;GPL&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.0.2&quot;</span>
+<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__status__</span> <span class="o">=</span> <span class="s2">&quot;Beta&quot;</span>
+
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">PyQt4</span> <span class="k">import</span> <span class="n">QtGui</span>
+
+<span class="kn">from</span> <span class="nn">MWeb</span> <span class="k">import</span> <span class="n">web</span>
+
+
+<div class="viewcode-block" id="ConfigGui"><a class="viewcode-back" href="../../mView.MConfigGui.html#mView.MConfigGui.ConfigGui">[docs]</a><span class="k">class</span> <span class="nc">ConfigGui</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Allows the user to configure the refresh rates for plots, devices</span>
+<span class="sd">    and LCD numbers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ConfigGui</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="c1"># Create a tab for update speed settings.</span>
+        <span class="n">mainTabWidget</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QTabWidget</span><span class="p">()</span>
+        <span class="n">mainTabWidget</span><span class="o">.</span><span class="n">addTab</span><span class="p">(</span><span class="n">refreshRateContents</span><span class="p">(),</span> <span class="s2">&quot;Refresh Rates&quot;</span><span class="p">)</span>
+        <span class="c1"># Create the main layout for the GUI.</span>
+        <span class="n">mainLayout</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="c1"># Add the tab widget to the main layout.</span>
+        <span class="n">mainLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">mainTabWidget</span><span class="p">)</span>
+        <span class="c1"># The button layout will hold the OK button.</span>
+        <span class="n">buttonLayout</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">okButton</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">okButton</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">&quot;OK&quot;</span><span class="p">)</span>
+        <span class="c1"># Give the button some cusion so that it will not be streched</span>
+        <span class="c1"># out.</span>
+        <span class="n">buttonLayout</span><span class="o">.</span><span class="n">addStretch</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">buttonLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">okButton</span><span class="p">)</span>
+        <span class="c1"># Add the button.</span>
+        <span class="n">mainLayout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">buttonLayout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">mainLayout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;Device Config&quot;</span><span class="p">)</span>
+        <span class="c1"># Close the window when the ok button is clicked.</span>
+        <span class="n">okButton</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="refreshRateContents"><a class="viewcode-back" href="../../mView.MConfigGui.html#mView.MConfigGui.refreshRateContents">[docs]</a><span class="k">class</span> <span class="nc">refreshRateContents</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">refreshRateContents</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        
+        <span class="n">mainLayout</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">mainLayout</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">refreshTabWidget</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QTabWidget</span><span class="p">()</span>
+       
+        <span class="n">mainLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refreshTabWidget</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refreshTabWidget</span><span class="o">.</span><span class="n">addTab</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">guiRefreshConfig</span><span class="p">(),</span> <span class="s2">&quot;GUI&quot;</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">refreshTabWidget</span><span class="o">.</span><span class="n">addTab</span><span class="p">(</span><span class="n">devRefRateConfig</span><span class="p">(</span><span class="n">device</span><span class="p">),</span>
+                    <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">())</span>
+            
+<div class="viewcode-block" id="refreshRateContents.guiRefreshConfig"><a class="viewcode-back" href="../../mView.MConfigGui.html#mView.MConfigGui.refreshRateContents.guiRefreshConfig">[docs]</a>    <span class="k">def</span> <span class="nf">guiRefreshConfig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">guiRefConfig</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">guiRefLayout</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">guiRefLayoutH</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">guiRefLayoutH</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;GUI Refresh period:&quot;</span><span class="p">))</span>
+        <span class="n">guiRefLayoutH</span><span class="o">.</span><span class="n">addStretch</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refRateEdit</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QLineEdit</span><span class="p">()</span>
+        <span class="c1">#print &quot;Gui ref rate:&quot;, web.persistentData(None, &#39;guiRefreshRate&#39;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refRateEdit</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;guiRefreshRate&#39;</span><span class="p">)))</span>
+        <span class="n">guiRefLayoutH</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refRateEdit</span><span class="p">)</span>
+        <span class="n">guiRefLayoutH</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refRateEdit</span><span class="o">.</span><span class="n">editingFinished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">updateMainGuiRefRate</span><span class="p">)</span>
+        
+        <span class="n">guiRefLayout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">guiRefLayoutH</span><span class="p">)</span>
+        <span class="n">guiRefConfig</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">guiRefLayout</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">guiRefConfig</span></div>
+        
+<div class="viewcode-block" id="refreshRateContents.updateMainGuiRefRate"><a class="viewcode-back" href="../../mView.MConfigGui.html#mView.MConfigGui.refreshRateContents.updateMainGuiRefRate">[docs]</a>    <span class="k">def</span> <span class="nf">updateMainGuiRefRate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+       <span class="k">try</span><span class="p">:</span>
+           <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refRateEdit</span><span class="o">.</span><span class="n">text</span><span class="p">()),</span> <span class="s1">&#39;guiRefreshRate&#39;</span><span class="p">)</span>
+            
+       <span class="k">except</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="devRefRateConfig"><a class="viewcode-back" href="../../mView.MConfigGui.html#mView.MConfigGui.devRefRateConfig">[docs]</a><span class="k">class</span> <span class="nc">devRefRateConfig</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">devRefRateConfig</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+ 
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+        
+        <span class="n">devRefConfig</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">devRefLayout</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">devRefLayoutH</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span>
+        <span class="n">devRefLayoutH</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> update period:&quot;</span>
+                <span class="o">%</span><span class="n">title</span><span class="p">))</span>
+        <span class="n">devRefLayoutH</span><span class="o">.</span><span class="n">addStretch</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">devRefConfig</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">devRefLayout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">devRefRateEdit</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QLineEdit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">devRefRateEdit</span><span class="o">.</span><span class="n">editingFinished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">updateDevRefRate</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">devRefRateEdit</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getRefreshRate</span><span class="p">()))</span>
+        <span class="n">devRefLayoutH</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">devRefRateEdit</span><span class="p">)</span>
+        <span class="n">devRefLayoutH</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">))</span>
+        
+        <span class="n">devRefLayout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">devRefLayoutH</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">isPlot</span><span class="p">():</span>
+            <span class="n">plotRefLayoutH</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span>
+            <span class="n">plotRefLayoutH</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> plot refresh rate:&quot;</span>
+                    <span class="o">%</span><span class="n">title</span><span class="p">))</span>
+            <span class="n">plotRefLayoutH</span><span class="o">.</span><span class="n">addStretch</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plotRefRateEdit</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QLineEdit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plotRefRateEdit</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getPlotRefreshRate</span><span class="p">()))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plotRefRateEdit</span><span class="o">.</span><span class="n">editingFinished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">updateDevPlotRate</span><span class="p">)</span>
+            <span class="n">plotRefLayoutH</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plotRefRateEdit</span><span class="p">)</span>
+            <span class="n">plotRefLayoutH</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">))</span>
+            <span class="n">devRefLayout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">plotRefLayoutH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">devRefLayout</span><span class="p">)</span>
+
+<div class="viewcode-block" id="devRefRateConfig.updateDevPlotRate"><a class="viewcode-back" href="../../mView.MConfigGui.html#mView.MConfigGui.devRefRateConfig.updateDevPlotRate">[docs]</a>    <span class="k">def</span> <span class="nf">updateDevPlotRate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">refreshRate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plotRefRateEdit</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">setPlotRefreshRate</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">refreshRate</span><span class="p">))</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%s</span><span class="s2">]: </span><span class="si">%s</span><span class="s2"> is not a number.&quot;</span>
+                    <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">(),</span> <span class="n">refreshRate</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="devRefRateConfig.updateDevRefRate"><a class="viewcode-back" href="../../mView.MConfigGui.html#mView.MConfigGui.devRefRateConfig.updateDevRefRate">[docs]</a>    <span class="k">def</span> <span class="nf">updateDevRefRate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">refreshRate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">devRefRateEdit</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">setRefreshRate</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">refreshRate</span><span class="p">))</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%s</span><span class="s2">]: </span><span class="si">%s</span><span class="s2"> is not a number.&quot;</span>
+                    <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">(),</span> <span class="n">refreshRate</span><span class="p">))</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

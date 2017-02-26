@@ -145,7 +145,11 @@ class MFrame:
 
     def setButtons(self, buttons):
         self.buttons = buttons
-
+        
+    def appendButton(self, button):
+        ''' Add another button to GUI.'''
+        self.buttons.append(button)
+        
     def buttonPressed(self, buttonInd):
         self.buttonInd = buttonInd
         self.buttonPushed = True

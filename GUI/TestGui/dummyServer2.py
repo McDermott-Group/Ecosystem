@@ -12,7 +12,7 @@ class MyServer2(LabradServer):
     name = "My Server2"    # Will be labrad name of server
 
     start = t.time() 
-    zip = 10
+    zip = 100
     prev0 = 0 
     prev1 = 0
     prev2 = 0 

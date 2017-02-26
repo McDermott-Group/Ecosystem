@@ -23,8 +23,22 @@ __status__ = "Beta"
 from MFrame import MFrame
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QThread
 import threading
+from dataChestWrapper import dataChestWrapper
 class MDevice(QThread):
     updateSignal = pyqtSignal()
+    '''
+  MView uses the MDevice class to give all sources of data a common 
+  interface with which to interact in the context of MView. These 
+  sources of data can be anything including but not limited to LabRad 
+  servers, RS232 devices, GPIB Devices, they can even represent the 
+  contents of .hdf5 files. Devices in MView are created by instantiating
+  their device drivers. For example, if there are two RS232 devices, 
+  we create two instances of the RS232 device driver. This means that 
+  only one generic device driver needs to be created for one interface 
+  (RS232, LabRad Servers, HDF5 files, etc.) and it can then be applied 
+  to all devices that use the same interface.
+  '''
+    
     def __init__(self, name):
         super(MDevice, self).__init__()
 
@@ -42,8 +56,9 @@ class MDevice(QThread):
         self.container = None
         self.nicknames = []
         self.settingResultIndices = []
-    def doNotLog(self, log):
-        self.noLogging = log
+        self.noLogging = False
+    def log(self, log):
+        self.noLogging = not log
     def setContainer(self, container):
 
         self.container = container
@@ -53,9 +68,9 @@ class MDevice(QThread):
     def updateContainer(self):
         if self.container != None:
            self.updateSignal.emit()
-            
+
     def addParameter(self, *args):
-            pass
+        pass
     def addButton(self, *args):
         pass
     def query(self, *args):
@@ -96,15 +111,45 @@ class MDevice(QThread):
         # Each device NEEDS to run on a different thread 
         # than the main thread (which ALWAYS runs the GUI).
         # This thread is responsible for querying the devices.
-        self.deviceThread = threading.Thread(target=self.query, args=[])
+        self.deviceThread = threading.Thread(target=self.callQuery, args=[])
         # If the main thread stops, stop the child thread.
         self.deviceThread.daemon = True
         # Start the thread.
         self.deviceThread.start()
-        
+        self.onBegin()
+    def onBegin(self):
+        '''Called at the end of MDevice.begin(). This is called before 
+        MView starts. This allows us to configure settings that 
+        MView might use while starting. This might include datalog 
+        locations or device-specific information.'''
+        pass
     def onLoad(self):
+       '''Called at the end of MGui.startGui(), when the main 
+       MView GUI has finished loading. This allows the 
+       MDevice to configure pieces of MView only available
+       once the program has fully loaded.'''
+       pass
+    def callQuery(self):
+        '''Automatically called periodically, 
+        determined by MDevice.Mframe.getRefreshRate(). 
+        There is also a MDevice.Mframe.setRefreshRate()
+        function with which the refresh rate can be configured.
+        '''
+        self.query()
+        threading.Timer(self.frame.getRefreshRate(),
+                    self.callQuery).start()
+    def prompt(self, button):
+        '''Called when 
+    a device's button is pushed. Button is an array which 
+    is associated with the button. The array is constructed 
+    in the device driver code, and the PyQT button is then appended
+    to the end by MView. The array associated with the button is passed 
+    to prompt() in the device driver. The device driver then determines 
+    what to do based on the button pushed. 
+   '''
         pass
     def logData(self, b, channels = None):
+    
         self.frame.DataLoggingInfo['channels'] = channels
         self.frame.enableDataLogging(b)
         

@@ -1,0 +1,215 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mView.MNodeEditor.MPipe &#8212; GUI  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mView.MNodeEditor.MPipe</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">PyQt4</span> <span class="k">import</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCore</span>
+
+<div class="viewcode-block" id="MPipe"><a class="viewcode-back" href="../../../mView.MNodeEditor.MPipe.html#mView.MNodeEditor.MPipe.MPipe">[docs]</a><span class="k">class</span> <span class="nc">MPipe</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsPathItem</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">startAnchor</span><span class="p">,</span> <span class="n">scene</span><span class="p">,</span> <span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsPathItem</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span> <span class="o">=</span> <span class="n">scene</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1">#startAnchor.parentNode().pipeConnected(startAnchor, self)</span>
+        <span class="c1"># Create a new painter path starting at the location of the first anchor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPainterPath</span><span class="p">(</span><span class="n">startAnchor</span><span class="o">.</span><span class="n">getGlobalLocation</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pen</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPen</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pen</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pen</span><span class="o">.</span><span class="n">setWidth</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pen</span><span class="o">.</span><span class="n">setColor</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="mi">189</span><span class="p">,</span> <span class="mi">195</span><span class="p">,</span> <span class="mi">199</span><span class="p">))</span>
+        <span class="c1"># Add itself to the scene</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="c1"># Set up bounding rectangle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mousePos</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QPoint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span> <span class="o">=</span> <span class="n">startAnchor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endAnchor</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputAnchor</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputAnchor</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">startAnchor</span><span class="o">.</span><span class="n">getType</span><span class="p">()</span><span class="o">==</span> <span class="s1">&#39;output&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">startAnchor</span><span class="o">.</span><span class="n">getLabel</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+<div class="viewcode-block" id="MPipe.connect"><a class="viewcode-back" href="../../../mView.MNodeEditor.MPipe.html#mView.MNodeEditor.MPipe.MPipe.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endAnchor</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Connect the other end of the pipe.&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">endAnchor</span><span class="o">.</span><span class="n">getType</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span><span class="o">.</span><span class="n">getType</span><span class="p">():</span>
+            <span class="nb">print</span> <span class="s2">&quot;Cannot connect two&quot;</span><span class="p">,</span> <span class="n">endAnchor</span><span class="o">.</span><span class="n">getType</span><span class="p">(),</span> <span class="s2">&quot;anchors together.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid pipe connection.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputAnchor</span> <span class="o">=</span> <span class="n">endAnchor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputAnchor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span>
+        
+        <span class="c1">#endAnchor.parentNode().pipeConnected(endAnchor, self)</span>
+        <span class="k">if</span> <span class="n">endAnchor</span><span class="o">.</span><span class="n">getType</span><span class="p">()</span><span class="o">==</span> <span class="s1">&#39;output&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">endAnchor</span><span class="o">.</span><span class="n">getLabel</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inputAnchor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">outputAnchor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">endAnchor</span>
+       <span class="c1"># print &quot;on connect, input anchor:&quot;, self.inputAnchor</span>
+       
+        <span class="bp">self</span><span class="o">.</span><span class="n">endAnchor</span> <span class="o">=</span> <span class="n">endAnchor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+        
+<div class="viewcode-block" id="MPipe.isUnconnected"><a class="viewcode-back" href="../../../mView.MNodeEditor.MPipe.html#mView.MNodeEditor.MPipe.MPipe.isUnconnected">[docs]</a>    <span class="k">def</span> <span class="nf">isUnconnected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">endAnchor</span> <span class="o">==</span> <span class="kc">None</span></div>
+        
+<div class="viewcode-block" id="MPipe.destruct"><a class="viewcode-back" href="../../../mView.MNodeEditor.MPipe.html#mView.MNodeEditor.MPipe.MPipe.destruct">[docs]</a>    <span class="k">def</span> <span class="nf">destruct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;This is where the pipe destroys itself :(. &#39;&#39;&#39;</span>
+        <span class="k">pass</span></div>
+        <span class="c1">#self.setParentItem(None)</span>
+        <span class="c1">#self = None</span>
+<div class="viewcode-block" id="MPipe.paint"><a class="viewcode-back" href="../../../mView.MNodeEditor.MPipe.html#mView.MNodeEditor.MPipe.MPipe.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isUnconnected</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setPath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">path2</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPainterPath</span><span class="p">()</span>
+            <span class="n">path2</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span><span class="o">.</span><span class="n">getGlobalLocation</span><span class="p">())</span>
+            <span class="n">path2</span><span class="o">.</span><span class="n">lineTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">endAnchor</span><span class="o">.</span><span class="n">getGlobalLocation</span><span class="p">())</span>
+            <span class="n">painter</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pen</span><span class="p">)</span>
+            <span class="n">painter</span><span class="o">.</span><span class="n">drawPath</span><span class="p">(</span><span class="n">path2</span><span class="p">)</span></div>
+            
+           <span class="c1"># painter.drawText(self.startAnchor.getGlobalLocation(), self.label)</span>
+            <span class="c1">#painter.drawRect(self.bound)</span>
+<div class="viewcode-block" id="MPipe.getStartAnchor"><a class="viewcode-back" href="../../../mView.MNodeEditor.MPipe.html#mView.MNodeEditor.MPipe.MPipe.getStartAnchor">[docs]</a>    <span class="k">def</span> <span class="nf">getStartAnchor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span></div>
+        
+<div class="viewcode-block" id="MPipe.getEndAnchor"><a class="viewcode-back" href="../../../mView.MNodeEditor.MPipe.html#mView.MNodeEditor.MPipe.MPipe.getEndAnchor">[docs]</a>    <span class="k">def</span> <span class="nf">getEndAnchor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">endAnchor</span></div>
+        
+<div class="viewcode-block" id="MPipe.getLabel"><a class="viewcode-back" href="../../../mView.MNodeEditor.MPipe.html#mView.MNodeEditor.MPipe.MPipe.getLabel">[docs]</a>    <span class="k">def</span> <span class="nf">getLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span></div>
+        
+<div class="viewcode-block" id="MPipe.setLabel"><a class="viewcode-back" href="../../../mView.MNodeEditor.MPipe.html#mView.MNodeEditor.MPipe.MPipe.setLabel">[docs]</a>    <span class="k">def</span> <span class="nf">setLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span></div>
+        
+<div class="viewcode-block" id="MPipe.getData"><a class="viewcode-back" href="../../../mView.MNodeEditor.MPipe.html#mView.MNodeEditor.MPipe.MPipe.getData">[docs]</a>    <span class="k">def</span> <span class="nf">getData</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span></div>
+        
+<div class="viewcode-block" id="MPipe.setData"><a class="viewcode-back" href="../../../mView.MNodeEditor.MPipe.html#mView.MNodeEditor.MPipe.MPipe.setData">[docs]</a>    <span class="k">def</span> <span class="nf">setData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        
+        <span class="c1">#print &quot;self.inputAnchor:&quot;, self.inputAnchor</span>
+        <span class="c1"># if self.inputAnchor != None:</span>
+            <span class="c1"># self.inputAnchor.parentNode().refreshData()</span>
+            <span class="c1"># if self.inputAnchor.parentNode().isDevice:</span>
+                <span class="c1"># self.inputAnchor.parentNode().getDevice().updateContainer()</span>
+        <span class="c1"># if self.inputAnchor != None:</span>
+            <span class="c1"># self.inputAnchor .getLcd().display(self.data)</span>
+        <span class="c1"># if self.outputAnchor != None:</span>
+            <span class="c1"># self.outputAnchor .getLcd().display(self.data) </span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputAnchor</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inputAnchor</span><span class="o">.</span><span class="n">setData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+
+        <span class="c1"># if self.outputAnchor != None:</span>
+            <span class="c1"># self.outputAnchor .update()</span>
+
+<div class="viewcode-block" id="MPipe.sceneMouseMove"><a class="viewcode-back" href="../../../mView.MNodeEditor.MPipe.html#mView.MNodeEditor.MPipe.MPipe.sceneMouseMove">[docs]</a>    <span class="k">def</span> <span class="nf">sceneMouseMove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="nb">print</span> <span class="s2">&quot;Scene mouse move&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">origMouseMoveEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span></div>
+        
+<div class="viewcode-block" id="MPipe.mouseMoveEvent"><a class="viewcode-back" href="../../../mView.MNodeEditor.MPipe.html#mView.MNodeEditor.MPipe.MPipe.mouseMoveEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseMoveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsPathItem</span><span class="o">.</span><span class="n">mouseMoveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+   
+<div class="viewcode-block" id="MPipe.boundingRect"><a class="viewcode-back" href="../../../mView.MNodeEditor.MPipe.html#mView.MNodeEditor.MPipe.MPipe.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isUnconnected</span><span class="p">():</span>
+            <span class="c1">#self.prepareGeometryChange()</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">endAnchor</span><span class="o">.</span><span class="n">getGlobalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">x</span><span class="p">()</span><span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span><span class="o">.</span><span class="n">getGlobalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">x</span><span class="p">()</span>
+            <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">endAnchor</span><span class="o">.</span><span class="n">getGlobalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">y</span><span class="p">()</span><span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span><span class="o">.</span><span class="n">getGlobalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">y</span><span class="p">()</span>
+            <span class="c1"># Must do each rectange differently depending on the quadrant the line is in.</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">width</span><span class="o">&lt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">height</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span><span class="o">.</span><span class="n">getGlobalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">x</span><span class="p">()</span><span class="o">+</span><span class="n">width</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span><span class="o">.</span><span class="n">getGlobalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">y</span><span class="p">()</span><span class="o">+</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="o">*-</span><span class="mi">1</span><span class="p">,</span> <span class="n">height</span><span class="o">*-</span><span class="mi">1</span> <span class="p">)</span>
+            <span class="k">elif</span><span class="p">(</span><span class="n">width</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span><span class="o">.</span><span class="n">getGlobalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">x</span><span class="p">()</span><span class="o">+</span><span class="n">width</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span><span class="o">.</span><span class="n">getGlobalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">y</span><span class="p">(),</span> <span class="n">width</span><span class="o">*-</span><span class="mi">1</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+            <span class="k">elif</span><span class="p">(</span><span class="n">height</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span><span class="o">.</span><span class="n">getGlobalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span><span class="o">.</span><span class="n">getGlobalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">y</span><span class="p">()</span><span class="o">+</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">*-</span><span class="mi">1</span> <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span><span class="o">.</span><span class="n">getGlobalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">startAnchor</span><span class="o">.</span><span class="n">getGlobalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">y</span><span class="p">(),</span> <span class="n">width</span><span class="p">,</span><span class="n">height</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bound</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bound</span></div></div>
+        
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

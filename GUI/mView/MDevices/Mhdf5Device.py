@@ -10,7 +10,7 @@ class Mhdf5Device(MDevice.MDevice):
          super(Mhdf5Device, self).__init__(*args)
          self.frame.setTitle(args[0])
          web.virtualDevices.append(self)
-         self.doNotLog(True)
+         self.log(False)
          
     def onLoad(self):
         self.setupMenus()

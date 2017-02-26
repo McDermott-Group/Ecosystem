@@ -1,0 +1,257 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mView.MNodeEditor.MNode &#8212; GUI  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mView.MNodeEditor.MNode</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">PyQt4</span> <span class="k">import</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCore</span>
+<span class="kn">from</span> <span class="nn">MAnchor</span> <span class="k">import</span> <span class="n">MAnchor</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">MWeb</span> <span class="k">import</span> <span class="n">web</span>
+<div class="viewcode-block" id="MNode"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode">[docs]</a><span class="k">class</span> <span class="nc">MNode</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsItem</span><span class="p">):</span>
+    <span class="c1"># Attribute that lets MView find this MNode</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">parent</span><span class="p">)</span>
+        <span class="c1">#default color&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFrame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;New MNode&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="mi">50</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isDevice</span> <span class="o">=</span> <span class="kc">False</span>
+        
+        
+<div class="viewcode-block" id="MNode.begin"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.begin">[docs]</a>    <span class="k">def</span> <span class="nf">begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>   <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; Create a new node&#39;&#39;&#39;</span>
+        <span class="c1">#print &quot;self.scene:&quot;,self.scene</span>
+        <span class="c1"># Get keyword args from constructor</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeLayout</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QGridLayout</span><span class="p">()</span>
+        <span class="c1">#self.setLayout(nodeLayout)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">font</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFont</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="o">.</span><span class="n">setPointSize</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+        
+       
+        <span class="c1">#self.nodeLayout = QtGui.QVBoxLayout(self.nodeFrame)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">&quot;color:rgb(189,195,199)&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        
+
+        
+       
+        <span class="c1">#nodeLayout.addWidget(QtGui.QCheckBox(nodeFrame))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeLayout</span><span class="p">)</span>
+     
+        
+        
+        <span class="n">pProxy</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsProxyWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">pProxy</span><span class="o">.</span><span class="n">setWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="p">)</span>
+        <span class="c1">#self.mode = kwargs.get(&#39;mode&#39;, &#39;operator&#39;)</span>
+        
+        <span class="c1"># Initialize the parent class</span>
+        
+        <span class="c1"># Variables to hold the anchors, scene, and tree</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">anchors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1">#self.scene = scene</span>
+        <span class="c1">#self.tree = tree</span>
+        
+        <span class="c1"># Tell the gui that the item is moveable, slectable, and focusable and that </span>
+        <span class="c1"># it accepts hover events.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIsMovable</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIsSelectable</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIsFocusable</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setAcceptsHoverEvents</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Bounding rectangles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rect</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="o">.</span><span class="n">width</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="o">.</span><span class="n">height</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rect2</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">(</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">220</span><span class="p">,</span><span class="mi">220</span><span class="p">)</span>
+        <span class="c1"># The pen, for painting the borders</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">textPen</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPen</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">textPen</span><span class="o">.</span><span class="n">setWidth</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">textPen</span><span class="o">.</span><span class="n">setColor</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="mi">189</span><span class="p">,</span> <span class="mi">195</span><span class="p">,</span> <span class="mi">199</span><span class="p">))</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeBrush</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QBrush</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="MNode.getDevice"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.getDevice">[docs]</a>    <span class="k">def</span> <span class="nf">getDevice</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span></div>
+<div class="viewcode-block" id="MNode.setDevice"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.setDevice">[docs]</a>    <span class="k">def</span> <span class="nf">setDevice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isDevice</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span></div>
+<div class="viewcode-block" id="MNode.getNodeWidget"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.getNodeWidget">[docs]</a>    <span class="k">def</span> <span class="nf">getNodeWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span></div>
+<div class="viewcode-block" id="MNode.getNodeLayout"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.getNodeLayout">[docs]</a>    <span class="k">def</span> <span class="nf">getNodeLayout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodeLayout</span></div>
+<div class="viewcode-block" id="MNode.setColor"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.setColor">[docs]</a>    <span class="k">def</span> <span class="nf">setColor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">&quot;.QFrame{background:rgba(&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;,&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">g</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;,&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;, 20)}&#39;</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MNode.getColor"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.getColor">[docs]</a>    <span class="k">def</span> <span class="nf">getColor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">color</span></div>
+<div class="viewcode-block" id="MNode.setScene"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.setScene">[docs]</a>    <span class="k">def</span> <span class="nf">setScene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scene</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span> <span class="o">=</span> <span class="n">scene</span></div>
+<div class="viewcode-block" id="MNode.setTree"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.setTree">[docs]</a>    <span class="k">def</span> <span class="nf">setTree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tree</span> <span class="o">=</span> <span class="n">tree</span></div>
+<div class="viewcode-block" id="MNode.setTitle"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.setTitle">[docs]</a>    <span class="k">def</span> <span class="nf">setTitle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">title</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MNode.getTitle"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.getTitle">[docs]</a>    <span class="k">def</span> <span class="nf">getTitle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span></div>
+    <span class="k">def</span> <span class="nf">refreshData</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">notimplementederror</span><span class="p">(</span><span class="s2">&quot;MNode-&gt;refreshData must be implemented.&quot;</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="MNode.getAnchors"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.getAnchors">[docs]</a>    <span class="k">def</span> <span class="nf">getAnchors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">anchors</span></div>
+        
+<div class="viewcode-block" id="MNode.addAnchor"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.addAnchor">[docs]</a>    <span class="k">def</span> <span class="nf">addAnchor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        
+        <span class="k">if</span> <span class="n">anchor</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">suggestedData</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">type</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;If no anchor is passed to MNode.addAnchor(), then </span><span class="se">\&#39;</span><span class="s2">name</span><span class="se">\&#39;</span><span class="s2">, </span><span class="se">\&#39;</span><span class="s2">type</span><span class="se">\&#39;</span><span class="s2"> keyword arguments must be given.&quot;</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="s2">&quot;MNode addanchor kwargs:&quot;</span><span class="p">,</span> <span class="n">kwargs</span>
+            <span class="n">anchor</span> <span class="o">=</span> <span class="n">MAnchor</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">anchors</span><span class="p">),</span> <span class="nb">type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">suggestedData</span><span class="p">)</span> <span class="c1"># adds itself</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">anchors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">anchor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">anchorAdded</span><span class="p">(</span><span class="n">anchor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rect</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="o">.</span><span class="n">width</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="o">.</span><span class="n">height</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rect2</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="o">.</span><span class="n">width</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="o">.</span><span class="n">height</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">anchor</span></div>
+<div class="viewcode-block" id="MNode.removeAnchor"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.removeAnchor">[docs]</a>    <span class="k">def</span> <span class="nf">removeAnchor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anchor</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">print</span> <span class="s2">&quot;specified anchor:&quot;</span><span class="p">,</span> <span class="n">anchor</span>
+        <span class="k">if</span> <span class="n">anchor</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;deleting last anchor&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">anchors</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">anchors</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">anchor</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">anc</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">anchors</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">anc</span> <span class="ow">is</span> <span class="n">anchor</span><span class="p">:</span>
+                    <span class="k">del</span> <span class="n">anchor</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></div>
+<div class="viewcode-block" id="MNode.pipeDisconnected"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.pipeDisconnected">[docs]</a>    <span class="k">def</span> <span class="nf">pipeDisconnected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+<div class="viewcode-block" id="MNode.pipeConnected"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.pipeConnected">[docs]</a>    <span class="k">def</span> <span class="nf">pipeConnected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span> <span class="n">pipe</span><span class="p">):</span>
+       <span class="k">pass</span></div>
+<div class="viewcode-block" id="MNode.anchorAdded"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.anchorAdded">[docs]</a>    <span class="k">def</span> <span class="nf">anchorAdded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anchor</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+<div class="viewcode-block" id="MNode.hoverEnterEvent"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.hoverEnterEvent">[docs]</a>    <span class="k">def</span> <span class="nf">hoverEnterEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">textPen</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DotLine</span><span class="p">)</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">hoverEnterEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="MNode.hoverLeaveEvent"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.hoverLeaveEvent">[docs]</a>    <span class="k">def</span> <span class="nf">hoverLeaveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">textPen</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">SolidLine</span><span class="p">)</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">hoverLeaveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="MNode.mouseMoveEvent"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.mouseMoveEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseMoveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">mouseMoveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="MNode.mousePressEvent"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.mousePressEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mousePressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">mousePressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="MNode.boundingRect"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#self.prepareGeometryChange()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rect2</span></div>
+        
+<div class="viewcode-block" id="MNode.paint"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="c1"># self.prepareGeometryChange()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rect2</span><span class="o">.</span><span class="n">setHeight</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="o">.</span><span class="n">height</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rect2</span><span class="o">.</span><span class="n">setWidth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="o">.</span><span class="n">width</span><span class="p">())</span>
+
+        <span class="n">painter</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeBrush</span><span class="p">)</span>
+        <span class="n">painter</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">textPen</span><span class="p">)</span>
+        <span class="n">painter</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="p">)</span>
+        <span class="n">painter</span><span class="o">.</span><span class="n">drawRect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rect2</span><span class="p">)</span></div>
+        <span class="c1">#painter.drawRect(self.rect)</span>
+<div class="viewcode-block" id="MNode.refreshData"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNode.html#mView.MNodeEditor.MNode.MNode.refreshData">[docs]</a>    <span class="k">def</span> <span class="nf">refreshData</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+        <span class="c1">#painter.drawText(5, 30, self.title)</span>
+        
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

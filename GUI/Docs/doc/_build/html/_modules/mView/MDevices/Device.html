@@ -1,0 +1,407 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mView.MDevices.Device &#8212; GUI  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mView.MDevices.Device</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016 Noah Meltzer</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 2 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2016, McDermott Group&quot;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s2">&quot;GPL&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;2.0.2&quot;</span>
+<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__status__</span> <span class="o">=</span> <span class="s2">&quot;Beta&quot;</span>
+
+
+
+
+<span class="kn">import</span> <span class="nn">labrad</span>
+<span class="kn">from</span> <span class="nn">labrad.units</span> <span class="k">import</span> <span class="n">Value</span><span class="p">,</span> <span class="n">ValueArray</span>
+<span class="kn">from</span> <span class="nn">dataChestWrapper</span> <span class="k">import</span> <span class="n">dataChestWrapper</span>
+<span class="c1"># from dataChestWrapper import dataChestWrapper</span>
+<span class="c1"># from MFrame import MFrame</span>
+<span class="kn">import</span> <span class="nn">MPopUp</span>
+<span class="kn">from</span> <span class="nn">MDevice</span> <span class="k">import</span> <span class="n">MDevice</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+
+<span class="kn">from</span> <span class="nn">MWeb</span> <span class="k">import</span> <span class="n">web</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<div class="viewcode-block" id="Device"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device">[docs]</a><span class="k">class</span> <span class="nc">Device</span><span class="p">(</span><span class="n">MDevice</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The device class handles a LabRAD device.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">Device</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="c1"># Get all the stuff from the constructor.</span>
+        <span class="c1"># Has a the device made an appearance, this is so we dont alert</span>
+        <span class="c1"># the user more than once if a device dissapears.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">foundDevice</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Nicknames of settings (the ones that show up on the GUI).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1">#Units for the settings to be used with the values on the GUI.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settingUnits</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># List of the precisions for the values on the GUI.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># List of settings that the user wants run on their device.</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># The actual names of the settings.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settingNames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Stores the actual reference to the labrad server.</span>
+        <span class="n">deviceServer</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># True if device is functioning correctly.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isDevice</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># Used for device.select_device(selectedDevice) setting.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selectedDevice</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Store the setting to select device (almost always</span>
+        <span class="c1"># &#39;select_device&#39;).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setDeviceCmd</span> <span class="o">=</span> <span class="kc">None</span>    
+        <span class="c1"># Store the buttons along with their parameters.</span>
+        <span class="n">buttons</span> <span class="o">=</span> <span class="p">[[]]</span>
+        <span class="c1"># Arguments that should be passed to settings if necessary.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settingArgs</span> <span class="o">=</span><span class="p">[]</span>    
+        <span class="bp">self</span><span class="o">.</span><span class="n">settingResultIndices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setYLabel</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        
+        <span class="c1"># Determine which buttons get messages.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttonMessages</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Setup all buttons.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttonNames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttonSettings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span> <span class="o">=</span> <span class="p">[]</span>
+    
+        <span class="c1"># Tells thread to keep going.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keepGoing</span> <span class="o">=</span> <span class="kc">True</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setTitle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        
+
+<div class="viewcode-block" id="Device.setServerName"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.setServerName">[docs]</a>    <span class="k">def</span> <span class="nf">setServerName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">serverName</span> <span class="o">=</span> <span class="n">name</span></div>
+        
+<div class="viewcode-block" id="Device.addParameter"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.addParameter">[docs]</a>    <span class="k">def</span> <span class="nf">addParameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">setting</span><span class="p">,</span> <span class="n">arg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;channels&#39;</span><span class="p">][</span><span class="n">parameter</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settingNames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">setting</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settingResultIndices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settingArgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settingUnits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="Device.connection"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.connection">[docs]</a>    <span class="k">def</span> <span class="nf">connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cxn</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cxn</span> <span class="o">=</span> <span class="n">cxn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">cxn</span><span class="o">.</span><span class="n">context</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Device.addButton"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.addButton">[docs]</a>    <span class="k">def</span> <span class="nf">addButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">arg</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+        <span class="c1">#i = len(self.buttons) - 1</span>
+        <span class="n">button</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">button</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">button</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="n">button</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">button</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setButtons</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buttons</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="Device.setYLabel"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.setYLabel">[docs]</a>    <span class="k">def</span> <span class="nf">setYLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">yLbl</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setYLabel</span><span class="p">(</span><span class="n">yLbl</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Device.selectDeviceCommand"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.selectDeviceCommand">[docs]</a>    <span class="k">def</span> <span class="nf">selectDeviceCommand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>  
+        <span class="bp">self</span><span class="o">.</span><span class="n">setDeviceCmd</span> <span class="o">=</span> <span class="n">cmd</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selectedDevice</span> <span class="o">=</span> <span class="n">arg</span></div>
+    
+<div class="viewcode-block" id="Device.onBegin"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.onBegin">[docs]</a>    <span class="k">def</span> <span class="nf">onBegin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setNicknames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setReadingIndices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settingResultIndices</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;chest&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataChestWrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datachest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;chest&#39;</span><span class="p">]</span></div>
+        <span class="c1"># # Each device NEEDS to run on a different thread </span>
+        <span class="c1"># # than the main thread (which ALWAYS runs the GUI).</span>
+        <span class="c1"># # This thread is responsible for querying the devices.</span>
+        <span class="c1"># self.deviceThread = threading.Thread(target=self.query, args=[])</span>
+        <span class="c1"># # If the main thread stops, stop the child thread.</span>
+        <span class="c1"># self.deviceThread.daemon = True</span>
+        <span class="c1"># # Start the thread.</span>
+        <span class="c1"># self.deviceThread.start()</span>
+
+<div class="viewcode-block" id="Device.setRefreshRate"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.setRefreshRate">[docs]</a>    <span class="k">def</span> <span class="nf">setRefreshRate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
+      
+        <span class="k">if</span>  <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span><span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Refresh Rates cannot be set until name is given to device.&quot;</span><span class="p">)</span>
+       
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">getRefreshRate</span><span class="p">()</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+             <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setRefreshRate</span><span class="p">(</span><span class="n">period</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Device.setPlotRefreshRate"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.setPlotRefreshRate">[docs]</a>    <span class="k">def</span> <span class="nf">setPlotRefreshRate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
+
+        <span class="k">if</span>  <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span><span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Refresh Rates cannot be set until name is given to device.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">getPlotRefreshRate</span><span class="p">()</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setPlotRefreshRate</span><span class="p">(</span><span class="n">period</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Device.addPlot"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.addPlot">[docs]</a>    <span class="k">def</span> <span class="nf">addPlot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">addPlot</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+        <span class="c1"># Datalogging must be enabled if we want to plot data.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">enableDataLogging</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">getPlot</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Device.connect"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  
+        <span class="sd">&quot;&quot;&quot;Connect to the device.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Attempt to connect to the server given the connection </span>
+            <span class="c1"># and the server name.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deviceServer</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cxn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">serverName</span><span class="p">)()</span>
+            <span class="c1"># If the select device command is not None, run it.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">setDeviceCmd</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deviceServer</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">setDeviceCmd</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">selectedDevice</span><span class="p">,</span>
+                                           <span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Found device: </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">serverName</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c1"># The nFrame class can pass an error along with a message.</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">raiseError</span><span class="p">(</span><span class="s2">&quot;LabRAD issue.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+        
+    <span class="c1"># def getFrame(self):</span>
+        <span class="c1"># &quot;&quot;&quot;Return the device&#39;s frame.&quot;&quot;&quot;</span>
+        <span class="c1"># return self.frame</span>
+
+    <span class="c1"># def logData(self, b):</span>
+        <span class="c1"># self.frame.enableDataLogging(b)</span>
+
+<div class="viewcode-block" id="Device.prompt"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.prompt">[docs]</a>    <span class="k">def</span> <span class="nf">prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">button</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If a button is clicked, handle it.&quot;&quot;&quot;</span><span class="c1">#name action msg arg</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="n">button</span>
+            <span class="n">actual_button</span> <span class="o">=</span> <span class="n">button</span>
+            <span class="c1"># If the button has a warning message attatched.</span>
+            <span class="k">if</span> <span class="n">actual_button</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Create a new popup.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">warning</span> <span class="o">=</span> <span class="n">MPopUp</span><span class="o">.</span><span class="n">PopUp</span><span class="p">(</span><span class="n">actual_button</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                <span class="c1"># Stop the main GUI thread and run the popup.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">warning</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+                <span class="c1"># If and only if the &#39;ok&#39; button is pressed.</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">warning</span><span class="o">.</span><span class="n">consent</span><span class="p">:</span>
+                    <span class="c1"># If the setting associated with the button also </span>
+                    <span class="c1"># has an argument for the setting.</span>
+                    <span class="k">if</span> <span class="n">actual_button</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deviceServer</span><span class="p">,</span>
+                                <span class="n">actual_button</span><span class="p">[</span><span class="mi">1</span><span class="p">])(</span><span class="n">actual_button</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+                    <span class="c1"># If just the setting needs to be run.</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deviceServer</span><span class="p">,</span> <span class="n">actual_button</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="c1"># Otherwise if there is no warning message, do not make</span>
+            <span class="c1"># a popup.</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># If there is an argument that must be passed to</span>
+                <span class="c1"># the setting.</span>
+                <span class="k">if</span> <span class="n">actual_button</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deviceServer</span><span class="p">,</span>
+                            <span class="n">actual_button</span><span class="p">[</span><span class="mi">1</span><span class="p">])(</span><span class="n">actual_button</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deviceServer</span><span class="p">,</span> <span class="n">actual_button</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="k">return</span></div>
+
+<div class="viewcode-block" id="Device.query"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Query the device for readings.&quot;&quot;&quot;</span>
+        <span class="c1"># If the device is attached.</span>
+        <span class="c1">#print &quot;querying device&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isDevice</span><span class="p">:</span>
+            <span class="c1"># Try to connect again, if the value changes, then we know </span>
+            <span class="c1"># that the device has connected.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isDevice</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">isDevice</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1"># Otherwise, if the device is already connected.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">readings</span> <span class="o">=</span> <span class="p">[]</span>   <span class="c1"># Stores the readings.</span>
+                <span class="n">units</span> <span class="o">=</span> <span class="p">[]</span>      <span class="c1"># Stores the units.</span>
+                <span class="n">precisions</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settingNames</span><span class="p">)):</span>
+                    <span class="c1"># If the setting needs to be passed arguments</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settingArgs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">reading</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deviceServer</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">settingNames</span><span class="p">[</span><span class="n">i</span><span class="p">])(</span><span class="bp">self</span><span class="o">.</span><span class="n">settingArgs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                <span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">reading</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deviceServer</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">settingNames</span><span class="p">[</span><span class="n">i</span><span class="p">])(</span><span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="p">)</span>
+                    <span class="c1"># If the reading has a value and units.</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reading</span><span class="p">,</span> <span class="n">Value</span><span class="p">):</span>
+                        <span class="k">pass</span>
+                    <span class="c1"># If the reading is an array of values and units.</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reading</span><span class="p">,</span> <span class="n">ValueArray</span><span class="p">):</span>
+                        <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settingResultIndices</span>
+                        <span class="k">if</span> <span class="n">indices</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> \
+                                <span class="nb">isinstance</span><span class="p">(</span><span class="n">reading</span><span class="p">[</span><span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">Value</span><span class="p">):</span>
+                            <span class="n">reading</span> <span class="o">=</span> <span class="n">reading</span><span class="p">[</span><span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+                        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">reading</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">reading</span> <span class="o">=</span> <span class="n">reading</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">reading</span> <span class="o">=</span> <span class="n">reading</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                            
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reading</span><span class="p">,</span> <span class="n">Value</span><span class="p">):</span>
+                        <span class="c1">#print &quot;Received labrad Value type&quot;</span>
+                        <span class="n">preferredUnits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settingUnits</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">preferredUnits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> \
+                                <span class="n">reading</span><span class="o">.</span><span class="n">isCompatible</span><span class="p">(</span><span class="n">preferredUnits</span><span class="p">):</span>
+                            <span class="n">reading</span> <span class="o">=</span> <span class="n">reading</span><span class="o">.</span><span class="n">inUnitsOf</span><span class="p">(</span><span class="n">preferredUnits</span><span class="p">)</span>
+                        <span class="n">u</span> <span class="o">=</span> <span class="n">reading</span><span class="o">.</span><span class="n">units</span>
+                        <span class="c1">#print &quot;units:&quot;, u</span>
+                        <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reading</span><span class="p">[</span><span class="n">u</span><span class="p">])</span>
+                        <span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                        <span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">precisions</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">reading</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">reading</span><span class="p">)):</span>
+                            <span class="n">rd</span> <span class="o">=</span> <span class="n">reading</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rd</span><span class="p">,</span> <span class="n">Value</span><span class="p">):</span>
+                                <span class="n">preferredUnits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settingUnits</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                                <span class="k">if</span> <span class="n">preferredUnits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> \
+                                        <span class="n">rd</span><span class="o">.</span><span class="n">isCompatible</span><span class="p">(</span><span class="n">preferredUnits</span><span class="p">):</span>
+                                    <span class="n">rd</span> <span class="o">=</span> <span class="n">rd</span><span class="o">.</span><span class="n">inUnitsOf</span><span class="p">(</span><span class="n">preferredUnits</span><span class="p">)</span>
+                                <span class="n">u</span> <span class="o">=</span> <span class="n">rd</span><span class="o">.</span><span class="n">units</span>
+                                <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rd</span><span class="p">[</span><span class="n">u</span><span class="p">])</span>
+                                <span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                                <span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">precisions</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reading</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                <span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                                <span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settingPrecisions</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reading</span><span class="p">)</span>
+                            <span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                            <span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">precisions</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                        <span class="k">except</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Problem with readings, type &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span>
+                                  <span class="s2">&quot;cannot be displayed.&quot;</span>
+                                  <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">reading</span><span class="p">)))</span>
+                <span class="c1"># Pass the readings and units to the frame.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setReadings</span><span class="p">(</span><span class="n">readings</span><span class="p">)</span>
+                <span class="c1">#print &quot;setting units&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setUnits</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setPrecisions</span><span class="p">(</span><span class="n">precisions</span><span class="p">)</span>
+                <span class="c1"># Save the data.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">datachest</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+                <span class="c1"># If there was an error, retract it.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">retractError</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%s</span><span class="s2">] Something appears to be wrong with what &quot;</span>
+                      <span class="s2">&quot;the labrad server is returning.&quot;</span>
+                      <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Reading: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">readings</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Units: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">units</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">raiseError</span><span class="p">(</span><span class="s2">&quot;Problem communicating with </span><span class="si">%s</span><span class="s2">.&quot;</span>
+                        <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setReadings</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">isDevice</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># Query calls itself again, this keeps the thread alive.</span>
+        <span class="c1">#if self.keepGoing:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateContainer</span><span class="p">()</span>
+        
+        <span class="k">return</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

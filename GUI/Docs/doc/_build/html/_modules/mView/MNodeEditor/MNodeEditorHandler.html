@@ -1,0 +1,130 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mView.MNodeEditor.MNodeEditorHandler &#8212; GUI  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mView.MNodeEditor.MNodeEditorHandler</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">MNodeEditor</span>
+<span class="kn">import</span> <span class="nn">MAnchor</span>
+<span class="kn">import</span> <span class="nn">MNodeTree</span>
+
+<span class="kn">from</span> <span class="nn">MWeb</span> <span class="k">import</span> <span class="n">web</span>
+<span class="kn">from</span> <span class="nn">MNodes.MLabradNode</span> <span class="k">import</span> <span class="n">MLabradNode</span>
+<span class="kn">from</span> <span class="nn">MNodes.MVirtualDeviceNode</span> <span class="k">import</span> <span class="n">MVirtualDeviceNode</span>
+
+<div class="viewcode-block" id="MNodeEditorHandler"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNodeEditorHandler.html#mView.MNodeEditor.MNodeEditorHandler.MNodeEditorHandler">[docs]</a><span class="k">class</span> <span class="nc">MNodeEditorHandler</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Create a nodeTree</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeTree</span> <span class="o">=</span> <span class="n">MNodeTree</span><span class="o">.</span><span class="n">NodeTree</span><span class="p">()</span>
+      
+        <span class="c1"># Create a nodeEditor GUI window</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeEditor</span> <span class="o">=</span> <span class="n">MNodeEditor</span><span class="o">.</span><span class="n">NodeGui</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodeTree</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodeTree</span><span class="o">.</span><span class="n">getScene</span><span class="p">()</span>
+        <span class="c1"># We need a reference to the main gui that allows us to manipulate mView</span>
+        <span class="c1">#self.mainGui = mainGui</span>
+
+        <span class="c1"># Create a new node to represent each device in the node tree</span>
+<div class="viewcode-block" id="MNodeEditorHandler.begin"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNodeEditorHandler.html#mView.MNodeEditor.MNodeEditorHandler.MNodeEditorHandler.begin">[docs]</a>    <span class="k">def</span> <span class="nf">begin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">dev</span> <span class="ow">in</span> <span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">:</span>
+            <span class="n">newNode</span> <span class="o">=</span> <span class="n">MLabradNode</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nodeTree</span><span class="o">.</span><span class="n">addNode</span><span class="p">(</span><span class="n">newNode</span><span class="p">)</span>
+            <span class="c1">#devnode = self.nodeTree.newNode(self.nodeTree, device = device,   mode = &#39;labrad_device&#39;)</span>
+            <span class="c1"># Tell the device&#39;s frame what it&#39;s node is</span>
+            <span class="n">dev</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">setNode</span><span class="p">(</span><span class="n">newNode</span><span class="p">)</span>
+            <span class="c1"># Create nodes representing the tiles in the main mView window</span>
+            <span class="c1">#virtNode = MVirtualDeviceNode()</span>
+            <span class="c1">#self.nodeTree.addNode(virtNode)</span>
+            <span class="c1">#outnode = self.nodeTree.addNode(self.nodeTree, mode = &#39;output&#39;)</span>
+            <span class="c1"># An anchor has been created on the device node for each parameter that it</span>
+            <span class="c1"># has, create a ouput node that is able to connect to all of these</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scene</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodeTree</span><span class="o">.</span><span class="n">getScene</span><span class="p">()</span></div>
+              
+<div class="viewcode-block" id="MNodeEditorHandler.showEditor"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNodeEditorHandler.html#mView.MNodeEditor.MNodeEditorHandler.MNodeEditorHandler.showEditor">[docs]</a>    <span class="k">def</span> <span class="nf">showEditor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeEditor</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+<div class="viewcode-block" id="MNodeEditorHandler.getTree"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNodeEditorHandler.html#mView.MNodeEditor.MNodeEditorHandler.MNodeEditorHandler.getTree">[docs]</a>    <span class="k">def</span> <span class="nf">getTree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodeTree</span></div>
+<div class="viewcode-block" id="MNodeEditorHandler.stop"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNodeEditorHandler.html#mView.MNodeEditor.MNodeEditorHandler.MNodeEditorHandler.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span> <span class="s2">&quot;stopping handler&quot;</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">keepGoing</span> <span class="o">=</span> <span class="kc">False</span></div></div>
+        
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
