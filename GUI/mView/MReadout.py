@@ -11,6 +11,13 @@ class MReadout(QtGui.QWidget):
         self.layout.addWidget(self.label)
         self.setLayout(self.layout)
         self.isLCD = True
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(sizePolicy)
+        self.lcd.setSizePolicy(sizePolicy)
+        self.label.setSizePolicy(sizePolicy)
+        #self.label.hide()
+        #self.lcd.hide()
+        self.layout.setContentsMargins(0,0,0,0)
     def getLCD(self):
         return self.lcd
     def getLabel(self):
@@ -20,23 +27,12 @@ class MReadout(QtGui.QWidget):
         font.setPointSize(size)
         self.label.setFont(font)
     def display(self, data):
-      
-        if type(data) == float or type(data) == int:
-            if not self.isLCD:
-                #self.widget.deleteLater()
-                self.isLCD = True
-                self.lcd.show()
-                self.label.hide()
-
+        try:
             self.lcd.display(data)
-            
-            
-        else:
-            if self.isLCD:
-                #self.widget.deleteLater()
-                self.lcd.hide()
-                self.label.show()
-                self.isLCD = False
-
-            
+            self.lcd.show()
+            self.label.hide()  
+        except:
+     
+            self.lcd.hide()
+            self.label.show()
             self.label.setText(str(str(data)))
