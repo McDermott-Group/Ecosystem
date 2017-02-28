@@ -138,11 +138,13 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">serverTitle</span></div>
 
 <div class="viewcode-block" id="MFrame.getNicknames"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getNicknames">[docs]</a>    <span class="k">def</span> <span class="nf">getNicknames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#print &quot;----------NICKNAMES WAS Got&quot;, self.nicknames</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span></div>
 
 <div class="viewcode-block" id="MFrame.setNicknames"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setNicknames">[docs]</a>    <span class="k">def</span> <span class="nf">setNicknames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nicknames</span><span class="p">):</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span> <span class="o">=</span> <span class="n">nicknames</span></div>
-
+        <span class="c1">#print &quot;---------- set nicknames NICKNAMES WAS SET&quot;, self.nicknames</span>
 <div class="viewcode-block" id="MFrame.setReadings"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setReadings">[docs]</a>    <span class="k">def</span> <span class="nf">setReadings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">readings</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">readings</span> <span class="o">=</span> <span class="n">readings</span></div>
 
@@ -189,7 +191,11 @@
 
 <div class="viewcode-block" id="MFrame.setButtons"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setButtons">[docs]</a>    <span class="k">def</span> <span class="nf">setButtons</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buttons</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span> <span class="o">=</span> <span class="n">buttons</span></div>
-
+        
+<div class="viewcode-block" id="MFrame.appendButton"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.appendButton">[docs]</a>    <span class="k">def</span> <span class="nf">appendButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">button</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; Add another button to GUI.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">button</span><span class="p">)</span></div>
+        
 <div class="viewcode-block" id="MFrame.buttonPressed"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.buttonPressed">[docs]</a>    <span class="k">def</span> <span class="nf">buttonPressed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buttonInd</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">buttonInd</span> <span class="o">=</span> <span class="n">buttonInd</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">buttonPushed</span> <span class="o">=</span> <span class="kc">True</span></div>
@@ -287,7 +293,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">container</span> <span class="o">=</span> <span class="n">container</span></div>
         
 <div class="viewcode-block" id="MFrame.getContainer"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getContainer">[docs]</a>    <span class="k">def</span> <span class="nf">getContainer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span></div>
+        
+<div class="viewcode-block" id="MFrame.addParameter"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.addParameter">[docs]</a>    <span class="k">def</span> <span class="nf">addParameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Adds to list of parameters displayed on the gui.&#39;&#39;&#39;</span>
+      
+        <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span></div></div>
+        
+        <span class="c1">#print &quot;---------- add parameter NICKNAMES WAS SET&quot;, self.nicknames</span>
 </pre></div>
 
           </div>

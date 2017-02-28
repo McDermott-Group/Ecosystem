@@ -47,7 +47,7 @@
 <span id="mview-mdevice-module"></span><h1>mView.MDevice module<a class="headerlink" href="#module-mView.MDevice" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="mView.MDevice.MDevice">
-<em class="property">class </em><code class="descclassname">mView.MDevice.</code><code class="descname">MDevice</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">mView.MDevice.</code><code class="descname">MDevice</code><span class="sig-paren">(</span><em>name</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">PyQt4.QtCore.QThread</span></code></p>
 <dl class="method">
 <dt id="mView.MDevice.MDevice.addButton">
@@ -55,13 +55,23 @@
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="mView.MDevice.MDevice.addButtonToGui">
+<code class="descname">addButtonToGui</code><span class="sig-paren">(</span><em>button</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.addButtonToGui"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.addButtonToGui" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="mView.MDevice.MDevice.addParameter">
-<code class="descname">addParameter</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.addParameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.addParameter" title="Permalink to this definition">¶</a></dt>
+<code class="descname">addParameter</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.addParameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.addParameter" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MDevice.MDevice.addPlot">
 <code class="descname">addPlot</code><span class="sig-paren">(</span><em>length=None</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.addPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.addPlot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.addReadout">
+<code class="descname">addReadout</code><span class="sig-paren">(</span><em>name</em>, <em>units</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.addReadout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.addReadout" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -72,6 +82,15 @@
 <dl class="method">
 <dt id="mView.MDevice.MDevice.callQuery">
 <code class="descname">callQuery</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.callQuery"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.callQuery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Automatically called periodically, 
+determined by MDevice.Mframe.getRefreshRate(). 
+There is also a MDevice.Mframe.setRefreshRate()
+function with which the refresh rate can be configured.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.close" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -96,14 +115,39 @@
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="mView.MDevice.MDevice.onAddParameter">
+<code class="descname">onAddParameter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.onAddParameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.onAddParameter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="mView.MDevice.MDevice.onBegin">
 <code class="descname">onBegin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.onBegin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.onBegin" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Called at the end of MDevice.begin(). This is called before 
+MView starts. This allows us to configure settings that 
+MView might use while starting. This might include datalog 
+locations or device-specific information.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="mView.MDevice.MDevice.onLoad">
 <code class="descname">onLoad</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.onLoad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.onLoad" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Called at the end of MGui.startGui(), when the main 
+MView GUI has finished loading. This allows the 
+MDevice to configure pieces of MView only available
+once the program has fully loaded.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.prompt">
+<code class="descname">prompt</code><span class="sig-paren">(</span><em>button</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.prompt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.prompt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when 
+a device&#8217;s button is pushed. Button is an array which 
+is associated with the button. The array is constructed 
+in the device driver code, and the PyQT button is then appended
+to the end by MView. The array associated with the button is passed 
+to prompt() in the device driver. The device driver then determines 
+what to do based on the button pushed.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="mView.MDevice.MDevice.query">
@@ -121,8 +165,18 @@
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="mView.MDevice.MDevice.setReadings">
+<code class="descname">setReadings</code><span class="sig-paren">(</span><em>readings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setReadings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setReadings" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="mView.MDevice.MDevice.setRefreshRate">
 <code class="descname">setRefreshRate</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setRefreshRate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setRefreshRate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.setTitle">
+<code class="descname">setTitle</code><span class="sig-paren">(</span><em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setTitle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setTitle" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">

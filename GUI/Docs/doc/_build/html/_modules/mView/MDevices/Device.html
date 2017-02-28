@@ -147,14 +147,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">cxn</span><span class="o">.</span><span class="n">context</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Device.addButton"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.addButton">[docs]</a>    <span class="k">def</span> <span class="nf">addButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">arg</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
-        <span class="c1">#i = len(self.buttons) - 1</span>
-        <span class="n">button</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">button</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">button</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">button</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
         <span class="n">button</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="n">button</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setButtons</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buttons</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">appendButton</span><span class="p">(</span><span class="n">button</span><span class="p">)</span></div>
         
 <div class="viewcode-block" id="Device.setYLabel"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.setYLabel">[docs]</a>    <span class="k">def</span> <span class="nf">setYLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">yLbl</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setYLabel</span><span class="p">(</span><span class="n">yLbl</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span></div>
@@ -224,11 +223,11 @@
 
     <span class="c1"># def logData(self, b):</span>
         <span class="c1"># self.frame.enableDataLogging(b)</span>
-
+    
 <div class="viewcode-block" id="Device.prompt"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.prompt">[docs]</a>    <span class="k">def</span> <span class="nf">prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">button</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;If a button is clicked, handle it.&quot;&quot;&quot;</span><span class="c1">#name action msg arg</span>
+        <span class="nb">print</span> <span class="s2">&quot;button clicked:&quot;</span><span class="p">,</span> <span class="n">button</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="nb">print</span> <span class="n">button</span>
             <span class="n">actual_button</span> <span class="o">=</span> <span class="n">button</span>
             <span class="c1"># If the button has a warning message attatched.</span>
             <span class="k">if</span> <span class="n">actual_button</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -359,7 +358,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">isDevice</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="c1"># Query calls itself again, this keeps the thread alive.</span>
         <span class="c1">#if self.keepGoing:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">updateContainer</span><span class="p">()</span>
+     
         
         <span class="k">return</span></div></div>
 </pre></div>

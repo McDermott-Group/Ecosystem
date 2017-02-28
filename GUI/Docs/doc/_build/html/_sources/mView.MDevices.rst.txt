@@ -10,6 +10,7 @@ Submodules
    mView.MDevices.MVirtualDevice
    mView.MDevices.MWeather
    mView.MDevices.Mhdf5Device
+   mView.MDevices.RS232Device
 
 Module contents
 ---------------

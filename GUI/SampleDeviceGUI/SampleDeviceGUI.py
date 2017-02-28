@@ -16,7 +16,7 @@
 
 """
 version = 1.1.1
-description = Monitors Leiden Devices
+description = Demonstration
 """
 
 import sys

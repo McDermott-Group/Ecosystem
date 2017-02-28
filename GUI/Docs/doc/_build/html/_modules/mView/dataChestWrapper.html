@@ -233,7 +233,9 @@
             <span class="c1"># For each device, assume it is not connected and we should</span>
             <span class="c1"># not log data until the GUI actually gets readings.</span>
             <span class="c1"># Loop through all parameters in the device.</span>
+            <span class="nb">print</span> <span class="s2">&quot;Setting up datalogging for device&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span>
             <span class="n">nicknames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">()</span>
+            <span class="nb">print</span> <span class="s2">&quot;Nicknames:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nicknames</span><span class="p">)):</span>
                 <span class="c1"># If the name of the parameter has not been defined as</span>
                 <span class="c1"># None in the constructor, then we want to log it.</span>
