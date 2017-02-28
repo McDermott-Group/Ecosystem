@@ -189,7 +189,9 @@ class dataChestWrapper:
             # For each device, assume it is not connected and we should
             # not log data until the GUI actually gets readings.
             # Loop through all parameters in the device.
+            print "Setting up datalogging for device", self.device.getFrame().getTitle()
             nicknames = self.device.getFrame().getNicknames()
+            print "Nicknames:", self.device.getFrame().getNicknames()
             for y in range(len(nicknames)):
                 # If the name of the parameter has not been defined as
                 # None in the constructor, then we want to log it.

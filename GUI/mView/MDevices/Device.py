@@ -314,6 +314,6 @@ class Device(MDevice):
                 self.isDevice = False
         # Query calls itself again, this keeps the thread alive.
         #if self.keepGoing:
-        self.updateContainer()
+     
         
         return

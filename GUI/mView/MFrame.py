@@ -94,11 +94,13 @@ class MFrame:
         return self.serverTitle
 
     def getNicknames(self):
+        #print "----------NICKNAMES WAS Got", self.nicknames
         return self.nicknames
 
     def setNicknames(self, nicknames):
+        
         self.nicknames = nicknames
-
+        #print "---------- set nicknames NICKNAMES WAS SET", self.nicknames
     def setReadings(self, readings):
         self.readings = readings
 
@@ -248,3 +250,12 @@ class MFrame:
         
     def getContainer(self):
         return self.container
+        
+    def addParameter(self, params):
+        '''Adds to list of parameters displayed on the gui.'''
+      
+        self.nicknames.append(params[0])
+        self.precisions.append(params[1])
+        self.units.append(params[2])
+        
+        #print "---------- add parameter NICKNAMES WAS SET", self.nicknames

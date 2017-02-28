@@ -25,6 +25,7 @@ from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QThread
 import threading
 from dataChestWrapper import dataChestWrapper
 class MDevice(QThread):
+
     updateSignal = pyqtSignal()
     '''
   MView uses the MDevice class to give all sources of data a common 
@@ -39,7 +40,7 @@ class MDevice(QThread):
   to all devices that use the same interface.
   '''
     
-    def __init__(self, name):
+    def __init__(self, name, *args):
         super(MDevice, self).__init__()
 
         self.frame = MFrame()
@@ -54,7 +55,8 @@ class MDevice(QThread):
         # RefreshRate for the device.
         self.refreshRate = 1
         self.container = None
-        self.nicknames = []
+
+        self.keepGoing = True
         self.settingResultIndices = []
         self.noLogging = False
     def log(self, log):
@@ -68,11 +70,10 @@ class MDevice(QThread):
     def updateContainer(self):
         if self.container != None:
            self.updateSignal.emit()
-
-    def addParameter(self, *args):
-        pass
     def addButton(self, *args):
         pass
+    def setTitle(self, title):
+        self.frame.setTitle(title)
     def query(self, *args):
         pass    
     def setYLabel(self, *args):
@@ -81,6 +82,11 @@ class MDevice(QThread):
         pass
     def setPlotRefreshRate(self, *args):
         pass
+    def addButtonToGui(self, button):
+        self.frame.appendButton(button)
+    def addReadout(self, name, units):
+        self.nicknames.append(name)
+        self.units.append(units)
     def addPlot(self, length = None, *args):
 
         self.frame.addPlot(length)
@@ -93,7 +99,9 @@ class MDevice(QThread):
     def stop(self):
         print "stopping device thread..."
         self.keepGoing = False
-        print "device thread stopped."
+        #print "device thread stopped."
+        
+        self.close()
     def begin(self):
       
         # self.frame.setNicknames(self.nicknames)
@@ -102,7 +110,8 @@ class MDevice(QThread):
         # self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self)
         # self.datachest = self.frame.DataLoggingInfo()['chest']
         
-        self.frame.setNicknames(self.nicknames)
+        #self.frame.setNicknames(self.nicknames)
+    
         self.frame.setReadingIndices(self.settingResultIndices)
         if not self.noLogging:
             self.frame.DataLoggingInfo()['name'] = self.name
@@ -129,13 +138,21 @@ class MDevice(QThread):
        MDevice to configure pieces of MView only available
        once the program has fully loaded.'''
        pass
+    def onAddParameter(self):
+        pass
+    def setReadings(self, readings):
+        self.frame.setReadings(readings)
     def callQuery(self):
         '''Automatically called periodically, 
         determined by MDevice.Mframe.getRefreshRate(). 
         There is also a MDevice.Mframe.setRefreshRate()
         function with which the refresh rate can be configured.
         '''
+        if not self.keepGoing:
+            return
         self.query()
+        self.datachest.save()
+        self.updateContainer()
         threading.Timer(self.frame.getRefreshRate(),
                     self.callQuery).start()
     def prompt(self, button):
@@ -148,6 +165,15 @@ class MDevice(QThread):
     what to do based on the button pushed. 
    '''
         pass
+    def close(self):
+        return
+    def addParameter(self, *args, **kwargs):
+        params = self.onAddParameter(*args)
+        #print "params to be added:", params
+        log = kwargs.get("log", True)
+        self.frame.DataLoggingInfo()['channels'][args[0]] = log
+        
+        self.frame.addParameter(params)
     def logData(self, b, channels = None):
     
         self.frame.DataLoggingInfo['channels'] = channels

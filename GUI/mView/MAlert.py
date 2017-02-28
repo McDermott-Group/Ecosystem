@@ -64,8 +64,12 @@ class MAlert:
         self.keepGoing = True
     def monitorReadings(self):
         # The dictionary keys are in the format 'devicename:parametername' : '
+       # print "checking readigns"
         for i in range(len(self.devices)):
+           # print "checking device", i
+           # print "nicknames:", self.devices[i].getFrame().getNicknames()
             for y, param in enumerate(self.devices[i].getFrame().getNicknames()):
+                #print "checking param", param
                 key = self.devices[i].getFrame().getTitle()+":"+param
                 enabled, min, max, people = web.limitDict[key]
                 min = self.toFloat(min)

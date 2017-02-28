@@ -189,7 +189,10 @@ class mGraph(QtGui.QWidget):
             
             axes.append(self.p.getAxis('left'))
             #print "grapher y axis units:", units[0]
-            axes[-1].setLabel(text = str(yLabel+"("+units[0]+")"))
+            if units[0] != None:
+                axes[-1].setLabel(text = str(yLabel+"("+units[0]+")"))
+            else:
+                axes[-1].setLabel(text = str(yLabel))
             # units.append(units[0])
             # self.p.showAxis('right')
             
