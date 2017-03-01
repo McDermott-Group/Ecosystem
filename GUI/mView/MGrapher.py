@@ -102,8 +102,9 @@ class mGraph(QtGui.QWidget):
         self.lineSelect = MCheckableComboBox()
         self.lineSelect.setSizeAdjustPolicy(0)
         
-        self.autoscaleCheckBox = QtGui.QCheckBox("Autoscale", self)
+        self.autoscaleCheckBox = QtGui.QCheckBox("Auto Ranging", self)
         self.autoscaleCheckBox.setChecked(True)
+        self.autoscaleCheckBox.clicked.connect(self.plot)
         self.setY100 = QtGui.QPushButton("100% Y Axis", self)
         self.setY100.clicked.connect(self.yAxTo100)
         self.lockYAx = QtGui.QCheckBox("Lock Y Axis", self)
@@ -229,7 +230,7 @@ class mGraph(QtGui.QWidget):
             for pa in self.viewboxes:
                 pa.setGeometry(self.p.vb.sceneBoundingRect())
                 pa.linkedViewChanged(self.p.vb, pa.XAxis)
-            maxtime = kwargs.get('time', None)
+            maxtime = kwargs.get('time','last_valid')
             autoRange = kwargs.get('autoRange', False)
             
             # If time was specified, then autorange
@@ -272,15 +273,16 @@ class mGraph(QtGui.QWidget):
             self.currMax = currMax
             if self.autoscaleCheckBox.isChecked():
                 #self.p.setXRange(times[0],times[-1], padding=0)
-                for pa in self.viewboxes:
-                    pa.autoRange(items = self.curves)
-                    pa.enableAutoRange(True)
+                # for pa in self.viewboxes:
+                    # pa.autoRange(items = self.curves)
+                    # pa.enableAutoRange(True)
                 self.autoscaleCheckBox.setChecked(True)
                 self.processRangeChangeSig = False
-                # try:
-                    # self.p.setRange(xRange=[times[0],times[-1]], yRange = [currMin, currMax])
-                # except:
-                    # pass
+                try:
+                    self.p.setRange(xRange=[times[0],times[-1]], yRange = [currMin, currMax])
+                except:
+                    pass
+                self.processRangeChangeSig = True
                     #traceback.print_exc()
 
 
