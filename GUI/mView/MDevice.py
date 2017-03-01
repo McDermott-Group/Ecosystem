@@ -55,12 +55,21 @@ class MDevice(QThread):
         # RefreshRate for the device.
         self.refreshRate = 1
         self.container = None
-
+        self.datachest = None
         self.keepGoing = True
         self.settingResultIndices = []
-        self.noLogging = False
+
     def log(self, log):
-        self.noLogging = not log
+        """ Tell the device whether to log data or not
+        
+        :param log: Boolean
+        
+    """
+        self.frame.enableDataLogging(log)
+        
+    def isLogging(self):
+        return self.frame.isDataLogging()
+        
     def setContainer(self, container):
 
         self.container = container
@@ -113,7 +122,7 @@ class MDevice(QThread):
         #self.frame.setNicknames(self.nicknames)
     
         self.frame.setReadingIndices(self.settingResultIndices)
-        if not self.noLogging:
+        if self.isLogging():
             self.frame.DataLoggingInfo()['name'] = self.name
             self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self)
             self.datachest = self.frame.DataLoggingInfo()['chest']
@@ -151,7 +160,8 @@ class MDevice(QThread):
         if not self.keepGoing:
             return
         self.query()
-        self.datachest.save()
+        if self.datachest is not None:
+            self.datachest.save()
         self.updateContainer()
         threading.Timer(self.frame.getRefreshRate(),
                     self.callQuery).start()
@@ -170,13 +180,14 @@ class MDevice(QThread):
     def addParameter(self, *args, **kwargs):
         params = self.onAddParameter(*args)
         #print "params to be added:", params
-        log = kwargs.get("log", True)
+        # The kwarg 'log' is can override the default
+        log = kwargs.get("log", self.isLogging)
         self.frame.DataLoggingInfo()['channels'][args[0]] = log
         
         self.frame.addParameter(params)
     def logData(self, b, channels = None):
-    
-        self.frame.DataLoggingInfo['channels'] = channels
+        if channels!= None:
+            self.frame.DataLoggingInfo['channels'] = channels
         self.frame.enableDataLogging(b)
         
     def __str__(self):

@@ -173,6 +173,7 @@ class MDeviceContainerWidget(QtGui.QFrame):
         frame.getNode().refreshData()
         #print "updating data 2",self.device.getFrame().getTitle()
         if self.device.getFrame().isPlot():
+            print "device container: device:", self.device
             self.device.getFrame().getPlot().plot(time = 'last_valid')
         if not frame.isError():
             readings = frame.getReadings()

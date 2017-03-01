@@ -119,7 +119,7 @@ class Device(MDevice):
         self.selectedDevice = arg
     
     def onBegin(self):
-      
+        print "onbegin here"
         self.frame.setNicknames(self.nicknames)
         self.frame.setReadingIndices(self.settingResultIndices)
         self.frame.DataLoggingInfo()['name'] = self.name
@@ -294,8 +294,7 @@ class Device(MDevice):
                 #print "setting units"
                 self.frame.setUnits(units)
                 self.frame.setPrecisions(precisions)
-                # Save the data.
-                self.datachest.save()
+
                 # If there was an error, retract it.
                 self.frame.retractError()
             except IndexError as e:
