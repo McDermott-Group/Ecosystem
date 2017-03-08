@@ -121,7 +121,7 @@ var stateReducer = function stateReducer() {
         case UPDATE_TEMPS:
             return Object.assign({}, state, { temps: {
                     timeStamps: [].concat(_toConsumableArray(state.temps.timeStamps), _toConsumableArray(action.newState.timeStamps.map(function (n) {
-                        return new Date(n);
+                        return new Date(1000 * n);
                     }))),
                     t60K: [].concat(_toConsumableArray(state.temps.t60K), _toConsumableArray(action.newState.t60K)),
                     t03K: [].concat(_toConsumableArray(state.temps.t03K), _toConsumableArray(action.newState.t03K)),

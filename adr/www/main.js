@@ -94,7 +94,7 @@ const stateReducer = (state={
             return Object.assign({},state,action.newState);
         case UPDATE_TEMPS:
             return Object.assign( {}, state, {temps: {
-                timeStamps:[...state.temps.timeStamps, ...action.newState.timeStamps.map((n)=>new Date(n))],
+                timeStamps:[...state.temps.timeStamps, ...action.newState.timeStamps.map((n)=>new Date(1000*n))],
                 t60K:[...state.temps.t60K, ...action.newState.t60K],
                 t03K:[...state.temps.t03K, ...action.newState.t03K],
                 tGGG:[...state.temps.tGGG, ...action.newState.tGGG],
