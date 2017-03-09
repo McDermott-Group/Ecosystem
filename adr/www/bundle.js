@@ -121,7 +121,7 @@ var stateReducer = function stateReducer() {
         case UPDATE_TEMPS:
             return Object.assign({}, state, { temps: {
                     timeStamps: [].concat(_toConsumableArray(state.temps.timeStamps), _toConsumableArray(action.newState.timeStamps.map(function (n) {
-                        return new Date(n);
+                        return new Date(1000 * n);
                     }))),
                     t60K: [].concat(_toConsumableArray(state.temps.t60K), _toConsumableArray(action.newState.t60K)),
                     t03K: [].concat(_toConsumableArray(state.temps.t03K), _toConsumableArray(action.newState.t03K)),
@@ -453,7 +453,7 @@ var RegulateButton = connect(mapStateToRegulateProps)(function (_ref7) {
         var buttonStyle = { width: "calc(70% - 10px)", borderTopRightRadius: '0px', borderBottomRightRadius: '0px' };
         var text = 'Regulate';
         var buttonClick = function buttonClick(e) {
-            var tempInput = document.getElementById("regTempField");
+            var tempInput = document.getElementById("regTempField").value;
             ws.send(JSON.stringify({ command: 'Regulate', temp: tempInput }));
         };
     }
@@ -472,8 +472,7 @@ var RegulateButton = connect(mapStateToRegulateProps)(function (_ref7) {
         React.createElement('input', { type: 'text',
             id: 'regTempField',
             style: { width: "calc(30% - 40px)", height: 50, fontSize: 30, textAlign: "center", verticalAlign: "middle", borderTopRightRadius: '15px', borderBottomRightRadius: '15px' },
-            placeholder: 'T',
-            value: 0 }),
+            placeholder: 'T' }),
         'K'
     );
 });

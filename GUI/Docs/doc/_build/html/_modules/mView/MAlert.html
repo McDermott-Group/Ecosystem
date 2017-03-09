@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mView.MAlert &#8212; GUI  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mView.MAlert</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016 Noah Meltzer</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 2 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2016, McDermott Group&quot;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s2">&quot;GPL&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;2.0.0&quot;</span>
+<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__status__</span> <span class="o">=</span> <span class="s2">&quot;Beta&quot;</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">version = 2.0.0</span>
+<span class="sd">description = Handles all data error checking</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">smtplib</span>
+<span class="kn">import</span> <span class="nn">MMail</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">MWeb</span> <span class="k">import</span> <span class="n">web</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">dont_write_bytecode</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="MAlert"><a class="viewcode-back" href="../../mView.MAlert.html#mView.MAlert.MAlert">[docs]</a><span class="k">class</span> <span class="nc">MAlert</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Configure all public variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tele</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">telecomm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">devices</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">devices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t1</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Have the specified people been notified about the specific device?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mailSent</span> <span class="o">=</span><span class="p">{}</span>
+        <span class="c1"># Keep running, this is false when settings are changed and a </span>
+        <span class="c1"># new NAlert instance is created. Setting this to false terminates</span>
+        <span class="c1"># the thread.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keepGoing</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1"># Keep track of which mail was sent</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">())):</span>
+                <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">()[</span><span class="n">y</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+                   <span class="c1"># print self.mailSent</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mailSent</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span><span class="o">+</span><span class="s2">&quot;:&quot;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">()[</span><span class="n">y</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="c1">#print(len(self.mailSent))</span>
+<div class="viewcode-block" id="MAlert.begin"><a class="viewcode-back" href="../../mView.MAlert.html#mView.MAlert.MAlert.begin">[docs]</a>    <span class="k">def</span> <span class="nf">begin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># This runs on its own thread</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deviceThread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">monitorReadings</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">[])</span>
+        <span class="c1"># If the main thread stops, stop the child thread</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deviceThread</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1"># Start the thread</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deviceThread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keepGoing</span> <span class="o">=</span> <span class="kc">True</span></div>
+<div class="viewcode-block" id="MAlert.monitorReadings"><a class="viewcode-back" href="../../mView.MAlert.html#mView.MAlert.MAlert.monitorReadings">[docs]</a>    <span class="k">def</span> <span class="nf">monitorReadings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># The dictionary keys are in the format &#39;devicename:parametername&#39; : &#39;</span>
+       <span class="c1"># print &quot;checking readigns&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">)):</span>
+           <span class="c1"># print &quot;checking device&quot;, i</span>
+           <span class="c1"># print &quot;nicknames:&quot;, self.devices[i].getFrame().getNicknames()</span>
+            <span class="k">for</span> <span class="n">y</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">()):</span>
+                <span class="c1">#print &quot;checking param&quot;, param</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span><span class="o">+</span><span class="s2">&quot;:&quot;</span><span class="o">+</span><span class="n">param</span>
+                <span class="n">enabled</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">,</span> <span class="n">people</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">limitDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="nb">min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">toFloat</span><span class="p">(</span><span class="nb">min</span><span class="p">)</span>
+                <span class="nb">max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">toFloat</span><span class="p">(</span><span class="nb">max</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getReadings</span><span class="p">()</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">reading</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getReadings</span><span class="p">()[</span><span class="n">y</span><span class="p">]</span>
+                    <span class="c1">#print &quot;enabled: &quot;, enabled</span>
+                    <span class="k">if</span><span class="p">(</span><span class="n">enabled</span><span class="p">):</span>
+                        <span class="c1">#print key,self.dict[key]</span>
+                        <span class="k">if</span><span class="p">(</span><span class="nb">min</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">min</span><span class="o">&gt;</span><span class="n">reading</span><span class="p">):</span>
+                            <span class="c1">#print &quot;MALERT reading below min &quot;, min</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">setOutOfRange</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">sendMail</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">y</span><span class="p">,</span> <span class="n">reading</span><span class="p">,</span> <span class="n">people</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">)</span>
+                            <span class="c1">#print &quot; min sent to &quot;, people</span>
+                        <span class="k">elif</span><span class="p">(</span><span class="nb">max</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">max</span><span class="o">&lt;</span><span class="n">reading</span><span class="p">):</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">setOutOfRange</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">sendMail</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">y</span><span class="p">,</span> <span class="n">reading</span><span class="p">,</span> <span class="n">people</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">)</span>      
+                            <span class="c1">#print &quot; max sent to &quot;, people</span>
+
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">setInRange</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>    
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">setInRange</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keepGoing</span><span class="p">):</span>
+            <span class="n">threading</span><span class="o">.</span><span class="n">Timer</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;guiRefreshRage&#39;</span><span class="p">,</span><span class="n">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">monitorReadings</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+<div class="viewcode-block" id="MAlert.toFloat"><a class="viewcode-back" href="../../mView.MAlert.html#mView.MAlert.MAlert.toFloat">[docs]</a>    <span class="k">def</span> <span class="nf">toFloat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+            
+<div class="viewcode-block" id="MAlert.stop"><a class="viewcode-back" href="../../mView.MAlert.html#mView.MAlert.MAlert.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keepGoing</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="MAlert.sendMail"><a class="viewcode-back" href="../../mView.MAlert.html#mView.MAlert.MAlert.sendMail">[docs]</a>    <span class="k">def</span> <span class="nf">sendMail</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">reading</span><span class="p">,</span> <span class="n">people</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Send mail if the given amount of time has elapsed.&#39;&#39;&#39;</span>
+        <span class="n">HOURS_BETWEEN_EMAILS</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="n">elapsedHrs</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">t1</span><span class="p">)</span><span class="o">/</span><span class="mi">3600</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span><span class="o">+</span><span class="s2">&quot;:&quot;</span><span class="o">+</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">()[</span><span class="n">y</span><span class="p">]</span> 
+        <span class="k">if</span> <span class="n">people</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">mailSent</span><span class="p">[</span><span class="n">key</span><span class="p">]):</span>
+            
+                <span class="bp">self</span><span class="o">.</span><span class="n">mailSent</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%x</span><span class="s1"> at </span><span class="si">%X</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">time</span><span class="o">.</span><span class="n">localtime</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span>
+                    <span class="o">+</span><span class="s2">&quot; | &quot;</span><span class="o">+</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span><span class="o">+</span><span class="s2">&quot;-&gt;&quot;</span>
+                    <span class="o">+</span> <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">()[</span><span class="n">y</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span><span class="o">+</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getReadings</span><span class="p">()[</span><span class="n">y</span><span class="p">])</span><span class="o">+</span>
+                    <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getUnits</span><span class="p">()[</span><span class="n">y</span><span class="p">]</span> <span class="o">+</span>
+                    <span class="s2">&quot; | Range: &quot;</span>
+                    <span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">min</span><span class="p">)</span> 
+                    <span class="o">+</span> <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getUnits</span><span class="p">()[</span><span class="n">y</span><span class="p">]</span><span class="o">+</span>
+                    <span class="s2">&quot; - &quot;</span> <span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">max</span><span class="p">)</span><span class="o">+</span>
+                    <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getUnits</span><span class="p">()[</span><span class="n">y</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="p">))</span>
+                
+                <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">HOURS_BETWEEN_EMAILS</span><span class="o">&lt;</span><span class="n">elapsedHrs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">person</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">person</span> <span class="ow">in</span> <span class="n">people</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)][</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span> <span class="s2">&quot;sending mail&quot;</span>
+                    <span class="c1">#print self.message</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mailSent</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">mailSent</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">success</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tele</span><span class="o">.</span><span class="n">send_sms</span><span class="p">(</span>
+                        <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">()[</span><span class="n">y</span><span class="p">],</span> 
+                                            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">),</span> 
+                                            <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">person</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">person</span> <span class="ow">in</span> <span class="n">people</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)],</span>
+                                            <span class="s2">&quot;labrad_physics&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span>  <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">person</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">person</span> <span class="ow">in</span> <span class="n">people</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">success</span><span class="p">):</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t send email to group: &quot;</span><span class="o">+</span>
+                           <span class="nb">str</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">person</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">person</span> <span class="ow">in</span> <span class="n">people</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)])</span><span class="o">+</span><span class="s2">&quot; | &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">success</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot; &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">address</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mailSent</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">mailSent</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span></div></div>
+    
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

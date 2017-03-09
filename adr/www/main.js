@@ -94,7 +94,7 @@ const stateReducer = (state={
             return Object.assign({},state,action.newState);
         case UPDATE_TEMPS:
             return Object.assign( {}, state, {temps: {
-                timeStamps:[...state.temps.timeStamps, ...action.newState.timeStamps.map((n)=>new Date(n))],
+                timeStamps:[...state.temps.timeStamps, ...action.newState.timeStamps.map((n)=>new Date(1000*n))],
                 t60K:[...state.temps.t60K, ...action.newState.t60K],
                 t03K:[...state.temps.t03K, ...action.newState.t03K],
                 tGGG:[...state.temps.tGGG, ...action.newState.tGGG],
@@ -334,7 +334,7 @@ const RegulateButton = connect(mapStateToRegulateProps)( ({isMaggingUp,isRegulat
         var buttonStyle = {width:"calc(70% - 10px)", borderTopRightRadius:'0px', borderBottomRightRadius:'0px'};
         var text = 'Regulate';
         var buttonClick = (e) => {
-            var tempInput = document.getElementById("regTempField");
+            var tempInput = document.getElementById("regTempField").value;
             ws.send(JSON.stringify({command:'Regulate',temp:tempInput}))
         };
     }
@@ -344,8 +344,7 @@ const RegulateButton = connect(mapStateToRegulateProps)( ({isMaggingUp,isRegulat
             <input type="text"
                     id="regTempField"
                     style={{width:"calc(30% - 40px)", height:50, fontSize:30, textAlign:"center", verticalAlign:"middle", borderTopRightRadius:'15px', borderBottomRightRadius:'15px'}}
-                    placeholder="T"
-                    value={0} />
+                    placeholder="T" />
             K
         </div>
     )

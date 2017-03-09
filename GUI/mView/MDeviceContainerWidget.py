@@ -1,8 +1,10 @@
 from PyQt4 import QtGui, QtCore
 from MWeb import web
 import MGrapher
+from MReadout import MReadout
 import math
 from functools import partial
+import traceback
 class MDeviceContainerWidget(QtGui.QFrame):
 
     def __init__(self, device, parent = None):
@@ -84,18 +86,20 @@ class MDeviceContainerWidget(QtGui.QFrame):
                 units.setFont(self.fontBig)
                 self.unitLabels.append(units)
                 
-                lcd = QtGui.QLCDNumber(self)
+                #lcd = QtGui.QLCDNumber(self)
+                lcd = MReadout(self)
                 self.lcds.append(lcd)
-                lcd.setNumDigits(11)
-                lcd.setSegmentStyle(QtGui.QLCDNumber.Flat)
-                lcd.display("-")
-                lcd.setFrameShape(QtGui.QFrame.Panel)
-                lcd.setFrameShadow(QtGui.QFrame.Plain)
-                lcd.setLineWidth(web.ratio)
-                lcd.setMidLineWidth(100)
-                lcd.setStyleSheet("color:rgb(189, 195, 199);\n")
-                lcd.setFixedHeight(web.scrnHeight / 30)
-                lcd.setMinimumWidth(web.scrnWidth / 7)
+                lcd.getLCD().setNumDigits(11)
+                lcd.getLCD().setSegmentStyle(QtGui.QLCDNumber.Flat)
+                lcd.getLCD().display("-")
+                lcd.getLCD().setFrameShape(QtGui.QFrame.Panel)
+                lcd.getLCD().setFrameShadow(QtGui.QFrame.Plain)
+                lcd.getLCD().setLineWidth(web.ratio)
+                lcd.getLCD().setMidLineWidth(100)
+                lcd.getLCD().setStyleSheet("color:rgb(189, 195, 199);\n")
+                lcd.getLCD().setFixedHeight(web.scrnHeight / 30)
+                lcd.getLCD().setMinimumWidth(web.scrnWidth / 7)
+                lcd.setLabelSize(30)
                 lcdHBox = QtGui.QHBoxLayout()
                 lcdHBox.addStretch(0)
                 lcdHBox.addWidget(lcd)
@@ -169,6 +173,7 @@ class MDeviceContainerWidget(QtGui.QFrame):
         frame.getNode().refreshData()
         #print "updating data 2",self.device.getFrame().getTitle()
         if self.device.getFrame().isPlot():
+            print "device container: device:", self.device
             self.device.getFrame().getPlot().plot(time = 'last_valid')
         if not frame.isError():
             readings = frame.getReadings()
@@ -177,7 +182,9 @@ class MDeviceContainerWidget(QtGui.QFrame):
             if readings is not None:
                 outOfRange = frame.getOutOfRangeStatus()
                 nicknames = frame.getNicknames()
+                #print "outofrange:", outOfRange
                 for y in range(len(outOfRange)):
+                   
                     key = frame.getTitle()+":"+nicknames[y]
                     if outOfRange[key]:
                         color = "color:rgb(200, 100, 50);\n"
@@ -187,21 +194,27 @@ class MDeviceContainerWidget(QtGui.QFrame):
                     if len(self.unitLabels)>y:
                         self.unitLabels[y].setStyleSheet(color)
                     self.nicknameLabels[y].setStyleSheet(color)
+                   
                     self.nicknameLabels[y].setText(nicknames[y])
                 while len(readings) > len(self.lcds):
                         self.addParameter()
-                        
+                #print "readings:", readings
+
                 for y in range(len(readings)):
-                   
                     try:
-                        format = "%." + str(int(precisions[y])) + "f"
-                        #print "readings:",readings
-                        if not math.isnan(readings[y]):
-                            self.lcds[y].display(format %readings[y])
+                        #print "precisions[y]:", precisions[y]
+                        if precisions[y] is not None:
+                            format = "%." + str(int(precisions[y])) + "f"
                         else:
-                            self.lcds[y].display("---")
+                            format = "%f"
+                        #print "readings:",readings
+                        if type(readings[y]) == float:
+                            if not math.isnan(readings[y]):
+                                self.lcds[y].display(format %readings[y])
+                        else:
+                            self.lcds[y].display(readings[y])
                     except TypeError:
-                        pass
+                        traceback.print_exc()
                     if len(self.unitLabels)>y:
                         unit = frame.getUnits()[y]
                         if unit != None:

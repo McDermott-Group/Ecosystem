@@ -1,0 +1,274 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mView.MDevice &#8212; GUI  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mView.MDevice</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016 Noah Meltzer</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 2 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2016, McDermott Group&quot;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s2">&quot;GPL&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.0.2&quot;</span>
+<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__status__</span> <span class="o">=</span> <span class="s2">&quot;Beta&quot;</span>
+
+<span class="kn">from</span> <span class="nn">MFrame</span> <span class="k">import</span> <span class="n">MFrame</span>
+<span class="kn">from</span> <span class="nn">PyQt4.QtCore</span> <span class="k">import</span> <span class="n">QObject</span><span class="p">,</span> <span class="n">pyqtSignal</span><span class="p">,</span> <span class="n">pyqtSlot</span><span class="p">,</span> <span class="n">QThread</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">from</span> <span class="nn">dataChestWrapper</span> <span class="k">import</span> <span class="n">dataChestWrapper</span>
+<div class="viewcode-block" id="MDevice"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice">[docs]</a><span class="k">class</span> <span class="nc">MDevice</span><span class="p">(</span><span class="n">QThread</span><span class="p">):</span>
+
+    <span class="n">updateSignal</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">  MView uses the MDevice class to give all sources of data a common </span>
+<span class="sd">  interface with which to interact in the context of MView. These </span>
+<span class="sd">  sources of data can be anything including but not limited to LabRad </span>
+<span class="sd">  servers, RS232 devices, GPIB Devices, they can even represent the </span>
+<span class="sd">  contents of .hdf5 files. Devices in MView are created by instantiating</span>
+<span class="sd">  their device drivers. For example, if there are two RS232 devices, </span>
+<span class="sd">  we create two instances of the RS232 device driver. This means that </span>
+<span class="sd">  only one generic device driver needs to be created for one interface </span>
+<span class="sd">  (RS232, LabRad Servers, HDF5 files, etc.) and it can then be applied </span>
+<span class="sd">  to all devices that use the same interface.</span>
+<span class="sd">  &#39;&#39;&#39;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MDevice</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">MFrame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setTitle</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="c1"># Datachest wrapper.</span>
+       <span class="c1"># Dictionary holding datalogging settings</span>
+         <span class="c1"># Datalogging disabled by default</span>
+
+
+       <span class="c1"># Refresh rate of plot.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotRefreshRate</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="c1"># RefreshRate for the device.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refreshRate</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">container</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">keepGoing</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settingResultIndices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noLogging</span> <span class="o">=</span> <span class="kc">False</span>
+<div class="viewcode-block" id="MDevice.log"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.log">[docs]</a>    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noLogging</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">log</span></div>
+<div class="viewcode-block" id="MDevice.setContainer"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.setContainer">[docs]</a>    <span class="k">def</span> <span class="nf">setContainer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">container</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">container</span> <span class="o">=</span> <span class="n">container</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setContainer</span><span class="p">(</span><span class="n">container</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MDevice.getContainer"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.getContainer">[docs]</a>    <span class="k">def</span> <span class="nf">getContainer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span></div>
+<div class="viewcode-block" id="MDevice.updateContainer"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.updateContainer">[docs]</a>    <span class="k">def</span> <span class="nf">updateContainer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+           <span class="bp">self</span><span class="o">.</span><span class="n">updateSignal</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
+<div class="viewcode-block" id="MDevice.addButton"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.addButton">[docs]</a>    <span class="k">def</span> <span class="nf">addButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+<div class="viewcode-block" id="MDevice.setTitle"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.setTitle">[docs]</a>    <span class="k">def</span> <span class="nf">setTitle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setTitle</span><span class="p">(</span><span class="n">title</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MDevice.query"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">pass</span>    </div>
+<div class="viewcode-block" id="MDevice.setYLabel"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.setYLabel">[docs]</a>    <span class="k">def</span> <span class="nf">setYLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+<div class="viewcode-block" id="MDevice.setRefreshRate"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.setRefreshRate">[docs]</a>    <span class="k">def</span> <span class="nf">setRefreshRate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+<div class="viewcode-block" id="MDevice.setPlotRefreshRate"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.setPlotRefreshRate">[docs]</a>    <span class="k">def</span> <span class="nf">setPlotRefreshRate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+<div class="viewcode-block" id="MDevice.addButtonToGui"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.addButtonToGui">[docs]</a>    <span class="k">def</span> <span class="nf">addButtonToGui</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">button</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">appendButton</span><span class="p">(</span><span class="n">button</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MDevice.addReadout"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.addReadout">[docs]</a>    <span class="k">def</span> <span class="nf">addReadout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">units</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MDevice.addPlot"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.addPlot">[docs]</a>    <span class="k">def</span> <span class="nf">addPlot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">addPlot</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+        <span class="c1"># Datalogging must be enabled if we want to plot data.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">enableDataLogging</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">getPlot</span><span class="p">()</span></div>
+<div class="viewcode-block" id="MDevice.getFrame"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.getFrame">[docs]</a>    <span class="k">def</span> <span class="nf">getFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the device&#39;s frame.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span></div>
+<div class="viewcode-block" id="MDevice.stop"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span> <span class="s2">&quot;stopping device thread...&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keepGoing</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1">#print &quot;device thread stopped.&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+<div class="viewcode-block" id="MDevice.begin"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.begin">[docs]</a>    <span class="k">def</span> <span class="nf">begin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      
+        <span class="c1"># self.frame.setNicknames(self.nicknames)</span>
+        <span class="c1"># self.frame.setReadingIndices(self.settingResultIndices)</span>
+        <span class="c1"># self.frame.DataLoggingInfo()[&#39;name&#39;] = self.frame.getTitle()</span>
+        <span class="c1"># self.frame.DataLoggingInfo()[&#39;chest&#39;] = dataChestWrapper(self)</span>
+        <span class="c1"># self.datachest = self.frame.DataLoggingInfo()[&#39;chest&#39;]</span>
+        
+        <span class="c1">#self.frame.setNicknames(self.nicknames)</span>
+    
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setReadingIndices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settingResultIndices</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">noLogging</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;chest&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataChestWrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">datachest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;chest&#39;</span><span class="p">]</span>
+        <span class="c1"># Each device NEEDS to run on a different thread </span>
+        <span class="c1"># than the main thread (which ALWAYS runs the GUI).</span>
+        <span class="c1"># This thread is responsible for querying the devices.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deviceThread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">callQuery</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">[])</span>
+        <span class="c1"># If the main thread stops, stop the child thread.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deviceThread</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1"># Start the thread.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deviceThread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">onBegin</span><span class="p">()</span></div>
+<div class="viewcode-block" id="MDevice.onBegin"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.onBegin">[docs]</a>    <span class="k">def</span> <span class="nf">onBegin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Called at the end of MDevice.begin(). This is called before </span>
+<span class="sd">        MView starts. This allows us to configure settings that </span>
+<span class="sd">        MView might use while starting. This might include datalog </span>
+<span class="sd">        locations or device-specific information.&#39;&#39;&#39;</span>
+        <span class="k">pass</span></div>
+<div class="viewcode-block" id="MDevice.onLoad"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.onLoad">[docs]</a>    <span class="k">def</span> <span class="nf">onLoad</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+       <span class="sd">&#39;&#39;&#39;Called at the end of MGui.startGui(), when the main </span>
+<span class="sd">       MView GUI has finished loading. This allows the </span>
+<span class="sd">       MDevice to configure pieces of MView only available</span>
+<span class="sd">       once the program has fully loaded.&#39;&#39;&#39;</span>
+       <span class="k">pass</span></div>
+<div class="viewcode-block" id="MDevice.onAddParameter"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.onAddParameter">[docs]</a>    <span class="k">def</span> <span class="nf">onAddParameter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+<div class="viewcode-block" id="MDevice.setReadings"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.setReadings">[docs]</a>    <span class="k">def</span> <span class="nf">setReadings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">readings</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setReadings</span><span class="p">(</span><span class="n">readings</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MDevice.callQuery"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.callQuery">[docs]</a>    <span class="k">def</span> <span class="nf">callQuery</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Automatically called periodically, </span>
+<span class="sd">        determined by MDevice.Mframe.getRefreshRate(). </span>
+<span class="sd">        There is also a MDevice.Mframe.setRefreshRate()</span>
+<span class="sd">        function with which the refresh rate can be configured.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">keepGoing</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datachest</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateContainer</span><span class="p">()</span>
+        <span class="n">threading</span><span class="o">.</span><span class="n">Timer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">getRefreshRate</span><span class="p">(),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">callQuery</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+<div class="viewcode-block" id="MDevice.prompt"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.prompt">[docs]</a>    <span class="k">def</span> <span class="nf">prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">button</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Called when </span>
+<span class="sd">    a device&#39;s button is pushed. Button is an array which </span>
+<span class="sd">    is associated with the button. The array is constructed </span>
+<span class="sd">    in the device driver code, and the PyQT button is then appended</span>
+<span class="sd">    to the end by MView. The array associated with the button is passed </span>
+<span class="sd">    to prompt() in the device driver. The device driver then determines </span>
+<span class="sd">    what to do based on the button pushed. </span>
+<span class="sd">   &#39;&#39;&#39;</span>
+        <span class="k">pass</span></div>
+<div class="viewcode-block" id="MDevice.close"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span></div>
+<div class="viewcode-block" id="MDevice.addParameter"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.addParameter">[docs]</a>    <span class="k">def</span> <span class="nf">addParameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">onAddParameter</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="c1">#print &quot;params to be added:&quot;, params</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;channels&#39;</span><span class="p">][</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">log</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">params</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MDevice.logData"><a class="viewcode-back" href="../../mView.MDevice.html#mView.MDevice.MDevice.logData">[docs]</a>    <span class="k">def</span> <span class="nf">logData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">channels</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">enableDataLogging</span><span class="p">(</span><span class="n">b</span><span class="p">)</span></div>
+        
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;Unnamed Device&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span></div>
+
+   
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

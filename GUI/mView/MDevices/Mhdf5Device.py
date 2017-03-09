@@ -10,10 +10,13 @@ class Mhdf5Device(MDevice.MDevice):
          super(Mhdf5Device, self).__init__(*args)
          self.frame.setTitle(args[0])
          web.virtualDevices.append(self)
-         self.doNotLog(True)
+    def onBegin(self):
+        self.log(False)
+
          
     def onLoad(self):
         self.setupMenus()
+        
     def setupMenus(self):
             root = os.environ['DATA_CHEST_ROOT']
             container = self.getFrame().getContainer()

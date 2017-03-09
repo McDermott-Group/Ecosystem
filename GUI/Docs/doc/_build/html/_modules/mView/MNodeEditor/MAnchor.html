@@ -1,0 +1,354 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mView.MNodeEditor.MAnchor &#8212; GUI  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mView.MNodeEditor.MAnchor</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">PyQt4</span> <span class="k">import</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCore</span>
+<span class="kn">from</span> <span class="nn">MPipe</span> <span class="k">import</span> <span class="n">MPipe</span>
+<span class="kn">from</span> <span class="nn">MWeb</span> <span class="k">import</span> <span class="n">web</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">MReadout</span> <span class="k">import</span> <span class="n">MReadout</span>
+<div class="viewcode-block" id="MAnchor"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor">[docs]</a><span class="k">class</span> <span class="nc">MAnchor</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsItem</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span>  <span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Get the keyword arguments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;output&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suggestedDataType</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">node</span>
+        <span class="c1"># get the tree</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tree</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">tree</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeLayout</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">getNodeLayout</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">getNodeWidget</span><span class="p">()</span>
+        <span class="c1"># Initialize the base class</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MAnchor</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="c1"># Anchor is not connected to any pipe by default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIsSelectable</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIsFocusable</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setAcceptsHoverEvents</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># What number the anchor is in the node</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="c1"># The QGraphics scene</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span>  <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">scene</span>
+        <span class="c1"># Add the anchor to the scene</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="c1"># Configure the anchor based on its type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setParentItem</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">node</span>
+        <span class="c1"># Configure the brush</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeBrush</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QBrush</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="n">node</span><span class="o">.</span><span class="n">getColor</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">posY</span> <span class="o">=</span> <span class="mi">70</span><span class="o">+</span><span class="mi">30</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">directInput</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">okDirectInput</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">directInputLayout</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">directInputData</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;output&#39;</span><span class="p">:</span>
+            <span class="c1"># Bounding rectangle of the anchor</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">posX</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+          
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;input&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">posX</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
+
+
+        <span class="c1">#print &quot;self.posX&quot;, self.posX</span>
+        <span class="c1">#print &quot;width:&quot;, self.nodeFrame.width()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">anchorSize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">8</span><span class="o">*</span><span class="n">web</span><span class="o">.</span><span class="n">ratio</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rect</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRectF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">posX</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">posY</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">anchorSize</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">anchorSize</span><span class="p">)</span>
+        
+        <span class="c1">#print &quot;posX1&quot;, self.posX</span>
+
+       
+        <span class="c1"># The QPen</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">textPen</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPen</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">textPen</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">textPen</span><span class="o">.</span><span class="n">setWidth</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">textPen</span><span class="o">.</span><span class="n">setColor</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="mi">189</span><span class="p">,</span> <span class="mi">195</span><span class="p">,</span> <span class="mi">199</span><span class="p">))</span>
+        <span class="c1"># Name displayed next to the anchor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">param</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">font</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFont</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="o">.</span><span class="n">setPointSize</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFontMetrics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="p">)</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">(</span><span class="n">label</span><span class="p">)</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+        <span class="c1">#self.update(self.rect)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labelWidget</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labelWidget</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">&quot;color:rgb(189, 195, 199)&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labelWidget</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lcd</span> <span class="o">=</span> <span class="n">MReadout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">lcd</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">&quot;color:rgb(189, 195, 199);</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lcd</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">suggestedDataType</span> <span class="o">==</span> <span class="s1">&#39;float&#39;</span><span class="p">:</span>
+           
+            <span class="bp">self</span><span class="o">.</span><span class="n">directInput</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QLineEdit</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directInputData</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">directInput</span><span class="o">.</span><span class="n">setValidator</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QDoubleValidator</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">directInput</span><span class="o">.</span><span class="n">textEdited</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directInput</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">,</span> <span class="s2">&quot;background:rgb(0,255,0);&quot;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">directInputLayout</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">okDirectInput</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Set&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">okDirectInput</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directInputHandler</span><span class="p">,</span> <span class="s1">&#39;float&#39;</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">directInput</span><span class="o">.</span><span class="n">text</span><span class="p">))</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">okDirectInput</span><span class="o">.</span><span class="n">fontMetrics</span><span class="p">()</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">(</span><span class="s2">&quot;Set&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+            <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">okDirectInput</span><span class="o">.</span><span class="n">fontMetrics</span><span class="p">()</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">(</span><span class="s2">&quot;Set&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">okDirectInput</span><span class="o">.</span><span class="n">setMaximumWidth</span><span class="p">(</span><span class="n">width</span><span class="o">+</span><span class="mi">10</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">okDirectInput</span><span class="o">.</span><span class="n">setMaximumHeight</span><span class="p">(</span><span class="n">height</span><span class="o">+</span><span class="mi">5</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lcd</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">directInput</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">directInputLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directInput</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">directInputLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">okDirectInput</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nodeLayout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directInputLayout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+<div class="viewcode-block" id="MAnchor.validate"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;float&#39;</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+<div class="viewcode-block" id="MAnchor.directInputHandler"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.directInputHandler">[docs]</a>    <span class="k">def</span> <span class="nf">directInputHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span>  <span class="n">callback</span><span class="p">):</span>
+        <span class="nb">print</span> <span class="s2">&quot;type:&quot;</span><span class="p">,</span> <span class="nb">type</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">callback</span><span class="p">())</span>
+        <span class="k">except</span><span class="p">:</span>
+             <span class="bp">self</span><span class="o">.</span><span class="n">directInput</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span> <span class="s2">&quot;background:rgb(255,0,0);&quot;</span><span class="p">)</span>
+             <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+             <span class="k">return</span>
+        <span class="nb">print</span> <span class="s2">&quot;value:&quot;</span><span class="p">,</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">directInput</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span> <span class="s2">&quot;background:rgb(255,255,255);&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;output&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span><span class="o">.</span><span class="n">setData</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">directInputData</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">directInputData</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parentNode</span><span class="p">()</span><span class="o">.</span><span class="n">refreshData</span><span class="p">()</span></div>
+<div class="viewcode-block" id="MAnchor.getLcd"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.getLcd">[docs]</a>    <span class="k">def</span> <span class="nf">getLcd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lcd</span></div>
+<div class="viewcode-block" id="MAnchor.parentNode"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.parentNode">[docs]</a>    <span class="k">def</span> <span class="nf">parentNode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span></div>
+<div class="viewcode-block" id="MAnchor.setParentNode"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.setParentNode">[docs]</a>    <span class="k">def</span> <span class="nf">setParentNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setParentItem</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span>  <span class="o">=</span> <span class="n">node</span></div>
+<div class="viewcode-block" id="MAnchor.getLabel"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.getLabel">[docs]</a>    <span class="k">def</span> <span class="nf">getLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MAnchor.setLabel"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.setLabel">[docs]</a>    <span class="k">def</span> <span class="nf">setLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">text</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labelWidget</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="c1"># Repaint the scene</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+<div class="viewcode-block" id="MAnchor.getType"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.getType">[docs]</a>    <span class="k">def</span> <span class="nf">getType</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Get the anchor type&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span></div>
+<div class="viewcode-block" id="MAnchor.getPipe"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.getPipe">[docs]</a>    <span class="k">def</span> <span class="nf">getPipe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Get the pipe connected to the anchor&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span></div>
+<div class="viewcode-block" id="MAnchor.pipeConnected"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.pipeConnected">[docs]</a>    <span class="k">def</span> <span class="nf">pipeConnected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe</span><span class="p">):</span>
+        <span class="nb">print</span> <span class="s2">&quot;anchor-&gt;pipeConnected:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setPipe</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">getType</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;output&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setData</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pipe</span><span class="o">.</span><span class="n">getData</span><span class="p">()</span></div>
+<div class="viewcode-block" id="MAnchor.update"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#self.parentNode().refreshData()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parentNode</span><span class="p">()</span><span class="o">.</span><span class="n">isDevice</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">parentNode</span><span class="p">()</span><span class="o">.</span><span class="n">getDevice</span><span class="p">()</span><span class="o">.</span><span class="n">updateContainer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">getLcd</span><span class="p">()</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MAnchor.getData"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.getData">[docs]</a>    <span class="k">def</span> <span class="nf">getData</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPipe</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">pipe</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPipe</span><span class="p">()</span><span class="o">.</span><span class="n">getData</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> </div>
+            
+            
+<div class="viewcode-block" id="MAnchor.setData"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.setData">[docs]</a>    <span class="k">def</span> <span class="nf">setData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="n">pipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPipe</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">pipe</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;output&#39;</span><span class="p">:</span>
+            <span class="n">pipe</span><span class="o">.</span><span class="n">setData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">parentNode</span><span class="p">()</span><span class="o">.</span><span class="n">isDevice</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parentNode</span><span class="p">()</span><span class="o">.</span><span class="n">getDevice</span><span class="p">()</span><span class="o">.</span><span class="n">updateContainer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lcd</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MAnchor.setPipe"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.setPipe">[docs]</a>    <span class="k">def</span> <span class="nf">setPipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span> <span class="o">=</span> <span class="n">pipe</span></div>
+<div class="viewcode-block" id="MAnchor.delete"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span> <span class="s2">&quot;deleting anchor&quot;</span>
+        
+
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeLayout</span><span class="o">.</span><span class="n">removeWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lcd</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeLayout</span><span class="o">.</span><span class="n">removeWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labelWidget</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">labelWidget</span><span class="o">.</span><span class="n">deleteLater</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lcd</span><span class="o">.</span><span class="n">deleteLater</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">setParentItem</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">removeItem</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MAnchor.disconnect"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.disconnect">[docs]</a>    <span class="k">def</span> <span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Disconnect and delete the pipe&#39;&#39;&#39;</span>
+        <span class="c1">#self.parentNode().pipeDisconnected(self, self.pipe)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">deletePipe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MAnchor.setColor"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.setColor">[docs]</a>    <span class="k">def</span> <span class="nf">setColor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeBrush</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QBrush</span><span class="p">(</span><span class="n">color</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MAnchor.getGlobalLocation"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.getGlobalLocation">[docs]</a>    <span class="k">def</span> <span class="nf">getGlobalLocation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;output&#39;</span><span class="p">:</span>
+            <span class="n">loc</span> <span class="o">=</span>  <span class="n">QtCore</span><span class="o">.</span><span class="n">QPoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getLocalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">x</span><span class="p">()</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">scenePos</span><span class="p">()</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">getLocalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">y</span><span class="p">()</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">scenePos</span><span class="p">()</span><span class="o">.</span><span class="n">y</span><span class="p">())</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;input&#39;</span><span class="p">:</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QPoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getLocalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">x</span><span class="p">()</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">scenePos</span><span class="p">()</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">getLocalLocation</span><span class="p">()</span><span class="o">.</span><span class="n">y</span><span class="p">()</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">scenePos</span><span class="p">()</span><span class="o">.</span><span class="n">y</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">loc</span></div>
+<div class="viewcode-block" id="MAnchor.getLocalLocation"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.getLocalLocation">[docs]</a>    <span class="k">def</span> <span class="nf">getLocalLocation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QPoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">posX</span><span class="o">+</span><span class="mi">10</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">posY</span><span class="o">+</span><span class="mi">10</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MAnchor.connect"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe</span><span class="p">):</span>
+        <span class="nb">print</span> <span class="s2">&quot;connect function called&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span> <span class="o">=</span> <span class="n">pipe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MAnchor.isConnected"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.isConnected">[docs]</a>    <span class="k">def</span> <span class="nf">isConnected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPipe</span><span class="p">()</span> <span class="o">==</span> <span class="kc">None</span></div>
+        
+<div class="viewcode-block" id="MAnchor.paint"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.paint">[docs]</a>    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;output&#39;</span><span class="p">:</span>
+            <span class="c1"># Bounding rectangle of the anchor</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">posX</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodeFrame</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+            
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;input&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">posX</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
+        <span class="c1">#print &quot;pipe:&quot;, self.pipe</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nodeBrush</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QBrush</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nodeBrush</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QBrush</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">getColor</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">posY</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labelWidget</span><span class="o">.</span><span class="n">mapToGlobal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labelWidget</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span><span class="o">.</span><span class="n">topLeft</span><span class="p">())</span><span class="o">.</span><span class="n">y</span><span class="p">()</span>
+        
+        <span class="n">painter</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeBrush</span><span class="p">)</span>
+        <span class="n">painter</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">textPen</span><span class="p">)</span>
+        <span class="n">painter</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="p">)</span>
+        
+            
+            <span class="c1"># self.label = self.getPipe().getLabel()</span>
+        <span class="c1"># #self.label = self.getLocalLocation</span>
+        <span class="c1"># if self.label is None:</span>
+            <span class="c1"># self.label = &#39;New Pipe&#39;</span>
+        
+        <span class="c1">#painter.drawText(150-self.width, 105+40*self.index, self.label)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rect</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">posX</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">posY</span><span class="p">)</span>
+        
+        <span class="c1">#painter.drawRect(self.rect)</span>
+        <span class="c1">#print &quot;posX&quot;, self.posX</span>
+        
+        <span class="n">painter</span><span class="o">.</span><span class="n">drawEllipse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">posX</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">posY</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">anchorSize</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">anchorSize</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MAnchor.boundingRect"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rect</span></div>
+
+<div class="viewcode-block" id="MAnchor.mousePressEvent"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.mousePressEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mousePressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+       <span class="c1"># print &quot;Anchor clicked!&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isConnected</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">deletePipe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">directInput</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">directInput</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">okDirectInput</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lcd</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">directInput</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">directInput</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">okDirectInput</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lcd</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="c1">#print &quot;disconnecting &quot;, self.param</span>
+
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setSelected</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">mousePressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MAnchor.hoverEnterEvent"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.hoverEnterEvent">[docs]</a>    <span class="k">def</span> <span class="nf">hoverEnterEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">textPen</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">DotLine</span><span class="p">)</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">hoverEnterEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MAnchor.hoverLeaveEvent"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.hoverLeaveEvent">[docs]</a>    <span class="k">def</span> <span class="nf">hoverLeaveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">textPen</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">SolidLine</span><span class="p">)</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">hoverLeaveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

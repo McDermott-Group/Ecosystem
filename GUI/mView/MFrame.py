@@ -63,13 +63,13 @@ class MFrame:
         self.dataSet = None
         # Hold the plot.
         self.plot = None
-        # Datalogging disabled by default
-        self.logData = False
+        # # Datalogging disabled by default
+        # self.logData = False
         #Datachest wrapper class
         self.dataChestWrapper = None
         # Dictionary holding datalogging settings
         self.datalogsettingsDict = {
-                "enabled"   :    self.logData,
+                "logData"   :   False,
                 "location":     None,
                 "dataset"   :     self.dataSet,
                 "channels":     {},
@@ -94,11 +94,13 @@ class MFrame:
         return self.serverTitle
 
     def getNicknames(self):
+        #print "----------NICKNAMES WAS Got", self.nicknames
         return self.nicknames
 
     def setNicknames(self, nicknames):
+        
         self.nicknames = nicknames
-
+        #print "---------- set nicknames NICKNAMES WAS SET", self.nicknames
     def setReadings(self, readings):
         self.readings = readings
 
@@ -145,7 +147,11 @@ class MFrame:
 
     def setButtons(self, buttons):
         self.buttons = buttons
-
+        
+    def appendButton(self, button):
+        ''' Add another button to GUI.'''
+        self.buttons.append(button)
+        
     def buttonPressed(self, buttonInd):
         self.buttonInd = buttonInd
         self.buttonPushed = True
@@ -212,15 +218,15 @@ class MFrame:
     def setDataChestWrapper(self, wrapper):
         self.dataChestWrapper = wrapper
     def enableDataLogging(self, b):
-        self.logData = b
+         self.datalogsettingsDict['logData'] = b
 
     def isDataLogging(self):
-        return self.logData
+        return self.datalogsettingsDict['logData']
         
     def DataLoggingInfo(self):
-        
+       # print "DATALOGGING INFO ACCESSED", self.datalogsettingsDict
         return self.datalogsettingsDict
-
+       
     def getOutOfRangeStatus(self): 
         return self.outOfRange
         
@@ -244,3 +250,12 @@ class MFrame:
         
     def getContainer(self):
         return self.container
+        
+    def addParameter(self, params):
+        '''Adds to list of parameters displayed on the gui.'''
+      
+        self.nicknames.append(params[0])
+        self.precisions.append(params[1])
+        self.units.append(params[2])
+        
+        #print "---------- add parameter NICKNAMES WAS SET", self.nicknames

@@ -218,12 +218,11 @@ class AlertConfig(QtGui.QWidget):
                     
                     if(len(web.devices[j].getFrame().getUnits())>(y-1)):
                         unitLabel = QtGui.QLabel()
-                        unitLabel.setText(web.devices[j].getFrame()
-                            .getUnits()[y-1])
-                        layout.addWidget(unitLabel,z,4)
-                        unitLabel = QtGui.QLabel()
-                        unitLabel.setText(web.devices[j].getFrame()
-                            .getUnits()[y-1])
+                        if web.devices[j].getFrame().getUnits()[y-1] is not None:
+                            unitLabel.setText(web.devices[j].getFrame()
+                                .getUnits()[y-1])
+                            layout.addWidget(unitLabel,z,4)
+                      
                         layout.addWidget(unitLabel,z,6)
                     # These are used for indexing
                     z = z+1

@@ -103,14 +103,13 @@ class Device(MDevice):
         self.ctx = cxn.context()
 
     def addButton(self, name, msg, action, arg=None):
-        self.buttons.append([])
-        #i = len(self.buttons) - 1
-        button = self.buttons[-1]
+
+        button = []
         button.append(name)
         button.append(action)
         button.append(msg)
         button.append(arg)
-        self.frame.setButtons(self.buttons)
+        self.frame.appendButton(button)
         
     def setYLabel(self, yLbl, units=''):
         self.frame.setYLabel(yLbl, units)
@@ -119,21 +118,21 @@ class Device(MDevice):
         self.setDeviceCmd = cmd
         self.selectedDevice = arg
     
-    def begin(self):
-      
+    def onBegin(self):
+        print "onbegin here"
         self.frame.setNicknames(self.nicknames)
         self.frame.setReadingIndices(self.settingResultIndices)
         self.frame.DataLoggingInfo()['name'] = self.name
         self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self)
         self.datachest = self.frame.DataLoggingInfo()['chest']
-        # Each device NEEDS to run on a different thread 
-        # than the main thread (which ALWAYS runs the GUI).
-        # This thread is responsible for querying the devices.
-        self.deviceThread = threading.Thread(target=self.query, args=[])
-        # If the main thread stops, stop the child thread.
-        self.deviceThread.daemon = True
-        # Start the thread.
-        self.deviceThread.start()
+        # # Each device NEEDS to run on a different thread 
+        # # than the main thread (which ALWAYS runs the GUI).
+        # # This thread is responsible for querying the devices.
+        # self.deviceThread = threading.Thread(target=self.query, args=[])
+        # # If the main thread stops, stop the child thread.
+        # self.deviceThread.daemon = True
+        # # Start the thread.
+        # self.deviceThread.start()
 
     def setRefreshRate(self, period):
       
@@ -180,11 +179,11 @@ class Device(MDevice):
 
     # def logData(self, b):
         # self.frame.enableDataLogging(b)
-
+    
     def prompt(self, button):
         """If a button is clicked, handle it."""#name action msg arg
+        print "button clicked:", button
         try:
-            print button
             actual_button = button
             # If the button has a warning message attatched.
             if actual_button[2] is not None:
@@ -295,8 +294,7 @@ class Device(MDevice):
                 #print "setting units"
                 self.frame.setUnits(units)
                 self.frame.setPrecisions(precisions)
-                # Save the data.
-                self.datachest.save()
+
                 # If there was an error, retract it.
                 self.frame.retractError()
             except IndexError as e:
@@ -314,9 +312,7 @@ class Device(MDevice):
                 self.frame.setReadings(None)
                 self.isDevice = False
         # Query calls itself again, this keeps the thread alive.
-        if self.keepGoing:
-            
-            self.updateContainer()
-            threading.Timer(self.frame.getRefreshRate(),
-                    self.query).start()
+        #if self.keepGoing:
+     
+        
         return

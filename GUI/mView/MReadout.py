@@ -3,27 +3,36 @@ class MReadout(QtGui.QWidget):
     def __init__(self, parent= None):
         QtGui.QWidget.__init__(self, parent)
         self.parent = parent
-        self.widget = QtGui.QLCDNumber(parent)
+        self.lcd = QtGui.QLCDNumber(parent)
+        self.lcd.setSegmentStyle(QtGui.QLCDNumber.Flat)
+        self.label = QtGui.QLabel('', self.parent)
         self.layout = QtGui.QHBoxLayout(parent)
-        self.layout.addWidget(self.widget)
+        self.layout.addWidget(self.lcd)
+        self.layout.addWidget(self.label)
         self.setLayout(self.layout)
         self.isLCD = True
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(sizePolicy)
+        self.lcd.setSizePolicy(sizePolicy)
+        self.label.setSizePolicy(sizePolicy)
+        #self.label.hide()
+        #self.lcd.hide()
+        self.layout.setContentsMargins(0,0,0,0)
+    def getLCD(self):
+        return self.lcd
+    def getLabel(self):
+        return self.label
+    def setLabelSize(self, size):
+        font = QtGui.QFont()
+        font.setPointSize(size)
+        self.label.setFont(font)
     def display(self, data):
-      
-        if type(data) == float or type(data) == int:
-            if not self.isLCD:
-                self.widget.deleteLater()
-                self.widget = QtGui.QLCDNumber(self.parent)
-                self.isLCD = True
-                self.layout.addWidget(self.widget)
-            self.widget.display(data)
-            self.widget.setSegmentStyle(QtGui.QLCDNumber.Flat)
-            
-        else:
-            if self.isLCD:
-                self.widget.deleteLater()
-                self.widget = QtGui.QLabel(str(data), self.parent)
-                self.isLCD = False
-                self.layout.addWidget(self.widget)
-            
-            self.widget.setText(str(data))
+        try:
+            self.lcd.display(data)
+            self.lcd.show()
+            self.label.hide()  
+        except:
+     
+            self.lcd.hide()
+            self.label.show()
+            self.label.setText(str(str(data)))

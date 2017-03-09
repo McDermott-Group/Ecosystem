@@ -1,0 +1,255 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mView.MDevices.RS232Device &#8212; GUI  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mView.MDevices.RS232Device</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016 Noah Meltzer</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 2 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2016, Noah Meltzer, McDermott Group&quot;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s2">&quot;GPL&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.0.1&quot;</span>
+<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__status__</span> <span class="o">=</span> <span class="s2">&quot;Beta&quot;</span>
+
+<span class="c1"># Import the parent class</span>
+<span class="kn">from</span> <span class="nn">MDevice</span> <span class="k">import</span> <span class="n">MDevice</span>
+<span class="c1"># We will use the pyserial class to interface with COM ports.</span>
+<span class="kn">import</span> <span class="nn">serial</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="c1"># Traceback is good for printing errors and debugging.</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="c1"># Import necessary Qt libraries</span>
+<span class="kn">from</span> <span class="nn">PyQt4</span> <span class="k">import</span> <span class="n">QtGui</span>
+
+<div class="viewcode-block" id="RS232Device"><a class="viewcode-back" href="../../../mView.MDevices.RS232Device.html#mView.MDevices.RS232Device.RS232Device">[docs]</a><span class="k">class</span> <span class="nc">RS232Device</span><span class="p">(</span><span class="n">MDevice</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Initialize variables. Most of the device parameters cannot yet be initialized.&#39;&#39;&#39;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RS232Device</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="c1"># The name of the device is passed as the first argument.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># The name of the port (i.e. COMx) is given as the second argument.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">portname</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># This dictionary will hold basic information about different parameters.</span>
+        <span class="c1"># This dictionary will just be used by us.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paramInfo</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># This will hold a reference to the pySerial instance that </span>
+        <span class="c1"># is used to communicate with the device.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Is the device connected?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connected</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># The serial timeout, default 10ms.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;timeout&quot;</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="c1"># Default baud rate is 9600.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baud</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;baud&quot;</span><span class="p">,</span> <span class="mi">9600</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="RS232Device.onAddParameter"><a class="viewcode-back" href="../../../mView.MDevices.RS232Device.html#mView.MDevices.RS232Device.RS232Device.onAddParameter">[docs]</a>    <span class="k">def</span> <span class="nf">onAddParameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paramName</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Look for keyword arguments</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;units&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># Add a key to our dictionary that holds another dictionary.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paramInfo</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">paramName</span><span class="p">)]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">thisParam</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">paramInfo</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">paramName</span><span class="p">)]</span>
+        <span class="c1"># Add some more keys to our dictionary.</span>
+        <span class="n">thisParam</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">paramName</span>
+        <span class="n">thisParam</span><span class="p">[</span><span class="s2">&quot;command&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">command</span>
+        <span class="n">thisParam</span><span class="p">[</span><span class="s2">&quot;precision&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">precision</span>
+        <span class="n">thisParam</span><span class="p">[</span><span class="s2">&quot;units&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">units</span>
+        <span class="c1"># Return the tuple in the REQUIRED format.</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">paramName</span><span class="p">,</span> <span class="n">precision</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RS232Device.addButton"><a class="viewcode-back" href="../../../mView.MDevices.RS232Device.html#mView.MDevices.RS232Device.RS232Device.addButton">[docs]</a>    <span class="k">def</span> <span class="nf">addButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Look for a message keyword argument</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># Build the list.  The QPush button object will be appended to the end of this list.</span>
+        <span class="n">button</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># We will make the first element of the list hold</span>
+        <span class="c1"># the text that is displayed on the button.</span>
+        <span class="n">button</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="c1"># The second element will be the command sent to the device</span>
+        <span class="c1"># if the button is clicked.</span>
+        <span class="n">button</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+        <span class="c1"># We can include a warning message too.</span>
+        <span class="n">button</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="c1"># Add the button to the gui</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addButtonToGui</span><span class="p">(</span><span class="n">button</span><span class="p">)</span></div>
+<div class="viewcode-block" id="RS232Device.prompt"><a class="viewcode-back" href="../../../mView.MDevices.RS232Device.html#mView.MDevices.RS232Device.RS232Device.prompt">[docs]</a>    <span class="k">def</span> <span class="nf">prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">button</span><span class="p">):</span>
+        <span class="c1"># We stored the warning message in the 3rd element of the button array.</span>
+        <span class="c1"># If it is None, do not display a warning message, if it is not, display about</span>
+        <span class="c1"># warning using the QMessageBox class.</span>
+        <span class="k">if</span> <span class="n">button</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Create a QMessageBox</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QMessageBox</span><span class="p">()</span>
+            <span class="c1"># Set the icon to an exclamation point.</span>
+            <span class="n">msg</span><span class="o">.</span><span class="n">setIcon</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Warning</span><span class="p">)</span>
+            <span class="c1"># Our warning message text is in the 3rd element of our array.</span>
+            <span class="n">msg</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">button</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="c1"># Add ok and cancel buttons.</span>
+            <span class="n">msg</span><span class="o">.</span><span class="n">setStandardButtons</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Ok</span> <span class="o">|</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Cancel</span><span class="p">)</span>
+            <span class="c1"># The window title.</span>
+            <span class="n">msg</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;Warning&quot;</span><span class="p">)</span>
+            <span class="c1"># Execute the class and retrieve the value clicked.</span>
+            <span class="n">retval</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+            <span class="c1"># If ok was clicked then send the command to the serial device.</span>
+            <span class="k">if</span> <span class="n">retval</span> <span class="o">==</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Ok</span><span class="p">:</span>
+                <span class="c1"># The command was put into the 2nd element of the array.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">button</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="c1"># If no warning message was given, then just go ahead and send the command.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># The command was put into the 2nd element of the array.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">button</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
+            
+<div class="viewcode-block" id="RS232Device.setPort"><a class="viewcode-back" href="../../../mView.MDevices.RS232Device.html#mView.MDevices.RS232Device.RS232Device.setPort">[docs]</a>    <span class="k">def</span> <span class="nf">setPort</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">portname</span><span class="p">,</span> <span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Set the name of the port. i.e. COMx. Keyword args: timeout = 10.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">portname</span> <span class="o">=</span> <span class="n">portname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span></div>
+        
+<div class="viewcode-block" id="RS232Device.setYLabel"><a class="viewcode-back" href="../../../mView.MDevices.RS232Device.html#mView.MDevices.RS232Device.RS232Device.setYLabel">[docs]</a>    <span class="k">def</span> <span class="nf">setYLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">yLbl</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Set the label to be displayed on the independent variable axis.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setYLabel</span><span class="p">(</span><span class="n">yLbl</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RS232Device.onBegin"><a class="viewcode-back" href="../../../mView.MDevices.RS232Device.html#mView.MDevices.RS232Device.RS232Device.onBegin">[docs]</a>    <span class="k">def</span> <span class="nf">onBegin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Begin the device.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span></div>
+    
+<div class="viewcode-block" id="RS232Device.connect"><a class="viewcode-back" href="../../../mView.MDevices.RS232Device.html#mView.MDevices.RS232Device.RS232Device.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+         <span class="sd">&#39;&#39;&#39;Open the serial port and try to connect to it.&#39;&#39;&#39;</span>
+         <span class="k">try</span><span class="p">:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">serial</span><span class="o">.</span><span class="n">Serial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">portname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">baud</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connected</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span>
+         <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connected</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="nb">print</span> <span class="s2">&quot;ERROR: port:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="s2">&quot;will try again.&quot;</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+            
+<div class="viewcode-block" id="RS232Device.query"><a class="viewcode-back" href="../../../mView.MDevices.RS232Device.html#mView.MDevices.RS232Device.RS232Device.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;The query function is called with a period defined </span>
+<span class="sd">        by MDevice.frame.getRefreshRate().  At the end it </span>
+<span class="sd">        should set the readings by calling self.frame.setReadings([readings]). </span>
+<span class="sd">        Where [readings] is an array of readings.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+        <span class="n">readings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">connected</span><span class="p">:</span>
+            <span class="c1"># if not connected, connect.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+        <span class="c1"># If self.port is not None.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># For each parameter, get readings</span>
+            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">paramInfo</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="c1"># Flush anything that might on the port.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+                <span class="c1"># Write the command to the port.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">paramInfo</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="s1">&#39;command&#39;</span><span class="p">])</span>
+                <span class="c1"># Wait while there is nothing on the port.</span>
+                <span class="k">while</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">in_waiting</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+                <span class="c1"># While there is stuff on the port, read it.</span>
+                <span class="n">reading</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+                <span class="c1"># Strip whitespace and newline characters off the received value.</span>
+                <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">reading</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+            <span class="c1"># Tell the device what the readings were.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setReadings</span><span class="p">(</span><span class="n">readings</span><span class="p">)</span></div>
+                
+<div class="viewcode-block" id="RS232Device.close"><a class="viewcode-back" href="../../../mView.MDevices.RS232Device.html#mView.MDevices.RS232Device.RS232Device.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Stop the device. This includes closing the port.&#39;&#39;&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;Could not close port.&quot;</span></div></div>
+            
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

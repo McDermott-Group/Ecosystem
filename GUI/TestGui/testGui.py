@@ -62,14 +62,14 @@ class nViewer:
         
         grapher = Mhdf5Device("Grapher")
         grapher.addButton("Load Data Set")
-        grapher.addPlot()
+        #grapher.addPlot()
         grapher.begin()
         
         self.devices.append(grapher)
-        # Start the datalogger. This line can be commented
-        # out if no datalogging is required.
-        #print self.devices
-       # self.chest = dataChestWrapper(self.devices)
+       # Start the datalogger. This line can be commented
+        #out if no datalogging is required.
+       # print self.devices
+
         
         # Create the gui
         self.gui = MGui.MGui()
