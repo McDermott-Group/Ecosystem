@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = ATS Waveform Digitizer
-version = 1.6.0
+version = 1.7.0
 description = Communicates with AlazarTech Digitizers over PCIe interface.
 
 [startup]
@@ -499,7 +499,7 @@ class AlazarTechServer(LabradServer):
         c['reshapedRecordsBuffer'] = np.empty((numberOfRecords,
                 numberOfChannels, samplesPerRecord), dtype=np.float32)
 
-        c['iqBuffers'] = np.empty((numberOfRecords, 2))
+        c['iqBuffers'] = np.empty((numberOfRecords, 2), dtype=np.float32)
  
     # Data acquisition settings start from setting 700. 
     @setting(700, 'Acquire Data', timeout='v[s]', returns='')
@@ -582,15 +582,10 @@ class AlazarTechServer(LabradServer):
         recordsView = np.rollaxis(recordsView, 2, 1).reshape(numberOfRecords,
                 numberOfChannels, samplesPerRecord)
 
-        # Convert the data to a float type. This is done in a record by
-        # record fashion to reduce the probability of the MemoryError.
-        # This approach works because at each iteration only
-        # a relatively small continuous chunck of memory is allocated.
-        for i in range(recordsView.shape[0]):
-            reshapedRecordsBuffer[i] = recordsView[i].astype(np.float32)
+        reshapedRecordsBuffer = recordsView.astype(np.float32, copy=False)
         
-        codeZero = float(1 << (bitsPerSample - 1)) - 0.5;
-        codeRange = float(1 << (bitsPerSample - 1)) - 0.5;
+        codeZero = float(1 << (bitsPerSample - 1)) - 0.5
+        codeRange = float(1 << (bitsPerSample - 1)) - 0.5
         reshapedRecordsBuffer -= codeZero
         reshapedRecordsBuffer *= (inputRangeV / codeRange)
         c['reshapedRecordsBuffer'] = reshapedRecordsBuffer
@@ -644,11 +639,22 @@ class AlazarTechServer(LabradServer):
         iqBuffer = c['iqBuffers']
         
         timeSeries = c['reshapedRecordsBuffer']
-        for i in range(numberOfRecords):
-            vA = timeSeries[i][0]
-            vB = timeSeries[i][1]
-            iqBuffer[i][0] = np.mean(chA_weight * vA - chB_weight * vB) # I
-            iqBuffer[i][1] = np.mean(chB_weight * vA + chA_weight * vB) # Q
+        
+        # This is the original data processing. Keep it for the future
+        # reference.
+        # for i in range(numberOfRecords):
+            # vA = timeSeries[i][0]
+            # vB = timeSeries[i][1]
+            # iqBuffer[i][0] = np.mean(chA_weight * vA - chB_weight * vB) # I
+            # iqBuffer[i][1] = np.mean(chB_weight * vA + chA_weight * vB) # Q
+        
+        chA = chA_weight['']
+        chB = chB_weight['']
+        chs = np.stack([np.hstack([chA, -chB]).T,
+                        np.hstack([chB,  chA]).T], axis=1)
+        np.dot(timeSeries.reshape(numberOfRecords, -1), np.float32(chs),
+               iqBuffer)
+        iqBuffer /= samplesPerRecord
 
         return iqBuffer * units.V
 
@@ -680,7 +686,7 @@ class AlazarTechServer(LabradServer):
         """
         samplesPerRecord = self.samples_per_record(c)
         samplingRate = float(c['samplingRate']) / 1e9 # samples per ns
-        t = np.linspace(0, samplesPerRecord-1, samplesPerRecord)
+        t = np.linspace(0, samplesPerRecord - 1, samplesPerRecord)
         return (t / samplingRate) * units.ns
 
         
