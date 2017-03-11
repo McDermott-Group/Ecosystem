@@ -273,9 +273,7 @@ class ADRServer(DeviceServer):
 
         # Web Socket Update Stuff:
         log.startLogging(sys.stdout)
-        # root = File("C:\\Users\\McDermott\\Desktop\\Git Repositories\\servers\\adr\\www")
-        root = File("./www")
-        # root.contentTypes['.crt'] = 'application/x-x509-ca-cert'
+        root = File("")
         
         adrN = int(self.deviceName[-1])
         port = 9879 - adrN
@@ -286,7 +284,8 @@ class ADRServer(DeviceServer):
         root.putChild(u"ws", resource)
 
         site = Site(root)
-        contextFactory = ssl.DefaultOpenSSLContextFactory('mcd-adr3_physics_wisc_edu.key','mcd-adr3_physics_wisc_edu.crt')
+        contextFactory = ssl.DefaultOpenSSLContextFactory('Z:/mcdermott-group/ssl_certificates/adr3/mcd-adr3_physics_wisc_edu.key',
+                                                          'Z:/mcdermott-group/ssl_certificates/adr3/mcd-adr3_physics_wisc_edu.crt')
         # reactor.listenTCP(port, site, interface='0.0.0.0')
         reactor.listenSSL(port, site, contextFactory, interface='0.0.0.0')
 
