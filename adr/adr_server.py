@@ -56,10 +56,10 @@ import json
 from twisted.web.static import File
 from twisted.python import log
 from twisted.web.server import Site
-from twisted.internet import reactor
+from twisted.internet import ssl, reactor
 
 from autobahn.twisted.websocket import WebSocketServerFactory, \
-    WebSocketServerProtocol
+    WebSocketServerProtocol, listenWS
 
 from autobahn.twisted.resource import WebSocketResource
 
@@ -275,17 +275,20 @@ class ADRServer(DeviceServer):
         log.startLogging(sys.stdout)
         # root = File("C:\\Users\\McDermott\\Desktop\\Git Repositories\\servers\\adr\\www")
         root = File("./www")
+        # root.contentTypes['.crt'] = 'application/x-x509-ca-cert'
         
         adrN = int(self.deviceName[-1])
         port = 9879 - adrN
 
-        self.factory = MyFactory(u"ws://127.0.0.1:%i/"%port,adrServer=self)
+        self.factory = MyFactory(u"wss://127.0.0.1:%i/"%port,adrServer=self)
         self.factory.protocol = MyServerProtocol
         resource = WebSocketResource(self.factory)
         root.putChild(u"ws", resource)
 
         site = Site(root)
-        reactor.listenTCP(port, site, interface='0.0.0.0')
+        contextFactory = ssl.DefaultOpenSSLContextFactory('mcd-adr3_physics_wisc_edu.key','mcd-adr3_physics_wisc_edu.crt')
+        # reactor.listenTCP(port, site, interface='0.0.0.0')
+        reactor.listenSSL(port, site, contextFactory, interface='0.0.0.0')
 
         try:
             yield self.client.registry.cd(self.ADRSettingsPath)
