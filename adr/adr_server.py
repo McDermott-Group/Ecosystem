@@ -13,21 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-### BEGIN NODE INFO
-[info]
-name = ADR Server
-version = 1.3.2
-description = Controls the ADRs
-[startup]
-cmdline = %PYTHON% %FILE%
-timeout = 20
-
-[shutdown]
-message = 987654321
-timeout = 20
-### END NODE INFO
-"""
 
 # This server can be connected to by adr_client.py or other LabRAD
 # clients to control the ADR with a GUI, etc.
@@ -236,7 +221,10 @@ class ADRServer(DeviceServer):
                 'Magnet Voltage Monitor':['SIM922','addr'],
                 'Heat Switch':['Heat Switch','addr'],
                 'Compressor':['CP2800 Compressor','addr'],
-                'Pressure Guage':['Varian Guage Controller','addr']
+                'Pressure Guage':['Varian Guage Controller','addr'],
+                'Log Path': "Z:\\mcdermott-group\\Data\\ADR Logs\\ADR3",
+                'Start Compressor Datetime': None,
+                'Stop Compressor Datetime': None
         }
         self.instruments = {'Power Supply':'None',
                             'Ruox Temperature Monitor':'None',
@@ -245,22 +233,6 @@ class ADRServer(DeviceServer):
                             'Heat Switch':'None',
                             'Compressor':'None',
                             'Pressure Guage':'None'}
-        self.startDatetime = datetime.datetime.utcnow()
-        self.tempDataChest = dataChest(['ADR Logs',self.name])
-        dts = dateStamp()
-        iso = self.startDatetime.isoformat().split('+')[0] # strip timezone (or dateStamp will fail)
-        dtstamp = dts.dateStamp(iso)
-        self.tempDataChest.createDataset("temperatures",
-                [('time',[1],'utc_datetime','')],
-                [('temp60K',[1],'float16','Kelvin'),('temp03K',[1],'float16','Kelvin'),
-                 ('tempGGG',[1],'float16','Kelvin'),('tempFAA',[1],'float16','Kelvin')],
-                 dateStamp=dtstamp)
-        self.tempDataChest.addParameter("X Label", "Time")
-        self.tempDataChest.addParameter("Y Label", "Temperature")
-        self.tempDataChest.addParameter("Plot Title",
-                self.startDatetime.strftime("ADR temperature history "
-                                            "for run starting on %y/%m/%d %H:%M"))
-        self.logMessages = []
 
     @inlineCallbacks
     def initServer(self):
@@ -284,18 +256,31 @@ class ADRServer(DeviceServer):
         root.putChild(u"ws", resource)
 
         site = Site(root)
-        contextFactory = ssl.DefaultOpenSSLContextFactory('Z:/mcdermott-group/ssl_certificates/adr3/mcd-adr3_physics_wisc_edu.key',
-                                                          'Z:/mcdermott-group/ssl_certificates/adr3/mcd-adr3_physics_wisc_edu.crt')
+        contextFactory = ssl.DefaultOpenSSLContextFactory('Z:/mcdermott-group/ssl_certificates/adr%i/ssl.key'%adrN,
+                                                          'Z:/mcdermott-group/ssl_certificates/adr%i/ssl.crt'%adrN)
         # reactor.listenTCP(port, site, interface='0.0.0.0')
         reactor.listenSSL(port, site, contextFactory, interface='0.0.0.0')
 
-        try:
-            yield self.client.registry.cd(self.ADRSettingsPath)
-            self.file_path = yield self.client.registry.get('Log Path')
-        except Exception as e:
-            self.logMessage('{Saving log failed. '
-                            ' Check that AFS is working.} ')
         yield self.loadDefaults()
+        
+        # init start time, create dataChest, etc.
+        # If the compressor was last stopped over 24 hours ago, or if the 
+        # compressor cannot be started and stopped from the computer,
+        # a new file will be created each time the server is opened.  If 
+        # the compressor has not been stopped, the last file will be
+        # appended to.  If the compressor has stopped, but it was less 
+        # than 24 hours ago, the last file will be appended to.  Starting
+        # the compressor creates a new file.
+        now = datetime.datetime.utcnow()
+        start = self.ADRSettings['Start Compressor Datetime']
+        stop = self.ADRSettings['Stop Compressor Datetime']
+        if start is None or (stop is not None and deltaT(now - stop) > 24*60*60):
+            self.ADRSettings['Start Compressor Datetime'] = now
+            reg = self.client.registry
+            yield reg.cd(self.ADRSettingsPath)
+            yield reg.set('Start Compressor Datetime',now)
+        self.initLogFiles()
+        
         yield self.initializeInstruments()
         # subscribe to messages
         # the server ones are not used right now, but at some point they could be
@@ -328,6 +313,31 @@ class ADRServer(DeviceServer):
         _,settingsList = yield reg.dir()
         for setting in settingsList:
             self.ADRSettings[setting] = yield reg.get(setting)
+    
+    def initLogFiles(self):
+        startDatetime = self.ADRSettings['Start Compressor Datetime']
+        self.tempDataChest = dataChest(['ADR Logs',self.name])
+        dts = dateStamp()
+        iso = startDatetime.isoformat().split('+')[0] # strip timezone (or dateStamp will fail)
+        dtstamp = dts.dateStamp(iso)
+        try:
+            self.tempDataChest.openDataset(dtstamp+'_temperatures', modify=True)
+        except Exception as e:
+            self.tempDataChest.createDataset("temperatures",
+                    [('time',[1],'utc_datetime','')],
+                    [('temp60K',[1],'float16','Kelvin'),('temp03K',[1],'float16','Kelvin'),
+                     ('tempGGG',[1],'float16','Kelvin'),('tempFAA',[1],'float16','Kelvin')],
+                     dateStamp=dtstamp)
+            self.tempDataChest.addParameter("X Label", "Time")
+            self.tempDataChest.addParameter("Y Label", "Temperature")
+            self.tempDataChest.addParameter("Plot Title",
+                    startDatetime.strftime("ADR temperature history "
+                                                "for run starting on %y/%m/%d %H:%M"))
+        self.logMessages = []
+        # add blank data so if we restart server, there will not be a 
+        # big ugly line on the graph where we have a break in time
+        timestamp = deltaT(datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1))
+        self.tempDataChest.addData( [[timestamp] + [numpy.float16(numpy.NaN)]*4] )
 
     @inlineCallbacks
     def initializeInstruments(self):
@@ -455,11 +465,12 @@ class ADRServer(DeviceServer):
         self.logMessages.append( (dt,message,alert) )
         messageWithTimeStamp = dt.strftime("[%m/%d/%y %H:%M:%S] ") + message
         try:
-            fname = self.file_path + self.startDatetime.strftime("\\log_%y%m%d_%H%M.txt")
+            fname = self.ADRSettings['Log Path'] + \
+                self.ADRSettings['Start Compressor Datetime'].strftime("\\log_%y%m%d_%H%M.txt")
             with open(fname, 'a') as f:
                 f.write( messageWithTimeStamp + '\n' )
         except Exception as e:
-            self.logMessage("Could not write to log file: " + str(e) + '.')
+            print("Could not write to log file: " + str(e) + '.')
         print '[log] '+ message
         self.factory.sendMessageToAll({
             'log': [{
@@ -795,7 +806,7 @@ class ADRServer(DeviceServer):
 
     @setting(102, 'Get Start Datetime', returns=['t'])
     def getStartDatetime(self,c):
-        return self.startDatetime
+        return self.ADRSettings['Start Compressor Datetime']
 
     @setting(103, 'Get Log', n=['v'], returns=['*(t,s,b)'])
     def getLog(self,c, n=0):
@@ -911,6 +922,20 @@ class ADRServer(DeviceServer):
         try:
             yield self.client['CP2800 Compressor'].start()
             self.logMessage('Compressor started.')
+            # Update start time and refresh files unless compressor was 
+            # stopped within last 24 hours.
+            now = datetime.datetime.utcnow()
+            start = self.ADRSettings['Start Compressor Datetime']
+            stop = self.ADRSettings['Stop Compressor Datetime']
+            if (start is None and stop is None) or \
+              (stop is not None and deltaT(now - stop) > 24*60*60):
+                self.ADRSettings['Start Compressor Datetime'] = now
+                self.ADRSettings['Stop Compressor Datetime'] = None
+                reg = self.client.registry
+                yield reg.cd(self.ADRSettingsPath)
+                yield reg.set('Start Compressor Datetime',now)
+                yield reg.set('Stop Compressor Datetime',None)
+                self.initLogFiles()
         except Exception as e:
             self.logMessage('Starting Compressor failed.',alert=True)
 
@@ -920,6 +945,11 @@ class ADRServer(DeviceServer):
         try:
             yield self.client['CP2800 Compressor'].stop()
             self.logMessage('Compressor stopped.')
+            now = datetime.datetime.utcnow()
+            self.ADRSettings['Stop Compressor Datetime'] = now
+            reg = self.client.registry
+            yield reg.cd(self.ADRSettingsPath)
+            yield reg.set('Stop Compressor Datetime',now)
         except Exception as e:
             self.logMessage('Stopping Compressor failed.',alert=True)
 
