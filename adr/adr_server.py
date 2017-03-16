@@ -80,13 +80,13 @@ class MyServerProtocol(WebSocketServerProtocol):
         # initial values
         state = self.adrServer.state
         text = json.dumps({
-            # 'temps': {
-                # 'timeStamps':[deltaT(state['datetime']-datetime.datetime(1970,1,1))],
-                # 't60K': [state['T_60K']['K']],
-                # 't03K': [state['T_3K']['K']],
-                # 'tGGG': [state['T_GGG']['K']],
-                # 'tFAA': [state['T_FAA']['K']]
-            # },
+            'temps': {
+                'timeStamps':[deltaT(state['datetime']-datetime.datetime(1970,1,1))],
+                't60K': [state['T_60K']['K']],
+                't03K': [state['T_3K']['K']],
+                'tGGG': [state['T_GGG']['K']],
+                'tFAA': [state['T_FAA']['K']]
+            },
             'instruments': { name:{'server':status[0],
                                     'connected':status[1] }
                                 for (name,status) in self.adrServer.getInstrumentState('bla')},
@@ -143,6 +143,11 @@ class MyServerProtocol(WebSocketServerProtocol):
                 tempData = self.adrServer.tempDataChest.getData(max(0,n-m*60), None)
                 now = deltaT(datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1))
                 tempData = [line for line in tempData if line[0] > now-m*60]
+                # add blank data so if we restart server, there will not be a
+                # big ugly line on the graph where we have a break in time
+                timestamp = deltaT(datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1))
+                nanRow = [[timestamp] + [numpy.float16(numpy.NaN)]*4]
+                tempData = nanRow + tempData + nanRow
                 tempData = numpy.array(tempData)
                 tempData = tempData.transpose()
                 tempData = tempData.tolist()
@@ -367,10 +372,6 @@ class ADRServer(DeviceServer):
                     startDatetime.strftime("ADR temperature history "
                                                 "for run starting on %y/%m/%d %H:%M"))
         self.logMessages = []
-        # add blank data so if we restart server, there will not be a
-        # big ugly line on the graph where we have a break in time
-        timestamp = deltaT(datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1))
-        self.tempDataChest.addData( [[timestamp] + [numpy.float16(numpy.NaN)]*4] )
 
     @inlineCallbacks
     def initializeInstruments(self):
