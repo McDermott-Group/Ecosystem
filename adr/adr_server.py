@@ -59,6 +59,17 @@ def deltaT(dT):
     except:
         return dT.days * 86400 + dT.seconds + dT.microseconds * pow(10,-6)
 
+class NumpyEncoder(json.JSONEncoder):
+    """ Special json encoder for numpy types.  Otherwise it fails with float16, etc. """
+    def default(self, obj):
+        if isinstance(obj, (numpy.int_, numpy.intc, numpy.intp, numpy.int8,
+            numpy.int16, numpy.int32, numpy.int64, numpy.uint8,
+            numpy.uint16,numpy.uint32, numpy.uint64)):
+            return int(obj)
+        elif isinstance(obj, (numpy.float_, numpy.float16, numpy.float32, 
+            numpy.float64)):
+            return float(obj)
+        return json.JSONEncoder.default(self, obj)
 
 class MyServerProtocol(WebSocketServerProtocol):
     def onOpen(self):
@@ -69,13 +80,13 @@ class MyServerProtocol(WebSocketServerProtocol):
         # initial values
         state = self.adrServer.state
         text = json.dumps({
-            'temps': {
-                'timeStamps':[deltaT(state['datetime']-datetime.datetime(1970,1,1))],
-                't60K': [state['T_60K']['K']],
-                't03K': [state['T_3K']['K']],
-                'tGGG': [state['T_GGG']['K']],
-                'tFAA': [state['T_FAA']['K']]
-            },
+            # 'temps': {
+                # 'timeStamps':[deltaT(state['datetime']-datetime.datetime(1970,1,1))],
+                # 't60K': [state['T_60K']['K']],
+                # 't03K': [state['T_3K']['K']],
+                # 'tGGG': [state['T_GGG']['K']],
+                # 'tFAA': [state['T_FAA']['K']]
+            # },
             'instruments': { name:{'server':status[0],
                                     'connected':status[1] }
                                 for (name,status) in self.adrServer.getInstrumentState('bla')},
@@ -90,7 +101,8 @@ class MyServerProtocol(WebSocketServerProtocol):
                 'datetime':deltaT(log[0]-datetime.datetime(1970,1,1)),
                 'message':log[1],
                 'alert':log[2]} for log in backLogs]
-        })
+        }, cls=NumpyEncoder)
+        text = text.replace('NaN','null') # apparently JSON does not support nan
         self.sendMessage(text)
 
     def connectionLost(self, reason):
@@ -132,7 +144,8 @@ class MyServerProtocol(WebSocketServerProtocol):
                 now = deltaT(datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1))
                 tempData = [line for line in tempData if line[0] > now-m*60]
                 tempData = numpy.array(tempData)
-                tempData.transpose()
+                tempData = tempData.transpose()
+                tempData = tempData.tolist()
                 text = json.dumps({
                     'temps': {
                         'timeStamps': tempData[0],
@@ -141,7 +154,8 @@ class MyServerProtocol(WebSocketServerProtocol):
                         'tGGG': tempData[3],
                         'tFAA': tempData[4]
                     }
-                })
+                }, cls=NumpyEncoder)
+                text = text.replace('NaN','null') # apparently JSON does not support nan
                 self.sendMessage(text)
 
 
@@ -160,7 +174,7 @@ class MyFactory(WebSocketServerFactory):
         self.clients.pop(client.peer)
 
     def sendMessageToAll(self, message):
-        text = json.dumps(message)
+        text = json.dumps(message, cls=NumpyEncoder)
         text = text.replace('NaN','null') # apparently JSON does not support nan
         for c in self.clients.keys():
             self.clients[c].sendMessage(text)
