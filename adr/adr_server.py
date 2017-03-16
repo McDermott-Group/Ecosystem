@@ -49,6 +49,17 @@ from autobahn.twisted.websocket import WebSocketServerFactory, \
 from autobahn.twisted.resource import WebSocketResource
 
 
+def deltaT(dT):
+    """
+    .total_seconds() is only supported by >py27 :(, so we use this
+    to subtract two datetime objects.
+    """
+    try:
+        return dT.total_seconds()
+    except:
+        return dT.days * 86400 + dT.seconds + dT.microseconds * pow(10,-6)
+
+
 class MyServerProtocol(WebSocketServerProtocol):
     def onOpen(self):
         self.adrServer = self.factory.register(self)
@@ -59,7 +70,7 @@ class MyServerProtocol(WebSocketServerProtocol):
         state = self.adrServer.state
         text = json.dumps({
             'temps': {
-                'timeStamps':[(state['datetime']-datetime.datetime(1970,1,1)).total_seconds()],
+                'timeStamps':[deltaT(state['datetime']-datetime.datetime(1970,1,1))],
                 't60K': [state['T_60K']['K']],
                 't03K': [state['T_3K']['K']],
                 'tGGG': [state['T_GGG']['K']],
@@ -76,7 +87,7 @@ class MyServerProtocol(WebSocketServerProtocol):
             'PSCurrent': state['PSCurrent']['A'],
             'PSVoltage': state['PSVoltage']['V'],
             'log':[{
-                'datetime':(log[0]-datetime.datetime(1970,1,1)).total_seconds(),
+                'datetime':deltaT(log[0]-datetime.datetime(1970,1,1)),
                 'message':log[1],
                 'alert':log[2]} for log in backLogs]
         })
@@ -113,6 +124,25 @@ class MyServerProtocol(WebSocketServerProtocol):
         elif message['command'] == 'Add To Log':
             if message['text'] is not None:
                 self.adrServer.logMessage(message['text'])
+        elif message['command'] == 'Get Temperature Data':
+            if message['minutes'] is not None:
+                m = int(message['minutes'])
+                n = self.adrServer.tempDataChest.getNumRows()
+                tempData = self.adrServer.tempDataChest.getData(max(0,n-m*60), None)
+                now = deltaT(datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1))
+                tempData = [line for line in tempData if line[0] > now-m*60]
+                tempData = numpy.array(tempData)
+                tempData.transpose()
+                text = json.dumps({
+                    'temps': {
+                        'timeStamps': tempData[0],
+                        't60K': tempData[1],
+                        't03K': tempData[2],
+                        'tGGG': tempData[3],
+                        'tFAA': tempData[4]
+                    }
+                })
+                self.sendMessage(text)
 
 
 class MyFactory(WebSocketServerFactory):
@@ -134,17 +164,6 @@ class MyFactory(WebSocketServerFactory):
         text = text.replace('NaN','null') # apparently JSON does not support nan
         for c in self.clients.keys():
             self.clients[c].sendMessage(text)
-
-
-def deltaT(dT):
-    """
-    .total_seconds() is only supported by >py27 :(, so we use this
-    to subtract two datetime objects.
-    """
-    try:
-        return dT.total_seconds()
-    except:
-        return dT.days * 86400 + dT.seconds + dT.microseconds * pow(10,-6)
 
 
 class ADRServer(DeviceServer):
@@ -243,10 +262,30 @@ class ADRServer(DeviceServer):
         """
         yield DeviceServer.initServer(self)
 
+        yield self.loadDefaults()
+
+        # init start time, create dataChest, etc.
+        # If the compressor was last stopped over 24 hours ago, or if the
+        # compressor cannot be started and stopped from the computer,
+        # a new file will be created each time the server is opened.  If
+        # the compressor has not been stopped, the last file will be
+        # appended to.  If the compressor has stopped, but it was less
+        # than 24 hours ago, the last file will be appended to.  Starting
+        # the compressor creates a new file.
+        now = datetime.datetime.utcnow()
+        start = self.ADRSettings['Start Compressor Datetime']
+        stop = self.ADRSettings['Stop Compressor Datetime']
+        if start is None or (stop is not None and deltaT(now - stop) > 24*60*60):
+            self.ADRSettings['Start Compressor Datetime'] = now
+            reg = self.client.registry
+            yield reg.cd(self.ADRSettingsPath)
+            yield reg.set('Start Compressor Datetime',now)
+        self.initLogFiles()
+
         # Web Socket Update Stuff:
         log.startLogging(sys.stdout)
         root = File("")
-        
+
         adrN = int(self.deviceName[-1])
         port = 9879 - adrN
 
@@ -261,26 +300,6 @@ class ADRServer(DeviceServer):
         # reactor.listenTCP(port, site, interface='0.0.0.0')
         reactor.listenSSL(port, site, contextFactory, interface='0.0.0.0')
 
-        yield self.loadDefaults()
-        
-        # init start time, create dataChest, etc.
-        # If the compressor was last stopped over 24 hours ago, or if the 
-        # compressor cannot be started and stopped from the computer,
-        # a new file will be created each time the server is opened.  If 
-        # the compressor has not been stopped, the last file will be
-        # appended to.  If the compressor has stopped, but it was less 
-        # than 24 hours ago, the last file will be appended to.  Starting
-        # the compressor creates a new file.
-        now = datetime.datetime.utcnow()
-        start = self.ADRSettings['Start Compressor Datetime']
-        stop = self.ADRSettings['Stop Compressor Datetime']
-        if start is None or (stop is not None and deltaT(now - stop) > 24*60*60):
-            self.ADRSettings['Start Compressor Datetime'] = now
-            reg = self.client.registry
-            yield reg.cd(self.ADRSettingsPath)
-            yield reg.set('Start Compressor Datetime',now)
-        self.initLogFiles()
-        
         yield self.initializeInstruments()
         # subscribe to messages
         # the server ones are not used right now, but at some point they could be
@@ -313,7 +332,7 @@ class ADRServer(DeviceServer):
         _,settingsList = yield reg.dir()
         for setting in settingsList:
             self.ADRSettings[setting] = yield reg.get(setting)
-    
+
     def initLogFiles(self):
         startDatetime = self.ADRSettings['Start Compressor Datetime']
         self.tempDataChest = dataChest(['ADR Logs',self.name])
@@ -334,7 +353,7 @@ class ADRServer(DeviceServer):
                     startDatetime.strftime("ADR temperature history "
                                                 "for run starting on %y/%m/%d %H:%M"))
         self.logMessages = []
-        # add blank data so if we restart server, there will not be a 
+        # add blank data so if we restart server, there will not be a
         # big ugly line on the graph where we have a break in time
         timestamp = deltaT(datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1))
         self.tempDataChest.addData( [[timestamp] + [numpy.float16(numpy.NaN)]*4] )
@@ -922,7 +941,7 @@ class ADRServer(DeviceServer):
         try:
             yield self.client['CP2800 Compressor'].start()
             self.logMessage('Compressor started.')
-            # Update start time and refresh files unless compressor was 
+            # Update start time and refresh files unless compressor was
             # stopped within last 24 hours.
             now = datetime.datetime.utcnow()
             start = self.ADRSettings['Start Compressor Datetime']
