@@ -17,7 +17,7 @@ ttRp7
 asS'Compressor:Output Water Temperature'
 p8
 (lp9
-I01
+I00
 aF1
 aF60
 ag4
@@ -64,7 +64,7 @@ ttRp22
 asS'Water Temperature:Exteranal Water Temperature'
 p23
 (lp24
-I01
+I00
 aF1
 aF20
 ag4
@@ -76,7 +76,7 @@ ttRp26
 asS'Compressor:Helium Temperature'
 p27
 (lp28
-I01
+I00
 aF1
 aF80
 ag4
@@ -88,7 +88,7 @@ ttRp30
 asS'Water Flow:External Water Flow Rate'
 p31
 (lp32
-I01
+I00
 aF1.2
 aF3
 ag4
@@ -111,7 +111,7 @@ ttRp37
 asS'Vacuum:OVC Pressure'
 p38
 (lp39
-I01
+I00
 aF0
 aF0.10000000000000001
 ag4
@@ -135,7 +135,7 @@ ttRp45
 asS'50K and 3K Pt1000 Temperatures:3K Stage Temperature'
 p46
 (lp47
-I01
+I00
 aF0
 aF100
 ag4
@@ -158,7 +158,7 @@ ttRp52
 asS'Compressor:Input Water Temperature'
 p53
 (lp54
-I01
+I00
 aF1
 aF20
 ag4
@@ -170,7 +170,7 @@ ttRp56
 asS'Compressor:Oil Temperature'
 p57
 (lp58
-I01
+I00
 aF1
 aF50
 ag4

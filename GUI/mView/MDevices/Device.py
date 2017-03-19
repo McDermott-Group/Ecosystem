@@ -106,11 +106,54 @@ class Device(MDevice):
 
         button = []
         button.append(name)
-        button.append(action)
         button.append(msg)
+        button.append(action)
         button.append(arg)
-        self.frame.appendButton(button)
-        
+        self.addButtonToGui(button)
+    def prompt(self, button):
+        """If a button is clicked, handle it."""
+        print "button clicked:", button
+        try:
+            actual_button = button
+            # If the button has a warning message attatched.
+            if button[1] is not None:
+                # Create a QMessageBox
+                msg = QtGui.QMessageBox()
+                # Set the icon to an exclamation point.
+                msg.setIcon(QtGui.QMessageBox.Warning)
+                # Our warning message text is in the 3rd element of our array.
+                msg.setText(button[1])
+                # Add ok and cancel buttons.
+                msg.setStandardButtons(QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
+                # The window title.
+                msg.setWindowTitle("Warning")
+                # Execute the class and retrieve the value clicked.
+                retval = msg.exec_()
+                # If ok was clicked then send the command to the serial device.
+                if retval == QtGui.QMessageBox.Ok:
+                
+                    # If the setting associated with the button also 
+                    # has an argument for the setting.
+                    if actual_button[3] is not None:
+                        getattr(self.deviceServer,
+                                actual_button[2])(actual_button[3])
+                    # If just the setting needs to be run.
+                    else:
+                        getattr(self.deviceServer, actual_button[2])()
+            # Otherwise if there is no warning message, do not make
+            # a popup.
+            else:
+                # If there is an argument that must be passed to
+                # the setting.
+                if actual_button[3] is not None:
+                    getattr(self.deviceServer,
+                            actual_button[1])(actual_button[3])
+                else:
+                    getattr(self.deviceServer, actual_button[1])
+        except:
+            traceback.print_exc()
+            return
+   
     def setYLabel(self, yLbl, units=''):
         self.frame.setYLabel(yLbl, units)
 
@@ -180,41 +223,7 @@ class Device(MDevice):
     # def logData(self, b):
         # self.frame.enableDataLogging(b)
     
-    def prompt(self, button):
-        """If a button is clicked, handle it."""#name action msg arg
-        print "button clicked:", button
-        try:
-            actual_button = button
-            # If the button has a warning message attatched.
-            if actual_button[2] is not None:
-                # Create a new popup.
-                self.warning = MPopUp.PopUp(actual_button[2])
-                # Stop the main GUI thread and run the popup.
-                self.warning.exec_()
-                # If and only if the 'ok' button is pressed.
-                if self.warning.consent:
-                    # If the setting associated with the button also 
-                    # has an argument for the setting.
-                    if actual_button[3] is not None:
-                        getattr(self.deviceServer,
-                                actual_button[1])(actual_button[3])
-                    # If just the setting needs to be run.
-                    else:
-                        getattr(self.deviceServer, actual_button[1])
-            # Otherwise if there is no warning message, do not make
-            # a popup.
-            else:
-                # If there is an argument that must be passed to
-                # the setting.
-                if actual_button[3] is not None:
-                    getattr(self.deviceServer,
-                            actual_button[1])(actual_button[3])
-                else:
-                    getattr(self.deviceServer, actual_button[1])
-        except:
-            traceback.print_exc()
-            return
-
+  
     def query(self):
         """Query the device for readings."""
         # If the device is attached.
