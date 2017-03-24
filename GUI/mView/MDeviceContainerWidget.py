@@ -241,21 +241,21 @@ class MDeviceContainerWidget(QtGui.QFrame):
                             
                             #print "precision:", precision
                             if precision is not None:
-                                format = "%." + str(int(precision)) + "f"
+                                format = "{0:." + str(int(precision)) + "f}"
                             else:
-                                format = "%f"
+                                format = "{0.0f}"
                             try:
                                 param['reading'] = float(param['reading'])
                             except:
                                 pass
-                            print "readings:",param['reading'], type(param['reading'])
+                            #print "readings:",param['reading'], type(param['reading'])
                             if type(param['reading']) is float or \
                                type(param['reading']) is np.float64:
                             
                                 #print "it is a float"
                                 
                                 if not math.isnan(param['reading']):
-                                    self.lcds[y].display(param['reading'])
+                                    self.lcds[y].display(format.format(param['reading']))
                                 else:
                                     self.lcds[y].display("No Reading")
                                 
