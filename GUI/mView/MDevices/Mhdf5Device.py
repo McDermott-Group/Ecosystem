@@ -31,26 +31,26 @@ class Mhdf5Device(MDevice.MDevice):
                 root, "Data Chest Files (*.hdf5)")
         dir = str(dir)
         # Get rid of the file namse, use just the path
-        print "before dir:", dir
+        #print "before dir:", dir
         path = dir.split("/")[0:-1]
         filename = dir.split("/")[-1]
         dir = '/'.join(path)
-        print "selected dir:", dir
+        #print "selected dir:", dir
         root = root.replace('\\', '/')
-        print "datachest root:", root
+        #print "datachest root:", root
         
         dir = dir.replace(root, '')
         dir = dir.replace('/','\\')
         relpath = dir.split('\\')
-        print "relative path:", dir
+        #print "relative path:", dir
         #print "current chest directory:", chest.pwd()
         chest = dataChest(relpath[1])
         chest.cd("")
         if len(relpath)> 2:
             chest.cd(relpath[2::])
-        print "current chest directory:", chest.pwd()
+        #print "current chest directory:", chest.pwd()
         chest.openDataset(filename)
-        print "opened dataset:", chest
+        #print "opened dataset:", chest
         self.getFrame().setDataSet(chest)
         
         self.getFrame().getPlot().plot()

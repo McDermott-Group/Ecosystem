@@ -1,5 +1,5 @@
 (dp1
-S'Light Meter 3000:Light Level'
+S'Light Meter 3000:Average Light Level'
 p2
 (lp3
 I00
@@ -13,4 +13,15 @@ p5
 S'QString'
 (V
 ttRp6
+asS'Light Meter 3000:Light Level'
+p7
+(lp8
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp9
 as.

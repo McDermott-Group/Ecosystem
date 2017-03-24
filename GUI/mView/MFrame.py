@@ -21,7 +21,11 @@ __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
 from MWeb import web
-
+import numpy as np
+import traceback
+import warnings
+from pprint import pprint
+import time
 class MFrame:
   
     def __init__(self):
@@ -30,13 +34,13 @@ class MFrame:
         # Name of device's server.
         self.serverTitle = None
         # Parameter names to be displayed on the GUI.
-        self.nicknames = []
+        #self.nicknames = []
         # Settings which are called by the GUI.
-        self.serverSettings = None
+        #self.serverSettings = None
         # Device readings.
-        self.readings = None
+        #self.readings = []
         # Precisions.
-        self.precisions = []
+        #self.precisions = []
         # Errors.
         self.error = False
         # Error messages.
@@ -44,7 +48,7 @@ class MFrame:
         # Label on the y axis of the dataChest dataplot.
         self.yLabel = ""
         # Units used for each parameter.
-        self.units = []
+        #self.units = []
         # Buttons on the GUI used to control the device.
         self.buttons = [[]]
         # Stores an index of a certain button.
@@ -78,11 +82,14 @@ class MFrame:
                 }
 
         restoredSettings = web.persistentData.persistentDataAccess(None,"DataLoggingInfo", self.serverTitle)
-
+        # Is the parameter visible?
+        self.paramVisibility = {}
+        # name:[name, readings, units, precision]
+        self.parameters = {}
         if restoredSettings != None:
             self.datalogsettingsDict = restoredSettings
-        # Is there a reading out of range?
-        self.outOfRange = {}
+        
+        
         self.node = None
         self.container = None
     def setTitle(self, title):
@@ -95,29 +102,85 @@ class MFrame:
 
     def getNicknames(self):
         #print "----------NICKNAMES WAS Got", self.nicknames
-        return self.nicknames
-
-    def setNicknames(self, nicknames):
+        names = self.getListOfParameterItems('name')
+        #print "Getting nicknames:", names
+        return self.getListOfParameterItems('name')
         
-        self.nicknames = nicknames
+    def _setNicknames(self, nicknames):
+        #print "Trying to set nicknames:", nicknames
+        if len(nicknames)!=len(self.parameters.keys()):
+            raise ValueError("The length of nicknames did not match the number of parameters."\
+                            +"\nnames: "+str(nicknames)+"\n"\
+                            +"Available Parameters: "+str(self.parameters.keys()))
+            
+        for i,key in enumerate(self.parameters.keys()):
+            self.setNickname(key, nicknames[i])
+
+        #pprint(self.parameters)
+        
         #print "---------- set nicknames NICKNAMES WAS SET", self.nicknames
-    def setReadings(self, readings):
-        self.readings = readings
-
-    def getReadings(self):
-        return self.readings
+    def setName(self, key, name):
+        self.parameters[key]['name'] = name
         
-    def setPrecisions(self, precisions):
-        self.precisions = precisions
+    def _setReadings(self, readings):
+        #print "-----Set Readings called:", readings
+        #pprint(self.parameters)
+        if len(readings)!=len(self.parameters.keys()):
+            raise ValueError("The length of readings did not match the number of parameters."\
+                            +"\nreadings: "+str(readings)+"\n"\
+                            +"Available Parameters: "+str(self.parameters.keys()))
+        for i,key in enumerate(self.parameters.keys()):
+            self.setReading(key, readings[i])
 
-    def getPrecisions(self):
-        return self.precisions
-        
-    def setReadingIndices(self, index):
-        self.readingIndices = index
+        #pprint(self.parameters)
+    def setReading(self, name, reading):
+        #traceback.print_stack()
+        #print "name in MFrame:", name, reading
+        try:
+            self.parameters[name]['reading'] = reading
+        except:
+            warnings.warn("Could not set reading of "+str(name)+", it does not \
+                        appear to be a parameter of "+str(self.getTitle()))
+    def _getReadings(self):
+        return self.getListOfParameterItems('reading')
+    def getReading(self, parameter):
+        try:
+            return self.parameters[parameter]['reading']
+        except:
+            warnings.warn("Could not get reading of "+str(parameter))  
+    def _setPrecisions(self, precisions):
+        if len(precisions)!=len(self.parameters.keys()):
+            raise ValueError("The length of precisions did not match the number of parameters."\
+                            +"\nprecisions: "+str(precisions)+"\n"\
+                            +"Available Parameters: "+str(self.parameters.keys()))
+        for i,key in enumerate(self.parameters.keys()):
+            self.setPrecision(key, precisions[i])
+            
+    def setPrecision(self, name, precision):    
+        self.parameters[name]['precision'] = precision
+    def getPrecision(self, name):
+        try:
+            return self.parameters[name]['precision']
+        except:
+            warnings.warn("Could not get precision of "+str(name))  
+    def _getPrecisions(self):
+        return self.getListOfParameterItems('precision')
+    def setCommand(self, name, command):
+        self.parameters[name]['command'] = command
+    def getCommand(self, name):
+        try:
+            return self.parameters[name]['command']
+        except:
+            warnings.warn("Could not get command of "+str(name))   
+    def setReadingIndex(self, name, index):
+        #traceback.print_stack()
+        try:
+            self.parameters[name]['reading_index'] = index
+        except:
+            warnings.warn("Could not set reading index of "+str(name))               
 
-    def getReadingIndices(self):
-        return self.readingIndices
+    def getReadingIndex(self, name):
+        self.parameters[name].get('reading_index', None)
        
     def raiseError(self, msg):
         self.error = True
@@ -133,12 +196,31 @@ class MFrame:
     def errorMsg(self):
         return self.errmsg
 
-    def setUnits(self, units):
-        self.units = units
-
-    def getUnits(self):
-        return self.units
-
+    def _setUnits(self, units):
+        if len(units)!=len(self.parameters.keys()):
+            raise ValueError("The length of units did not match the number of parameters."\
+                            +"\nunits: "+str(units)+"\n"\
+                            +"Available Parameters: "+str(self.parameters.keys()))
+        for i,key in enumerate(self.parameters.keys()):
+            self.setUnit(key, units[i])
+    def setUnit(self, name, unit):
+        self.parameters[name]['units'] = unit
+    def getUnit(self, parameter):
+        try:
+            return self.parameters[parameter]['units']
+        except:
+            warnings.warn("Could not get unit of "+str(parameter)+", it does not \
+                        appear to be a parameter of "+str(self.getTitle()))   
+            return None
+    def getListOfParameterItems(self, itemkey):
+        items = []
+        for key in self.parameters.keys():
+            param = self.parameters[key]
+            if param != None and itemkey in param.keys():
+                items.append(param[itemkey])
+            else:
+                items.append(None)
+        return items
     def getCustomUnits(self):
         return self.custUnits
 
@@ -173,8 +255,10 @@ class MFrame:
     def addPlot(self, length = None):
         self.isPlotBool=True
         self.plotLength = length
-
+    def setHasPlot(self, hasPlot):
+        self.isPlotBool = hasPlot
     def isPlot(self):
+        #print "is plot set to true"
         return self.isPlotBool
 
     def setPlot(self, p):
@@ -224,21 +308,22 @@ class MFrame:
         return self.datalogsettingsDict['logData']
         
     def DataLoggingInfo(self):
-       # print "DATALOGGING INFO ACCESSED", self.datalogsettingsDict
+        #print "DATALOGGING INFO ACCESSED", self.datalogsettingsDict
         return self.datalogsettingsDict
        
-    def getOutOfRangeStatus(self): 
-        return self.outOfRange
+    def getOutOfRangeStatus(self, key):
+        return self.parameters[key]['out_of_range']
         
     def setOutOfRange(self, key):
-        self.outOfRange[key] = True
+        self.parameters[key]['out_of_range'] = True
 
     def setInRange(self, key):
-        self.outOfRange[key] = False
+        self.parameters[key]['out_of_range'] = False
 
     def disableRange(self):
-      self.outOfRange = {key: False for key in self.outOfRange}
-    
+        
+        for key in self.parameters:
+            self.parameters[key]['out_of_range'] = False
     def setNode(self, node):
         self.node = node
         
@@ -250,12 +335,77 @@ class MFrame:
         
     def getContainer(self):
         return self.container
-        
+    def setParameters(self, params):
+        self.parameters = params
+    
+    def getParameter(self, name):
+        try:
+            return self.parameters[name]
+        except:
+            print "Problem getting parameters for", name, ", could not find parameters."
+    def getParameters(self):
+        return self.parameters
+    def getParamAttr(self, *args, **kwargs):
+        default = kwargs.get('default', None)
+        curr = self.parameters[args[0]]
+        for arg in args[1::]:
+            if arg in curr.keys():
+                curr = curr[arg]
+            else:
+                curr[arg] = default
     def addParameter(self, params):
         '''Adds to list of parameters displayed on the gui.'''
-      
-        self.nicknames.append(params[0])
-        self.precisions.append(params[1])
-        self.units.append(params[2])
+        #print self.getTitle(), "----------add parameter called", params
+#        self.nicknames.append(params[0])
+#        self.precisions.append(params[1])
+#        self.units.append(params[2])
+#        self.readings.append(None)
+        self.parameters[params[0]]={"name":params[0], "reading":None, "units":params[1], "precision":params[2], "out_of_range":False}
+        #print "---------- add parameter NICKNAMES WAS SET", self.parameters
+    def setParamVisibility(self, param, visible):
+        '''Set whether or not a parameter shows up on the GUI.'''
+        if param in self.parameters.keys():
+            self.parameters[param]['visible'] = visible
+        else:
+            self.parameters[param] = {}
+            self.parameters[param]['visible'] = visible
+    def isParamVisible(self, param):
+        '''Get the visibility of a parameter.'''
+        return self.parameters[param]['visible']
+    def getRawDataSet(self, param):
+        '''Get a tuple structured as (name, units, [1-d data]).'''
         
-        #print "---------- add parameter NICKNAMES WAS SET", self.nicknames
+        origparam = param
+        param = param.replace(" ", "_")
+        #print "looking for", param
+        #print "Variables: ", self.dataSet.getVariables()
+        #print "data: ", np.transpose(self.dataSet.getData())
+        loc = None
+        #print "enumerate(self.dataSet.getVariables())", enumerate(self.dataSet.getVariables())
+        
+        try:
+            for i, var in enumerate(self.dataSet.getVariables()[1]):
+                #print "var[0]:", var[0]
+                if param == var[0]:
+                    #print "Found it!"
+                    loc = i
+            if loc == None:
+                return None
+            t1 = time.time()
+            data = list(np.transpose(self.dataSet.getData())[loc+1])
+            t2 = time.time()
+            # Append the most recent reading as it is not yet in 
+            # the data set.
+            
+            #data.append(self.parameters[origparam]['reading'])
+            #print "data retreived"
+            variable = self.dataSet.getVariables()[1][loc][0]
+            
+            #print "------Time to get Raw data:", t2-t1
+            return (variable, self.parameters[origparam]['units'], data)
+        except:
+            #traceback.print_exc ()
+            return None
+      
+      
+        #return self.dataSet.getVariables

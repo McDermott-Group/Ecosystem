@@ -1,16 +1,19 @@
 import sys
 sys.dont_write_bytecode = True
 import MGui             # Handles all gui operations. Independent of labrad.
-from MWeb import web
+
 #from PyQt4 import QtCore, QtGui
 
+
 from MDevices.Device import Device
+from MDevices.MVirtualDevice import MVirtualDevice
 from MDevices.Mhdf5Device import Mhdf5Device
-from multiprocessing.pool import ThreadPool
-import threading
+
 import labrad
-import labrad.units as units
-from dataChestWrapper import *
+from MNodeEditor.MNodes import runningAverage
+from MNodeEditor import MNodeTree
+
+from MNodeEditor.MNodes import MDeviceNode
 
 class nViewer:
     gui = None
@@ -29,19 +32,19 @@ class nViewer:
             print("Please start the telecomm server")
             sys.exit(1)
       
-        LeidenDRTemperature = Device("Random")
-        LeidenDRTemperature.connection(cxn)
+        Random = Device("Random")
+        Random.connection(cxn)
 
-        LeidenDRTemperature.setServerName("my_server")
-        LeidenDRTemperature.addParameter("Random Pressure","pressure", None, log = False)
-        LeidenDRTemperature.addParameter("Random Temperature", "temperature", None)
+        Random.setServerName("my_server")
+        Random.addParameter("Random Pressure","pressure", None, log = False)
+        Random.addParameter("Random Temperature", "temperature", None)
         #LeidenDRTemperature.selectDeviceCommand("select_device", 0)
-        LeidenDRTemperature.addPlot()
-        LeidenDRTemperature.setPlotRefreshRate(0.5)
-        LeidenDRTemperature.setRefreshRate(0.5)
-        LeidenDRTemperature.setYLabel("Hi", "Custom Units")
-        LeidenDRTemperature.begin()
-        self.devices.append(LeidenDRTemperature)
+        Random.addPlot()
+        Random.setPlotRefreshRate(0.5)
+        Random.setRefreshRate(0.5)
+        Random.setYLabel("Hi", "Custom Units")
+        Random.begin()
+        self.devices.append(Random)
 
         localTemp = Device("Local Temperatures")
         localTemp.connection(cxn)
@@ -70,13 +73,42 @@ class nViewer:
         #out if no datalogging is required.
        # print self.devices
 
+        self.nodeTree = MNodeTree.NodeTree()
+#        
+        temp = MDeviceNode.MDeviceNode(localTemp)
+        self.nodeTree.addNode(temp)
+        directInput = temp.addAnchor(name = "avg", type = "input", terminate = True, precision = 2)
         
+        
+        virtdev = MVirtualDevice("Test Node", yLabel = "Test Node Y Label",  units = "Test Units")
+        virtDevNode = MDeviceNode.MDeviceNode(virtdev)
+        self.devices.append(virtdev)
+        self.nodeTree.addNode(virtDevNode)
+        anchor2 = virtDevNode.addAnchor(name = "test input", type = "input")
+        anchor3 = virtDevNode.addAnchor(name = "raw input", type = "input")
+        
+        avg = runningAverage.runningAverage()
+        avg.setWindowWidth(20)
+        dataInput = avg.getAnchorByName("data")
+        output = avg.getAnchorByName("running avg")
+#        
+        anchor1 = temp.getAnchorByName("Outside Temperature")
+        # print "Trying to connect two anchors"
+        self.nodeTree.connect(anchor1,dataInput)
+        self.nodeTree.connect(anchor2,output)
+        self.nodeTree.connect(anchor1,anchor3)
+        self.nodeTree.connect(directInput,output)
+       # print randomNode.getAnchors()
         # Create the gui
+        
         self.gui = MGui.MGui()
+        
         self.gui.setRefreshRate(0.5)
         self.gui.startGui(self.devices, 'Leiden Gui',tele)
         
+
         
 # In phython, the main class's __init__() IS NOT automatically called
+
 viewer = nViewer()  
 viewer.__init__()

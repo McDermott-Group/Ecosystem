@@ -15,7 +15,7 @@ class MCompare(MNode):
         self.setTitle("Comparator")
         
     def refreshData(self):
-        print "refreshing data"
+        #print "refreshing data"
         anchors = self.getAnchors()
        
         data1 = anchors[0].getData()

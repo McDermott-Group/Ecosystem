@@ -1,3 +1,26 @@
+# Copyright (C) 2016 Noah Meltzer
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+__author__ = "Noah Meltzer"
+__copyright__ = "Copyright 2016, McDermott Group"
+__license__ = "GPL"
+__version__ = "0.0.1"
+__maintainer__ = "Noah Meltzer"
+__status__ = "Beta"
+
+
 from PyQt4 import QtCore, QtGui
 from MNodeEditor.MNode import MNode
 from MNodeEditor.MAnchor import MAnchor
@@ -5,58 +28,98 @@ from MDevices.MVirtualDevice import MVirtualDevice
 from MWeb import web
 from functools import partial
 class MVirtualDeviceNode(MNode):
-    def __init__(self, *args, **kwargs):
-       
-        super( MVirtualDeviceNode, self).__init__(None, *args, **kwargs)
-        self.setColor(52, 94, 73)
-        self.title = 'Output'
+    def __init__(self, name, *args, **kwargs):
         
-    def begin(self, *args, **kwargs):
+        super( MVirtualDeviceNode, self).__init__(None, *args, **kwargs)
+        self.name = name
+        self.setColor(52, 94, 73)
+        self.associatedDevice = None
+        self.device = None
+        self.keywordArgs = kwargs
+        
+        
+    def begin(self,*args):
         super( MVirtualDeviceNode, self).begin()
         #print "initializing MVirtualDeviceNode"
-        self.addAnchor(name = 'Self', type = 'output')
-        self.addAnchor(name = 'New Input', type = 'input')
-        self.setTitle("Virtual Device")
+        #self.addAnchor(name = 'Self', type = 'output')
+        #self.propogateData(False)
+        #self.setTitle("Virtual Device")
         #print "creating new virtual device named", self.getTitle()
-        self.associatedDevice = MVirtualDevice(self.getTitle())
+        self.associatedDevice = MVirtualDevice(self.name, **self.keywordArgs)
         self.setDevice(self.associatedDevice)
         self.associatedDevice.addPlot()
-        self.associatedDevice.addParameter(self.getAnchors()[0].getLabel())
+        #self.associatedDevice.addParameter(str(self.getAnchors()[0]), None, None, show = False)
         self.associatedDevice.getFrame().setNode(self)
         editButton = QtGui.QPushButton("Edit")
-        self.showOnGui = QtGui.QCheckBox("Show", self.nodeFrame)
-        self.showOnGui.setStyleSheet("color:rgb(189,195,199);\n background:rgb(52,94,73,0)")
-        self.showOnGui.setChecked(True)
-        self.nodeLayout.addWidget(editButton, 0, 1)
-        self.nodeLayout.addWidget(self.showOnGui, 1, 0)
-        editButton.clicked.connect(self.openVirtualDeviceGui)
-        web.gui.color = (52,94,73)
+        
+        #self.showOnGui = QtGui.QCheckBox("Show", self.nodeFrame)
+        #self.showOnGui.setStyleSheet("color:rgb(189,195,199);\n background:rgb(52,94,73,0)")
+        #self.showOnGui.setChecked(True)
+        #self.nodeLayout.addWidget(editButton, 0, 1)
+        #self.nodeLayout.addWidget(self.showOnGui, 1, 0)
+        #editButton.clicked.connect(self.openVirtualDeviceGui)
+        #web.gui.color = (52,94,73)
+        
+        #self.showOnGui.clicked.connect(partial(self.associatedDevice.getFrame().getContainer().visible))
+    def onLoad(self):
         web.gui.addDevice(self.associatedDevice)
-        self.showOnGui.clicked.connect(partial(self.associatedDevice.getFrame().getContainer().visible))
-
+        
+    def setDevice(self, device):
+        self.device = device
     def refreshData(self):
         #print "virtual device refreshing data"
         
         reading = []
-        #print "anchors:", self.getAnchors()
-        for anchor in self.getAnchors():
-            if anchor.getPipe():
-                reading.append(anchor.getPipe().getData())
+        units = []
+        paramNames = []
+        precisions = []
+        for i,anchor in enumerate(self.getAnchors()[0::]):
+           # print "anchor:", anchor
+            metadata = anchor.getMetaData()
+            data = anchor.getData()
+            if metadata != None:
+                units.append(metadata[1])
+                precisions.append(None)
+               # paramNames.append(metadata[0])
+            else:
+                #print self.associatedDevice, "units", self.associatedDevice.getFrame().getUnits()
+                units.append(self.associatedDevice.getUnit(str(anchor)))
+                
+                precisions.append(None)
+            paramNames.append(self.associatedDevice.getFrame().nicknames[i])
+            #print "data:", data
+            if type(data) is list:
+                #print "its a tuple, saving", data[2][-1]
+                
+                reading.append(data[-1])
+                
+            else:
+                reading.append(data)
           #  anchor.getLcd().display(reading[-1])
+        #print "setting virt dev readings:", reading
+        self.associatedDevice.getFrame().setUnits(units)
         
-        self.getDevice().retrieveFromNode(reading)
+        self.associatedDevice.getFrame().nicknames = paramNames
+        self.associatedDevice.setReadings(reading)
+        self.associatedDevice.setPrecisions(precisions)
+    # def onAddAnchor(self, anchor, **kwargs):
+        # 
+        # 
+    def anchorAdded(self, anchor, **kwargs):
+        #print "---------Adding parameter"
+        self.associatedDevice.addParameter(str(anchor), None, None)
         
     def pipeConnected(self, anchor, pipe):
         '''called when a pipe is added'''
-        print "pipeConnected called"
-        if anchor.getType() == 'input':
-            self.addAnchor(name = 'New Input', type = 'input')
-            self.associatedDevice.addParameter(self.getAnchors()[-1].getLabel())
-        elif anchor.getLabel() == 'Self':
-            anchor.setData(self.getDevice())
+
+        # if anchor.getType() == 'input':
+        #newAnchor = self.addAnchor(name = 'New Input', type = 'input')
+        #self.associatedDevice.addParameter(str(newAnchor), None, None)
+        # elif anchor.getLabel() == 'Self':
+            # anchor.setData(self.getDevice())
         pass
     def pipeDisconnected(self):
-       print "pipeDisconnected called"
+
        self.removeAnchor()
        
     def openVirtualDeviceGui(self):

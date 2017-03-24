@@ -23,11 +23,11 @@ class NodeGui(QtGui.QDialog):
         mainLayout.addWidget(lbl)
         
         #self.scene = QtGui.QGraphicsScene()
-        if(not tree.getScene()is None):
-            self.scene = tree.getScene()
-        else:
-            self.scene = QtGui.QGraphicsScene()
-            tree.setScene(self.scene)
+        # if(not tree.getScene()is None):
+            # self.scene = tree.getScene()
+        # else:
+            # self.scene = QtGui.QGraphicsScene()
+            # tree.setScene(self.scene)
         self.devices = devices
         self.tree = tree
         view = QtGui.QGraphicsView(self.scene)
@@ -62,17 +62,18 @@ class NodeGui(QtGui.QDialog):
         if ok:  
            #import MNodes.MCompare
            newNodeModule = importlib.import_module(str('MNodeEditor.MNodes.'+str(item)))
-           print "newNodeModule:", newNodeModule
+           #print "newNodeModule:", newNodeModule
            
            for name, obj in inspect.getmembers(newNodeModule):
                 #print obj.__dict__
                 if inspect.isclass(obj):
-                    print "looking at:", item, obj.__name__
+                    #print "looking at:", item, obj.__name__
+                    pass
                 if inspect.isclass(obj) and item == obj.__name__:
                     newNodeClass = obj
-                    print "obj:", obj
+                    #print "obj:", obj
                     self.tree.addNode(obj())
-                    print "importing type:", str(newNodeClass)
+                    #print "importing type:", str(newNodeClass)
                     break
 
                     

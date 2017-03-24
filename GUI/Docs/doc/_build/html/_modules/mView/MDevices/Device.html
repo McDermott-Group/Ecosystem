@@ -140,8 +140,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settingArgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settingUnits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span></div>
-        
+        <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setParamVisibility</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></div>
 <div class="viewcode-block" id="Device.connection"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.connection">[docs]</a>    <span class="k">def</span> <span class="nf">connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cxn</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cxn</span> <span class="o">=</span> <span class="n">cxn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">cxn</span><span class="o">.</span><span class="n">context</span><span class="p">()</span></div>
@@ -163,7 +163,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">selectedDevice</span> <span class="o">=</span> <span class="n">arg</span></div>
     
 <div class="viewcode-block" id="Device.onBegin"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.onBegin">[docs]</a>    <span class="k">def</span> <span class="nf">onBegin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-      
+        <span class="nb">print</span> <span class="s2">&quot;onbegin here&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setNicknames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setReadingIndices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settingResultIndices</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
@@ -334,12 +334,11 @@
                                   <span class="s2">&quot;cannot be displayed.&quot;</span>
                                   <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">reading</span><span class="p">)))</span>
                 <span class="c1"># Pass the readings and units to the frame.</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setReadings</span><span class="p">(</span><span class="n">readings</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">setReadings</span><span class="p">(</span><span class="n">readings</span><span class="p">)</span>
                 <span class="c1">#print &quot;setting units&quot;</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setUnits</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setPrecisions</span><span class="p">(</span><span class="n">precisions</span><span class="p">)</span>
-                <span class="c1"># Save the data.</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">datachest</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
                 <span class="c1"># If there was an error, retract it.</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">retractError</span><span class="p">()</span>
             <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>

@@ -36,6 +36,7 @@ sys.dont_write_bytecode = True
 
 class MAlert:
     def __init__(self):
+
         # Configure all public variables
         self.tele = web.telecomm
         self.devices = web.devices
@@ -56,45 +57,41 @@ class MAlert:
                     #print(len(self.mailSent))
     def begin(self):
         # This runs on its own thread
-        self.deviceThread = threading.Thread(target = self.monitorReadings, args=[])
-        # If the main thread stops, stop the child thread
-        self.deviceThread.daemon = True
-        # Start the thread
-        self.deviceThread.start()
+        
         self.keepGoing = True
-    def monitorReadings(self):
+    def monitorReadings(self, dev):
         # The dictionary keys are in the format 'devicename:parametername' : '
        # print "checking readigns"
-        for i in range(len(self.devices)):
+       
            # print "checking device", i
            # print "nicknames:", self.devices[i].getFrame().getNicknames()
-            for y, param in enumerate(self.devices[i].getFrame().getNicknames()):
+            for y, param in enumerate(dev.getFrame().getNicknames()):
                 #print "checking param", param
-                key = self.devices[i].getFrame().getTitle()+":"+param
+                #print "Nicknames from MAlert:", self.devices[i].getFrame().getNicknames()
+                key = dev.getFrame().getTitle()+":"+dev.getFrame().getNicknames()[y]
                 enabled, min, max, people = web.limitDict[key]
                 min = self.toFloat(min)
                 max = self.toFloat(max)
-                if self.devices[i].getFrame().getReadings() != None:
-                    reading = self.devices[i].getFrame().getReadings()[y]
+                if dev.getFrame().getReading(param) != None:
+                    reading = dev.getFrame().getReading(param)
                     #print "enabled: ", enabled
                     if(enabled):
                         #print key,self.dict[key]
                         if(min != None and min>reading):
                             #print "MALERT reading below min ", min
-                            self.devices[i].getFrame().setOutOfRange(key)
-                            self.sendMail(self.devices[i], y, reading, people, min, max)
+                            dev.setOutOfRange(param)
+                            self.sendMail(dev, param, reading, people, min, max)
                             #print " min sent to ", people
                         elif(max != None and max<reading):
-                            self.devices[i].getFrame().setOutOfRange(key)
-                            self.sendMail(self.devices[i], y, reading, people, min, max)      
+                            dev.setOutOfRange(param)
+                            self.sendMail(dev, param, reading, people, min, max)      
                             #print " max sent to ", people
 
                         else:
-                            self.devices[i].getFrame().setInRange(key)    
+                            dev.getFrame().setInRange(param)
                     else:
-                        self.devices[i].getFrame().setInRange(key)
-        if(self.keepGoing):
-            threading.Timer(web.persistentData.persistentDataAccess(None, 'guiRefreshRage',default = 1), self.monitorReadings).start()
+                        dev.getFrame().setInRange(param)
+        
     def toFloat(self, val):
         try:
             return float(val)
@@ -104,25 +101,25 @@ class MAlert:
     def stop(self):
         self.keepGoing = False
 
-    def sendMail(self, device, y, reading, people, min, max):
+    def sendMail(self, device, param, reading, people, min, max):
         '''Send mail if the given amount of time has elapsed.'''
         HOURS_BETWEEN_EMAILS = 3
         elapsedHrs = (time.time()-self.t1)/3600
-        key = device.getFrame().getTitle()+":"+device.getFrame().getNicknames()[y] 
+        key = device.getFrame().getTitle()+":"+param
         if people != '':
             if(not self.mailSent[key]):
             
                 self.mailSent[key] = True
                 self.message.append((time.strftime('%x at %X',time.localtime(time.time()))
-                    +" | "+device.getFrame().getTitle()+"->"
-                    + device.getFrame().getNicknames()[y] + ": "+
-                    str(device.getFrame().getReadings()[y])+
-                    device.getFrame().getUnits()[y] +
+                    +" | "+str(device)+"->"
+                    + param + ": "+
+                    str(device.getReading(param))+
+                    device.getUnit(param) +
                     " | Range: "
                     +str(min) 
-                    + device.getFrame().getUnits()[y]+
+                    + device.getUnit(param)+
                     " - " +str(max)+
-                    device.getFrame().getUnits()[y]+"."))
+                    device.getUnit(param)+"."))
                 
                 self.message.append((""))
             if(HOURS_BETWEEN_EMAILS<elapsedHrs):

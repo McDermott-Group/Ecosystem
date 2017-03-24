@@ -25,6 +25,10 @@ import MGui     # Handles all GUI operations. Independent of  LabRAD.
 
 from MDevices.RS232Device import RS232Device
 
+from MNodeEditor import MNodeTree
+from MNodeEditor.MNodes import MDeviceNode
+from MNodeEditor.MNodes import runningAverage
+
 import labrad
 import labrad.units as units
 import time
@@ -57,7 +61,7 @@ class mViewer:
             sys.exit(1)
     
         
-        lm3000 = RS232Device("Light Meter 3000", "COM7")
+        lm3000 = RS232Device("Light Meter 3000", "COM7", baud = 115200)
         lm3000.addButton("Off", 'b0', message = "You are about to turn off the LED.")
         lm3000.addButton("20%", 'b2')
         lm3000.addButton("50%", 'b5')
@@ -69,6 +73,22 @@ class mViewer:
         lm3000.begin()
         self.devices.append(lm3000)
 
+        self.nodeTree = MNodeTree.NodeTree()
+        
+        lightMeterNode = MDeviceNode.MDeviceNode(lm3000)
+        self.nodeTree.addNode(lightMeterNode)
+        rawLightOutput = lightMeterNode.getAnchorByName("Light Level")
+        avgLight = lightMeterNode.addAnchor(name = "Average Light Level", type = "input")
+
+        avg = runningAverage.runningAverage()
+        avg.setWindowWidth(2)
+        avgInput = avg.getAnchorByName("data")
+        avgOutput = avg.getAnchorByName("running avg")
+        
+        self.nodeTree.connect(rawLightOutput, avgInput)
+        self.nodeTree.connect(avgOutput, avgLight)
+        # self.nodeTree.connect(output, virtAvgInput)
+         
         # Create the gui.
         self.gui = MGui.MGui()
         self.gui.startGui(self.devices, 'Leiden DR GUI', tele)

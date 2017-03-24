@@ -15,7 +15,7 @@ class grapher(MNode):
         self.addAnchor(name = 'Device', type = 'input')
         self.setTitle("Grapher")
     def pipeConnected(self,anchor, pipe):
-        print "device connected to grapher:", anchor.getData()
+        #print "device connected to grapher:", anchor.getData()
         self.frame = QtGui.QFrame()
         
         self.frameSizePolicy = QtGui.QSizePolicy()

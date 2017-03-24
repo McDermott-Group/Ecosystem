@@ -10,6 +10,7 @@ Submodules
    mView.MNodeEditor.MNodes.MLabradNode
    mView.MNodeEditor.MNodes.MVirtualDeviceNode
    mView.MNodeEditor.MNodes.grapher
+   mView.MNodeEditor.MNodes.runningAverage
 
 Module contents
 ---------------

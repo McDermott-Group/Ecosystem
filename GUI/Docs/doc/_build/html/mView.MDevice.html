@@ -49,6 +49,16 @@
 <dt id="mView.MDevice.MDevice">
 <em class="property">class </em><code class="descclassname">mView.MDevice.</code><code class="descname">MDevice</code><span class="sig-paren">(</span><em>name</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">PyQt4.QtCore.QThread</span></code></p>
+<p>MView uses the MDevice class to give all sources of data a common 
+interface with which to interact in the context of MView. These 
+sources of data can be anything including but not limited to LabRad 
+servers, RS232 devices, GPIB Devices, they can even represent the 
+contents of .hdf5 files. Devices in MView are created by instantiating
+their device drivers. For example, if there are two RS232 devices, 
+we create two instances of the RS232 device driver. This means that 
+only one generic device driver needs to be created for one interface 
+(RS232, LabRad Servers, HDF5 files, etc.) and it can then be applied 
+to all devices that use the same interface.</p>
 <dl class="method">
 <dt id="mView.MDevice.MDevice.addButton">
 <code class="descname">addButton</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.addButton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.addButton" title="Permalink to this definition">¶</a></dt>
@@ -77,7 +87,8 @@
 <dl class="method">
 <dt id="mView.MDevice.MDevice.begin">
 <code class="descname">begin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.begin" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Start the device.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="mView.MDevice.MDevice.callQuery">
@@ -94,6 +105,11 @@ function with which the refresh rate can be configured.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="mView.MDevice.MDevice.configureDataLogging">
+<code class="descname">configureDataLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.configureDataLogging"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.configureDataLogging" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="mView.MDevice.MDevice.getContainer">
 <code class="descname">getContainer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.getContainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.getContainer" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -105,9 +121,32 @@ function with which the refresh rate can be configured.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="mView.MDevice.MDevice.isLogging">
+<code class="descname">isLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.isLogging"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.isLogging" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter for whether or not datalogging is enabled for this device.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">boolean</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="mView.MDevice.MDevice.log">
 <code class="descname">log</code><span class="sig-paren">(</span><em>log</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.log" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Tell the device whether to log data or not</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>log</strong> &#8211; Boolean</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="mView.MDevice.MDevice.logData">
@@ -116,8 +155,13 @@ function with which the refresh rate can be configured.</p>
 
 <dl class="method">
 <dt id="mView.MDevice.MDevice.onAddParameter">
-<code class="descname">onAddParameter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.onAddParameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.onAddParameter" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">onAddParameter</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.onAddParameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.onAddParameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when when a new parameter is added. 
+It is passed whatever MDevice.addParameter() is passed. 
+(Note: MDevice.onAddParameter() and MDevice.addParameter() 
+are different). This function must return a tuple in 
+the form ((str) Parameter Name, (int)Precision, (str) units)</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="mView.MDevice.MDevice.onBegin">
@@ -136,6 +180,11 @@ MView GUI has finished loading. This allows the
 MDevice to configure pieces of MView only available
 once the program has fully loaded.</p>
 </dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.plot">
+<code class="descname">plot</code><span class="sig-paren">(</span><em>plot</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MDevice.MDevice.prompt">
@@ -167,7 +216,16 @@ what to do based on the button pushed.</p>
 <dl class="method">
 <dt id="mView.MDevice.MDevice.setReadings">
 <code class="descname">setReadings</code><span class="sig-paren">(</span><em>readings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setReadings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setReadings" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Tell the frame what the readings are so that they can be logged.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>readings</strong> &#8211; Type: list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="mView.MDevice.MDevice.setRefreshRate">
@@ -192,22 +250,14 @@ what to do based on the button pushed.</p>
 <dl class="method">
 <dt id="mView.MDevice.MDevice.updateContainer">
 <code class="descname">updateContainer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.updateContainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.updateContainer" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Refresh the devices container (Tile) on the GUI
+by emitting an update signal</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="mView.MDevice.MDevice.updateSignal">
 <code class="descname">updateSignal</code><a class="headerlink" href="#mView.MDevice.MDevice.updateSignal" title="Permalink to this definition">¶</a></dt>
-<dd><p>MView uses the MDevice class to give all sources of data a common
-interface with which to interact in the context of MView. These
-sources of data can be anything including but not limited to LabRad
-servers, RS232 devices, GPIB Devices, they can even represent the
-contents of .hdf5 files. Devices in MView are created by instantiating
-their device drivers. For example, if there are two RS232 devices,
-we create two instances of the RS232 device driver. This means that
-only one generic device driver needs to be created for one interface
-(RS232, LabRad Servers, HDF5 files, etc.) and it can then be applied
-to all devices that use the same interface.</p>
-</dd></dl>
+<dd></dd></dl>
 
 </dd></dl>
 
