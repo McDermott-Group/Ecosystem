@@ -227,6 +227,7 @@ class dataChestWrapper:
         Run when GUI is exited. Cleanly terminates the dataset 
         with NaN values.
         """
+        
         dStamp = dateStamp()
         # If the dataset was being logged.
         if self.hasData:
@@ -260,9 +261,12 @@ class dataChestWrapper:
             currentlyLogging = False
             #devReadings = self.device.getFrame().getReadings()
            # print "DevReadings:", devReadings
+            enabled = self.device.getFrame().DataLoggingInfo()['channels']
+            #print "enabled:", enabled
             for y,param in enumerate(self.device.getParameters()):
                 # Channels that should be logged
-                enabled = self.device.getFrame().DataLoggingInfo()['channels']
+                
+                
                 nickname = param
                 # This checks if the reading is displayed on the GUI
                 # if it is not, then it does not include it in
@@ -278,14 +282,14 @@ class dataChestWrapper:
                     #print "readings:", devReadings
                     # If the device has readings.
                 reading = self.device.getReading(param)
-                if reading is not None:
+                if reading is not None and enabled[param]:
                     readings.append(float(reading))
                 else:
                     readings.append(np.nan)
 
             # If the device has readings, add data to dataset.
             if(readings is not None and currentlyLogging):
-              
+                print self.device, "is logging"
                 indepvars.append(self.dStamp.utcNowFloat())
                 depvars.extend(readings)
                 vars.extend(indepvars)
@@ -301,6 +305,7 @@ class dataChestWrapper:
                     self.configureDataSets()
                 
             if self.keepLoggingNan and not currentlyLogging:
+                print self.device, "not logging"
                 self.done()
 
                 self.keepLoggingNan = False

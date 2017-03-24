@@ -48,7 +48,7 @@ class MDeviceContainerWidget(QtGui.QFrame):
         self.fontBig.setKerning(True)
         self.fontBig.setPointSize(18)
 
-        self.isRed = False
+        self.isRed = {}
         titleWidget = QtGui.QLabel(device.getFrame().getTitle())
         titleWidget.setFont(self.fontBig)
         titleWidget.setStyleSheet("color:rgb(189, 195, 199);")
@@ -86,6 +86,7 @@ class MDeviceContainerWidget(QtGui.QFrame):
                 units = QtGui.QLabel('')
                 grid.addWidget(units, y, 2)
                 units.setFont(self.fontBig)
+                units.setStyleSheet("color:rgb(189, 195, 199);")
                 self.unitLabels.append(units)
                 
                 #lcd = QtGui.QLCDNumber(self)
@@ -144,8 +145,9 @@ class MDeviceContainerWidget(QtGui.QFrame):
         self.grid.addWidget(units, self.grid.rowCount()-1, 3)
         
         units.setFont(self.fontBig)
+        units.setStyleSheet("color:rgb(189, 195, 199);")
         self.unitLabels.append(units)
-     
+        
         self.lcds.append(lcd)
         lcd.setNumDigits(11)
         lcd.setSegmentStyle(QtGui.QLCDNumber.Flat)
@@ -220,14 +222,19 @@ class MDeviceContainerWidget(QtGui.QFrame):
                     #self.lcds[y].setStyleSheet("color:rgb(189, 100, 5);\n")
                     if (self.device.getFrame().isParamVisible(key)):
                         #print self.device.isOutOfRange(key)
-                        if self.device.isOutOfRange(key) and not self.isRed:
+                        
+                        if self.device.isOutOfRange(key) and not self.isRed.get(key, False):
                             #print "turning it red", self.device, key
                             self.lcds[y].getLCD().setStyleSheet("color:rgb(210, 100, 10);\n")
-                            self.isRed = True
-                        elif self.isRed:
+                            self.nicknameLabels[y].setStyleSheet("color:rgb(210, 100, 10);\n")
+                            self.unitLabels[y].setStyleSheet("color:rgb(210, 100, 10);\n")
+                            self.isRed[key] = True
+                        elif self.isRed.get(key, False) and not self.device.isOutOfRange(key):
                             #print "turning it white"
                             self.lcds[y].getLCD().setStyleSheet("color:rgb(189, 195, 199);")
-                            self.isRed = False
+                            self.nicknameLabels[y].setStyleSheet("color:rgb(189, 195, 199);")
+                            self.unitLabels[y].setStyleSheet("color:rgb(189, 195, 199);")
+                            self.isRed[key] = False
                         try:
                             precision = self.device.getPrecision(key)
                             #print self.device, key, "precision:", precision

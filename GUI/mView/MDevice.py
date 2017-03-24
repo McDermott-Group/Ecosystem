@@ -249,14 +249,14 @@ class MDevice(QThread):
         self.frame.disableRange()
     def setReading(self, parameter, reading):
         self.frame.setReading(parameter, reading)
-        self.updateContainer()
+        
     def getUnit(self, parameter):
         return self.frame.getUnit(parameter)
     def setUnit(self, parameter, unit):
         self.frame.setUnit(parameter, unit)
     def setPrecision(self, parameter, precision):
         self.frame.setPrecision(parameter, precision)
-        self.updateContainer()
+        
     def getPrecision(self, parameter):
         return self.frame.getPrecision(parameter)
     def getReading(self, parameter):
