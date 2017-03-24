@@ -41,6 +41,9 @@ class MReadout(QtGui.QWidget):
         #self.label.hide()
         #self.lcd.hide()
         self.layout.setContentsMargins(0,0,0,0)
+    def setStyle(self, style):
+        self.lcd.setStyleSheet(style)
+        self.label.setStyleSheet(style)
     def getLCD(self):
         return self.lcd
     def getLabel(self):

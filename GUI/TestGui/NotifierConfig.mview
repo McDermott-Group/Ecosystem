@@ -2,9 +2,9 @@
 S'Random:Random Pressure'
 p2
 (lp3
-I01
-aF1
-aF10
+I00
+aS''
+aS''
 aV
 asS'Local Temperatures:Humidity'
 p4
@@ -37,9 +37,9 @@ aV
 asS'Local Temperatures:avg'
 p12
 (lp13
-I01
-aF1
-aF10
+I00
+aS''
+aS''
 aV
 asS'Test Node:test input'
 p14

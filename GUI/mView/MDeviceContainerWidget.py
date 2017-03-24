@@ -99,7 +99,7 @@ class MDeviceContainerWidget(QtGui.QFrame):
                 lcd.getLCD().setFrameShadow(QtGui.QFrame.Plain)
                 lcd.getLCD().setLineWidth(web.ratio)
                 lcd.getLCD().setMidLineWidth(100)
-                lcd.getLCD().setStyleSheet("color:rgb(189, 195, 199);\n")
+                lcd.setStyle("color:rgb(189, 195, 199);\n")
                 lcd.getLCD().setFixedHeight(web.scrnHeight / 30)
                 lcd.getLCD().setMinimumWidth(web.scrnWidth / 7)
                 lcd.setLabelSize(20)
@@ -225,13 +225,13 @@ class MDeviceContainerWidget(QtGui.QFrame):
                         
                         if self.device.isOutOfRange(key) and not self.isRed.get(key, False):
                             #print "turning it red", self.device, key
-                            self.lcds[y].getLCD().setStyleSheet("color:rgb(210, 100, 10);\n")
+                            self.lcds[y].setStyle("color:rgb(210, 100, 10);\n")
                             self.nicknameLabels[y].setStyleSheet("color:rgb(210, 100, 10);\n")
                             self.unitLabels[y].setStyleSheet("color:rgb(210, 100, 10);\n")
                             self.isRed[key] = True
                         elif self.isRed.get(key, False) and not self.device.isOutOfRange(key):
                             #print "turning it white"
-                            self.lcds[y].getLCD().setStyleSheet("color:rgb(189, 195, 199);")
+                            self.lcds[y].setStyle("color:rgb(189, 195, 199);")
                             self.nicknameLabels[y].setStyleSheet("color:rgb(189, 195, 199);")
                             self.unitLabels[y].setStyleSheet("color:rgb(189, 195, 199);")
                             self.isRed[key] = False
@@ -244,17 +244,25 @@ class MDeviceContainerWidget(QtGui.QFrame):
                                 format = "%." + str(int(precision)) + "f"
                             else:
                                 format = "%f"
-                            #print "readings:",param['reading']
+                            try:
+                                param['reading'] = float(param['reading'])
+                            except:
+                                pass
+                            print "readings:",param['reading'], type(param['reading'])
                             if type(param['reading']) is float or \
                                type(param['reading']) is np.float64:
-                                   
+                            
                                 #print "it is a float"
                                 
                                 if not math.isnan(param['reading']):
-                                    self.lcds[y].display(format % param['reading'])
+                                    self.lcds[y].display(param['reading'])
+                                else:
+                                    self.lcds[y].display("No Reading")
+                                
                             else:
                                 #print "not a float", type(param['reading'])
                                 self.lcds[y].display(param['reading'])
+                                
                         except:
                             traceback.print_exc()
                         if len(self.unitLabels)>y:

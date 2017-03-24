@@ -125,6 +125,8 @@ class MAnchor(object):
                         #print "Pipes:", [str(pipe) for pipe in self.pipes]
                         #print "Calling refresh data from node:", self.parent, ", Anchor:", self
                         self.parentNode().refreshData()
+                        if self.parentNode().getDevice() != None:
+                            self.parentNode().getDevice().updateContainer()
                         pass
             
         #self.lcd.display(data)

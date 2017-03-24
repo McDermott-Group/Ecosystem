@@ -289,7 +289,7 @@ class dataChestWrapper:
 
             # If the device has readings, add data to dataset.
             if(readings is not None and currentlyLogging):
-                print self.device, "is logging"
+                #print self.device, "is logging"
                 indepvars.append(self.dStamp.utcNowFloat())
                 depvars.extend(readings)
                 vars.extend(indepvars)
