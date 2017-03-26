@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = ATS Waveform Digitizer
-version = 1.7.1
+version = 1.7.2
 description = Communicates with AlazarTech Digitizers over PCIe interface.
 
 [startup]
@@ -635,21 +635,23 @@ class AlazarTechServer(LabradServer):
         samplesPerRecord = self.samples_per_record(c)
         numberOfRecords = self.number_of_records(c)
 
-        chA_len = len(chA_weight)
+        # labrad.units.DimensionlessArray to numpy.ndarray conversion.
+        chA = chA_weight['']
+        chB = chB_weight['']
+
+        chA_len = len(chA)
         if chA_len > samplesPerRecord:
-            chA_weight = chA_weight[:samplesPerRecord]
+            chA = chA[:samplesPerRecord]
         elif chA_len < samplesPerRecord:
-            chA_weight = np.hstack([chA_weight,
-                                    np.zeros(samplesPerRecord - chA_len)])
+            chA = np.hstack([chA, np.zeros(samplesPerRecord - chA_len)])
 
-        chB_len = len(chB_weight)
+        chB_len = len(chB)
         if chB_len > samplesPerRecord:
-            chB_weight = chB_weight[:samplesPerRecord]
+            chB = chB[:samplesPerRecord]
         elif chB_len < samplesPerRecord:
-            chB_weight = np.hstack([chB_weight,
-                                    np.zeros(samplesPerRecord - chB_len)])
-        iqBuffer = c['iqBuffers']
+            chB = np.hstack([chB, np.zeros(samplesPerRecord - chB_len)])
 
+        iqBuffer = c['iqBuffers']
         timeSeries = c['reshapedRecordsBuffer']
 
         # This is the original data processing. Keep it for the future
@@ -657,11 +659,9 @@ class AlazarTechServer(LabradServer):
         # for i in range(numberOfRecords):
         #     vA = timeSeries[i][0]
         #     vB = timeSeries[i][1]
-        #     iqBuffer[i][0] = np.mean(chA_weight * vA - chB_weight * vB) # I
-        #     iqBuffer[i][1] = np.mean(chB_weight * vA + chA_weight * vB) # Q
+        #     iqBuffer[i][0] = np.mean(chA * vA - chB * vB) # I
+        #     iqBuffer[i][1] = np.mean(chB * vA + chA * vB) # Q
 
-        chA = chA_weight['']
-        chB = chB_weight['']
         chs = np.stack([np.hstack([chA, -chB]).T,
                         np.hstack([chB, chA]).T], axis=1)
         np.dot(timeSeries.reshape(numberOfRecords, -1), np.float32(chs),
