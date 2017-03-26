@@ -613,8 +613,8 @@ class ADRServer(DeviceServer):
                 except AttributeError:
                     pass # in case instrument didn't initialize properly and is None
             # pressure
-            pressures = yield instruments['Pressure Guage'].get_pressures()
             try:
+                pressures = yield instruments['Pressure Guage'].get_pressures()
                 pressure = pressures[0]['torr'] * units.torr
             except Exception as e:
                 pressure = numpy.nan * units.torr
