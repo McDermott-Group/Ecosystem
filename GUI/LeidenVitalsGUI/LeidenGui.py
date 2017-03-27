@@ -22,7 +22,7 @@ import labrad
 from dataChestWrapper import *
 import MGui # Handles all GUI operations. Independent of LabRAD.
 from MDevices.Device import Device
-
+from MDevices.Mhdf5Device import Mhdf5Device
 
 class nViewer:
     gui = None
@@ -53,14 +53,14 @@ class nViewer:
             print("Please start the telecomm server")
             time.sleep(2)
             sys.exit(1)
-
+        self.gui = MGui.MGui()
         PT1000s = Device("50K and 3K Pt1000 Temperatures")
         PT1000s.connection(cxn)
         PT1000s.setServerName("goldstein_s_pt1000_temperature_monitor")
         PT1000s.addParameter("50K Stage Temperature",
-                "get_temperatures", None, 0, precision=1)
+                "get_temperatures", None, index = 0, precision=1)
         PT1000s.addParameter("3K Stage Temperature",
-                "get_temperatures", None, 1, precision=1)
+                "get_temperatures", None, index = 1, precision=1)
         # PT1000s.addParameter("50K Stage PT1000 Resistance",
                 # "get_resistances", None, 0)
         # PT1000s.addParameter("3K Stage PT1000 Resistance",
@@ -69,7 +69,7 @@ class nViewer:
         PT1000s.setYLabel("Temperature")
         PT1000s.addPlot()
         PT1000s.begin()
-        self.devices.append(PT1000s)
+        self.gui.addDevice(PT1000s)
 
         LeidenDRTemperature = Device("Dilution Unit Temperatures")
         LeidenDRTemperature.connection(cxn)
@@ -83,7 +83,7 @@ class nViewer:
         LeidenDRTemperature.addPlot()
         LeidenDRTemperature.begin()
         LeidenDRTemperature.setYLabel("Temperature")
-        self.devices.append(LeidenDRTemperature)
+        self.gui.addDevice(LeidenDRTemperature)
         
         LeidenDRTemperature = Device("Mix Pt1000 Temperature")
         LeidenDRTemperature.connection(cxn)
@@ -93,22 +93,19 @@ class nViewer:
         LeidenDRTemperature.addPlot()
         LeidenDRTemperature.begin()
         LeidenDRTemperature.setYLabel("Temperature")
-        self.devices.append(LeidenDRTemperature)
+        self.gui.addDevice(LeidenDRTemperature)
 
         Vacuum = Device("Vacuum")
         Vacuum.connection(cxn)
         Vacuum.setServerName("pfeiffer_vacuum_maxigauge")
-        Vacuum.addParameter("OVC Pressure", "get_pressures", None, 3,
-                'mbar', 4)
-        Vacuum.addParameter("IVC Pressure", "get_pressures", None, 4,
-                'mbar', 4)
-        Vacuum.addParameter("Still Pressure", "get_pressures", None, 5,
-                'mbar', 4)
+        Vacuum.addParameter("OVC Pressure", "get_pressures", None, index = 3)
+        Vacuum.addParameter("IVC Pressure", "get_pressures", None, index = 4)
+        Vacuum.addParameter("Still Pressure", "get_pressures", None, index = 5)
         Vacuum.setYLabel("Pressure")
         Vacuum.selectDeviceCommand("select_device", 0)
         Vacuum.addPlot()
         Vacuum.begin()
-        self.devices.append(Vacuum)
+        self.gui.addDevice(Vacuum)
 
         Temperature = Device("Water Temperature")
         Temperature.connection(cxn)
@@ -119,7 +116,7 @@ class nViewer:
         Temperature.setYLabel("Temperature")
         Temperature.addPlot()
         Temperature.begin()
-        self.devices.append(Temperature)
+        self.gui.addDevice(Temperature)
 
         Compressor = Device("Compressor")
         Compressor.connection(cxn)
@@ -131,18 +128,18 @@ class nViewer:
                 "You are about to turn the compressor on.",
                 "start", None)
         Compressor.addParameter("Input Water Temperature",
-                "current_temperatures_only", None, 0, 'degC', 1)
+                "current_temperatures_only", None, index =0)
         Compressor.addParameter("Output Water Temperature",
-                "current_temperatures_only", None, 1, 'degC', 1)
+                "current_temperatures_only", None, index =1)
         Compressor.addParameter("Helium Temperature",
-                "current_temperatures_only", None, 2, 'degC', 1)
+                "current_temperatures_only", None, index =2)
         Compressor.addParameter("Oil Temperature",
-                "current_temperatures_only", None, 3, 'degC', 1)
+                "current_temperatures_only", None, index =3)
         Compressor.selectDeviceCommand("select_device", 0)
         Compressor.setYLabel("Temperature")
         Compressor.addPlot()
         Compressor.begin()
-        self.devices.append(Compressor)
+        self.gui.addDevice(Compressor)
 
         Flow = Device("Water Flow")
         Flow.connection(cxn)
@@ -152,12 +149,15 @@ class nViewer:
         Flow.setYLabel("Flow Rate")
         Flow.addPlot()
         Flow.begin()
-        self.devices.append(Flow)
-
+        self.gui.addDevice(Flow)
+        
+        grapher = Mhdf5Device("Grapher")
+        grapher.begin()
+        
+        self.gui.addDevice(grapher)
         # Create the gui.
-        self.gui = MGui.MGui()
-        self.gui.startGui(self.devices, 'Leiden DR GUI',
-                tele)
+        
+        self.gui.startGui('Leiden DR GUI',tele)
 
 
 # In Python, the main class's __init__() IS NOT automatically called.

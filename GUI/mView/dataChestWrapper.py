@@ -274,7 +274,7 @@ class dataChestWrapper:
             if custUnits is None:
                 custUnits = ''
             self.dataSet.addParameter("y_label", self.device.getFrame().getYLabel())
-            print "setting units:", custUnits
+            #print "setting units:", custUnits
             self.dataSet.addParameter("custom_units", custUnits)
             for y,param in enumerate(self.device.getParameters()):
                 # Channels that should be logged

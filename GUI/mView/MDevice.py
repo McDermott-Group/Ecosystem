@@ -280,6 +280,8 @@ class MDevice(QThread):
         self.frame.setParamVisibility(parameter, True)
     def getParamVisibility(self, paramteter):
         return self.frame.getParamVisibility(parameter)
+    def getReadingIndex(self, parameter):
+        return self.frame.getReadingIndex(parameter)
 #    def addReading(self, reading, units=None, precision=None):
 #        currReadings = self.frame.getReadings()
 #        currReadings.extend(reading)
@@ -306,9 +308,9 @@ class MDevice(QThread):
         if not self.keepGoing:
             return
             
-        self.lock.acquire()
+        #self.lock.acquire()
         self.query()
-        self.lock.release()
+        #self.lock.release()
         node = self.frame.getNode()        
         
         if self.datachest is not None and self.doneLoading:

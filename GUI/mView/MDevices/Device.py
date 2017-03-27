@@ -88,10 +88,10 @@ class Device(MDevice):
     def setServerName(self, name):
         self.serverName = name
         
-    def onAddParameter(self, parameter, setting = None, arg=None, index=None, **kwargs):
+    def onAddParameter(self, parameter, setting = None, arg=None, **kwargs):
         precision = kwargs.get('precision', 2)
         units = kwargs.get('units', None)
-
+        index = kwargs.get('index', None)
         self.frame.DataLoggingInfo()['channels'][parameter] = kwargs.get('log', True)
         
         self.setCommand(parameter, [setting, arg])
@@ -261,9 +261,9 @@ class Device(MDevice):
 
                     # If the reading is an array of values and units.
                     if isinstance(reading, ValueArray):
-                        index = self.getSettingResultIndex(name)
+                        index = self.getReadingIndex(name)
                         units = reading.units
-                        if indices != None and \
+                        if index != None and \
                                 isinstance(reading[index], Value):
                             reading = reading[index]
                         elif len(reading) == 1:
@@ -271,7 +271,7 @@ class Device(MDevice):
                         else:
                             reading = reading[i]
                         self.setReading(name, reading)
-                        self.setUnits(name, units)
+                        self.setUnit(name, units)
                     if isinstance(reading, Value):
                         #print "Received labrad Value type"
                         
