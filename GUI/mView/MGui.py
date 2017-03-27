@@ -76,6 +76,8 @@ class MGui(QtGui.QMainWindow):
     # Used to allow query to keep calling itself.
     keepGoing = True
     MAlert=None
+    started = False
+    widgetsToAdd = []
     # splash_pix = QtGui.QPixmap('logo.png')
     # splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
     # splash.show()
@@ -84,7 +86,8 @@ class MGui(QtGui.QMainWindow):
         
 
         web.gui = self
-    def initGui(self, devices, parent=None):
+        self.devices = []
+    def initGui(self, parent=None):
         """Configure all GUI elements."""
         QtGui.QWidget.__init__(self, parent)
         app.setActiveWindow(self)
@@ -162,9 +165,12 @@ class MGui(QtGui.QMainWindow):
 
         # Which column are we adding a tile to next.
         #devices = web.devices
+        
         self.index = 0
-        for i,device in enumerate(devices):
+        for i,device in enumerate(self.devices):
             self.addDevice(device)
+        for widget in self.widgetsToAdd:
+            self.addWidget(widget)
         #self.mainVBox[0].addStretch(0)
         #self.mainVBox[1].addStretch(0)
         #print("GUI initialized.")
@@ -185,20 +191,27 @@ class MGui(QtGui.QMainWindow):
         #self.neh.stop()
         
     def addDevice(self, device):
-        if self.VBoxColumn == 0:
-            self.VBoxColumn = 1
+        if self.started:
+            if self.VBoxColumn == 0:
+                self.VBoxColumn = 1
+            else:
+                self.VBoxColumn = 0
+           
+            container = MDeviceContainerWidget(device, self)
+            self.deviceWidgets.append(container)
+            self.mainVBox[self.VBoxColumn].addWidget(container)
         else:
-            self.VBoxColumn = 0
-       
-        container = MDeviceContainerWidget(device, self)
-        self.deviceWidgets.append(container)
-        self.mainVBox[self.VBoxColumn].addWidget(container)
+            self.devices.append(device)
     def addWidget(self, widget):
-        if self.VBoxColumn == 0:
-            self.VBoxColumn = 1
+        if self.started:
+            if self.VBoxColumn == 0:
+                self.VBoxColumn = 1
+            else:
+                self.VBoxColumn = 0
+            self.mainVBox[self.VBoxColumn].addWidget(widget)
+            widget.show()
         else:
-            self.VBoxColumn = 0
-        self.mainVBox[self.VBoxColumn].addWidget(widget)
+            self.widgetsToAdd.append(widget)
     def mousePressEvent(self, event):
         
         focused_widget = QtGui.QApplication.focusWidget()
@@ -240,13 +253,14 @@ class MGui(QtGui.QMainWindow):
             self.MAlert.stop()
         self.MAlert = MAlert.MAlert()
         self.MAlert.begin()
-    def startGui(self, devices, title, tele, autostart = True):
+    def startGui(self, title, tele, autostart = True):
         """Start the GUI."""
         #print "Starting GUI."
         # Used as the name of the dataChest data title.
         
         #web.devices = devices
         # Start the notifier.
+        self.started = True
         web.telecomm = tele
         self.NotifierGUI = NotifierGUI()
         self.startMAlert()
@@ -261,7 +275,7 @@ class MGui(QtGui.QMainWindow):
         else:
             web.ratio = float(self.scrnHeight) / 1800 + 1
         # Call the class's initialization function.
-        self.initGui(devices)
+        self.initGui()
         self.setWindowTitle(title)
         web.title = title
         # Show the GUI.

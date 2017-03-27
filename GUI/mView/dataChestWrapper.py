@@ -116,7 +116,8 @@ class dataChestWrapper:
                 if relativePath == '.':
                     raise IOError("Cannot create dataset directly under DATA_CHEST_ROOT.")
                 path = relativePath.split("\\")
-                self.dataSet = dataChest(path[0])
+                #print "path:", str(path[0])
+                self.dataSet = dataChest(str(path[0]))
                 self.dataSet.cd('')
                 relativepath = os.path.relpath(location, self.dataSet.pwd().replace("/","\\"))
                 path = relativePath.split("\\")
@@ -215,11 +216,11 @@ class dataChestWrapper:
             # (independent and dependent) make up the dataset.
             # DataWidth is used internally only.
             self.dataSet.addParameter("DataWidth", len(vars))
-            if self.device.getFrame().getYLabel() is not None:
+            
+            #if self.device.getFrame().getYLabel() is not None:
                 # Configure the label of the y axis given in the
                 # device's constructor.
-                self.dataSet.addParameter("Y Label",
-                        self.device.getFrame().getYLabel())
+            
         self.device.getFrame().setDataSet(self.dataSet)
 
     def done(self):
@@ -247,12 +248,14 @@ class dataChestWrapper:
         #for i in range(0, len(self.devices)):
        # dStamp = dateStamp()
         #dStamp.utcNowFloat()
+        
         t1 = time.time()
         if not self.hasData:
             
             self.configureDataSets()
         if self.hasData:
             #print "HERE E"
+            
             depvars = []
             indepvars = []
             vars = []
@@ -263,6 +266,16 @@ class dataChestWrapper:
            # print "DevReadings:", devReadings
             enabled = self.device.getFrame().DataLoggingInfo()['channels']
             #print "enabled:", enabled
+            
+            custUnits = self.device.getFrame().getCustomUnits()
+            if custUnits is '':
+                nickname = self.device.getFrame().getNicknames()[0]
+                custUnits = self.device.getUnit(nickname)
+            if custUnits is None:
+                custUnits = ''
+            self.dataSet.addParameter("y_label", self.device.getFrame().getYLabel())
+            print "setting units:", custUnits
+            self.dataSet.addParameter("custom_units", custUnits)
             for y,param in enumerate(self.device.getParameters()):
                 # Channels that should be logged
                 

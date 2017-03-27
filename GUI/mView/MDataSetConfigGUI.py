@@ -66,8 +66,10 @@ class DataSetConfigGUI(QtGui.QDialog):
         
             if self.initialStates[i] != device.getFrame().DataLoggingInfo():
                # print "some info was changed"
+                chest = device.getFrame().DataLoggingInfo()['chest']
                 try:
-                    device.getFrame().DataLoggingInfo()['chest'].configureDataSets()
+                    if chest != None:
+                        chest.configureDataSets()
                 except Exception as e:
                     traceback.print_exc()
                     self.cancel()
@@ -172,8 +174,11 @@ class DataSetSettings(QtGui.QWidget):
             device.getFrame().DataLoggingInfo()['name'] = device.getFrame().getTitle()
             device.getFrame().DataLoggingInfo()['location'] = None
             try:
-                device.getFrame().DataLoggingInfo()['chest'].configureDataSets()
-            except Exception as e:
+                chest = device.getFrame().DataLoggingInfo()['chest']
+                if chest != None:
+                    chest.configureDataSets()
+            except:
+                print "ERROR:", device
                 traceback.print_exc()
             location = device.getFrame().DataLoggingInfo()['location']
             self.configGui.advancedSettingsWidget.locationLabels[i].setText(location)

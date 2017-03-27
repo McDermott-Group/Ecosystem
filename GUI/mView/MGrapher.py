@@ -33,11 +33,11 @@ from dateStamp import *
 from dataChest import *
 from MCheckableComboBoxes import MCheckableComboBox
 import  datetime
-
+import warnings
 class mGraph(QtGui.QWidget):
-    def __init__(self, device, parent=None):
+    def __init__(self, device, parent=None, **kwargs):
         QtGui.QWidget.__init__(self, parent)
-
+        self.title = kwargs.get("title", device.getFrame().getTitle())
         # This is the device we want to use.
         self.device = device
         # This sets up axis on which to plot.
@@ -59,7 +59,7 @@ class mGraph(QtGui.QWidget):
         
         frameLayout.addWidget(self.win)
         
-        self.p = self.win.addPlot(title = device.getFrame().getTitle(), axisItems={'bottom': TimeAxisItem(orientation='bottom')})
+        self.p = self.win.addPlot(title = self.title, axisItems={'bottom': TimeAxisItem(orientation='bottom')})
         
         self.p.addLegend()
         self.p.showGrid(x=True, y=True, alpha = 0.5)
@@ -222,18 +222,28 @@ class mGraph(QtGui.QWidget):
     def setupUnits(self):
         
         frame = self.device.getFrame()
-        yLabel = frame.getYLabel()
-        
-        nickname = self.device.getNicknames()[0]
-        if frame.getCustomUnits():
-            self.p.setLabel('left', text =  str(yLabel)+"("+str(frame.getCustomUnits())+")")
+        try:
+            yLabel = frame.getDataSet().getParameter("y_label")
+        except:
+            warnings.warn( "\'y_label\' is not a parameter of the data set for" +str(self.device)+".")
+            yLabel = ''
+        vars = self.device.getFrame().getDataSet().getVariables()
+        try:
+            customUnits = frame.getDataSet().getParameter("custom_units")
+        except:
+            warnings.warn( "\'custom_units\' is not a parameter of the data set for" +str(self.device)+".")
+            customUnits = None
+        #print "vars:", vars
+        #nickname = vars[1][0][0].replace('_',' ')
+        if customUnits != None:
+            self.p.setLabel('left', text =  str(yLabel)+"("+str(customUnits)+")")
        
-        elif self.device.getUnit(nickname) != None:
+        elif vars[1][0][3] != None:
             
             self.viewboxes = []
             axes = []
             units = []
-            units.append(frame.getUnit(nickname))
+            units.append(vars[1][0][3])
             
             axes.append(self.p.getAxis('left'))
 
@@ -269,6 +279,7 @@ class mGraph(QtGui.QWidget):
             times = [elem[0] for elem in data]
             
             data = np.transpose(data)
+            #print "data:", data
             #print "Data to be plotted:", data
             i = 0
            
@@ -301,14 +312,16 @@ class mGraph(QtGui.QWidget):
             if self.autoscaleCheckBox.isChecked():
                 #self.p.setXRange(times[0],times[-1], padding=0)
                 # for pa in self.viewboxes:
-                    # pa.autoRange(items = self.curves)
+                self.p.autoRange()
                     # pa.enableAutoRange(True)
                 self.autoscaleCheckBox.setChecked(True)
                 self.processRangeChangeSig = False
-                try:
-                    self.p.setRange(xRange=[times[0],times[-1]], yRange = [currMin, currMax])
-                except:
-                    pass
+#                try:
+#                    #print "currmin", currMin
+#                    #print "currmax", currMax
+#                    #self.p.setRange(xRange=[times[0],times[-1]], yRange = [currMin, currMax])
+#                except:
+#                    pass
                 self.processRangeChangeSig = True
 
     def rangeChanged(self):
@@ -319,7 +332,9 @@ class mGraph(QtGui.QWidget):
     
     def yAxTo100(self):
         self.p.enableAutoRange(axis = 'y')
-        
+    def show(self):
+        if self.hidden:
+            self.togglePlot()
     def togglePlot(self):    
             if not self.hidden:
                 self.win.hide()

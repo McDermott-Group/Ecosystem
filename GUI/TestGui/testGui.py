@@ -3,13 +3,13 @@ sys.dont_write_bytecode = True
 import MGui             # Handles all gui operations. Independent of labrad.
 
 #from PyQt4 import QtCore, QtGui
-
-
+from PyQt4 import QtCore, QtGui
 from MDevices.Device import Device
 from MDevices.MVirtualDevice import MVirtualDevice
 from MDevices.Mhdf5Device import Mhdf5Device
 
 import labrad
+import grapher as alexGrapher
 from MNodeEditor.MNodes import runningAverage
 from MNodeEditor import MNodeTree
 
@@ -31,7 +31,7 @@ class nViewer:
         except:
             print("Please start the telecomm server")
             sys.exit(1)
-      
+        self.gui = MGui.MGui()
         Random = Device("Random")
         Random.connection(cxn)
 
@@ -44,8 +44,9 @@ class nViewer:
         Random.setRefreshRate(0.5)
         Random.setYLabel("Hi", "Custom Units")
         Random.begin()
-        self.devices.append(Random)
-
+       # self.devices.append(Random)
+        self.gui.addDevice(Random)
+        
         localTemp = Device("Local Temperatures")
         localTemp.connection(cxn)
         localTemp.setServerName("my_server2")
@@ -61,14 +62,13 @@ class nViewer:
         localTemp.setRefreshRate(2)
         localTemp.setYLabel("Temperature")
         localTemp.begin()
-        self.devices.append(localTemp)
-        
+        #self.devices.append(localTemp)
+        self.gui.addDevice(localTemp)
+
         grapher = Mhdf5Device("Grapher")
-        grapher.addButton("Load Data Set")
-        #grapher.addPlot()
         grapher.begin()
         
-        self.devices.append(grapher)
+        self.gui.addDevice(grapher)
        # Start the datalogger. This line can be commented
         #out if no datalogging is required.
        # print self.devices
@@ -82,7 +82,7 @@ class nViewer:
         
         virtdev = MVirtualDevice("Test Node", yLabel = "Test Node Y Label",  units = "Test Units")
         virtDevNode = MDeviceNode.MDeviceNode(virtdev)
-        self.devices.append(virtdev)
+        self.gui.addDevice(virtdev)
         self.nodeTree.addNode(virtDevNode)
         anchor2 = virtDevNode.addAnchor(name = "test input", type = "input")
         anchor3 = virtDevNode.addAnchor(name = "raw input", type = "input")
@@ -100,11 +100,12 @@ class nViewer:
         self.nodeTree.connect(directInput,output)
        # print randomNode.getAnchors()
         # Create the gui
+       # a = alexGrapher.Main()
         
-        self.gui = MGui.MGui()
-        
+        #self.gui.addWidget(alexGrapher.Main())
+        self.gui.addWidget(QtGui.QLabel("HI"))
         self.gui.setRefreshRate(0.5)
-        self.gui.startGui(self.devices, 'Leiden Gui',tele)
+        self.gui.startGui( 'Leiden Gui',tele)
         
 
         

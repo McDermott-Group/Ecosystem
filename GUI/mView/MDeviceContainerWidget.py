@@ -120,10 +120,10 @@ class MDeviceContainerWidget(QtGui.QFrame):
         self.bottomHBox = QtGui.QHBoxLayout()
       
           
-        grid.addLayout(self.bottomHBox, yPos+1, 0, yPos+1, 3)
+        grid.addLayout(self.bottomHBox, yPos+2, 0, yPos+2, 3)
         
     def getBottomHBox(self):
-        return self.BottomHBox
+        return self.bottomHBox
     def getTopHBox(self):
         return self.topHBox
     def addParameter(self, param):
