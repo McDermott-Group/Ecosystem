@@ -347,7 +347,9 @@ class MDevice(QThread):
         return
         
     def addParameter(self, *args, **kwargs):
-        #print "args:", args
+        """Adds a parameter to the GUI. The first argument is the name,
+        the other arguments are specific to the device driver.
+        """
         try:
             name = args[0]
         except:

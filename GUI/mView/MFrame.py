@@ -180,7 +180,7 @@ class MFrame:
             warnings.warn("Could not set reading index of "+str(name))               
 
     def getReadingIndex(self, name):
-        self.parameters[name].get('reading_index', None)
+        return self.parameters[name].get('reading_index', None)
        
     def raiseError(self, msg):
         self.error = True
