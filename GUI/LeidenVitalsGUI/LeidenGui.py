@@ -127,6 +127,9 @@ class nViewer:
         Compressor.addButton("Turn On",
                 "You are about to turn the compressor on.",
                 "start", None)
+        Compressor.addButton("Elapsed Time",
+                None,
+                "elapsed_time", None)
         Compressor.addParameter("Input Water Temperature",
                 "current_temperatures_only", None, index =0)
         Compressor.addParameter("Output Water Temperature",

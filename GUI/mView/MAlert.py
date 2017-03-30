@@ -129,10 +129,10 @@ class MAlert:
                     for key in self.mailSent:
                         self.mailSent[key] = False
                     success, address = self.tele.send_sms(
-                        device.getFrame().getNicknames()[y], 
-                                            str(self.message), 
-                                            [str(person).strip() for person in people.split(',')],
-                                            "labrad_physics")
+                        key, 
+                        str(self.message), 
+                        [str(person).strip() for person in people.split(',')],
+                        "labrad_physics")
                     print  [str(person).strip() for person in people.split(',')]
                     if (not success):
                         print("Couldn't send email to group: "+

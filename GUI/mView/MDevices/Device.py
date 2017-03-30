@@ -35,6 +35,7 @@ import threading
 from MWeb import web
 import traceback
 from sys import getsizeof
+from PyQt4 import QtGui, QtCore
 class Device(MDevice):
     """The device class handles a LabRAD device."""
     def __init__(self, *args):
@@ -189,6 +190,13 @@ class Device(MDevice):
     def prompt(self, button):
         """If a button is clicked, handle it."""#name action msg arg
         #print "button clicked:", button
+        # button.append(name)
+        # button.append(action)
+        # button.append(msg)
+        # button.append(arg)
+        # [name, action, msg, arg]
+        #    0     1      2    3
+        resp = None
         try:
             actual_button = button
             # If the button has a warning message attatched.
@@ -203,21 +211,28 @@ class Device(MDevice):
                     # has an argument for the setting.
                     
                     if actual_button[3] is not None:
-                        getattr(self.deviceServer,
-                                actual_button[1])(actual_button[3])
+                        resp = getattr(self.deviceServer,
+                                actual_button[1])(actual_button[3], context=self.ctx)
                     # If just the setting needs to be run.
                     else:
-                        getattr(self.deviceServer, actual_button[1])
+                        resp = getattr(self.deviceServer, actual_button[1])(context=self.ctx)
             # Otherwise if there is no warning message, do not make
             # a popup.
             else:
                 # If there is an argument that must be passed to
                 # the setting.
                 if actual_button[3] is not None:
-                    getattr(self.deviceServer,
-                            actual_button[1])(actual_button[3])
+                    resp = getattr(self.deviceServer,
+                            actual_button[1])(actual_button[3], context=self.ctx)
                 else:
-                    getattr(self.deviceServer, actual_button[1])
+                    resp = getattr(self.deviceServer, actual_button[1])(context=self.ctx)
+            print "Response:", resp
+            
+            if resp != None:
+                p = QtGui.QMessageBox()
+                p.setText(str("Response: "+str(resp)))
+                p.setWindowTitle("Query Response")
+                p.exec_()
         except:
             traceback.print_exc()
             return
