@@ -47,8 +47,8 @@
 <span id="mview-mnodeeditor-mnode-module"></span><h1>mView.MNodeEditor.MNode module<a class="headerlink" href="#module-mView.MNodeEditor.MNode" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="mView.MNodeEditor.MNode.MNode">
-<em class="property">class </em><code class="descclassname">mView.MNodeEditor.MNode.</code><code class="descname">MNode</code><span class="sig-paren">(</span><em>parent=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">PyQt4.QtGui.QGraphicsItem</span></code></p>
+<em class="property">class </em><code class="descclassname">mView.MNodeEditor.MNode.</code><code class="descname">MNode</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.addAnchor">
 <code class="descname">addAnchor</code><span class="sig-paren">(</span><em>anchor=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.addAnchor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.addAnchor" title="Permalink to this definition">¶</a></dt>
@@ -56,18 +56,18 @@
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.anchorAdded">
-<code class="descname">anchorAdded</code><span class="sig-paren">(</span><em>anchor</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.anchorAdded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.anchorAdded" title="Permalink to this definition">¶</a></dt>
+<code class="descname">anchorAdded</code><span class="sig-paren">(</span><em>anchor</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.anchorAdded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.anchorAdded" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.begin">
-<code class="descname">begin</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.begin" title="Permalink to this definition">¶</a></dt>
+<code class="descname">begin</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.begin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new node</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="mView.MNodeEditor.MNode.MNode.boundingRect">
-<code class="descname">boundingRect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.boundingRect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.boundingRect" title="Permalink to this definition">¶</a></dt>
+<dt id="mView.MNodeEditor.MNode.MNode.getAnchorByName">
+<code class="descname">getAnchorByName</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.getAnchorByName"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.getAnchorByName" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -76,53 +76,18 @@
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="mView.MNodeEditor.MNode.MNode.getColor">
-<code class="descname">getColor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.getColor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.getColor" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="mView.MNodeEditor.MNode.MNode.getDevice">
-<code class="descname">getDevice</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.getDevice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.getDevice" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="mView.MNodeEditor.MNode.MNode.getNodeLayout">
-<code class="descname">getNodeLayout</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.getNodeLayout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.getNodeLayout" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="mView.MNodeEditor.MNode.MNode.getNodeWidget">
-<code class="descname">getNodeWidget</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.getNodeWidget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.getNodeWidget" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.getTitle">
 <code class="descname">getTitle</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.getTitle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.getTitle" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="mView.MNodeEditor.MNode.MNode.hoverEnterEvent">
-<code class="descname">hoverEnterEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.hoverEnterEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.hoverEnterEvent" title="Permalink to this definition">¶</a></dt>
+<dt id="mView.MNodeEditor.MNode.MNode.onLoad">
+<code class="descname">onLoad</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.onLoad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.onLoad" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="mView.MNodeEditor.MNode.MNode.hoverLeaveEvent">
-<code class="descname">hoverLeaveEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.hoverLeaveEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.hoverLeaveEvent" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="mView.MNodeEditor.MNode.MNode.mouseMoveEvent">
-<code class="descname">mouseMoveEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.mouseMoveEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.mouseMoveEvent" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="mView.MNodeEditor.MNode.MNode.mousePressEvent">
-<code class="descname">mousePressEvent</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.mousePressEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.mousePressEvent" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="mView.MNodeEditor.MNode.MNode.paint">
-<code class="descname">paint</code><span class="sig-paren">(</span><em>painter</em>, <em>option</em>, <em>widget</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.paint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.paint" title="Permalink to this definition">¶</a></dt>
+<dt id="mView.MNodeEditor.MNode.MNode.onRefreshData">
+<code class="descname">onRefreshData</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.onRefreshData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.onRefreshData" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -148,16 +113,6 @@
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.setColor">
 <code class="descname">setColor</code><span class="sig-paren">(</span><em>r</em>, <em>g</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.setColor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.setColor" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="mView.MNodeEditor.MNode.MNode.setDevice">
-<code class="descname">setDevice</code><span class="sig-paren">(</span><em>device</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.setDevice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.setDevice" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="mView.MNodeEditor.MNode.MNode.setScene">
-<code class="descname">setScene</code><span class="sig-paren">(</span><em>scene</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.setScene"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.setScene" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">

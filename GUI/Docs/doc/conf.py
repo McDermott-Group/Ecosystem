@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # GUI documentation build configuration file, created by
-# sphinx-quickstart on Tue Feb 28 11:35:47 2017.
+# sphinx-quickstart on Mon Mar 06 17:53:48 2017.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.

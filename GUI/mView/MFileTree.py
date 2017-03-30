@@ -3,7 +3,8 @@ from PyQt4.QtGui import (QApplication, QColumnView, QFileSystemModel,
                          QSplitter, QTreeView)
 from PyQt4.QtCore import QDir, Qt
 import sys
-class MFileTree(QtGui.QWidget):
+from MGrapher import mGraph as MGrapher
+class MFileTree(QtGui.QTreeView):
     def __init__(self, root, parent = None):
         super(MFileTree, self).__init__(parent)
         self.setStyleSheet("color:rgb(189, 195, 199);")
@@ -19,11 +20,12 @@ class MFileTree(QtGui.QWidget):
         # You can setRootPath to any path.
         model.setRootPath(root)
         # List of views.
-        views = []
-        view = QTreeView(self)
-        view.setModel(model)
-        view.setRootIndex(model.index(root))
-        view.header().setStyleSheet("background:rgb(70, 80, 88);")
+        self.views = []
+        #self.view = QTreeView(self)
+        #self.itemPressed.connect(self.itemClicked)
+        self.setModel(model)
+        self.setRootIndex(model.index(root))
+        self.header().setStyleSheet("background:rgb(70, 80, 88);")
         # for ViewType in (QColumnView, QTreeView):
             # # Create the view in the splitter.
             # view = ViewType(splitter)
@@ -33,10 +35,34 @@ class MFileTree(QtGui.QWidget):
             # view.setRootIndex(model.index(QDir.homePath()))
         # # Show the splitter.
         # splitter.show()
-        layout = QtGui.QHBoxLayout()
-        layout.addWidget(view)
-        self.setLayout(layout)
+        self.layout = QtGui.QHBoxLayout()
+        #self.layout.addWidget(self)
+        
+        
+        self.setLayout(self.layout)
+       
         # Maximize the splitter.
         splitter.setWindowState(Qt.WindowMaximized)
+        
         # Start the main loop.
-    
+    def resizeColumns(self):
+        self.resizeColumnToContents(0)
+    def fileSelected(self):
+        index = self.selectedIndexes()[0]
+        crawler = index.model().itemFromIndex(index)
+        print "Selected item:", crawler
+        self.callback(crawler)
+    def setCallback(self, callback):
+        self.callback = callback
+    def selectionChanged(self, selected, deselected):
+        #col = self.itemFromIndex(modelIndex)
+        self.path = self.model().filePath(selected.indexes()[0])
+        print "clicked", self.path
+        self.callback(self.path)
+        self.resizeColumns()
+        
+        #self.fileSelected()
+    def mousePressEvent(self, event):
+        QtGui.QTreeView.mousePressEvent(self, event)
+        self.resizeColumns()
+        

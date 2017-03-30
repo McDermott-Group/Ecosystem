@@ -57,7 +57,7 @@ class DataSetConfigGUI(QtGui.QDialog):
         root = os.environ['DATA_CHEST_ROOT']
       
         for i,device in enumerate(web.devices):
-            print "Data logging info:",device.getFrame().DataLoggingInfo()
+            #print "Data logging info:",device.getFrame().DataLoggingInfo()
             # If any changes were made, reinitialize the datalogger.
             #print "initial: ",self.initialStates[i]
             #print "final: ",device.getFrame().DataLoggingInfo()
@@ -66,8 +66,10 @@ class DataSetConfigGUI(QtGui.QDialog):
         
             if self.initialStates[i] != device.getFrame().DataLoggingInfo():
                # print "some info was changed"
+                chest = device.getFrame().DataLoggingInfo()['chest']
                 try:
-                    device.getFrame().DataLoggingInfo()['chest'].configureDataSets()
+                    if chest != None:
+                        chest.configureDataSets()
                 except Exception as e:
                     traceback.print_exc()
                     self.cancel()
@@ -135,7 +137,9 @@ class DataSetSettings(QtGui.QWidget):
             mainLayout.addStretch(0)
         else:
             row = 2
+           
             for y,device in enumerate(web.devices):
+                #print " device:", device
                 row += 1
                 title = QtGui.QLabel(str(device)+": ")
                 title.setFont(font)
@@ -156,6 +160,7 @@ class DataSetSettings(QtGui.QWidget):
                     #hBox = QtGui.QHBoxLayout()
                     checkbox = QtGui.QCheckBox(self)
                     self.checkboxes[y].append(checkbox)
+                    #print device, "Data logging info: ", device.getFrame().DataLoggingInfo()
                     checkbox.setChecked(device.getFrame().DataLoggingInfo()['channels'][nickname])
                     #grid.addLayout(hBox, row, 0)
                     grid.addWidget(QtGui.QLabel(nickname), row, 0)
@@ -169,8 +174,11 @@ class DataSetSettings(QtGui.QWidget):
             device.getFrame().DataLoggingInfo()['name'] = device.getFrame().getTitle()
             device.getFrame().DataLoggingInfo()['location'] = None
             try:
-                device.getFrame().DataLoggingInfo()['chest'].configureDataSets()
-            except Exception as e:
+                chest = device.getFrame().DataLoggingInfo()['chest']
+                if chest != None:
+                    chest.configureDataSets()
+            except:
+                print "ERROR:", device
                 traceback.print_exc()
             location = device.getFrame().DataLoggingInfo()['location']
             self.configGui.advancedSettingsWidget.locationLabels[i].setText(location)
@@ -197,7 +205,7 @@ class DataSetSettings(QtGui.QWidget):
         #print "root:", root
         #print "location:",location
         if not root in location:
-                print "ERROR"
+                #print "ERROR"
                 errorMsg = PopUp(str(
                     "ERROR: Directory must be inside of directory in DATA_CHEST_ROOT."
                     ))

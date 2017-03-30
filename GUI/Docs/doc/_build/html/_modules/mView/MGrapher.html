@@ -146,8 +146,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">lineSelect</span> <span class="o">=</span> <span class="n">MCheckableComboBox</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lineSelect</span><span class="o">.</span><span class="n">setSizeAdjustPolicy</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">(</span><span class="s2">&quot;Autoscale&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">(</span><span class="s2">&quot;Auto Ranging&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setY100</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;100% Y Axis&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setY100</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">yAxTo100</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lockYAx</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">(</span><span class="s2">&quot;Lock Y Axis&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
@@ -273,7 +274,7 @@
             <span class="k">for</span> <span class="n">pa</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">viewboxes</span><span class="p">:</span>
                 <span class="n">pa</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">vb</span><span class="o">.</span><span class="n">sceneBoundingRect</span><span class="p">())</span>
                 <span class="n">pa</span><span class="o">.</span><span class="n">linkedViewChanged</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">vb</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">XAxis</span><span class="p">)</span>
-            <span class="n">maxtime</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">maxtime</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span><span class="s1">&#39;last_valid&#39;</span><span class="p">)</span>
             <span class="n">autoRange</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;autoRange&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
             
             <span class="c1"># If time was specified, then autorange</span>
@@ -316,42 +317,26 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">currMax</span> <span class="o">=</span> <span class="n">currMax</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
                 <span class="c1">#self.p.setXRange(times[0],times[-1], padding=0)</span>
-                <span class="k">for</span> <span class="n">pa</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">viewboxes</span><span class="p">:</span>
-                    <span class="n">pa</span><span class="o">.</span><span class="n">autoRange</span><span class="p">(</span><span class="n">items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curves</span><span class="p">)</span>
-                    <span class="n">pa</span><span class="o">.</span><span class="n">enableAutoRange</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="c1"># for pa in self.viewboxes:</span>
+                    <span class="c1"># pa.autoRange(items = self.curves)</span>
+                    <span class="c1"># pa.enableAutoRange(True)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">processRangeChangeSig</span> <span class="o">=</span> <span class="kc">False</span></div>
-                <span class="c1"># try:</span>
-                    <span class="c1"># self.p.setRange(xRange=[times[0],times[-1]], yRange = [currMin, currMax])</span>
-                <span class="c1"># except:</span>
-                    <span class="c1"># pass</span>
-                    <span class="c1">#traceback.print_exc()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">processRangeChangeSig</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">setRange</span><span class="p">(</span><span class="n">xRange</span><span class="o">=</span><span class="p">[</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="n">yRange</span> <span class="o">=</span> <span class="p">[</span><span class="n">currMin</span><span class="p">,</span> <span class="n">currMax</span><span class="p">])</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">processRangeChangeSig</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-
-                    <span class="c1">#self.p.setYRange()</span>
-                <span class="c1">#print &quot;col:&quot;, col</span>
-                <span class="c1">#print &quot;times:&quot;,times</span>
-            <span class="c1">#self.curve1.setData(times, data, antialias = False)</span>
-            
-            <span class="c1">#times = [dt.datetime.fromtimestamp(elem[0]) for elem in data]</span>
-            <span class="c1">#print &quot;data[0]:&quot;, data[0]</span>
-       
-            
-           
-           
-           <span class="c1"># print &quot;data:\n&quot;, data</span>
-            
-            <span class="c1">#self.changeIndependenVarRange(time)</span>
 <div class="viewcode-block" id="mGraph.rangeChanged"><a class="viewcode-back" href="../../mView.MGrapher.html#mView.MGrapher.mGraph.rangeChanged">[docs]</a>    <span class="k">def</span> <span class="nf">rangeChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">processRangeChangeSig</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lockYAx</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">yAxTo100</span><span class="p">()</span></div>
-            
-   
-            
+    
 <div class="viewcode-block" id="mGraph.yAxTo100"><a class="viewcode-back" href="../../mView.MGrapher.html#mView.MGrapher.mGraph.yAxTo100">[docs]</a>    <span class="k">def</span> <span class="nf">yAxTo100</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">enableAutoRange</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="s1">&#39;y&#39;</span><span class="p">)</span></div>
+        
 <div class="viewcode-block" id="mGraph.togglePlot"><a class="viewcode-back" href="../../mView.MGrapher.html#mView.MGrapher.mGraph.togglePlot">[docs]</a>    <span class="k">def</span> <span class="nf">togglePlot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>    
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">win</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
@@ -384,6 +369,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">autoscaleCheckBox</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">buttonFrame</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div></div>
+                
 <div class="viewcode-block" id="TimeAxisItem"><a class="viewcode-back" href="../../mView.MGrapher.html#mView.MGrapher.TimeAxisItem">[docs]</a><span class="k">class</span> <span class="nc">TimeAxisItem</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">AxisItem</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1">#  super().__init__(*args, **kwargs)</span>

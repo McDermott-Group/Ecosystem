@@ -1,5 +1,5 @@
 (dp1
-S'Local Temperatures:Humidity'
+S'Random:Random Pressure'
 p2
 (lp3
 I00
@@ -13,7 +13,7 @@ p5
 S'QString'
 (V
 ttRp6
-asS'Local Temperatures:Outside pressure'
+asS'Local Temperatures:Humidity'
 p7
 (lp8
 I00
@@ -24,7 +24,7 @@ ag4
 S'QString'
 (V
 ttRp9
-asS'Random:Random Temperature'
+asS'Test Node:raw input'
 p10
 (lp11
 I00
@@ -46,7 +46,7 @@ ag4
 S'QString'
 (V
 ttRp15
-asS'Random:Random Pressure'
+asS'Local Temperatures:Outside pressure'
 p16
 (lp17
 I00
@@ -57,4 +57,37 @@ ag4
 S'QString'
 (V
 ttRp18
+asS'Local Temperatures:avg'
+p19
+(lp20
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp21
+asS'Test Node:test input'
+p22
+(lp23
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp24
+asS'Random:Random Temperature'
+p25
+(lp26
+I00
+aS''
+aS''
+ag4
+(g5
+S'QString'
+(V
+ttRp27
 as.

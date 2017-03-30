@@ -115,7 +115,8 @@
             <span class="n">dataname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataname</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;channels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">channels</span>
+        <span class="k">if</span> <span class="n">channels</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;channels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">channels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">location</span></div>
 <div class="viewcode-block" id="dataChestWrapper.saveState"><a class="viewcode-back" href="../../mView.dataChestWrapper.html#mView.dataChestWrapper.dataChestWrapper.saveState">[docs]</a>    <span class="k">def</span> <span class="nf">saveState</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1">#print &quot;saving&quot;</span>
@@ -344,13 +345,9 @@
                       <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">addData</span><span class="p">([</span><span class="nb">vars</span><span class="p">])</span>        
                 <span class="k">except</span><span class="p">:</span>
                     <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: could not store data, this might be due&quot;</span>
-                          <span class="s2">&quot; to a change made to the parameters of the &quot;</span>
-                          <span class="s2">&quot;device, if this is the case then either &quot;</span>
-                          <span class="s2">&quot;delete the data set from the current storage&quot;</span>
-                          <span class="s2">&quot; directory or move it somewhere else.&quot;</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: Problem storing data. Will try to reconfigure data sets.&quot;</span>
                           <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">())</span>
-          
+                    <span class="bp">self</span><span class="o">.</span><span class="n">configureDataSets</span><span class="p">()</span>
                 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keepLoggingNan</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">currentlyLogging</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>

@@ -26,7 +26,7 @@ import atexit
 import traceback
 from functools import partial
 from PyQt4 import QtCore, QtGui
-
+import time
 from NotifierGUI import NotifierGUI
 from MConfigGui import ConfigGui
 from MDataSetConfigGUI import DataSetConfigGUI
@@ -40,9 +40,10 @@ from MDeviceContainerWidget import MDeviceContainerWidget
 
 class MGui(QtGui.QMainWindow):
     """Handles construction of GUI using mView framework."""
-    print("##########################################")
-    print("## Starting mView (C) Noah Meltzer 2016 ##")
-    print("##########################################")
+    print("#############################################")
+    print("# Starting mView (C) Noah Meltzer 2016-2017 #")
+    print("#############################################")
+
     web.persistentData = MPersistentData()
     # Holds the Qlabels that label the parameters.
     parameters = [[]]
@@ -74,23 +75,29 @@ class MGui(QtGui.QMainWindow):
     VBoxColumn = 0
     # Used to allow query to keep calling itself.
     keepGoing = True
-    
+    MAlert=None
+    started = False
+    widgetsToAdd = []
     # splash_pix = QtGui.QPixmap('logo.png')
     # splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
     # splash.show()
     def __init__(self):
         atexit.register(self.stop)
-    def initGui(self, devices, parent=None):
+        
+
+        web.gui = self
+        self.devices = []
+    def initGui(self, parent=None):
         """Configure all GUI elements."""
         QtGui.QWidget.__init__(self, parent)
         app.setActiveWindow(self)
         QtGui.QApplication.setStyle(QtGui.QStyleFactory.create('plastique'))
         
-        web.gui = self
+        
         # Make the GUI fullscreen.
         self.showMaximized()
        
-        web.devices = devices
+       
         # Make GUI area scrollable.
         self.main_widget = QtGui.QWidget()
         self.main_widget.setLayout(self.mainHBox)
@@ -141,7 +148,7 @@ class MGui(QtGui.QMainWindow):
         VirtualDevicesMenu.addAction(virtualDevicesConfigAction)
         # Keeps track of the number of widgets, used for placing tiles
         # into the correct column.
-        self.neh = MNodeEditorHandler()
+        #self.neh = MNodeEditorHandler()
         numWidgets = 0
         # Configure the size policy of all tiles.
         self.frameSizePolicy = QtGui.QSizePolicy()
@@ -157,40 +164,54 @@ class MGui(QtGui.QMainWindow):
         self.mainVBox[1].setAlignment(QtCore.Qt.AlignTop)
 
         # Which column are we adding a tile to next.
-        devices = web.devices
+        #devices = web.devices
+        
         self.index = 0
-        for i,device in enumerate(devices):
+        for i,device in enumerate(self.devices):
             self.addDevice(device)
+        for widget in self.widgetsToAdd:
+            self.addWidget(widget)
         #self.mainVBox[0].addStretch(0)
         #self.mainVBox[1].addStretch(0)
-        print("GUI initialized.")
+        #print("GUI initialized.")
     def stop(self):
         '''Stop MView.'''
         print "Shutting down MView."
-        print "all devices:", web.devices
+
+        #print "all devices:", web.devices
         for device in web.devices:
-            print "stopping", str(device)
+            #print "stopping", str(device)
             device.stop()
-            device.getFrame().getDataChestWrapper().done()
-            device.getFrame().getDataChestWrapper().saveState()
+            try:
+                device.getFrame().getDataChestWrapper().done()
+                device.getFrame().getDataChestWrapper().saveState()
+            except:
+                pass
         web.persistentData.saveState()
-        self.neh.stop()
+        #self.neh.stop()
         
     def addDevice(self, device):
-        if self.VBoxColumn == 0:
-            self.VBoxColumn = 1
+        if self.started:
+            if self.VBoxColumn == 0:
+                self.VBoxColumn = 1
+            else:
+                self.VBoxColumn = 0
+           
+            container = MDeviceContainerWidget(device, self)
+            self.deviceWidgets.append(container)
+            self.mainVBox[self.VBoxColumn].addWidget(container)
         else:
-            self.VBoxColumn = 0
-       
-        container = MDeviceContainerWidget(device, self)
-        self.deviceWidgets.append(container)
-        self.mainVBox[self.VBoxColumn].addWidget(container)
+            self.devices.append(device)
     def addWidget(self, widget):
-        if self.VBoxColumn == 0:
-            self.VBoxColumn = 1
+        if self.started:
+            if self.VBoxColumn == 0:
+                self.VBoxColumn = 1
+            else:
+                self.VBoxColumn = 0
+            self.mainVBox[self.VBoxColumn].addWidget(widget)
+            widget.show()
         else:
-            self.VBoxColumn = 0
-        self.mainVBox[self.VBoxColumn].addWidget(widget)
+            self.widgetsToAdd.append(widget)
     def mousePressEvent(self, event):
         
         focused_widget = QtGui.QApplication.focusWidget()
@@ -199,7 +220,7 @@ class MGui(QtGui.QMainWindow):
         QtGui.QMainWindow.mousePressEvent(self, event)
 
     def closeEvent(self, event):
-        print("Closing mView...")
+        #print("Closing mView...")
         self.stop()
         exit()
     def openNotifierSettings(self):
@@ -221,23 +242,28 @@ class MGui(QtGui.QMainWindow):
         web.persistentData.persistentDataAccess(period,'guiRefreshRate')
         
     def openVirtualDevicesConfig(self):
-        self.neh.showEditor()
-
+        #self.neh.showEditor()
+        print "no, I wont"
     def openConfig(self):
         self.Config = ConfigGui(self)
         self.Config.exec_()
 
-    def startGui(self, devices, title, tele, autostart = True):
-        """Start the GUI."""
-        print "Starting GUI."
-        # Used as the name of the dataChest data title.
-        
-        web.devices = devices
-        # Start the notifier.
-        web.telecomm = tele
-        self.NotifierGUI = NotifierGUI()
+    def startMAlert(self):
+        if self.MAlert != None:
+            self.MAlert.stop()
         self.MAlert = MAlert.MAlert()
         self.MAlert.begin()
+    def startGui(self, title, tele, autostart = True):
+        """Start the GUI."""
+        #print "Starting GUI."
+        # Used as the name of the dataChest data title.
+        
+        #web.devices = devices
+        # Start the notifier.
+        self.started = True
+        web.telecomm = tele
+        self.NotifierGUI = NotifierGUI()
+        self.startMAlert()
         
         screen_resolution = QtGui.QDesktopWidget().screenGeometry()
         self.scrnWidth = screen_resolution.width()
@@ -249,13 +275,13 @@ class MGui(QtGui.QMainWindow):
         else:
             web.ratio = float(self.scrnHeight) / 1800 + 1
         # Call the class's initialization function.
-        self.initGui(devices)
+        self.initGui()
         self.setWindowTitle(title)
         web.title = title
         # Show the GUI.
         self.show()
         self.timer = QtCore.QTimer(self)
-        self.neh.begin()
+        #self.neh.begin()
         # Update the GUI every so often. This CAN ONLY be done 
         # in the main thread.
         if self.keepGoing:
@@ -264,11 +290,18 @@ class MGui(QtGui.QMainWindow):
             # QtGui.QApplication.focusWidget().clearFocus()
         # except:
             # pass
+            
+        #print web.nodes
+        # Begin all logic nodes
+        for node in web.nodes:
+            node.onLoad()
         # Now that the gui is mostly loaded, all of teh onLoad functions can be called
         for device in web.devices:
-            device.onLoad()
+            device.loaded()
+            
         if autostart:
             self.showGui()
+     
     def showGui(self):
         sys.exit(app.exec_())
 

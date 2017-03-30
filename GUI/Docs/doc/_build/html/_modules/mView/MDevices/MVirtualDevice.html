@@ -71,27 +71,33 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
          <span class="nb">super</span><span class="p">(</span><span class="n">MVirtualDevice</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
          <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setTitle</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-         <span class="n">web</span><span class="o">.</span><span class="n">virtualDevices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+         <span class="c1">#web.virtualDevices.append(self)</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="p">()</span>
          
-
-<div class="viewcode-block" id="MVirtualDevice.addParameter"><a class="viewcode-back" href="../../../mView.MDevices.MVirtualDevice.html#mView.MDevices.MVirtualDevice.MVirtualDevice.addParameter">[docs]</a>    <span class="k">def</span> <span class="nf">addParameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">units</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;units&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">precision</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">nicknames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MVirtualDevice.onBegin"><a class="viewcode-back" href="../../../mView.MDevices.MVirtualDevice.html#mView.MDevices.MVirtualDevice.MVirtualDevice.onBegin">[docs]</a>    <span class="k">def</span> <span class="nf">onBegin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#print &quot;--------beginning virt device---------&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span></div>
+        
+    <span class="c1"># def addParameter(self, *args, **kwargs):</span>
+        <span class="c1"># name = args[0]</span>
+        <span class="c1"># units = kwargs.get(&quot;units&quot;, None)</span>
+        <span class="c1"># precision = kwargs.get(&quot;precision&quot;, 2)</span>
+        <span class="c1"># self.frame.nicknames.append(name)</span>
+        <span class="c1"># self.frame.units.append(units)</span>
+        <span class="c1"># self.frame.precisions.append(precision)</span>
 <div class="viewcode-block" id="MVirtualDevice.addButton"><a class="viewcode-back" href="../../../mView.MDevices.MVirtualDevice.html#mView.MDevices.MVirtualDevice.MVirtualDevice.addButton">[docs]</a>    <span class="k">def</span> <span class="nf">addButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">pass</span></div>
+<div class="viewcode-block" id="MVirtualDevice.onLoad"><a class="viewcode-back" href="../../../mView.MDevices.MVirtualDevice.html#mView.MDevices.MVirtualDevice.MVirtualDevice.onLoad">[docs]</a>    <span class="k">def</span> <span class="nf">onLoad</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configureDataLogging</span><span class="p">()</span></div>
 <div class="viewcode-block" id="MVirtualDevice.setYLabel"><a class="viewcode-back" href="../../../mView.MDevices.MVirtualDevice.html#mView.MDevices.MVirtualDevice.MVirtualDevice.setYLabel">[docs]</a>    <span class="k">def</span> <span class="nf">setYLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">yLbl</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">units</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setYLabel</span><span class="p">(</span><span class="n">yLbl</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span></div>
 <div class="viewcode-block" id="MVirtualDevice.query"><a class="viewcode-back" href="../../../mView.MDevices.MVirtualDevice.html#mView.MDevices.MVirtualDevice.MVirtualDevice.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-        <span class="k">pass</span></div>
-        <span class="c1">#self.datachest.save()</span>
         
-<div class="viewcode-block" id="MVirtualDevice.retrieveFromNode"><a class="viewcode-back" href="../../../mView.MDevices.MVirtualDevice.html#mView.MDevices.MVirtualDevice.MVirtualDevice.retrieveFromNode">[docs]</a>    <span class="k">def</span> <span class="nf">retrieveFromNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">setReadings</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+        <span class="k">pass</span></div>
 <div class="viewcode-block" id="MVirtualDevice.setRefreshRate"><a class="viewcode-back" href="../../../mView.MDevices.MVirtualDevice.html#mView.MDevices.MVirtualDevice.MVirtualDevice.setRefreshRate">[docs]</a>    <span class="k">def</span> <span class="nf">setRefreshRate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setRefreshRate</span><span class="p">(</span><span class="n">period</span><span class="p">)</span></div>
 <div class="viewcode-block" id="MVirtualDevice.setPlotRefreshRate"><a class="viewcode-back" href="../../../mView.MDevices.MVirtualDevice.html#mView.MDevices.MVirtualDevice.MVirtualDevice.setPlotRefreshRate">[docs]</a>    <span class="k">def</span> <span class="nf">setPlotRefreshRate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>

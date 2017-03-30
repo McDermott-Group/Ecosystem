@@ -42,7 +42,31 @@
           <div class="body" role="main">
             
   <h1>Source code for mView.MNodeEditor.MNodeTree</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">MPipe</span> <span class="k">import</span> <span class="n">MPipe</span>
+<span></span><span class="c1"># Copyright (C) 2016 Noah Meltzer</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 2 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2016, McDermott Group&quot;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s2">&quot;GPL&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.0.1&quot;</span>
+<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__status__</span> <span class="o">=</span> <span class="s2">&quot;Beta&quot;</span>
+
+
+
+<span class="kn">from</span> <span class="nn">MPipe</span> <span class="k">import</span> <span class="n">MPipe</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">inspect</span>
 <span class="kn">from</span> <span class="nn">glob</span> <span class="k">import</span> <span class="n">glob</span>
@@ -63,22 +87,24 @@
         <span class="nb">print</span> <span class="n">file</span>
 
 <div class="viewcode-block" id="NodeTree.getPipes"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNodeTree.html#mView.MNodeEditor.MNodeTree.NodeTree.getPipes">[docs]</a>    <span class="k">def</span> <span class="nf">getPipes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Returns all pipes in the tree.&#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span></div>
         
 <div class="viewcode-block" id="NodeTree.addPipe"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNodeTree.html#mView.MNodeEditor.MNodeTree.NodeTree.addPipe">[docs]</a>    <span class="k">def</span> <span class="nf">addPipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">pipe</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Add a pipe to the tree.&#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
         
 <div class="viewcode-block" id="NodeTree.deletePipe"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNodeTree.html#mView.MNodeEditor.MNodeTree.NodeTree.deletePipe">[docs]</a>    <span class="k">def</span> <span class="nf">deletePipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeToDel</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Delete pipe from tree&#39;&#39;&#39;</span>
-        <span class="c1"># Connect both ends of the pipe to nothing</span>
+
         <span class="n">pipeToDel</span><span class="o">.</span><span class="n">setLabel</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
         <span class="n">start</span> <span class="o">=</span> <span class="n">pipeToDel</span><span class="o">.</span><span class="n">getStartAnchor</span><span class="p">()</span>
         <span class="n">end</span> <span class="o">=</span> <span class="n">pipeToDel</span><span class="o">.</span><span class="n">getEndAnchor</span><span class="p">()</span>
         <span class="n">start</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">end</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">end</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">removeItem</span><span class="p">(</span><span class="n">pipeToDel</span><span class="p">)</span>
+        
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">pipe</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">pipe</span> <span class="ow">is</span> <span class="n">pipeToDel</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -87,63 +113,49 @@
         <span class="k">if</span> <span class="n">end</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">end</span><span class="o">.</span><span class="n">parentNode</span><span class="p">()</span><span class="o">.</span><span class="n">pipeDisconnected</span><span class="p">()</span></div>
                 
-<div class="viewcode-block" id="NodeTree.setScene"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNodeTree.html#mView.MNodeEditor.MNodeTree.NodeTree.setScene">[docs]</a>    <span class="k">def</span> <span class="nf">setScene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scene</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span> <span class="o">=</span> <span class="n">scene</span></div>
-        
-<div class="viewcode-block" id="NodeTree.getScene"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNodeTree.html#mView.MNodeEditor.MNodeTree.NodeTree.getScene">[docs]</a>    <span class="k">def</span> <span class="nf">getScene</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span></div>
-        
 <div class="viewcode-block" id="NodeTree.connect"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNodeTree.html#mView.MNodeEditor.MNodeTree.NodeTree.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span> <span class="n">endAnchor</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Connect anchors with a pipe.&#39;&#39;&#39;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="nb">print</span> <span class="s2">&quot;endAnchor:&quot;</span><span class="p">,</span> <span class="n">endAnchor</span>
             <span class="nb">print</span> <span class="s2">&quot;anchor:&quot;</span><span class="p">,</span> <span class="n">anchor</span>
             <span class="k">if</span> <span class="n">endAnchor</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MPipe</span><span class="p">(</span><span class="n">anchor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="p">))</span>
+                <span class="n">pipe</span> <span class="o">=</span> <span class="n">MPipe</span><span class="p">(</span><span class="n">anchor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">endAnchor</span><span class="p">)</span>
                 <span class="n">endAnchor</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-            <span class="c1"># If the start anchor of the pipe is and output</span>
-                <span class="n">endAnchor</span><span class="o">.</span><span class="n">parentItem</span><span class="p">()</span><span class="o">.</span><span class="n">pipeConnected</span><span class="p">(</span><span class="n">endAnchor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">endAnchor</span><span class="o">.</span><span class="n">parentNode</span><span class="p">()</span><span class="o">.</span><span class="n">pipeConnected</span><span class="p">(</span><span class="n">endAnchor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
                 <span class="n">endAnchor</span><span class="o">.</span><span class="n">pipeConnected</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getPipes</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">addPipe</span><span class="p">(</span><span class="n">MPipe</span><span class="p">(</span><span class="n">anchor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="p">))</span>
-                    
+                    <span class="nb">print</span> <span class="s2">&quot;adding pipe&quot;</span>
+                    <span class="n">pipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">addPipe</span><span class="p">(</span><span class="n">MPipe</span><span class="p">(</span><span class="n">anchor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span> <span class="s2">&quot;A pipe exists&quot;</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPipes</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isUnconnected</span><span class="p">():</span>
-                        <span class="c1">#print &quot;using existing pipe&quot;</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">getPipes</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anchor</span><span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">getPipes</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                        <span class="n">pipe</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">getPipes</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">addPipe</span><span class="p">(</span><span class="n">MPipe</span><span class="p">(</span><span class="n">anchor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="p">))</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPipes</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">anchor</span><span class="o">.</span><span class="n">pipeConnected</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe</span><span class="p">)</span>
-            <span class="n">anchor</span><span class="o">.</span><span class="n">parentItem</span><span class="p">()</span><span class="o">.</span><span class="n">pipeConnected</span><span class="p">(</span><span class="n">anchor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span><span class="p">)</span>
-            
-            <span class="n">anchor</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="nb">print</span> <span class="s2">&quot;Creating pipe&quot;</span>
+                        <span class="n">pipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">addPipe</span><span class="p">(</span><span class="n">MPipe</span><span class="p">(</span><span class="n">anchor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="p">))</span>
+
+                <span class="n">anchor</span><span class="o">.</span><span class="n">pipeConnected</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span>
+                <span class="n">anchor</span><span class="o">.</span><span class="n">parentNode</span><span class="p">()</span><span class="o">.</span><span class="n">pipeConnected</span><span class="p">(</span><span class="n">anchor</span><span class="p">,</span> <span class="n">pipe</span><span class="p">)</span>
+                
+            <span class="n">anchor</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span>
         <span class="k">except</span>  <span class="ne">ValueError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
             <span class="nb">print</span> <span class="s2">&quot;ERROR:&quot;</span><span class="p">,</span><span class="n">e</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">deletePipe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span></div>
-
-        
-        
-        
-       
-        
+            
 <div class="viewcode-block" id="NodeTree.addNode"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNodeTree.html#mView.MNodeEditor.MNodeTree.NodeTree.addNode">[docs]</a>    <span class="k">def</span> <span class="nf">addNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
-        <span class="c1">#print &quot;adding node to scene:&quot;,self.scene</span>
-        <span class="n">node</span><span class="o">.</span><span class="n">setScene</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="p">)</span>
+        <span class="c1">#node.setScene(self.scene)</span>
         <span class="n">node</span><span class="o">.</span><span class="n">setTree</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">node</span><span class="o">.</span><span class="n">begin</span><span class="p">()</span>
-        <span class="c1">#newNode = MNode(self.scene, self, **kwargs)</span>
-       <span class="c1"># print newNode</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-        
-       <span class="c1"># print self.nodes[-1]</span>
         <span class="k">return</span> <span class="n">node</span></div>
         
 <div class="viewcode-block" id="NodeTree.getNodes"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNodeTree.html#mView.MNodeEditor.MNodeTree.NodeTree.getNodes">[docs]</a>    <span class="k">def</span> <span class="nf">getNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span></div>
+        
 <div class="viewcode-block" id="NodeTree.getGuiNodes"><a class="viewcode-back" href="../../../mView.MNodeEditor.MNodeTree.html#mView.MNodeEditor.MNodeTree.NodeTree.getGuiNodes">[docs]</a>    <span class="k">def</span> <span class="nf">getGuiNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNodes</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">getType</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;output&#39;</span><span class="p">]</span></div></div>
 </pre></div>

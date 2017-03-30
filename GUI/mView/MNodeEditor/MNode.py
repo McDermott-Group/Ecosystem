@@ -1,123 +1,97 @@
-from PyQt4 import QtGui, QtCore
+# Copyright (C) 2016 Noah Meltzer
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+__author__ = "Noah Meltzer"
+__copyright__ = "Copyright 2016, McDermott Group"
+__license__ = "GPL"
+__version__ = "0.0.1"
+__maintainer__ = "Noah Meltzer"
+__status__ = "Beta"
+
+
+
 from MAnchor import MAnchor
 import traceback
 from MWeb import web
-class MNode(QtGui.QGraphicsItem):
+class MNode(object):
     # Attribute that lets MView find this MNode
     
-    def __init__(self, parent = None, *args, **kwargs):
-        QtGui.QGraphicsItem.__init__(self,parent)
-        #default color'
-        self.nodeFrame = QtGui.QFrame()
-        self.title = "New MNode"
-        self.color = (50,50,50)
-        self.device = parent
-        self.isDevice = False
+    def __init__(self, *args, **kwargs):
         
-        
-    def begin(self,   **kwargs):
-        ''' Create a new node'''
-        #print "self.scene:",self.scene
-        # Get keyword args from constructor
-        
-        self.scene.addItem(self)
-        self.nodeLayout = QtGui.QGridLayout()
-        #self.setLayout(nodeLayout)
-        self.font = QtGui.QFont()
-        self.font.setPointSize(15)
-        
-       
-        #self.nodeLayout = QtGui.QVBoxLayout(self.nodeFrame)
-        self.label = QtGui.QLabel(self.title,self.nodeFrame)
-        self.label.setFont(self.font)
-        self.label.setStyleSheet("color:rgb(189,195,199)")
-        self.nodeLayout.addWidget(self.label, 0, 0)
+        web.nodes.append(self)
         
 
-        
-       
-        #nodeLayout.addWidget(QtGui.QCheckBox(nodeFrame))
-        self.nodeFrame.setLayout(self.nodeLayout)
-     
-        
-        
-        pProxy = QtGui.QGraphicsProxyWidget(self)
-        pProxy.setWidget(self.nodeFrame)
-        #self.mode = kwargs.get('mode', 'operator')
-        
-        # Initialize the parent class
-        
-        # Variables to hold the anchors, scene, and tree
+        self.tree = None
+        #self.begin()
         self.anchors = []
-        #self.scene = scene
-        #self.tree = tree
+        self.callAnchorAdded  = False
         
-        # Tell the gui that the item is moveable, slectable, and focusable and that 
-        # it accepts hover events.
-        self.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
-        self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
-        self.setFlag(QtGui.QGraphicsItem.ItemIsFocusable, True)
-        self.setAcceptsHoverEvents(True)
-        # Bounding rectangles
-        self.rect = QtCore.QRectF(0, 0, self.nodeFrame.width(),self.nodeFrame.height())
-        self.rect2 = QtCore.QRectF(-20, -20, 220,220)
-        # The pen, for painting the borders
-        self.textPen = QtGui.QPen()
-
-        self.textPen.setWidth(2)
-        self.textPen.setColor(QtGui.QColor(189, 195, 199))
-        
-        self.nodeBrush = QtGui.QBrush(QtGui.QColor(*self.color))
-
-    def getDevice(self):
-        return self.device
-    def setDevice(self, device):
-        self.isDevice = True
-        self.device = device
-    def getNodeWidget(self):
-        return self.nodeFrame
-    def getNodeLayout(self):
-        return self.nodeLayout
-    def setColor(self,r, g, b):
-            self.color = (r, g, b)
-            self.nodeFrame.setStyleSheet(".QFrame{background:rgba("+str(r)+','+str(g)+','+str(b)+', 20)}')
-    def getColor(self):
-        return self.color
-    def setScene(self, scene):
-        self.scene = scene
+    def begin(self,  *args,  **kwargs):
+        ''' Create a new node'''
+        #print "wrong begin called"
+        self.onBegin()
+        pass
+    def onBegin(self):
+        pass
     def setTree(self, tree):
         self.tree = tree
+        
     def setTitle(self, title): 
         self.title = title
-        self.label.setText(title)
+    def propogateData(self, pd):
+        self.propogateData = pd
+        
+    def isPropogateData(self):
+        return self.propogateData
+        
     def getTitle(self):
         return self.title
-    def refreshData(self):
-        raise notimplementederror("MNode->refreshData must be implemented.")
         
+    def refreshData(self):
+        #print "node:", str(self), "refresh data called"
+        try:
+           self.onRefreshData()
+        except:
+            traceback.print_exc()
+            pass
+    def onRefreshData(self):
+        pass
     def getAnchors(self):
         return self.anchors
         
     def addAnchor(self, anchor=None, **kwargs):
-        
+        propagate = not kwargs.get('terminate', False)
         if anchor == None:
             name = kwargs.get('name', None)
             type = kwargs.get('type', None)
             suggestedData = kwargs.get('data', None)
+            
             if name == None or type == None:
                 raise RuntimeError("If no anchor is passed to MNode.addAnchor(), then \'name\', \'type\' keyword arguments must be given.")
-            print "MNode addanchor kwargs:", kwargs
+
             anchor = MAnchor(name, self, len(self.anchors), type = type, data = suggestedData) # adds itself
-            
+        anchor.propagateData(propagate)
         self.anchors.append(anchor)
-        self.anchorAdded(anchor)
-        self.rect = QtCore.QRectF(0, 0, self.nodeFrame.width(),self.nodeFrame.height())
-        self.rect2 = QtCore.QRectF(0, 0,self.nodeFrame.width(),self.nodeFrame.height())
+        self.anchorAdded(anchor, **kwargs)
+        
         return anchor
+
     def removeAnchor(self, anchor = None, **kwargs):
-        print "specified anchor:", anchor
+        #print "specified anchor:", anchor
         if anchor == None:
-            print "deleting last anchor"
+            #print "deleting last anchor"
             self.anchors[-1].delete()
             del self.anchors[-1]
         else:
@@ -125,46 +99,31 @@ class MNode(QtGui.QGraphicsItem):
             for i, anc in enumerate(self.anchors):
                 if anc is anchor:
                     del anchor[i]
+    
+    def getAnchorByName(self, name):
+        #print "self.anchors:", [str(anchor) for anchor in self.anchors]
+        for anchor in self.anchors:
+            if str(anchor) == name:
+                #print "Found anchor: ", anchor
+                return anchor
+        raise LookupError(str(name)+" is not a anchor in "+str(self)+".")
+    def onLoad(self):
+        self.callAnchorAdded = True
+        pass
     def pipeDisconnected(self):
         pass
+        
     def pipeConnected(self, anchor, pipe):
        pass
-    def anchorAdded(self, anchor):
+       
+    def anchorAdded(self, anchor, **kwargs):
         pass
-    def hoverEnterEvent(self, event):
-        self.prepareGeometryChange()
-        self.textPen.setStyle(QtCore.Qt.DotLine)
-        QtGui.QGraphicsItem.hoverEnterEvent(self, event)
         
-    def hoverLeaveEvent(self, event):
-        self.prepareGeometryChange()
-        self.textPen.setStyle(QtCore.Qt.SolidLine)
-        QtGui.QGraphicsItem.hoverLeaveEvent(self, event)
-        
-    def mouseMoveEvent(self, event):
-        self.prepareGeometryChange()
-        QtGui.QGraphicsItem.mouseMoveEvent(self, event)
-        
-    def mousePressEvent(self, event):
-        self.prepareGeometryChange()
-        QtGui.QGraphicsItem.mousePressEvent(self, event)
-        
-    def boundingRect(self):
-        #self.prepareGeometryChange()
-        return self.rect2
-        
-    def paint(self, painter, option, widget):
-        # self.prepareGeometryChange()
-        self.rect2.setHeight(self.nodeFrame.height())
-        self.rect2.setWidth(self.nodeFrame.width())
-
-        painter.setBrush(self.nodeBrush)
-        painter.setPen(self.textPen)
-        painter.setFont(self.font)
-        painter.drawRect(self.rect2)
-        #painter.drawRect(self.rect)
-    def refreshData(self):
+    def getDevice(self):
+        return None
+    def __str__(self):
+        return self.title
+    def setColor(self, r, g, b):
         pass
 
-        #painter.drawText(5, 30, self.title)
         

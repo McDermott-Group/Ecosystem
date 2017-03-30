@@ -67,11 +67,11 @@
         <span class="n">mainLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">lbl</span><span class="p">)</span>
         
         <span class="c1">#self.scene = QtGui.QGraphicsScene()</span>
-        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="n">tree</span><span class="o">.</span><span class="n">getScene</span><span class="p">()</span><span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">scene</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">getScene</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">scene</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsScene</span><span class="p">()</span>
-            <span class="n">tree</span><span class="o">.</span><span class="n">setScene</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="p">)</span>
+        <span class="c1"># if(not tree.getScene()is None):</span>
+            <span class="c1"># self.scene = tree.getScene()</span>
+        <span class="c1"># else:</span>
+            <span class="c1"># self.scene = QtGui.QGraphicsScene()</span>
+            <span class="c1"># tree.setScene(self.scene)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">devices</span> <span class="o">=</span> <span class="n">devices</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tree</span> <span class="o">=</span> <span class="n">tree</span>
         <span class="n">view</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsView</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="p">)</span>

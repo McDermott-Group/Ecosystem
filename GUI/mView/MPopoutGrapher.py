@@ -310,7 +310,7 @@ class mGraph(QtGui.QWidget):
             return None
             
     def openFullGraphGui(self):
-        print "opening full graph gui."
+        #print "opening full graph gui."
         dataSet = self.device.getFrame().getDataSet().getData()
         #print dataSet
         times = [dt.datetime.fromtimestamp(elem[0]) for elem in dataSet]
@@ -404,7 +404,7 @@ class fullGraphContainer(QtGui.QWidget):
 
             self.line.append(set)
             
-            print name
+            #print name
        
         self.toolbar = NavigationToolbar(self.canvas, self)
         self.legend = self.ax.legend(loc='upper left')

@@ -3,8 +3,8 @@ import MAnchor
 import MNodeTree
 
 from MWeb import web
-from MNodes.MLabradNode import MLabradNode
-from MNodes.MVirtualDeviceNode import MVirtualDeviceNode
+
+from MNodes.MDeviceNode import MDeviceNode
 
 class MNodeEditorHandler:
     def __init__(self):
@@ -38,6 +38,6 @@ class MNodeEditorHandler:
     def getTree(self):
         return self.nodeTree
     def stop(self):
-        print "stopping handler"
+        #print "stopping handler"
         web.keepGoing = False
         

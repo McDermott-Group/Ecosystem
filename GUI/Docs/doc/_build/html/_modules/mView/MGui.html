@@ -134,7 +134,7 @@
         <span class="c1"># Make the GUI fullscreen.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">showMaximized</span><span class="p">()</span>
        
-        <span class="n">web</span><span class="o">.</span><span class="n">devices</span> <span class="o">=</span> <span class="n">devices</span>
+       
         <span class="c1"># Make GUI area scrollable.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">main_widget</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">main_widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mainHBox</span><span class="p">)</span>
@@ -185,7 +185,7 @@
         <span class="n">VirtualDevicesMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">virtualDevicesConfigAction</span><span class="p">)</span>
         <span class="c1"># Keeps track of the number of widgets, used for placing tiles</span>
         <span class="c1"># into the correct column.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">neh</span> <span class="o">=</span> <span class="n">MNodeEditorHandler</span><span class="p">()</span>
+        <span class="c1">#self.neh = MNodeEditorHandler()</span>
         <span class="n">numWidgets</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="c1"># Configure the size policy of all tiles.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frameSizePolicy</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QSizePolicy</span><span class="p">()</span>
@@ -201,7 +201,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">mainVBox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">setAlignment</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignTop</span><span class="p">)</span>
 
         <span class="c1"># Which column are we adding a tile to next.</span>
-        <span class="n">devices</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">devices</span>
+        <span class="c1">#devices = web.devices</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">device</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">devices</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">addDevice</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
@@ -217,8 +217,8 @@
             <span class="n">device</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
             <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getDataChestWrapper</span><span class="p">()</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
             <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getDataChestWrapper</span><span class="p">()</span><span class="o">.</span><span class="n">saveState</span><span class="p">()</span>
-        <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">saveState</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">neh</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
+        <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">saveState</span><span class="p">()</span></div>
+        <span class="c1">#self.neh.stop()</span>
         
 <div class="viewcode-block" id="MGui.addDevice"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.addDevice">[docs]</a>    <span class="k">def</span> <span class="nf">addDevice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">VBoxColumn</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -265,8 +265,8 @@
         <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="n">period</span><span class="p">,</span><span class="s1">&#39;guiRefreshRate&#39;</span><span class="p">)</span></div>
         
 <div class="viewcode-block" id="MGui.openVirtualDevicesConfig"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.openVirtualDevicesConfig">[docs]</a>    <span class="k">def</span> <span class="nf">openVirtualDevicesConfig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">neh</span><span class="o">.</span><span class="n">showEditor</span><span class="p">()</span></div>
-
+        <span class="c1">#self.neh.showEditor()</span>
+        <span class="nb">print</span> <span class="s2">&quot;no, I wont&quot;</span></div>
 <div class="viewcode-block" id="MGui.openConfig"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.openConfig">[docs]</a>    <span class="k">def</span> <span class="nf">openConfig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Config</span> <span class="o">=</span> <span class="n">ConfigGui</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Config</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div>
@@ -276,7 +276,7 @@
         <span class="nb">print</span> <span class="s2">&quot;Starting GUI.&quot;</span>
         <span class="c1"># Used as the name of the dataChest data title.</span>
         
-        <span class="n">web</span><span class="o">.</span><span class="n">devices</span> <span class="o">=</span> <span class="n">devices</span>
+        <span class="c1">#web.devices = devices</span>
         <span class="c1"># Start the notifier.</span>
         <span class="n">web</span><span class="o">.</span><span class="n">telecomm</span> <span class="o">=</span> <span class="n">tele</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">NotifierGUI</span> <span class="o">=</span> <span class="n">NotifierGUI</span><span class="p">()</span>
@@ -299,7 +299,7 @@
         <span class="c1"># Show the GUI.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">timer</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QTimer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">neh</span><span class="o">.</span><span class="n">begin</span><span class="p">()</span>
+        <span class="c1">#self.neh.begin()</span>
         <span class="c1"># Update the GUI every so often. This CAN ONLY be done </span>
         <span class="c1"># in the main thread.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keepGoing</span><span class="p">:</span>
@@ -308,11 +308,17 @@
             <span class="c1"># QtGui.QApplication.focusWidget().clearFocus()</span>
         <span class="c1"># except:</span>
             <span class="c1"># pass</span>
+            
+        <span class="nb">print</span> <span class="n">web</span><span class="o">.</span><span class="n">nodes</span>
+        <span class="c1"># Begin all logic nodes</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">web</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">onLoad</span><span class="p">()</span>
         <span class="c1"># Now that the gui is mostly loaded, all of teh onLoad functions can be called</span>
         <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">:</span>
             <span class="n">device</span><span class="o">.</span><span class="n">onLoad</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">autostart</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">showGui</span><span class="p">()</span></div>
+     
 <div class="viewcode-block" id="MGui.showGui"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.showGui">[docs]</a>    <span class="k">def</span> <span class="nf">showGui</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">())</span></div>
 

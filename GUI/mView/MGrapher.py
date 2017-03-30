@@ -33,11 +33,11 @@ from dateStamp import *
 from dataChest import *
 from MCheckableComboBoxes import MCheckableComboBox
 import  datetime
-
+import warnings
 class mGraph(QtGui.QWidget):
-    def __init__(self, device, parent=None):
+    def __init__(self, device, parent=None, **kwargs):
         QtGui.QWidget.__init__(self, parent)
-
+        self.title = kwargs.get("title", device.getFrame().getTitle())
         # This is the device we want to use.
         self.device = device
         # This sets up axis on which to plot.
@@ -59,7 +59,7 @@ class mGraph(QtGui.QWidget):
         
         frameLayout.addWidget(self.win)
         
-        self.p = self.win.addPlot(title = device.getFrame().getTitle(), axisItems={'bottom': TimeAxisItem(orientation='bottom')})
+        self.p = self.win.addPlot(title = self.title, axisItems={'bottom': TimeAxisItem(orientation='bottom')})
         
         self.p.addLegend()
         self.p.showGrid(x=True, y=True, alpha = 0.5)
@@ -105,6 +105,8 @@ class mGraph(QtGui.QWidget):
         self.autoscaleCheckBox = QtGui.QCheckBox("Auto Ranging", self)
         self.autoscaleCheckBox.setChecked(True)
         self.autoscaleCheckBox.clicked.connect(self.plot)
+        self.refreshColors = QtGui.QPushButton("Randomize Colors", self)
+        self.refreshColors.clicked.connect(self.generateColors)
         self.setY100 = QtGui.QPushButton("100% Y Axis", self)
         self.setY100.clicked.connect(self.yAxTo100)
         self.lockYAx = QtGui.QCheckBox("Lock Y Axis", self)
@@ -129,6 +131,7 @@ class mGraph(QtGui.QWidget):
         buttonLayout3.addWidget(self.autoscaleCheckBox)
         buttonLayout3.addWidget(self.lockYAx)
         buttonLayout3.addWidget(self.setY100)
+        buttonLayout3.addWidget(self.refreshColors)
         buttonLayout3.addStretch(0)
         
         self.buttonFrame = QtGui.QFrame()
@@ -141,6 +144,7 @@ class mGraph(QtGui.QWidget):
         self.dropdownFont = QtGui.QFont()
         self.dropdownFont.setPointSize(12)
         self.autoscaleCheckBox.setFont(self.dropdownFont)
+        self.refreshColors.setFont(self.dropdownFont)
         self.lockYAx.setFont(self.dropdownFont)
         self.setY100.setFont(self.dropdownFont)
         self.initialized = False
@@ -158,72 +162,101 @@ class mGraph(QtGui.QWidget):
     def eventFilter(self, receiver, event):
         '''Filter out scroll events so that only pyqtgraph catches them'''
         if(event.type() == QtCore.QEvent.Wheel):
-            print "scroll detected"
+            #print "scroll detected"
             return True
         else:
             #print "scroll not detected"
             return False
+    def generateColors(self):
+        #print "RAINBOW COLORS!!"
+        for curve in self.curves:
+        
+            self.r = np.random.random()*200
+            self.g = np.random.random()*200
+            self.b = np.random.random()*200
+        
+            pen = pg.mkPen(cosmetic=True, width=2, color= (self.r, self.g, self.b))
+            curve.setPen(pen)
     def initialize(self):
         
         varNames = self.device.getFrame().getDataSet().getVariables()
         varNames = [varNames[1][i][0] for i in range(len(varNames[1]))]
         for i,var in enumerate(varNames):
-            Qvar = QtCore.QString(var.replace('_',' '))
-            self.lineSelect.addItem(Qvar)
+            #Qvar = QtCore.QString(var.replace('_',' '))
+            self.lineSelect.addItem(var.replace('_',' '))
             self.lineSelect.setFont(self.dropdownFont)
             self.lineSelect.setChecked(i, True)
             
         self.initialized = True
+
         device = self.device
         frame = device.getFrame()
-        yLabel = frame.getYLabel()
-        units = frame.getUnits()
-        if frame.getCustomUnits():
-            #self.p.getAxis('left').setLabel(text = yLabel, units = frame.getCustomUnits())
-            self.p.setLabel('left', text = yLabel, units = frame.getCustomUnits())
-       
-        elif frame.getUnits() != []:
-            units = []
-            self.viewboxes = []
-            axes = []
-            units.append(frame.getUnits()[0])
-            
-            axes.append(self.p.getAxis('left'))
-            #print "grapher y axis units:", units[0]
-            if units[0] != None:
-                axes[-1].setLabel(text = str(yLabel+"("+units[0]+")"))
-            else:
-                axes[-1].setLabel(text = str(yLabel))
+
+
+        self.setupUnits()
             # units.append(units[0])
             # self.p.showAxis('right')
             
             #axes.append(self.p.getAxis('right'))
             #axes[-1].setLabel(text= "Test", units = "test units")
 
-            for unit in frame.getUnits():
-                if unit not in units:
-                    print "found new unit:", unit
+            # for unit in frame.getUnits():
+                # if unit not in units:
+                    # print "found new unit:", unit
                     
-                    pa = pg.ViewBox()
-                    ax = pg.AxisItem('right')
-                    self.p.layout.addItem(ax, 2, 2+len(units))
-                    self.p.scene().addItem(pa)
-                    ax.linkToView(pa)
-                    pa.setXLink(self.p)
+                    # pa = pg.ViewBox()
+                    # ax = pg.AxisItem('right')
+                    # self.p.layout.addItem(ax, 2, 2+len(units))
+                    # self.p.scene().addItem(pa)
+                    # ax.linkToView(pa)
+                    # pa.setXLink(self.p)
                  
-                    self.viewboxes.append(pa)
-                    units.append(unit)
-                    axes.append(ax)
-                    ax.setZValue(-10000)
-                    ax.setLabel(text= "Test", units = "test units")
-                    pa.show()
-                    ax.show()
-                    self.p.vb.sigResized.connect(self.plot)
+                    # self.viewboxes.append(pa)
+                    # units.append(unit)
+                    # axes.append(ax)
+                    # ax.setZValue(-10000)
+                    # ax.setLabel(text= "Test", units = "test units")
+                    # pa.show()
+                    # ax.show()
+                    # self.p.vb.sigResized.connect(self.plot)
+    def setupUnits(self):
+        
+        frame = self.device.getFrame()
+        try:
+            yLabel = frame.getDataSet().getParameter("y_label")
+        except:
+            warnings.warn( "\'y_label\' is not a parameter of the data set for" +str(self.device)+".")
+            yLabel = ''
+        vars = self.device.getFrame().getDataSet().getVariables()
+        try:
+            customUnits = frame.getDataSet().getParameter("custom_units")
+        except:
+            warnings.warn( "\'custom_units\' is not a parameter of the data set for" +str(self.device)+".")
+            customUnits = None
+        #print "vars:", vars
+        #nickname = vars[1][0][0].replace('_',' ')
+        if customUnits != None:
+            self.p.setLabel('left', text =  str(yLabel)+"("+str(customUnits)+")")
+       
+        elif vars[1][0][3] != None:
+            
+            self.viewboxes = []
+            axes = []
+            units = []
+            units.append(vars[1][0][3])
+            
+            axes.append(self.p.getAxis('left'))
 
+            if units[0] != None:
+                axes[-1].setLabel(text = str(yLabel+"("+units[0]+")"))
+            else:
+                axes[-1].setLabel(text = str(yLabel))
+
+         
     def plot(self, **kwargs):
-
+            #print "plotting"
            
-          
+            
             if not self.initialized:
                 self.initialize()
 
@@ -234,7 +267,7 @@ class mGraph(QtGui.QWidget):
             autoRange = kwargs.get('autoRange', False)
             
             # If time was specified, then autorange
-            
+            self.setupUnits()
             if maxtime == 'last_valid':
                 maxtime = self.lastValidTime
             data = self.device.getFrame().getDataSet().getData()
@@ -246,15 +279,20 @@ class mGraph(QtGui.QWidget):
             times = [elem[0] for elem in data]
             
             data = np.transpose(data)
+            #print "data:", data
+            #print "Data to be plotted:", data
             i = 0
+           
+            
             while len(self.curves)<len(data)-1:
                 #self.p.plot()
                 
-                pen = pg.mkPen(cosmetic=True, width=2, color=(np.random.random()*200, np.random.random()*200, np.random.random()*200))
+                self.pen = pg.mkPen(cosmetic=True, width=2, color= (0,0,0))
                 varNames = self.device.getFrame().getDataSet().getVariables()
                 varNames = [varNames[1][y][0] for y in range(len(varNames[1]))]
-                self.curves.append(self.p.plot([0], pen = pen, name = varNames[i].replace('_', ' ')))
+                self.curves.append(self.p.plot([0], pen = self.pen, name = varNames[i].replace('_', ' ')))
                 i = i+1
+                self.generateColors()
             currMax = None
             currMin = None
             for i,col in enumerate(data[1:]):
@@ -274,42 +312,29 @@ class mGraph(QtGui.QWidget):
             if self.autoscaleCheckBox.isChecked():
                 #self.p.setXRange(times[0],times[-1], padding=0)
                 # for pa in self.viewboxes:
-                    # pa.autoRange(items = self.curves)
+                self.p.autoRange()
                     # pa.enableAutoRange(True)
                 self.autoscaleCheckBox.setChecked(True)
                 self.processRangeChangeSig = False
-                try:
-                    self.p.setRange(xRange=[times[0],times[-1]], yRange = [currMin, currMax])
-                except:
-                    pass
+#                try:
+#                    #print "currmin", currMin
+#                    #print "currmax", currMax
+#                    #self.p.setRange(xRange=[times[0],times[-1]], yRange = [currMin, currMax])
+#                except:
+#                    pass
                 self.processRangeChangeSig = True
-                    #traceback.print_exc()
 
-
-                    #self.p.setYRange()
-                #print "col:", col
-                #print "times:",times
-            #self.curve1.setData(times, data, antialias = False)
-            
-            #times = [dt.datetime.fromtimestamp(elem[0]) for elem in data]
-            #print "data[0]:", data[0]
-       
-            
-           
-           
-           # print "data:\n", data
-            
-            #self.changeIndependenVarRange(time)
     def rangeChanged(self):
         if self.processRangeChangeSig:
             self.autoscaleCheckBox.setChecked(False)
         if self.lockYAx.isChecked():
             self.yAxTo100()
-            
-   
-            
+    
     def yAxTo100(self):
         self.p.enableAutoRange(axis = 'y')
+    def show(self):
+        if self.hidden:
+            self.togglePlot()
     def togglePlot(self):    
             if not self.hidden:
                 self.win.hide()
@@ -342,6 +367,7 @@ class mGraph(QtGui.QWidget):
                 self.autoscaleCheckBox.show()
                 self.buttonFrame.show()
                 self.frame.show()
+                
 class TimeAxisItem(pg.AxisItem):
     def __init__(self, *args, **kwargs):
         #  super().__init__(*args, **kwargs)

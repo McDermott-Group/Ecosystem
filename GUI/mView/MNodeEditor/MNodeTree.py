@@ -1,3 +1,27 @@
+# Copyright (C) 2016 Noah Meltzer
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+__author__ = "Noah Meltzer"
+__copyright__ = "Copyright 2016, McDermott Group"
+__license__ = "GPL"
+__version__ = "0.0.1"
+__maintainer__ = "Noah Meltzer"
+__status__ = "Beta"
+
+
+
 from MPipe import MPipe
 import os
 import sys, inspect
@@ -9,32 +33,34 @@ class NodeTree:
     pipes = []
     #def __init__(self):
     nodes = []
-    print os.getcwd()
+    #print os.getcwd()
     path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) 
     
     os.chdir(path+"\MNodes")
-    print os.getcwd()
+    #print os.getcwd()
     for file in glob("*.py"):
         web.nodeFilenames.append(file)
-        print file
+        #print file
 
     def getPipes(self):
+        '''Returns all pipes in the tree.'''
         return self.pipes
         
     def addPipe(self,pipe):
+        '''Add a pipe to the tree.'''
         self.pipes.append(pipe)
         return self.pipes[-1]
         
     def deletePipe(self, pipeToDel):
         '''Delete pipe from tree'''
-        # Connect both ends of the pipe to nothing
+
         pipeToDel.setLabel(None)
         start = pipeToDel.getStartAnchor()
         end = pipeToDel.getEndAnchor()
         start.connect(None)
         if end != None:
             end.connect(None)
-        self.scene.removeItem(pipeToDel)
+        
         for i,pipe in enumerate(self.pipes):
             if pipe is pipeToDel:
                 self.pipes[i] = None
@@ -43,62 +69,48 @@ class NodeTree:
         if end != None:
             end.parentNode().pipeDisconnected()
                 
-    def setScene(self, scene):
-        self.scene = scene
-        
-    def getScene(self):
-        return self.scene
-        
     def connect(self, anchor, endAnchor = None):
         '''Connect anchors with a pipe.'''
         try:
-            print "endAnchor:", endAnchor
-            print "anchor:", anchor
+            #print "endAnchor:", endAnchor
+            #print "anchor:", anchor
             if endAnchor != None:
-                self.pipes.append(MPipe(anchor, self.scene))
+                pipe = MPipe(anchor, self.scene)
+                self.pipes.append(pipe)
                 self.pipes[-1].connect(endAnchor)
                 endAnchor.connect(self.pipes[-1])
-            # If the start anchor of the pipe is and output
-                endAnchor.parentItem().pipeConnected(endAnchor, self.pipes[-1])
+                endAnchor.parentNode().pipeConnected(endAnchor, self.pipes[-1])
                 endAnchor.pipeConnected(self.pipes[-1])
             else:
                 if len(self.getPipes()) == 0:
-                    self.pipe = self.addPipe(MPipe(anchor, self.scene))
-                    
+                    #print "adding pipe"
+                    pipe = self.addPipe(MPipe(anchor, self.scene))
                 else:
+                    #print "A pipe exists"
                     if self.getPipes()[-1].isUnconnected():
-                        #print "using existing pipe"
                         self.getPipes()[-1].connect(anchor)
-                        self.pipe =  self.getPipes()[-1]
+                        pipe =  self.getPipes()[-1]
                     else:
-                        self.pipe = self.addPipe(MPipe(anchor, self.scene))
-                    self.pipe = self.getPipes()[-1]
-            anchor.pipeConnected(self.pipe)
-            anchor.parentItem().pipeConnected(anchor, self.pipe)
-            
-            anchor.connect(self.pipes[-1])
-        except  ValueError, e:
-            print "ERROR:",e
-            self.deletePipe(self.pipes[-1])
+                       # print "Creating pipe"
+                        pipe = self.addPipe(MPipe(anchor, self.scene))
 
-        
-        
-        
-       
-        
+                anchor.pipeConnected(pipe)
+                anchor.parentNode().pipeConnected(anchor, pipe)
+                
+            anchor.connect(pipe)
+        except  ValueError, e:
+            #print "ERROR:",e
+            self.deletePipe(self.pipes[-1])
+            
     def addNode(self, node):
-        #print "adding node to scene:",self.scene
-        node.setScene(self.scene)
+        #node.setScene(self.scene)
         node.setTree(self)
         node.begin()
-        #newNode = MNode(self.scene, self, **kwargs)
-       # print newNode
         self.nodes.append(node)
-        
-       # print self.nodes[-1]
         return node
         
     def getNodes(self):
         return self.nodes
+        
     def getGuiNodes(self):
         return [node for node in self.getNodes() if node.getType() == 'output']

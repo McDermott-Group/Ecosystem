@@ -49,7 +49,7 @@ class web:
     gui = None
     title = None
     nodeFilenames = []
-
+    nodes = []
     persistentData = None
     
    

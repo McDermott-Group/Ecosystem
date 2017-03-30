@@ -163,7 +163,7 @@
 <div class="viewcode-block" id="RS232Device.onBegin"><a class="viewcode-back" href="../../../mView.MDevices.RS232Device.html#mView.MDevices.RS232Device.RS232Device.onBegin">[docs]</a>    <span class="k">def</span> <span class="nf">onBegin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Begin the device.&#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span></div>
-    
+
 <div class="viewcode-block" id="RS232Device.connect"><a class="viewcode-back" href="../../../mView.MDevices.RS232Device.html#mView.MDevices.RS232Device.RS232Device.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
          <span class="sd">&#39;&#39;&#39;Open the serial port and try to connect to it.&#39;&#39;&#39;</span>
          <span class="k">try</span><span class="p">:</span> 
@@ -181,28 +181,32 @@
 <span class="sd">        should set the readings by calling self.frame.setReadings([readings]). </span>
 <span class="sd">        Where [readings] is an array of readings.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-        <span class="n">readings</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">connected</span><span class="p">:</span>
-            <span class="c1"># if not connected, connect.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-        <span class="c1"># If self.port is not None.</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># For each parameter, get readings</span>
-            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">paramInfo</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="c1"># Flush anything that might on the port.</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-                <span class="c1"># Write the command to the port.</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">paramInfo</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="s1">&#39;command&#39;</span><span class="p">])</span>
-                <span class="c1"># Wait while there is nothing on the port.</span>
-                <span class="k">while</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">in_waiting</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
-                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
-                <span class="c1"># While there is stuff on the port, read it.</span>
-                <span class="n">reading</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-                <span class="c1"># Strip whitespace and newline characters off the received value.</span>
-                <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">reading</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
-            <span class="c1"># Tell the device what the readings were.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">setReadings</span><span class="p">(</span><span class="n">readings</span><span class="p">)</span></div>
-                
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">readings</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">connected</span><span class="p">:</span>
+                <span class="c1"># if not connected, connect.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+            <span class="c1"># If self.port is not None.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># For each parameter, get readings</span>
+                <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">paramInfo</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="c1"># Flush anything that might on the port.</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+                    <span class="c1"># Write the command to the port.</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">paramInfo</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="s1">&#39;command&#39;</span><span class="p">])</span>
+                    <span class="c1"># Wait while there is nothing on the port.</span>
+                    <span class="k">while</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">in_waiting</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+                        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+                    <span class="c1"># While there is stuff on the port, read it.</span>
+                    <span class="n">reading</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+                    <span class="c1"># Strip whitespace and newline characters off the received value.</span>
+                    <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">reading</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+                <span class="c1"># Tell the device what the readings were.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">setReadings</span><span class="p">(</span><span class="n">readings</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;Serial Device:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;on&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="s2">&quot;was disconnected.&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connected</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">pass</span></div>
 <div class="viewcode-block" id="RS232Device.close"><a class="viewcode-back" href="../../../mView.MDevices.RS232Device.html#mView.MDevices.RS232Device.RS232Device.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Stop the device. This includes closing the port.&#39;&#39;&#39;</span>
         <span class="k">try</span><span class="p">:</span>

@@ -29,7 +29,7 @@ class MPersistentData:
 
     persistentDataDict = {}
     def __init__(self):
-        print "Loading persistent data..."
+        #print "Loading persistent data..."
         self.location = os.path.dirname(traceback.extract_stack()[0][0])
         self.name = 'mview.config'
         try:
@@ -41,6 +41,7 @@ class MPersistentData:
     def saveState(self):
         #print self.persistentDataDict
         print "Pickling and saving data to file..."
+        #print self.persistentDataDict
         pickle.dump(self.persistentDataDict, open(os.path.join(self.location, self.name), 'wb'))
         print "data pickled and saved."
     def restoreState(self):
