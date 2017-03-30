@@ -89,9 +89,10 @@ class Device(MDevice):
     def setServerName(self, name):
         self.serverName = name
         
-    def addParameter(self, parameter, setting, arg=None, index=None,
-            units=None, precision=2, **kwargs):
-        
+    def onAddParameter(self, parameter, setting = None, arg=None, **kwargs):
+        precision = kwargs.get('precision', 2)
+        units = kwargs.get('units', None)
+        index = kwargs.get('index', None)
         self.frame.DataLoggingInfo()['channels'][parameter] = kwargs.get('log', True)
         
         self.setCommand(parameter, [setting, arg])
