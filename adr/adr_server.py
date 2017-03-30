@@ -13,21 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-### BEGIN NODE INFO
-[info]
-name = ADR Server
-version = 1.3.2
-description = Controls the ADRs
-[startup]
-cmdline = %PYTHON% %FILE%
-timeout = 20
-
-[shutdown]
-message = 987654321
-timeout = 20
-### END NODE INFO
-"""
 
 # This server can be connected to by adr_client.py or other LabRAD
 # clients to control the ADR with a GUI, etc.
@@ -56,13 +41,35 @@ import json
 from twisted.web.static import File
 from twisted.python import log
 from twisted.web.server import Site
-from twisted.internet import reactor
+from twisted.internet import ssl, reactor
 
 from autobahn.twisted.websocket import WebSocketServerFactory, \
-    WebSocketServerProtocol
+    WebSocketServerProtocol, listenWS
 
 from autobahn.twisted.resource import WebSocketResource
 
+
+def deltaT(dT):
+    """
+    .total_seconds() is only supported by >py27 :(, so we use this
+    to subtract two datetime objects.
+    """
+    try:
+        return dT.total_seconds()
+    except:
+        return dT.days * 86400 + dT.seconds + dT.microseconds * pow(10,-6)
+
+class NumpyEncoder(json.JSONEncoder):
+    """ Special json encoder for numpy types.  Otherwise it fails with float16, etc. """
+    def default(self, obj):
+        if isinstance(obj, (numpy.int_, numpy.intc, numpy.intp, numpy.int8,
+            numpy.int16, numpy.int32, numpy.int64, numpy.uint8,
+            numpy.uint16,numpy.uint32, numpy.uint64)):
+            return int(obj)
+        elif isinstance(obj, (numpy.float_, numpy.float16, numpy.float32, 
+            numpy.float64)):
+            return float(obj)
+        return json.JSONEncoder.default(self, obj)
 
 class MyServerProtocol(WebSocketServerProtocol):
     def onOpen(self):
@@ -74,7 +81,7 @@ class MyServerProtocol(WebSocketServerProtocol):
         state = self.adrServer.state
         text = json.dumps({
             'temps': {
-                'timeStamps':[(state['datetime']-datetime.datetime(1970,1,1)).total_seconds()],
+                'timeStamps':[deltaT(state['datetime']-datetime.datetime(1970,1,1))],
                 't60K': [state['T_60K']['K']],
                 't03K': [state['T_3K']['K']],
                 'tGGG': [state['T_GGG']['K']],
@@ -91,10 +98,11 @@ class MyServerProtocol(WebSocketServerProtocol):
             'PSCurrent': state['PSCurrent']['A'],
             'PSVoltage': state['PSVoltage']['V'],
             'log':[{
-                'datetime':(log[0]-datetime.datetime(1970,1,1)).total_seconds(),
+                'datetime':deltaT(log[0]-datetime.datetime(1970,1,1)),
                 'message':log[1],
                 'alert':log[2]} for log in backLogs]
-        })
+        }, cls=NumpyEncoder)
+        text = text.replace('NaN','null') # apparently JSON does not support nan
         self.sendMessage(text)
 
     def connectionLost(self, reason):
@@ -128,6 +136,32 @@ class MyServerProtocol(WebSocketServerProtocol):
         elif message['command'] == 'Add To Log':
             if message['text'] is not None:
                 self.adrServer.logMessage(message['text'])
+        elif message['command'] == 'Get Temperature Data':
+            if message['minutes'] is not None:
+                m = int(message['minutes'])
+                n = self.adrServer.tempDataChest.getNumRows()
+                tempData = self.adrServer.tempDataChest.getData(max(0,n-m*60), None)
+                now = deltaT(datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1))
+                tempData = [line for line in tempData if line[0] > now-m*60]
+                # add blank data so if we restart server, there will not be a
+                # big ugly line on the graph where we have a break in time
+                timestamp = deltaT(datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1))
+                nanRow = [[timestamp] + [numpy.float16(numpy.NaN)]*4]
+                tempData = nanRow + tempData + nanRow
+                tempData = numpy.array(tempData)
+                tempData = tempData.transpose()
+                tempData = tempData.tolist()
+                text = json.dumps({
+                    'temps': {
+                        'timeStamps': tempData[0],
+                        't60K': tempData[1],
+                        't03K': tempData[2],
+                        'tGGG': tempData[3],
+                        'tFAA': tempData[4]
+                    }
+                }, cls=NumpyEncoder)
+                text = text.replace('NaN','null') # apparently JSON does not support nan
+                self.sendMessage(text)
 
 
 class MyFactory(WebSocketServerFactory):
@@ -145,21 +179,10 @@ class MyFactory(WebSocketServerFactory):
         self.clients.pop(client.peer)
 
     def sendMessageToAll(self, message):
-        text = json.dumps(message)
+        text = json.dumps(message, cls=NumpyEncoder)
         text = text.replace('NaN','null') # apparently JSON does not support nan
         for c in self.clients.keys():
             self.clients[c].sendMessage(text)
-
-
-def deltaT(dT):
-    """
-    .total_seconds() is only supported by >py27 :(, so we use this
-    to subtract two datetime objects.
-    """
-    try:
-        return dT.total_seconds()
-    except:
-        return dT.days * 86400 + dT.seconds + dT.microseconds * pow(10,-6)
 
 
 class ADRServer(DeviceServer):
@@ -236,7 +259,10 @@ class ADRServer(DeviceServer):
                 'Magnet Voltage Monitor':['SIM922','addr'],
                 'Heat Switch':['Heat Switch','addr'],
                 'Compressor':['CP2800 Compressor','addr'],
-                'Pressure Guage':['Varian Guage Controller','addr']
+                'Pressure Guage':['Varian Guage Controller','addr'],
+                'Log Path': "Z:\\mcdermott-group\\Data\\ADR Logs\\ADR3",
+                'Start Compressor Datetime': None,
+                'Stop Compressor Datetime': None
         }
         self.instruments = {'Power Supply':'None',
                             'Ruox Temperature Monitor':'None',
@@ -245,22 +271,6 @@ class ADRServer(DeviceServer):
                             'Heat Switch':'None',
                             'Compressor':'None',
                             'Pressure Guage':'None'}
-        self.startDatetime = datetime.datetime.utcnow()
-        self.tempDataChest = dataChest(['ADR Logs',self.name])
-        dts = dateStamp()
-        iso = self.startDatetime.isoformat().split('+')[0] # strip timezone (or dateStamp will fail)
-        dtstamp = dts.dateStamp(iso)
-        self.tempDataChest.createDataset("temperatures",
-                [('time',[1],'utc_datetime','')],
-                [('temp60K',[1],'float16','Kelvin'),('temp03K',[1],'float16','Kelvin'),
-                 ('tempGGG',[1],'float16','Kelvin'),('tempFAA',[1],'float16','Kelvin')],
-                 dateStamp=dtstamp)
-        self.tempDataChest.addParameter("X Label", "Time")
-        self.tempDataChest.addParameter("Y Label", "Temperature")
-        self.tempDataChest.addParameter("Plot Title",
-                self.startDatetime.strftime("ADR temperature history "
-                                            "for run starting on %y/%m/%d %H:%M"))
-        self.logMessages = []
 
     @inlineCallbacks
     def initServer(self):
@@ -271,29 +281,44 @@ class ADRServer(DeviceServer):
         """
         yield DeviceServer.initServer(self)
 
+        yield self.loadDefaults()
+
+        # init start time, create dataChest, etc.
+        # If the compressor was last stopped over 24 hours ago, or if the
+        # compressor cannot be started and stopped from the computer,
+        # a new file will be created each time the server is opened.  If
+        # the compressor has not been stopped, the last file will be
+        # appended to.  If the compressor has stopped, but it was less
+        # than 24 hours ago, the last file will be appended to.  Starting
+        # the compressor creates a new file.
+        now = datetime.datetime.utcnow()
+        start = self.ADRSettings['Start Compressor Datetime']
+        stop = self.ADRSettings['Stop Compressor Datetime']
+        if start is None or (stop is not None and deltaT(now - stop) > 24*60*60):
+            self.ADRSettings['Start Compressor Datetime'] = now
+            reg = self.client.registry
+            yield reg.cd(self.ADRSettingsPath)
+            yield reg.set('Start Compressor Datetime',now)
+        self.initLogFiles()
+
         # Web Socket Update Stuff:
         log.startLogging(sys.stdout)
-        # root = File("C:\\Users\\McDermott\\Desktop\\Git Repositories\\servers\\adr\\www")
-        root = File("./www")
-        
+        root = File("")
+
         adrN = int(self.deviceName[-1])
         port = 9879 - adrN
 
-        self.factory = MyFactory(u"ws://127.0.0.1:%i/"%port,adrServer=self)
+        self.factory = MyFactory(u"wss://127.0.0.1:%i/"%port,adrServer=self)
         self.factory.protocol = MyServerProtocol
         resource = WebSocketResource(self.factory)
         root.putChild(u"ws", resource)
 
         site = Site(root)
-        reactor.listenTCP(port, site, interface='0.0.0.0')
+        contextFactory = ssl.DefaultOpenSSLContextFactory('Z:/mcdermott-group/ssl_certificates/adr%i/ssl.key'%adrN,
+                                                          'Z:/mcdermott-group/ssl_certificates/adr%i/ssl.crt'%adrN)
+        # reactor.listenTCP(port, site, interface='0.0.0.0')
+        reactor.listenSSL(port, site, contextFactory, interface='0.0.0.0')
 
-        try:
-            yield self.client.registry.cd(self.ADRSettingsPath)
-            self.file_path = yield self.client.registry.get('Log Path')
-        except Exception as e:
-            self.logMessage('{Saving log failed. '
-                            ' Check that AFS is working.} ')
-        yield self.loadDefaults()
         yield self.initializeInstruments()
         # subscribe to messages
         # the server ones are not used right now, but at some point they could be
@@ -326,6 +351,27 @@ class ADRServer(DeviceServer):
         _,settingsList = yield reg.dir()
         for setting in settingsList:
             self.ADRSettings[setting] = yield reg.get(setting)
+
+    def initLogFiles(self):
+        startDatetime = self.ADRSettings['Start Compressor Datetime']
+        self.tempDataChest = dataChest(['ADR Logs',self.name])
+        dts = dateStamp()
+        iso = startDatetime.isoformat().split('+')[0] # strip timezone (or dateStamp will fail)
+        dtstamp = dts.dateStamp(iso)
+        try:
+            self.tempDataChest.openDataset(dtstamp+'_temperatures', modify=True)
+        except Exception as e:
+            self.tempDataChest.createDataset("temperatures",
+                    [('time',[1],'utc_datetime','')],
+                    [('temp60K',[1],'float16','Kelvin'),('temp03K',[1],'float16','Kelvin'),
+                     ('tempGGG',[1],'float16','Kelvin'),('tempFAA',[1],'float16','Kelvin')],
+                     dateStamp=dtstamp)
+            self.tempDataChest.addParameter("X Label", "Time")
+            self.tempDataChest.addParameter("Y Label", "Temperature")
+            self.tempDataChest.addParameter("Plot Title",
+                    startDatetime.strftime("ADR temperature history "
+                                                "for run starting on %y/%m/%d %H:%M"))
+        self.logMessages = []
 
     @inlineCallbacks
     def initializeInstruments(self):
@@ -453,11 +499,12 @@ class ADRServer(DeviceServer):
         self.logMessages.append( (dt,message,alert) )
         messageWithTimeStamp = dt.strftime("[%m/%d/%y %H:%M:%S] ") + message
         try:
-            fname = self.file_path + self.startDatetime.strftime("\\log_%y%m%d_%H%M.txt")
+            fname = self.ADRSettings['Log Path'] + \
+                self.ADRSettings['Start Compressor Datetime'].strftime("\\log_%y%m%d_%H%M.txt")
             with open(fname, 'a') as f:
                 f.write( messageWithTimeStamp + '\n' )
         except Exception as e:
-            self.logMessage("Could not write to log file: " + str(e) + '.')
+            print("Could not write to log file: " + str(e) + '.')
         print '[log] '+ message
         self.factory.sendMessageToAll({
             'log': [{
@@ -566,8 +613,8 @@ class ADRServer(DeviceServer):
                 except AttributeError:
                     pass # in case instrument didn't initialize properly and is None
             # pressure
-            pressures = yield instruments['Pressure Guage'].get_pressures()
             try:
+                pressures = yield instruments['Pressure Guage'].get_pressures()
                 pressure = pressures[0]['torr'] * units.torr
             except Exception as e:
                 pressure = numpy.nan * units.torr
@@ -793,7 +840,7 @@ class ADRServer(DeviceServer):
 
     @setting(102, 'Get Start Datetime', returns=['t'])
     def getStartDatetime(self,c):
-        return self.startDatetime
+        return self.ADRSettings['Start Compressor Datetime']
 
     @setting(103, 'Get Log', n=['v'], returns=['*(t,s,b)'])
     def getLog(self,c, n=0):
@@ -909,6 +956,20 @@ class ADRServer(DeviceServer):
         try:
             yield self.client['CP2800 Compressor'].start()
             self.logMessage('Compressor started.')
+            # Update start time and refresh files unless compressor was
+            # stopped within last 24 hours.
+            now = datetime.datetime.utcnow()
+            start = self.ADRSettings['Start Compressor Datetime']
+            stop = self.ADRSettings['Stop Compressor Datetime']
+            if (start is None and stop is None) or \
+              (stop is not None and deltaT(now - stop) > 24*60*60):
+                self.ADRSettings['Start Compressor Datetime'] = now
+                self.ADRSettings['Stop Compressor Datetime'] = None
+                reg = self.client.registry
+                yield reg.cd(self.ADRSettingsPath)
+                yield reg.set('Start Compressor Datetime',now)
+                yield reg.set('Stop Compressor Datetime',None)
+                self.initLogFiles()
         except Exception as e:
             self.logMessage('Starting Compressor failed.',alert=True)
 
@@ -918,6 +979,11 @@ class ADRServer(DeviceServer):
         try:
             yield self.client['CP2800 Compressor'].stop()
             self.logMessage('Compressor stopped.')
+            now = datetime.datetime.utcnow()
+            self.ADRSettings['Stop Compressor Datetime'] = now
+            reg = self.client.registry
+            yield reg.cd(self.ADRSettingsPath)
+            yield reg.set('Stop Compressor Datetime',now)
         except Exception as e:
             self.logMessage('Stopping Compressor failed.',alert=True)
 

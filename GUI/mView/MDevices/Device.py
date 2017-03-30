@@ -113,10 +113,10 @@ class Device(MDevice):
 
         button = []
         button.append(name)
-        button.append(action)
         button.append(msg)
+        button.append(action)
         button.append(arg)
-        self.frame.appendButton(button)
+        self.addButtonToGui(button)
         
     def setYLabel(self, yLbl, units=''):
         self.frame.setYLabel(yLbl, units)

@@ -49,9 +49,9 @@ MAX_MODEL_NAME = 32     # Maximum length of Lab Brick model name.
 
 
 class LBAttenuatorServer(LabradServer):
-    name='%LABRADNODE% Lab Brick Attenuators'
+    name = '%LABRADNODE% Lab Brick Attenuators'
     refreshInterval = 60 * s
-    
+
     @inlineCallbacks
     def getRegistryKeys(self):
         """Get registry keys for the Lab Brick Attenuator Server."""
@@ -62,27 +62,27 @@ class LBAttenuatorServer(LabradServer):
             git = yield reg.get('GIT_REPOSITORIES_PATH')
         else:
             raise Exception("Registry key 'GIT_REPOSITORIES_PATH' "
-                    "is not specified.")  
+                            "is not specified.")
         yield reg.cd(['', 'Servers', 'Lab Brick Attenuators'], True)
         dirs, keys = yield reg.dir()
         if 'Lab Brick Attenuator DLL Path' in keys:
             self.DLL_path = yield reg.get('Lab Brick Attenuator DLL '
-                    'Path')
+                                          'Path')
             self.DLL_path = os.path.join(git, self.DLL_path)
         else:
             raise Exception("Registry key 'Lab Brick Attenuator DLL "
-                    "Path' is not specified.")  
+                            "Path' is not specified.")
         print("Lab Brick Attenuator DLL Path is set to %s"
-                %self.DLL_path)
+              % self.DLL_path)
         if 'Lab Brick Attenuator Server Autorefresh' not in keys:
             self.autoRefresh = False
         else:
             self.autoRefresh = yield reg.get('Lab Brick Attenuator '
-                    'Server Autorefresh')
+                                             'Server Autorefresh')
         print("Lab Brick Attenuator Server Autorefresh is set to %s"
-                %self.autoRefresh)
+              % self.autoRefresh)
 
-    @inlineCallbacks    
+    @inlineCallbacks
     def initServer(self):
         """Initialize the Lab Brick Attenuator Server."""
         yield self.getRegistryKeys()
@@ -92,14 +92,14 @@ class LBAttenuatorServer(LabradServer):
             raise Exception('Could not find Lab Brick Attenuator DLL')
 
         # Disable attenuator DLL test mode.
-        self.VNXdll.fnLDA_SetTestMode(ctypes.c_bool(False)) 
-        
+        self.VNXdll.fnLDA_SetTestMode(ctypes.c_bool(False))
+
         # Number of the currently connected devices.
         self._num_devs = 0
         # Create a dictionary that maps serial numbers to device IDs.
         self._SN2DID = {}
         # Create a dictionary that keeps track of last set attenuation.
-        self._last_attn = {}   
+        self._last_attn = {}
         # Dictionary to keep track of min/max attenuations.
         self._min_attn = {}
         self._max_attn = {}
@@ -120,9 +120,9 @@ class LBAttenuatorServer(LabradServer):
         """
         self.refresher = LoopingCall(self.refreshAttenuators)
         self.refresherDone = \
-                self.refresher.start(self.refreshInterval['s'],
-                now=True)
-        
+            self.refresher.start(self.refreshInterval['s'],
+                                 now=True)
+
     @inlineCallbacks
     def stopServer(self):
         """Kill the device refresh loop and wait for it to terminate."""
@@ -130,14 +130,14 @@ class LBAttenuatorServer(LabradServer):
             self.refresher.stop()
             yield self.refresherDone
         self.killAttenuatorConnections()
-            
+
     def killAttenuatorConnections(self):
         for DID in self._SN2DID.values():
             try:
                 yield self.VNXdll.fnLDA_CloseDevice(ctypes.c_uint(DID))
             except Exception:
                 pass
-    
+
     @inlineCallbacks
     def refreshAttenuators(self):
         """Refresh attenuator list."""
@@ -168,28 +168,28 @@ class LBAttenuatorServer(LabradServer):
                 self._min_attn.update({SN: min_attn})
                 self._max_attn.update({SN: max_attn})
                 print('Found a %s Lab Brick Attenuator, serial '
-                        'number: %d, current attenuation: %s'
-                        %(model, SN, self._last_attn[SN]))
+                      'number: %d, current attenuation: %s'
+                      % (model, SN, self._last_attn[SN]))
 
     def getDeviceDID(self, c):
         if 'SN' not in c:
             raise DeviceNotSelectedError('No Lab Brick Attenuator '
-                    'serial number is selected')
+                                         'serial number is selected')
         if c['SN'] not in self._SN2DID.keys():
             raise Exception('Cannot find Lab Brick Attenuator with '
-                    'serial number %s' %c['SN'])
-        return self._SN2DID[c['SN']]       
-                
+                            'serial number %s' % c['SN'])
+        return self._SN2DID[c['SN']]
+
     @setting(1, 'Refresh Device List')
     def refresh_device_list(self, c):
         """Manually refresh attenuator list."""
         yield self.refreshAttenuators()
-        
+
     @setting(2, 'List Devices', returns='*w')
     def list_devices(self, c):
         """Return list of attenuator serial numbers."""
         return sorted(self._SN2DID.keys())
-        
+
     @setting(5, 'Select Device', SN='w', returns='')
     def select_device(self, c, SN):
         """
@@ -198,13 +198,13 @@ class LBAttenuatorServer(LabradServer):
         necessary to select a device.
         """
         c['SN'] = SN
-        
+
     @setting(6, 'Deselect Device', returns='')
     def deselect_device(self, c):
         """Deselect attenuator."""
         if 'SN' in c:
             del c['SN']
-     
+
     @setting(10, 'Attenuation', attn='v[dB]', returns='v[dB]')
     def attenuation(self, c, attn=None):
         """Get or set attenuation."""
@@ -216,7 +216,7 @@ class LBAttenuatorServer(LabradServer):
             # Check whether the attenuation needs to be changed.
             if self._last_attn[c['SN']] == attn:
                 returnValue(attn)
-        
+
         # Set the attenuation (if requested) and read it back.
         DID = ctypes.c_uint(self.getDeviceDID(c))
         yield self.VNXdll.fnLDA_InitDevice(DID)
@@ -227,7 +227,7 @@ class LBAttenuatorServer(LabradServer):
         self._last_attn[c['SN']] = attn
         yield self.VNXdll.fnLDA_CloseDevice(DID)
         returnValue(attn)
-        
+
     @setting(21, 'Max Attenuation', returns='v[dB]')
     def max_attenuation(self, c):
         """Return maximum attenuation."""
@@ -247,7 +247,7 @@ class LBAttenuatorServer(LabradServer):
         min_attn = .25 * min_attn * dB
         yield self.VNXdll.fnLDA_CloseDevice(DID)
         returnValue(min_attn)
-        
+
     @setting(30, 'Model', returns='s')
     def model(self, c):
         """Return attenuator model name."""

@@ -18,7 +18,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Lab Brick RF Generators
-version = 2.0.1
+version = 2.0.2
 description =  Gives access to Lab Brick RF generators.
 instancename = %LABRADNODE% Lab Brick RF Generators
 
@@ -49,9 +49,9 @@ MAX_MODEL_NAME = 32     # Maximum length of Lab Brick model name.
 
 
 class LBRFGenServer(LabradServer):
-    name='%LABRADNODE% Lab Brick RF Generators'
+    name = '%LABRADNODE% Lab Brick RF Generators'
     refreshInterval = 60 * s
-    
+
     @inlineCallbacks
     def getRegistryKeys(self):
         """Get registry keys for the Lab Brick RF Generator Server."""
@@ -62,39 +62,27 @@ class LBRFGenServer(LabradServer):
             git = yield reg.get('GIT_REPOSITORIES_PATH')
         else:
             raise Exception("Registry key 'GIT_REPOSITORIES_PATH' "
-                    "is not specified.")  
+                            "is not specified.")
         yield reg.cd(['', 'Servers', 'Lab Brick RF Generators'], True)
         dirs, keys = yield reg.dir()
         if 'Lab Brick RF Generator DLL Path' in keys:
             self.DLL_path = \
-                    yield reg.get('Lab Brick RF Generator DLL Path')
+                yield reg.get('Lab Brick RF Generator DLL Path')
             self.DLL_path = os.path.join(git, self.DLL_path)
         else:
             raise Exception("Registry key 'Lab Brick RF Generator DLL"
-                    " Path' is not specified.")  
+                            " Path' is not specified.")
         print("Lab Brick RF Generator DLL Path is set to %s"
-                %self.DLL_path)
+              % self.DLL_path)
         if 'Lab Brick RF Generator Server Autorefresh' not in keys:
             self.autoRefresh = True
         else:
             self.autoRefresh = yield reg.get('Lab Brick RF Generator '
-                    'Server Autorefresh')
+                                             'Server Autorefresh')
         print("Lab Brick RF Generator Server Autorefresh is set to %s"
-                %self.autoRefresh)
-        # Determine whether or not to use external 10 MHz reference.
-        if 'Lab Brick RF Generator External Reference' not in keys:
-            self.useExternalRef = True
-        else:
-            self.useExternalRef = yield reg.get('Lab Brick RF '
-                    'Generator External Reference')
-        if self.useExternalRef:
-            print("Lab Brick RF generators are using an external "
-                    "10 MHz reference")
-        else:
-            print("Lab Brick RF genreators are using internal "
-                    "reference")
+              % self.autoRefresh)
 
-    @inlineCallbacks    
+    @inlineCallbacks
     def initServer(self):
         """Initialize the Lab Brick RF Generator Server."""
         yield self.getRegistryKeys()
@@ -105,7 +93,7 @@ class LBRFGenServer(LabradServer):
 
         # Disable RF Generator DLL test mode (turn it off).
         self.VNXdll.fnLMS_SetTestMode(ctypes.c_bool(False))
-        
+
         # Number of the currently connected devices.
         self._num_devs = 0
         # Create dictionaries that keep track of the last set power and
@@ -137,9 +125,9 @@ class LBRFGenServer(LabradServer):
         """
         self.refresher = LoopingCall(self.refreshRFGenerators)
         self.refresherDone = \
-                self.refresher.start(self.refreshInterval['s'],
-                now=True)
-        
+            self.refresher.start(self.refreshInterval['s'],
+                                 now=True)
+
     @inlineCallbacks
     def stopServer(self):
         """Kill the device refresh loop and wait for it to terminate."""
@@ -148,8 +136,8 @@ class LBRFGenServer(LabradServer):
             yield self.refresherDone
         self.killRFGenConnections()
 
-    @inlineCallbacks   
-    def killRFGenConnections(self):  
+    @inlineCallbacks
+    def killRFGenConnections(self):
         for DID in self._SN2DID.values():
             try:
                 yield self.VNXdll.fnLMS_CloseDevice(ctypes.c_uint(DID))
@@ -193,49 +181,49 @@ class LBRFGenServer(LabradServer):
                 freq = yield self.frequency(self._pseudo_ctx)
                 power = yield self.power(self._pseudo_ctx)
                 state = yield self.output(self._pseudo_ctx)
+                ref = yield self.external_reference(self._pseudo_ctx)
                 self._last_freq.update({SN: freq})
                 self._last_pow.update({SN: power})
-                yield self.VNXdll.fnLMS_SetUseInternalRef(DIDs_ptr[idx],
-                        ctypes.c_bool(not self.useExternalRef))
                 print('Found a %s Lab Brick RF generator, serial '
-                        'number: %d, current power: %s, current '
-                        'frequency: %s, output state: %s'
-                        %(model, SN, power, freq, state))
+                      'number: %d, current power: %s, current '
+                      'frequency: %s, output state: %s, '
+                      'external reference: %s'
+                      % (model, SN, power, freq, state, ref))
 
     def getDeviceDID(self, c):
         if 'SN' not in c:
             raise DeviceNotSelectedError('No Lab Brick RF Generator '
-                    'serial number selected')
+                                         'serial number selected')
         if c['SN'] not in self._SN2DID.keys():
             raise Exception('Could not find Lab Brick RF Generator '
-                    'with serial number %d' %c['SN'])
+                            'with serial number %d' % c['SN'])
         return self._SN2DID[c['SN']]
-                
+
     @setting(561, 'Refresh Device List')
     def refresh_device_list(self, c):
         """Manually refresh RF generator list."""
         self.refreshRFGenerators()
-        
+
     @setting(562, 'List Devices', returns='*w')
     def list_devices(self, c):
         """Return list of RF generator serial numbers."""
         return sorted(self._SN2DID.keys())
-        
+
     @setting(565, 'Select Device', SN='w', returns='')
     def select_device(self, c, SN):
         """
-        Select RF generator by its serial number. Since the serial 
-        numbers are unique by definition, no extra information is 
+        Select RF generator by its serial number. Since the serial
+        numbers are unique by definition, no extra information is
         necessary to select a device.
         """
         c['SN'] = SN
-        
+
     @setting(566, 'Deselect Device', returns='')
     def deselect_device(self, c):
         """Deselect RF generator."""
         if 'SN' in c:
             del c['SN']
-        
+
     @setting(570, 'Output', state='b', returns='b')
     def output(self, c, state=None):
         """Get or set RF generator output state (on/off)."""
@@ -246,14 +234,29 @@ class LBRFGenServer(LabradServer):
         outputState = yield self.VNXdll.fnLMS_GetRF_On(DID)
         yield self.VNXdll.fnLMS_CloseDevice(DID)
         returnValue(bool(outputState))
-          
+
+    @setting(575, 'External Reference', ref='b', returns='b')
+    def external_reference(self, c, ref=None):
+        """Get or set RF generator external reference (True/False).
+        True corresponds to the external reference, False corresponds
+        to the internal.
+        """
+        DID = ctypes.c_uint(self.getDeviceDID(c))
+        yield self.VNXdll.fnLMS_InitDevice(DID)
+        if ref is not None:
+            yield self.VNXdll.fnLMS_SetUseInternalRef(DID,
+                                                      ctypes.c_bool(not ref))
+        ref = yield self.VNXdll.fnLMS_GetUseInternalRef(DID)
+        yield self.VNXdll.fnLMS_CloseDevice(DID)
+        returnValue(not bool(ref))
+
     @setting(582, 'Frequency', freq='v[Hz]', returns='v[Hz]')
     def frequency(self, c, freq=None):
         """Set or get RF generator output frequency."""
         DID = ctypes.c_uint(self.getDeviceDID(c))
         yield self.VNXdll.fnLMS_InitDevice(DID)
         if freq is None:
-            # Synthesizer decided to work in 10 Hz increments 
+            # Synthesizer decided to work in 10 Hz increments
             # f[actual] = 10 * f[returned].
             freq = 10. * (yield self.VNXdll.fnLMS_GetFrequency(DID)) * Hz
         else:
@@ -307,7 +310,7 @@ class LBRFGenServer(LabradServer):
         min_pow = .25 * (yield self.VNXdll.fnLMS_GetMinPwr(DID)) * dBm
         yield self.VNXdll.fnLMS_CloseDevice(DID)
         returnValue(min_pow)
-        
+
     @setting(593, 'Max Frequency', returns='v[Hz]')
     def max_frequency(self, c):
         """Return maximum output frequency."""
@@ -325,7 +328,7 @@ class LBRFGenServer(LabradServer):
         min_freq = 10. * (yield self.VNXdll.fnLMS_GetMinFreq(DID)) * Hz
         yield self.VNXdll.fnLMS_CloseDevice(DID)
         returnValue(min_freq)
-        
+
     @setting(595, 'Model', returns='s')
     def model(self, c):
         """Return RF generator model name."""
