@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Leiden DR Temperature
-version = 0.4.2
+version = 0.4.3
 description =  Gives access to Leiden DR temperatures.
 instancename = Leiden DR Temperature
 
@@ -81,7 +81,7 @@ class LeidenDRPseudoserver(LabradServer):
         self._offset = 1024
         # Number of reading to hold in the memory. The filtering is
         # based on this array.
-        array_length = 50
+        array_length = 25
         self._arr_still = np.nan * np.empty(array_length)       # mK
         self._arr_exch = np.nan * np.empty(array_length)        # mK
         self._arr_mix = np.nan * np.empty(array_length)         # mK
@@ -171,12 +171,12 @@ class LeidenDRPseudoserver(LabradServer):
             Tmean = np.sum(weight * filtered) / np.sum(weight)
             Tmed = np.median(raw)
             
-            if Tmean > 1.3 * Tmed or Tmean < 0.7 * Tmed:
+            if Tmean > 1.5 * Tmed or Tmean < 0.5 * Tmed:
                 T = Tmed
             else:
                 T = Tmean
-            lower_threshold = np.max([lower_threshold, 0.7 * T])
-            upper_threshold = np.min([upper_threshold, 1.3 * T])
+            lower_threshold = np.max([lower_threshold, 0.5 * T])
+            upper_threshold = np.min([upper_threshold, 1.5 * T])
             mask = np.logical_and(np.less(array, upper_threshold),
                                   np.greater(array, lower_threshold))
             fine = array[mask]
