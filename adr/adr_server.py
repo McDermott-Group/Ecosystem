@@ -625,7 +625,7 @@ class ADRServer(DeviceServer):
                 timestamp = deltaT(self.state['datetime'] - datetime.datetime(1970, 1, 1))
                 self.tempDataChest.addData( [[timestamp] + newTemps] )
             except Exception as e:
-                self.logMessage('Temperature recording failed: %s.' %str(e) )
+                self.logMessage('Temperature recording failed: %s.\n%s' %(str(e),str([[timestamp] + newTemps])) )
             cycleLength = deltaT(datetime.datetime.utcnow() - cycleStartTime)
             self.factory.sendMessageToAll({
                 'temps': {
