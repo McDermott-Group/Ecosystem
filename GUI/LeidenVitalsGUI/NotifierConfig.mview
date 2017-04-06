@@ -18,8 +18,8 @@ asS'Compressor:Output Water Temperature'
 p8
 (lp9
 I00
-aF1
-aF60
+aF274
+aF314
 ag4
 (g5
 S'QString'
@@ -158,8 +158,8 @@ asS'Compressor:Input Water Temperature'
 p52
 (lp53
 I00
-aF1
-aF20
+aF274
+aF294
 ag4
 (g5
 S'QString'

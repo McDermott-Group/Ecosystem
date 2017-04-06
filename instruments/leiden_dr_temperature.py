@@ -32,6 +32,7 @@ timeout = 20
 """
 
 import os
+import sys
 import numpy as np
 from scipy.signal import medfilt
 
@@ -58,16 +59,17 @@ class LeidenDRPseudoserver(LabradServer):
         Get registry keys for the Leiden DR Temperature Pseudoserver.
         """
         reg = self.client.registry()
-        yield reg.cd(['', 'Servers', 'Leiden DR Temperature', os.environ['COMPUTERNAME'].lower()], True)
+        yield reg.cd(['', 'Servers', 'Leiden DR Temperature'], True)
         dirs, keys = yield reg.dir()
-        
+        print "keys:",keys
         if 'Leiden Log Files Path' in keys:
             self._path = yield reg.get('Leiden Log Files Path')
-        
+            print "found path:", self._path
         if ('Leiden Log Files Path' not in keys or 
                 not os.path.exists(self._path)):
-                self._path = ('Z:\mcdermott-group\Data\DR Log Files\Leiden')
-        
+                #self._path = ('Z:\mcdermott-group\Data\DR Log Files\Leiden')
+                print "ERROR: Log folder not found."
+                sys.exit(1)
         if not os.path.exists(self._path):
             raise Exception("Could not find the Leiden Log Files "
                     "Path: '%s'" %str(self._path))

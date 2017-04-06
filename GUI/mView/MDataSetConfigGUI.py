@@ -177,11 +177,12 @@ class DataSetSettings(QtGui.QWidget):
                 chest = device.getFrame().DataLoggingInfo()['chest']
                 if chest != None:
                     chest.configureDataSets()
+                    location = str(device.getFrame().DataLoggingInfo()['location'])
+                    self.configGui.advancedSettingsWidget.locationLabels[i].setText(location)
             except:
                 print "ERROR:", device
                 traceback.print_exc()
-            location = device.getFrame().DataLoggingInfo()['location']
-            self.configGui.advancedSettingsWidget.locationLabels[i].setText(location)
+
         
            
         grid.itemAtPosition(0, 1).widget().setText(location)

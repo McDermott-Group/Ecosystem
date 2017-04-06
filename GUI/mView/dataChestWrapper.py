@@ -24,6 +24,7 @@ import re
 
 
 import datetime as dt
+import time
 #from PyQt4 import QtCore, QtGui
 from MWeb import web
 import time
@@ -127,24 +128,22 @@ class dataChestWrapper:
                 #print "Configuring datalogging for", str(self.device)+" located at", location
                 
         if location == None:
-           self.dataSet = dataChest(str(now.year))
-           try:
-                self.dataSet.cd(str(now.month))
-           except:
-                self.dataSet.mkdir(str(now.month))
-                self.dataSet.cd(str(now.month))
-
-           try:
-                self.dataSet.cd(str(int(now.day / 7)))
-           except:
-                self.dataSet.mkdir(str(int(now.day / 7)))
-                self.dataSet.cd(str(int(now.day / 7)))
-                
+           
+           folderName = time.strftime('%x').replace(' ', '_')
+           folderName = folderName.replace('/','_')
+           self.dataSet = dataChest(folderName)
+           
+           # try:
+                # self.dataSet.cd(folderName)
+           # except:
+                # self.dataSet.mkdir(folderName)
+                # self.dataSet.cd(folderName)
            try:
                 self.device.getFrame().DataLoggingInfo()['location'] = os.path.abspath(
-                    self.dataSet.pwd())
+                     self.dataSet.pwd())
            except:
-                traceback.print_exc()
+                 traceback.print_exc()
+                
         # Look at the names of all existing datasets and check
         # if the name contains the title of the current device. 
         existingFiles = self.dataSet.ls()
