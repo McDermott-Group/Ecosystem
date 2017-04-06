@@ -260,7 +260,7 @@ class ADRServer(DeviceServer):
                 'Heat Switch':['Heat Switch','addr'],
                 'Compressor':['CP2800 Compressor','addr'],
                 'Pressure Guage':['Varian Guage Controller','addr'],
-                'Log Path': "Z:\\mcdermott-group\\data\\Fridge Logs\\ADR3",
+                'Log Path': "Z:\\mcdermott-group\\data\\fridgeLogs\\ADR3",
                 'Start Compressor Datetime': None,
                 'Stop Compressor Datetime': None
         }
@@ -354,7 +354,7 @@ class ADRServer(DeviceServer):
 
     def initLogFiles(self):
         startDatetime = self.ADRSettings['Start Compressor Datetime']
-        self.tempDataChest = dataChest(['Fridge Logs',self.name])
+        self.tempDataChest = dataChest(['fridgeLogs',self.name])
         dts = dateStamp()
         iso = startDatetime.isoformat().split('+')[0] # strip timezone (or dateStamp will fail)
         dtstamp = dts.dateStamp(iso)
