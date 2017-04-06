@@ -395,7 +395,7 @@ class ADRController(object):#Tkinter.Tk):
         time.sleep(0.5)
         startDateTime = yield self.cxn[self.selectedADR].get_start_datetime()
         try:
-            tempDataChest = dataChest(['ADR Logs'])
+            tempDataChest = dataChest(['Fridge Logs'])
             tempDataChest.cd(self.selectedADR)
             ds = dateStamp()
             dset = '%s_temperatures'%ds.dateStamp(startDateTime.isoformat())

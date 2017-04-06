@@ -260,7 +260,7 @@ class ADRServer(DeviceServer):
                 'Heat Switch':['Heat Switch','addr'],
                 'Compressor':['CP2800 Compressor','addr'],
                 'Pressure Guage':['Varian Guage Controller','addr'],
-                'Log Path': "Z:\\mcdermott-group\\Data\\ADR Logs\\ADR3",
+                'Log Path': "Z:\\mcdermott-group\\data\\Fridge Logs\\ADR3",
                 'Start Compressor Datetime': None,
                 'Stop Compressor Datetime': None
         }
@@ -314,8 +314,8 @@ class ADRServer(DeviceServer):
         root.putChild(u"ws", resource)
 
         site = Site(root)
-        contextFactory = ssl.DefaultOpenSSLContextFactory('Z:/mcdermott-group/ssl_certificates/adr%i/ssl.key'%adrN,
-                                                          'Z:/mcdermott-group/ssl_certificates/adr%i/ssl.crt'%adrN)
+        contextFactory = ssl.DefaultOpenSSLContextFactory('Z:/mcdermott-group/LabRAD/ssl_certificates/adr%i/ssl.key'%adrN,
+                                                          'Z:/mcdermott-group/LabRAD/ssl_certificates/adr%i/ssl.crt'%adrN)
         # reactor.listenTCP(port, site, interface='0.0.0.0')
         reactor.listenSSL(port, site, contextFactory, interface='0.0.0.0')
 
@@ -354,7 +354,7 @@ class ADRServer(DeviceServer):
 
     def initLogFiles(self):
         startDatetime = self.ADRSettings['Start Compressor Datetime']
-        self.tempDataChest = dataChest(['ADR Logs',self.name])
+        self.tempDataChest = dataChest(['Fridge Logs',self.name])
         dts = dateStamp()
         iso = startDatetime.isoformat().split('+')[0] # strip timezone (or dateStamp will fail)
         dtstamp = dts.dateStamp(iso)
