@@ -17,7 +17,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Leiden DR Temperature
-version = 0.4.3
+version = 0.4.4
 description =  Gives access to Leiden DR temperatures.
 instancename = Leiden DR Temperature
 
@@ -51,29 +51,28 @@ class LeidenDRPseudoserver(LabradServer):
     """
     name = 'Leiden DR Temperature'
     refreshInterval = 15 * s
-    
+
     @inlineCallbacks
     def getRegistryKeys(self):
         """
         Get registry keys for the Leiden DR Temperature Pseudoserver.
         """
         reg = self.client.registry()
-        yield reg.cd(['', 'Servers', 'Leiden DR Temperature', os.environ['COMPUTERNAME'].lower()], True)
+        yield reg.cd(['', 'Servers', 'Leiden DR Temperature',
+                      os.environ['COMPUTERNAME'].lower()], True)
         dirs, keys = yield reg.dir()
-        
         if 'Leiden Log Files Path' in keys:
             self._path = yield reg.get('Leiden Log Files Path')
-        
-        if ('Leiden Log Files Path' not in keys or 
-                not os.path.exists(self._path)):
-                self._path = ('Z:\mcdermott-group\Data\DR Log Files\Leiden')
-        
+        elif 'Leiden Log Files Path' not in keys or \
+                not os.path.exists(self._path):
+            self._path = (r'Z:\mcdermott-group\data\fridgeLogs\dr2'
+                          '\resistanceBridgeRawData')
         if not os.path.exists(self._path):
             raise Exception("Could not find the Leiden Log Files "
-                    "Path: '%s'" %str(self._path))
-        print("Leiden Log Files Path is set to '%s'." %str(self._path))
+                            "Path: '%s'" % str(self._path))
+        print("Leiden Log Files Path is set to '%s'." % str(self._path))
 
-    @inlineCallbacks    
+    @inlineCallbacks
     def initServer(self):
         """Initialize the Leiden DR Temperature Pseudoserver."""
         yield self.getRegistryKeys()
@@ -99,9 +98,9 @@ class LeidenDRPseudoserver(LabradServer):
         """
         self.refresher = LoopingCall(self.readTemperatures)
         self.refresherDone = \
-                self.refresher.start(self.refreshInterval['s'],
-                now=True)
-        
+            self.refresher.start(self.refreshInterval['s'],
+                                 now=True)
+
     @inlineCallbacks
     def stopServer(self):
         """Kill the device refresh loop and wait for it to terminate."""
@@ -114,7 +113,7 @@ class LeidenDRPseudoserver(LabradServer):
         # Get the list of files in the folder and return the one with
         # the most recent name.
         file = sorted([f for f in os.listdir(self._path)
-                if os.path.isfile(os.path.join(self._path, f))])[-1]
+                       if os.path.isfile(os.path.join(self._path, f))])[-1]
 
         # Read the last line in the log file.
         with open(os.path.join(self._path, file), 'rb') as f:
@@ -135,24 +134,24 @@ class LeidenDRPseudoserver(LabradServer):
             raw_exch = float(fields[11])          # mK
             raw_mix = float(fields[12])           # mK
             raw_mix_pt1000 = float(fields[13])    # K
-            
+
             if self._arr_still[-1] != raw_still or \
                     self._arr_exch[-1] != raw_exch or \
                     self._arr_mix[-1] != raw_mix or \
                     self._arr_mix_pt1000[-1] != raw_mix_pt1000:
-                
+
                 self._arr_still = np.roll(self._arr_still, -1)
                 self._arr_exch = np.roll(self._arr_exch, -1)
                 self._arr_mix = np.roll(self._arr_mix, -1)
                 self._arr_mix_pt1000 = np.roll(self._arr_mix_pt1000, -1)
-                
+
                 self._arr_still[-1] = raw_still
                 self._arr_exch[-1] = raw_exch
                 self._arr_mix[-1] = raw_mix
                 self._arr_mix_pt1000[-1] = raw_mix_pt1000
-    
+
     def filteredTemperature(self, array, lower_threshold,
-            upper_threshold):
+                            upper_threshold):
         if not np.any(np.isfinite(array)):
             return np.nan
         # Raw thresholding.
@@ -160,17 +159,17 @@ class LeidenDRPseudoserver(LabradServer):
         mask = np.logical_and(np.less(array, upper_threshold),
                               np.greater(array, lower_threshold))
         raw = array[mask]
-        
+
         # Median filtering.
         filtered = medfilt(raw, 5)
-        
+
         # Fine thresholding.
         if filtered.size:
             weight = np.exp(-np.linspace(filtered.size / 5., 0,
                                          filtered.size))
             Tmean = np.sum(weight * filtered) / np.sum(weight)
             Tmed = np.median(raw)
-            
+
             if Tmean > 1.5 * Tmed or Tmean < 0.5 * Tmed:
                 T = Tmed
             else:
@@ -188,12 +187,12 @@ class LeidenDRPseudoserver(LabradServer):
             return raw[-1]
         else:
             return np.nan
-   
+
     @setting(1, 'Refresh Temperatures')
     def refresh_temperatures(self, c):
         """Manually refresh the temperatures."""
         self.readTemperatures()
-        
+
     @setting(11, 'Raw Still Temperature', returns='v[mK]')
     def raw_still_temperature(self, c):
         """Return the raw still chamber temperature."""
@@ -203,12 +202,12 @@ class LeidenDRPseudoserver(LabradServer):
     def raw_exchange_temperature(self, c):
         """Return the raw exchange chamber temperature."""
         return self._arr_ech[-1] * mK
-        
+
     @setting(13, 'Raw Mix Temperature', returns='v[mK]')
     def raw_mix_temperature(self, c):
         """Return the raw mix chamber temperature."""
         return self._arr_mix[-1] * mK
-        
+
     @setting(14, 'Raw Mix Temperature Pt1000', returns='v[K]')
     def raw_mix_temperature_pt1000(self, c):
         """
@@ -216,7 +215,7 @@ class LeidenDRPseudoserver(LabradServer):
         thermometer.
         """
         return self._arr_mix_pt1000[-1] * K
-        
+
     @setting(21, 'Still Temperature', returns='v[mK]')
     def still_temperature(self, c):
         """Return the still chamber temperature."""
@@ -226,12 +225,12 @@ class LeidenDRPseudoserver(LabradServer):
     def exchange_temperature(self, c):
         """Return the exchange chamber temperature."""
         return self.filteredTemperature(self._arr_exch, 1, 1.1e4) * mK
-        
+
     @setting(23, 'Mix Temperature', returns='v[mK]')
     def mix_temperature(self, c):
         """Return the mix chamber temperature."""
         return self.filteredTemperature(self._arr_mix, 1, 1.1e4) * mK
-        
+
     @setting(24, 'Mix Temperature Pt1000', returns='v[K]')
     def mix_temperature_pt1000(self, c):
         """

@@ -39,6 +39,7 @@ class MPersistentData:
 
 
     def saveState(self):
+       # traceback.print_stack()
         #print self.persistentDataDict
         print "Pickling and saving data to file..."
         #print self.persistentDataDict
