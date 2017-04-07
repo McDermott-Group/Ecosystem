@@ -82,7 +82,7 @@ class MGui(QtGui.QMainWindow):
     # splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
     # splash.show()
     def __init__(self):
-        atexit.register(self.stop)
+    #atexit.register(self.stop)
         
 
         web.gui = self

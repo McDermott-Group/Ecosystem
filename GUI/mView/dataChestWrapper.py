@@ -24,6 +24,7 @@ import re
 
 
 import datetime as dt
+import time
 #from PyQt4 import QtCore, QtGui
 from MWeb import web
 import time
@@ -64,6 +65,7 @@ class dataChestWrapper:
         location = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device),  'location')
         #Do a sanity check
         #print "device:", self.device
+        #print "restoring location of", self.device, location
         for nickname in self.device.getFrame().getNicknames():
             if channels == None or nickname not in channels.keys():
                 channels = self.device.getFrame().DataLoggingInfo()['channels']
@@ -83,7 +85,9 @@ class dataChestWrapper:
         #print "saving datachest state to persistent data..."
         dataname = self.device.getFrame().DataLoggingInfo()['name']
         channels = self.device.getFrame().DataLoggingInfo()['channels']
+       
         location = self.device.getFrame().DataLoggingInfo()['location']
+        
         web.persistentData.persistentDataAccess(dataname, 'DataLoggingInfo', str(self.device), 'name')
         web.persistentData.persistentDataAccess(channels, 'DataLoggingInfo', str(self.device), 'channels')
         web.persistentData.persistentDataAccess(location, 'DataLoggingInfo', str(self.device), 'location')
@@ -107,44 +111,55 @@ class dataChestWrapper:
         # Try to access the current month's folder, if it does not
         # exist, make it.
         location = self.device.getFrame().DataLoggingInfo()['location']
+        #print "Location1:", location
         # root = os.environ['DATA_CHEST_ROOT']
         # relativePath =  os.path.relpath(root, dir)
         # print "Configuring datalogging for", str(self.device)+" located at", location
+
+        
         if location != None:
                 root = os.environ['DATA_CHEST_ROOT']
                 relativePath =  os.path.relpath(location, root)
+                print "relativePath:", relativePath
                 if relativePath == '.':
                     raise IOError("Cannot create dataset directly under DATA_CHEST_ROOT.")
                 path = relativePath.split("\\")
-                #print "path:", str(path[0])
+                print "path:", str(path)
                 self.dataSet = dataChest(str(path[0]))
                 self.dataSet.cd('')
                 relativepath = os.path.relpath(location, self.dataSet.pwd().replace("/","\\"))
                 path = relativePath.split("\\")
-                
+                dateFolderName = time.strftime('%x').replace(' ', '_')
+                dateFolderName = dateFolderName.replace('/','_')
                 for folder in path[1::]:
-                    self.dataSet.cd(folder)
+                    try:
+                        self.dataSet.cd(folder)
+                    except:
+                        try:
+                            self.dataSet.mkdir(folder)
+                            self.dataSet.cd(folder)  
+                        except:
+                            print "ERROR: Could not create dataset at:", path
+                            traceback.print_exc()
+               
                 #print "Configuring datalogging for", str(self.device)+" located at", location
                 
         if location == None:
-           self.dataSet = dataChest(str(now.year))
-           try:
-                self.dataSet.cd(str(now.month))
-           except:
-                self.dataSet.mkdir(str(now.month))
-                self.dataSet.cd(str(now.month))
+           folderName = time.strftime('%x').replace(' ', '_')
+           folderName = folderName.replace('/','_')
 
-           try:
-                self.dataSet.cd(str(int(now.day / 7)))
-           except:
-                self.dataSet.mkdir(str(int(now.day / 7)))
-                self.dataSet.cd(str(int(now.day / 7)))
-                
+           self.dataSet = dataChest(folderName)
+           # try:
+                # self.dataSet.cd(folderName)
+           # except:
+                # self.dataSet.mkdir(folderName)
+                # self.dataSet.cd(folderName)
            try:
                 self.device.getFrame().DataLoggingInfo()['location'] = os.path.abspath(
-                    self.dataSet.pwd())
+                     self.dataSet.pwd())
            except:
-                traceback.print_exc()
+                 traceback.print_exc()
+                
         # Look at the names of all existing datasets and check
         # if the name contains the title of the current device. 
         existingFiles = self.dataSet.ls()
@@ -241,7 +256,12 @@ class dataChestWrapper:
                 self.dataSet.addData([vars])
             except:
                 traceback.print_exc()
-                
+    def changeLocation(self, location, ignoreLocks):
+        lock = self.device.getFrame().DataLoggingInfo()['lock_logging_settings']
+        if (not lock) or ignoreLocks:
+            self.device.getFrame().DataLoggingInfo()['name'] = self.device.getFrame().getTitle()
+            self.device.getFrame().DataLoggingInfo()['location'] = location
+            self.configureDataSets()
     def save(self):
         '''Stores the data'''
         # For all datasets, check if there are readings

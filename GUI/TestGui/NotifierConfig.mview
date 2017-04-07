@@ -5,89 +5,54 @@ p2
 I00
 aS''
 aS''
-acsip
-_unpickle_type
-p4
-(S'PyQt4.QtCore'
-p5
-S'QString'
-(V
-ttRp6
+aV
 asS'Local Temperatures:Humidity'
-p7
-(lp8
+p4
+(lp5
 I00
 aS''
 aS''
-ag4
-(g5
-S'QString'
-(V
-ttRp9
+aV
 asS'Test Node:raw input'
+p6
+(lp7
+I00
+aS''
+aS''
+aV
+asS'Local Temperatures:Outside Temperature'
+p8
+(lp9
+I00
+aS''
+aS''
+aV
+asS'Local Temperatures:Outside pressure'
 p10
 (lp11
 I00
 aS''
 aS''
-ag4
-(g5
-S'QString'
-(V
-ttRp12
-asS'Local Temperatures:Outside Temperature'
-p13
-(lp14
+aV
+asS'Local Temperatures:avg'
+p12
+(lp13
 I00
 aS''
 aS''
-ag4
-(g5
-S'QString'
-(V
-ttRp15
-asS'Local Temperatures:Outside pressure'
+aV
+asS'Test Node:test input'
+p14
+(lp15
+I00
+aS''
+aS''
+aV
+asS'Random:Random Temperature'
 p16
 (lp17
 I00
 aS''
 aS''
-ag4
-(g5
-S'QString'
-(V
-ttRp18
-asS'Local Temperatures:avg'
-p19
-(lp20
-I00
-aS''
-aS''
-ag4
-(g5
-S'QString'
-(V
-ttRp21
-asS'Test Node:test input'
-p22
-(lp23
-I00
-aS''
-aS''
-ag4
-(g5
-S'QString'
-(V
-ttRp24
-asS'Random:Random Temperature'
-p25
-(lp26
-I00
-aS''
-aS''
-ag4
-(g5
-S'QString'
-(V
-ttRp27
+aV
 as.

@@ -30,6 +30,8 @@ from dateStamp import dateStamp
 from twisted.internet import tksupport, reactor
 import os, time
 
+ADR_SETTINGS_BASE_PATH = ['','ADR Settings'] # path in registry
+
 class EntryWithAlert(Tkinter.Entry):
     """Inherited from the Tkinter Entry widget, this just turns red when a limit
      is reached"""
@@ -395,8 +397,10 @@ class ADRController(object):#Tkinter.Tk):
         time.sleep(0.5)
         startDateTime = yield self.cxn[self.selectedADR].get_start_datetime()
         try:
-            tempDataChest = dataChest(['ADR Logs'])
-            tempDataChest.cd(self.selectedADR)
+            reg = self.cxn.registry
+            yield reg.cd(ADR_SETTINGS_BASE_PATH + [self.selectedADR])
+            logPath = yield reg.get('Log Path')
+            tempDataChest = dataChest(logPath)
             ds = dateStamp()
             dset = '%s_temperatures'%ds.dateStamp(startDateTime.isoformat())
             tempDataChest.openDataset(dset)
