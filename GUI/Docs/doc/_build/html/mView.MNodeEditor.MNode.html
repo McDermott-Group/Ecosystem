@@ -1,128 +1,251 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>mView.MNodeEditor.MNode module &#8212; GUI  documentation</title>
-    
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="mView.MNodeEditor.MNodeEditor module" href="mView.MNodeEditor.MNodeEditor.html" />
-    <link rel="prev" title="mView.MNodeEditor.MAnchor module" href="mView.MNodeEditor.MAnchor.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
   
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head>
-  <body role="document">
+  <title>mView.MNodeEditor.MNode module &mdash; MVIEW  documentation</title>
   
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="MVIEW  documentation" href="index.html"/>
+        <link rel="up" title="mView.MNodeEditor package" href="mView.MNodeEditor.html"/>
+        <link rel="next" title="mView.MNodeEditor.MNodeEditor module" href="mView.MNodeEditor.MNodeEditor.html"/>
+        <link rel="prev" title="mView.MNodeEditor.MAnchor module" href="mView.MNodeEditor.MAnchor.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> MVIEW
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="mView.html">mView package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="mView.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mView.MDevices.html">mView.MDevices package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="mView.MNodeEditor.html">mView.MNodeEditor package</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mView.MNodeEditor.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="mView.MNodeEditor.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mView.MNodeEditor.html#module-mView.MNodeEditor">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mView.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mView.html#module-mView">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">MVIEW</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="mView.html">mView package</a> &raquo;</li>
+      
+          <li><a href="mView.MNodeEditor.html">mView.MNodeEditor package</a> &raquo;</li>
+      
+    <li>mView.MNodeEditor.MNode module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/mView.MNodeEditor.MNode.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="module-mView.MNodeEditor.MNode">
 <span id="mview-mnodeeditor-mnode-module"></span><h1>mView.MNodeEditor.MNode module<a class="headerlink" href="#module-mView.MNodeEditor.MNode" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="mView.MNodeEditor.MNode.MNode">
-<em class="property">class </em><code class="descclassname">mView.MNodeEditor.MNode.</code><code class="descname">MNode</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">mView.MNodeEditor.MNode.</code><code class="descname">MNode</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.addAnchor">
-<code class="descname">addAnchor</code><span class="sig-paren">(</span><em>anchor=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.addAnchor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.addAnchor" title="Permalink to this definition">¶</a></dt>
+<code class="descname">addAnchor</code><span class="sig-paren">(</span><em>anchor=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.addAnchor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.anchorAdded">
-<code class="descname">anchorAdded</code><span class="sig-paren">(</span><em>anchor</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.anchorAdded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.anchorAdded" title="Permalink to this definition">¶</a></dt>
+<code class="descname">anchorAdded</code><span class="sig-paren">(</span><em>anchor</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.anchorAdded" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.begin">
-<code class="descname">begin</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.begin" title="Permalink to this definition">¶</a></dt>
+<code class="descname">begin</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.begin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new node</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.getAnchorByName">
-<code class="descname">getAnchorByName</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.getAnchorByName"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.getAnchorByName" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getAnchorByName</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.getAnchorByName" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.getAnchors">
-<code class="descname">getAnchors</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.getAnchors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.getAnchors" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getAnchors</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.getAnchors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MNodeEditor.MNode.MNode.getDevice">
+<code class="descname">getDevice</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.getDevice" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.getTitle">
-<code class="descname">getTitle</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.getTitle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.getTitle" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getTitle</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.getTitle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MNodeEditor.MNode.MNode.isPropogateData">
+<code class="descname">isPropogateData</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.isPropogateData" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MNodeEditor.MNode.MNode.onBegin">
+<code class="descname">onBegin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.onBegin" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.onLoad">
-<code class="descname">onLoad</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.onLoad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.onLoad" title="Permalink to this definition">¶</a></dt>
+<code class="descname">onLoad</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.onLoad" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.onRefreshData">
-<code class="descname">onRefreshData</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.onRefreshData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.onRefreshData" title="Permalink to this definition">¶</a></dt>
+<code class="descname">onRefreshData</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.onRefreshData" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.pipeConnected">
-<code class="descname">pipeConnected</code><span class="sig-paren">(</span><em>anchor</em>, <em>pipe</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.pipeConnected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.pipeConnected" title="Permalink to this definition">¶</a></dt>
+<code class="descname">pipeConnected</code><span class="sig-paren">(</span><em>anchor</em>, <em>pipe</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.pipeConnected" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.pipeDisconnected">
-<code class="descname">pipeDisconnected</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.pipeDisconnected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.pipeDisconnected" title="Permalink to this definition">¶</a></dt>
+<code class="descname">pipeDisconnected</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.pipeDisconnected" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MNodeEditor.MNode.MNode.propogateData">
+<code class="descname">propogateData</code><span class="sig-paren">(</span><em>pd</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.propogateData" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.refreshData">
-<code class="descname">refreshData</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.refreshData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.refreshData" title="Permalink to this definition">¶</a></dt>
+<code class="descname">refreshData</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.refreshData" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.removeAnchor">
-<code class="descname">removeAnchor</code><span class="sig-paren">(</span><em>anchor=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.removeAnchor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.removeAnchor" title="Permalink to this definition">¶</a></dt>
+<code class="descname">removeAnchor</code><span class="sig-paren">(</span><em>anchor=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.removeAnchor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.setColor">
-<code class="descname">setColor</code><span class="sig-paren">(</span><em>r</em>, <em>g</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.setColor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.setColor" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setColor</code><span class="sig-paren">(</span><em>r</em>, <em>g</em>, <em>b</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.setColor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.setTitle">
-<code class="descname">setTitle</code><span class="sig-paren">(</span><em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.setTitle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.setTitle" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setTitle</code><span class="sig-paren">(</span><em>title</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.setTitle" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MNodeEditor.MNode.MNode.setTree">
-<code class="descname">setTree</code><span class="sig-paren">(</span><em>tree</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MNodeEditor/MNode.html#MNode.setTree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.setTree" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setTree</code><span class="sig-paren">(</span><em>tree</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MNodeEditor.MNode.MNode.setTree" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -130,58 +253,71 @@
 </div>
 
 
+           </div>
           </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="mView.MNodeEditor.MNodeEditor.html" class="btn btn-neutral float-right" title="mView.MNodeEditor.MNodeEditor module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="mView.MNodeEditor.MAnchor.html" class="btn btn-neutral" title="mView.MNodeEditor.MAnchor module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Noah Meltzer.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  <li><a href="mView.html">mView package</a><ul>
-  <li><a href="mView.MNodeEditor.html">mView.MNodeEditor package</a><ul>
-      <li>Previous: <a href="mView.MNodeEditor.MAnchor.html" title="previous chapter">mView.MNodeEditor.MAnchor module</a></li>
-      <li>Next: <a href="mView.MNodeEditor.MNodeEditor.html" title="next chapter">mView.MNodeEditor.MNodeEditor module</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/mView.MNodeEditor.MNode.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2017, Author.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
-      
-      |
-      <a href="_sources/mView.MNodeEditor.MNode.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
 
-    
+    </section>
 
-    
-  </body>
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
 </html>

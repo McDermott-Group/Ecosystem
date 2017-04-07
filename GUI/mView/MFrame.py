@@ -33,22 +33,12 @@ class MFrame:
     classes which use the device or any of its parameters."""
         # Name of device's server.
         self.serverTitle = None
-        # Parameter names to be displayed on the GUI.
-        #self.nicknames = []
-        # Settings which are called by the GUI.
-        #self.serverSettings = None
-        # Device readings.
-        #self.readings = []
-        # Precisions.
-        #self.precisions = []
         # Errors.
         self.error = False
         # Error messages.
         self.errmsg = None
         # Label on the y axis of the dataChest dataplot.
         self.yLabel = ""
-        # Units used for each parameter.
-        #self.units = []
         # Buttons on the GUI used to control the device.
         self.buttons = [[]]
         # Stores an index of a certain button.
@@ -67,8 +57,6 @@ class MFrame:
         self.dataSet = None
         # Hold the plot.
         self.plot = None
-        # # Datalogging disabled by default
-        # self.logData = False
         #Datachest wrapper class
         self.dataChestWrapper = None
         # Dictionary holding datalogging settings
@@ -78,10 +66,12 @@ class MFrame:
                 "dataset"   :     self.dataSet,
                 "channels":     {},
                 "chest"        :      None,
-                "name"           :      self.serverTitle
+                "name"           :      self.serverTitle,
+                "lock_settings"  :    False
                 }
 
         restoredSettings = web.persistentData.persistentDataAccess(None,"DataLoggingInfo", self.serverTitle)
+        
         # Is the parameter visible?
         self.paramVisibility = {}
         # name:[name, readings, units, precision]
@@ -92,6 +82,7 @@ class MFrame:
         
         self.node = None
         self.container = None
+        
     def setTitle(self, title):
        # print "Set title:", title
         self.serverTitle = title

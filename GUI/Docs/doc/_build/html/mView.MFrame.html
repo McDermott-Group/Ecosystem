@@ -1,326 +1,473 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>mView.MFrame module &#8212; GUI  documentation</title>
-    
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="mView.MGrapher module" href="mView.MGrapher.html" />
-    <link rel="prev" title="mView.MFileTree module" href="mView.MFileTree.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
   
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head>
-  <body role="document">
+  <title>mView.MFrame module &mdash; MVIEW  documentation</title>
   
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="MVIEW  documentation" href="index.html"/>
+        <link rel="up" title="mView package" href="mView.html"/>
+        <link rel="next" title="mView.MGrapher module" href="mView.MGrapher.html"/>
+        <link rel="prev" title="mView.MFileTree module" href="mView.MFileTree.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> MVIEW
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="mView.html">mView package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="mView.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mView.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mView.MAlert.html">mView.MAlert module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MCheckableComboBoxes.html">mView.MCheckableComboBoxes module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MConfigGui.html">mView.MConfigGui module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MDataSetConfigGUI.html">mView.MDataSetConfigGUI module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MDevice.html">mView.MDevice module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MDeviceContainerWidget.html">mView.MDeviceContainerWidget module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MFileTree.html">mView.MFileTree module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">mView.MFrame module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MGrapher.html">mView.MGrapher module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MGui.html">mView.MGui module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MMail.html">mView.MMail module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MPersistentData.html">mView.MPersistentData module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MPopUp.html">mView.MPopUp module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MPopoutGrapher.html">mView.MPopoutGrapher module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MReadout.html">mView.MReadout module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MWeb.html">mView.MWeb module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.NotifierGUI.html">mView.NotifierGUI module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.dataChestWrapper.html">mView.dataChestWrapper module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mView.html#module-mView">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">MVIEW</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="mView.html">mView package</a> &raquo;</li>
+      
+    <li>mView.MFrame module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/mView.MFrame.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="module-mView.MFrame">
 <span id="mview-mframe-module"></span><h1>mView.MFrame module<a class="headerlink" href="#module-mView.MFrame" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="mView.MFrame.MFrame">
-<em class="property">class </em><code class="descclassname">mView.MFrame.</code><code class="descname">MFrame</code><a class="reference internal" href="_modules/mView/MFrame.html#MFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">mView.MFrame.</code><code class="descname">MFrame</code><a class="headerlink" href="#mView.MFrame.MFrame" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
 <dt id="mView.MFrame.MFrame.DataLoggingInfo">
-<code class="descname">DataLoggingInfo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.DataLoggingInfo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.DataLoggingInfo" title="Permalink to this definition">¶</a></dt>
+<code class="descname">DataLoggingInfo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.DataLoggingInfo" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.addParameter">
-<code class="descname">addParameter</code><span class="sig-paren">(</span><em>params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.addParameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.addParameter" title="Permalink to this definition">¶</a></dt>
+<code class="descname">addParameter</code><span class="sig-paren">(</span><em>params</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.addParameter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds to list of parameters displayed on the gui.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.addPlot">
-<code class="descname">addPlot</code><span class="sig-paren">(</span><em>length=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.addPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.addPlot" title="Permalink to this definition">¶</a></dt>
+<code class="descname">addPlot</code><span class="sig-paren">(</span><em>length=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.addPlot" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.appendButton">
-<code class="descname">appendButton</code><span class="sig-paren">(</span><em>button</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.appendButton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.appendButton" title="Permalink to this definition">¶</a></dt>
+<code class="descname">appendButton</code><span class="sig-paren">(</span><em>button</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.appendButton" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add another button to GUI.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.buttonPressed">
-<code class="descname">buttonPressed</code><span class="sig-paren">(</span><em>buttonInd</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.buttonPressed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.buttonPressed" title="Permalink to this definition">¶</a></dt>
+<code class="descname">buttonPressed</code><span class="sig-paren">(</span><em>buttonInd</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.buttonPressed" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.disableRange">
-<code class="descname">disableRange</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.disableRange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.disableRange" title="Permalink to this definition">¶</a></dt>
+<code class="descname">disableRange</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.disableRange" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.enableDataLogging">
-<code class="descname">enableDataLogging</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.enableDataLogging"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.enableDataLogging" title="Permalink to this definition">¶</a></dt>
+<code class="descname">enableDataLogging</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.enableDataLogging" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.errorMsg">
-<code class="descname">errorMsg</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.errorMsg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.errorMsg" title="Permalink to this definition">¶</a></dt>
+<code class="descname">errorMsg</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.errorMsg" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getButtonPressed">
-<code class="descname">getButtonPressed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getButtonPressed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getButtonPressed" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getButtonPressed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getButtonPressed" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getButtons">
-<code class="descname">getButtons</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getButtons"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getButtons" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getButtons</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getButtons" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MFrame.MFrame.getCommand">
+<code class="descname">getCommand</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getCommand" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getContainer">
-<code class="descname">getContainer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getContainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getContainer" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getContainer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getContainer" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getCustomUnits">
-<code class="descname">getCustomUnits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getCustomUnits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getCustomUnits" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getCustomUnits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getCustomUnits" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getDataChestWrapper">
-<code class="descname">getDataChestWrapper</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getDataChestWrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getDataChestWrapper" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getDataChestWrapper</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getDataChestWrapper" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getDataSet">
-<code class="descname">getDataSet</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getDataSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getDataSet" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getDataSet</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getDataSet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MFrame.MFrame.getListOfParameterItems">
+<code class="descname">getListOfParameterItems</code><span class="sig-paren">(</span><em>itemkey</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getListOfParameterItems" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getNicknames">
-<code class="descname">getNicknames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getNicknames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getNicknames" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getNicknames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getNicknames" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getNode">
-<code class="descname">getNode</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getNode" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getNode</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getNode" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getOutOfRangeStatus">
-<code class="descname">getOutOfRangeStatus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getOutOfRangeStatus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getOutOfRangeStatus" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getOutOfRangeStatus</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getOutOfRangeStatus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MFrame.MFrame.getParamAttr">
+<code class="descname">getParamAttr</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getParamAttr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MFrame.MFrame.getParameter">
+<code class="descname">getParameter</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getParameter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MFrame.MFrame.getParameters">
+<code class="descname">getParameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getParameters" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getPlot">
-<code class="descname">getPlot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getPlot" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getPlot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getPlot" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getPlotLength">
-<code class="descname">getPlotLength</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getPlotLength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getPlotLength" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getPlotLength</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getPlotLength" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getPlotRefreshRate">
-<code class="descname">getPlotRefreshRate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getPlotRefreshRate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getPlotRefreshRate" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getPlotRefreshRate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getPlotRefreshRate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="mView.MFrame.MFrame.getPrecisions">
-<code class="descname">getPrecisions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getPrecisions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getPrecisions" title="Permalink to this definition">¶</a></dt>
+<dt id="mView.MFrame.MFrame.getPrecision">
+<code class="descname">getPrecision</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getPrecision" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getRawDataSet">
-<code class="descname">getRawDataSet</code><span class="sig-paren">(</span><em>param</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getRawDataSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getRawDataSet" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getRawDataSet</code><span class="sig-paren">(</span><em>param</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getRawDataSet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a tuple structured as (name, units, [1-d data]).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="mView.MFrame.MFrame.getReadingIndices">
-<code class="descname">getReadingIndices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getReadingIndices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getReadingIndices" title="Permalink to this definition">¶</a></dt>
+<dt id="mView.MFrame.MFrame.getReading">
+<code class="descname">getReading</code><span class="sig-paren">(</span><em>parameter</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getReading" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="mView.MFrame.MFrame.getReadings">
-<code class="descname">getReadings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getReadings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getReadings" title="Permalink to this definition">¶</a></dt>
+<dt id="mView.MFrame.MFrame.getReadingIndex">
+<code class="descname">getReadingIndex</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getReadingIndex" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getRefreshRate">
-<code class="descname">getRefreshRate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getRefreshRate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getRefreshRate" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getRefreshRate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getRefreshRate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getTitle">
-<code class="descname">getTitle</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getTitle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getTitle" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getTitle</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getTitle" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="mView.MFrame.MFrame.getUnits">
-<code class="descname">getUnits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getUnits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getUnits" title="Permalink to this definition">¶</a></dt>
+<dt id="mView.MFrame.MFrame.getUnit">
+<code class="descname">getUnit</code><span class="sig-paren">(</span><em>parameter</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getUnit" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.getYLabel">
-<code class="descname">getYLabel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.getYLabel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.getYLabel" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getYLabel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.getYLabel" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.isButtonPressed">
-<code class="descname">isButtonPressed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.isButtonPressed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.isButtonPressed" title="Permalink to this definition">¶</a></dt>
+<code class="descname">isButtonPressed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.isButtonPressed" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.isDataLogging">
-<code class="descname">isDataLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.isDataLogging"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.isDataLogging" title="Permalink to this definition">¶</a></dt>
+<code class="descname">isDataLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.isDataLogging" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.isError">
-<code class="descname">isError</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.isError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.isError" title="Permalink to this definition">¶</a></dt>
+<code class="descname">isError</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.isError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.isParamVisible">
-<code class="descname">isParamVisible</code><span class="sig-paren">(</span><em>param</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.isParamVisible"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.isParamVisible" title="Permalink to this definition">¶</a></dt>
+<code class="descname">isParamVisible</code><span class="sig-paren">(</span><em>param</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.isParamVisible" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the visibility of a parameter.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.isPlot">
-<code class="descname">isPlot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.isPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.isPlot" title="Permalink to this definition">¶</a></dt>
+<code class="descname">isPlot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.isPlot" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.raiseError">
-<code class="descname">raiseError</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.raiseError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.raiseError" title="Permalink to this definition">¶</a></dt>
+<code class="descname">raiseError</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.raiseError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.retractError">
-<code class="descname">retractError</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.retractError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.retractError" title="Permalink to this definition">¶</a></dt>
+<code class="descname">retractError</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.retractError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.setButtons">
-<code class="descname">setButtons</code><span class="sig-paren">(</span><em>buttons</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setButtons"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setButtons" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setButtons</code><span class="sig-paren">(</span><em>buttons</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setButtons" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MFrame.MFrame.setCommand">
+<code class="descname">setCommand</code><span class="sig-paren">(</span><em>name</em>, <em>command</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setCommand" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.setContainer">
-<code class="descname">setContainer</code><span class="sig-paren">(</span><em>container</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setContainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setContainer" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setContainer</code><span class="sig-paren">(</span><em>container</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setContainer" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.setDataChestWrapper">
-<code class="descname">setDataChestWrapper</code><span class="sig-paren">(</span><em>wrapper</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setDataChestWrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setDataChestWrapper" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setDataChestWrapper</code><span class="sig-paren">(</span><em>wrapper</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setDataChestWrapper" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.setDataSet">
-<code class="descname">setDataSet</code><span class="sig-paren">(</span><em>dataSet</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setDataSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setDataSet" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setDataSet</code><span class="sig-paren">(</span><em>dataSet</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setDataSet" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.setHasPlot">
-<code class="descname">setHasPlot</code><span class="sig-paren">(</span><em>hasPlot</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setHasPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setHasPlot" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setHasPlot</code><span class="sig-paren">(</span><em>hasPlot</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setHasPlot" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.setInRange">
-<code class="descname">setInRange</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setInRange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setInRange" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setInRange</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setInRange" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="mView.MFrame.MFrame.setNicknames">
-<code class="descname">setNicknames</code><span class="sig-paren">(</span><em>nicknames</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setNicknames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setNicknames" title="Permalink to this definition">¶</a></dt>
+<dt id="mView.MFrame.MFrame.setName">
+<code class="descname">setName</code><span class="sig-paren">(</span><em>key</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setName" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.setNode">
-<code class="descname">setNode</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setNode" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setNode</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setNode" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.setOutOfRange">
-<code class="descname">setOutOfRange</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setOutOfRange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setOutOfRange" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setOutOfRange</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setOutOfRange" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.setParamVisibility">
-<code class="descname">setParamVisibility</code><span class="sig-paren">(</span><em>param</em>, <em>visible</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setParamVisibility"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setParamVisibility" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setParamVisibility</code><span class="sig-paren">(</span><em>param</em>, <em>visible</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setParamVisibility" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set whether or not a parameter shows up on the GUI.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="mView.MFrame.MFrame.setParameters">
+<code class="descname">setParameters</code><span class="sig-paren">(</span><em>params</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setParameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="mView.MFrame.MFrame.setPlot">
-<code class="descname">setPlot</code><span class="sig-paren">(</span><em>p</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setPlot" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setPlot</code><span class="sig-paren">(</span><em>p</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setPlot" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.setPlotRefreshRate">
-<code class="descname">setPlotRefreshRate</code><span class="sig-paren">(</span><em>period</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setPlotRefreshRate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setPlotRefreshRate" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setPlotRefreshRate</code><span class="sig-paren">(</span><em>period</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setPlotRefreshRate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="mView.MFrame.MFrame.setPrecisions">
-<code class="descname">setPrecisions</code><span class="sig-paren">(</span><em>precisions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setPrecisions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setPrecisions" title="Permalink to this definition">¶</a></dt>
+<dt id="mView.MFrame.MFrame.setPrecision">
+<code class="descname">setPrecision</code><span class="sig-paren">(</span><em>name</em>, <em>precision</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setPrecision" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="mView.MFrame.MFrame.setReadingIndices">
-<code class="descname">setReadingIndices</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setReadingIndices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setReadingIndices" title="Permalink to this definition">¶</a></dt>
+<dt id="mView.MFrame.MFrame.setReading">
+<code class="descname">setReading</code><span class="sig-paren">(</span><em>name</em>, <em>reading</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setReading" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="mView.MFrame.MFrame.setReadings">
-<code class="descname">setReadings</code><span class="sig-paren">(</span><em>readings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setReadings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setReadings" title="Permalink to this definition">¶</a></dt>
+<dt id="mView.MFrame.MFrame.setReadingIndex">
+<code class="descname">setReadingIndex</code><span class="sig-paren">(</span><em>name</em>, <em>index</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setReadingIndex" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.setRefreshRate">
-<code class="descname">setRefreshRate</code><span class="sig-paren">(</span><em>period</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setRefreshRate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setRefreshRate" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setRefreshRate</code><span class="sig-paren">(</span><em>period</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setRefreshRate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.setTitle">
-<code class="descname">setTitle</code><span class="sig-paren">(</span><em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setTitle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setTitle" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setTitle</code><span class="sig-paren">(</span><em>title</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setTitle" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="mView.MFrame.MFrame.setUnits">
-<code class="descname">setUnits</code><span class="sig-paren">(</span><em>units</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setUnits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setUnits" title="Permalink to this definition">¶</a></dt>
+<dt id="mView.MFrame.MFrame.setUnit">
+<code class="descname">setUnit</code><span class="sig-paren">(</span><em>name</em>, <em>unit</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setUnit" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MFrame.MFrame.setYLabel">
-<code class="descname">setYLabel</code><span class="sig-paren">(</span><em>y</em>, <em>custUnits=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MFrame.html#MFrame.setYLabel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MFrame.MFrame.setYLabel" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setYLabel</code><span class="sig-paren">(</span><em>y</em>, <em>custUnits=''</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MFrame.MFrame.setYLabel" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -328,56 +475,71 @@
 </div>
 
 
+           </div>
           </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="mView.MGrapher.html" class="btn btn-neutral float-right" title="mView.MGrapher module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="mView.MFileTree.html" class="btn btn-neutral" title="mView.MFileTree module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Noah Meltzer.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  <li><a href="mView.html">mView package</a><ul>
-      <li>Previous: <a href="mView.MFileTree.html" title="previous chapter">mView.MFileTree module</a></li>
-      <li>Next: <a href="mView.MGrapher.html" title="next chapter">mView.MGrapher module</a></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/mView.MFrame.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2017, Author.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
-      
-      |
-      <a href="_sources/mView.MFrame.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
 
-    
+    </section>
 
-    
-  </body>
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
 </html>

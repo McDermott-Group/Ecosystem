@@ -39,7 +39,9 @@ class dataChestWrapper:
     begin datalogging.
     """
     def __init__(self, device):
-        """Initiallize the dataChest."""
+        """Initiallize the dataChest.
+        :param device: The device to graph.        
+        """
         # Define the current time.
        
         now = dt.datetime.now()
@@ -59,11 +61,13 @@ class dataChestWrapper:
         self.restoreState()
         
     def restoreState(self):
+        """
+        Load saved data from previous MView session using MPerisistentData.
+        """
         dataname = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device), 'name')
         channels = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device), 'channels')
         location = web.persistentData.persistentDataAccess(None, 'DataLoggingInfo', str(self.device),  'location')
         #Do a sanity check
-        #print "device:", self.device
         for nickname in self.device.getFrame().getNicknames():
             if channels == None or nickname not in channels.keys():
                 channels = self.device.getFrame().DataLoggingInfo()['channels']
@@ -75,25 +79,23 @@ class dataChestWrapper:
         if channels != None:
             self.device.getFrame().DataLoggingInfo()['channels'] = channels
         self.device.getFrame().DataLoggingInfo()['location'] = location
+        
     def saveState(self):
-        #print "saving"
-        
-        
-            #web.persistentData.persistentDataAccess(device.getFrame().DataLoggingInfo(),"DataLoggingInfo", str(device))
-        #print "saving datachest state to persistent data..."
+        """
+        Use MPersistentData to save certain variables.
+        """
         dataname = self.device.getFrame().DataLoggingInfo()['name']
         channels = self.device.getFrame().DataLoggingInfo()['channels']
         location = self.device.getFrame().DataLoggingInfo()['location']
         web.persistentData.persistentDataAccess(dataname, 'DataLoggingInfo', str(self.device), 'name')
         web.persistentData.persistentDataAccess(channels, 'DataLoggingInfo', str(self.device), 'channels')
         web.persistentData.persistentDataAccess(location, 'DataLoggingInfo', str(self.device), 'location')
-        #print "datachest persistent data saved."
+
     def configureDataSets(self):
         """
         Initialize the datalogger, if datasets already exist, use them.
         Otherwise create new ones.
         """
-        
         now = dt.datetime.now()
         self.hasData = True
         # Generate a title for the dataset. NOTE: if 
@@ -107,9 +109,6 @@ class dataChestWrapper:
         # Try to access the current month's folder, if it does not
         # exist, make it.
         location = self.device.getFrame().DataLoggingInfo()['location']
-        # root = os.environ['DATA_CHEST_ROOT']
-        # relativePath =  os.path.relpath(root, dir)
-        # print "Configuring datalogging for", str(self.device)+" located at", location
         if location != None:
                 root = os.environ['DATA_CHEST_ROOT']
                 relativePath =  os.path.relpath(location, root)
@@ -123,9 +122,7 @@ class dataChestWrapper:
                 path = relativePath.split("\\")
                 
                 for folder in path[1::]:
-                    self.dataSet.cd(folder)
-                #print "Configuring datalogging for", str(self.device)+" located at", location
-                
+                    self.dataSet.cd(folder)  
         if location == None:
            self.dataSet = dataChest(str(now.year))
            try:
@@ -161,17 +158,13 @@ class dataChestWrapper:
                 foundit = True
                 # If the number of variables in the data set has changed since last time,
                 # Then we do not want to use the old dataset.
-                
                 if len(self.dataSet.getVariables()[1]) != len(self.device.getFrame().getNicknames()):
                     
                     foundit = False
                 else:
-                    #print("Existing data set found for %s: %s."
-                         #   %(title, existingFiles[0][y]))
                      pass
         # If the dataset does not already exist, we must create it.
         if not foundit:
-            # print("Creating dataset for %s." %title)
             # Name of the parameter. This is the name of the parameter
             # displayed on the gui except without spaces or 
             # non-alphanumerical characters.
@@ -184,7 +177,6 @@ class dataChestWrapper:
             # Loop through all parameters in the device.
             # print "Setting up datalogging for device", self.device.getFrame().getTitle()
             nicknames = self.device.getFrame().getNicknames()
-           # print "Nicknames:", self.device.getFrame().getNicknames()
             for y, name in enumerate(nicknames):
                 # If the name of the parameter has not been defined as
                 # None in the constructor, then we want to log it.
@@ -196,8 +188,6 @@ class dataChestWrapper:
                     paramName = str(name).replace(" ","_")
                     paramName = re.sub(r'\W+', '', paramName)
                     # Create the tuple that defines the parameter.
-                    #print self.device, "device units: ", self.device.getFrame().getUnits()
-                    #print "nicknames:", nicknames
                     tup = (paramName, [1], "float64",
                             str(self.device.getUnit(name)))
                     # Add it to the array of dependent variables.
@@ -216,11 +206,6 @@ class dataChestWrapper:
             # (independent and dependent) make up the dataset.
             # DataWidth is used internally only.
             self.dataSet.addParameter("DataWidth", len(vars))
-            
-            #if self.device.getFrame().getYLabel() is not None:
-                # Configure the label of the y axis given in the
-                # device's constructor.
-            
         self.device.getFrame().setDataSet(self.dataSet)
 
     def done(self):
@@ -243,30 +228,16 @@ class dataChestWrapper:
                 traceback.print_exc()
                 
     def save(self):
-        '''Stores the data'''
-        # For all datasets, check if there are readings
-        #for i in range(0, len(self.devices)):
-       # dStamp = dateStamp()
-        #dStamp.utcNowFloat()
-        
-        t1 = time.time()
+        '''Stores current data points of all curves.'''
         if not self.hasData:
-            
             self.configureDataSets()
         if self.hasData:
-            #print "HERE E"
-            
             depvars = []
             indepvars = []
             vars = []
             readings = []
-
             currentlyLogging = False
-            #devReadings = self.device.getFrame().getReadings()
-           # print "DevReadings:", devReadings
-            enabled = self.device.getFrame().DataLoggingInfo()['channels']
-            #print "enabled:", enabled
-            
+            enabled = self.device.getFrame().DataLoggingInfo()['channels']            
             custUnits = self.device.getFrame().getCustomUnits()
             if custUnits is '':
                 nickname = self.device.getFrame().getNicknames()[0]
@@ -274,41 +245,31 @@ class dataChestWrapper:
             if custUnits is None:
                 custUnits = ''
             self.dataSet.addParameter("y_label", self.device.getFrame().getYLabel())
-            #print "setting units:", custUnits
             self.dataSet.addParameter("custom_units", custUnits)
             for y,param in enumerate(self.device.getParameters()):
                 # Channels that should be logged
-                
-                
-                nickname = param
                 # This checks if the reading is displayed on the GUI
                 # if it is not, then it does not include it in
                 # the dataset.
-                #print self.device, "enabled: ",enabled
                 try:
-                    if nickname is not None and enabled[nickname]:
+                    if param is not None and enabled[param]:
                         self.keepLoggingNan= True
                         currentlyLogging = True
                 except:
                     traceback.print_exc()
-                    
-                    #print "readings:", devReadings
-                    # If the device has readings.
+                # If the device has readings.
                 reading = self.device.getReading(param)
                 if reading is not None and enabled[param]:
                     readings.append(float(reading))
                 else:
                     readings.append(np.nan)
-
             # If the device has readings, add data to dataset.
             if(readings is not None and currentlyLogging):
-                #print self.device, "is logging"
                 indepvars.append(self.dStamp.utcNowFloat())
                 depvars.extend(readings)
                 vars.extend(indepvars)
                 vars.extend(depvars)
                 varslist = self.dataSet.getVariables()
-                #print vars
                 try:
                       self.dataSet.addData([vars])        
                 except:
@@ -316,12 +277,8 @@ class dataChestWrapper:
                     print("%s: Problem storing data. Will try to reconfigure data sets."
                           %self.device.getFrame().getTitle())
                     self.configureDataSets()
-                
             if self.keepLoggingNan and not currentlyLogging:
                 print self.device, "not logging"
                 self.done()
-
                 self.keepLoggingNan = False
                 currentlyLogging = False
-            t2 = time.time()
-            #print "Time to save data for", self.device, ":", t2-t1

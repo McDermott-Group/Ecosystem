@@ -1,77 +1,189 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>mView.MAlert module &#8212; GUI  documentation</title>
-    
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="mView.MCheckableComboBoxes module" href="mView.MCheckableComboBoxes.html" />
-    <link rel="prev" title="mView.MNodeEditor.MPipe module" href="mView.MNodeEditor.MPipe.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
   
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head>
-  <body role="document">
+  <title>mView.MAlert module &mdash; MVIEW  documentation</title>
   
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="MVIEW  documentation" href="index.html"/>
+        <link rel="up" title="mView package" href="mView.html"/>
+        <link rel="next" title="mView.MCheckableComboBoxes module" href="mView.MCheckableComboBoxes.html"/>
+        <link rel="prev" title="mView.MNodeEditor.MPipe module" href="mView.MNodeEditor.MPipe.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> MVIEW
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="mView.html">mView package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="mView.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mView.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">mView.MAlert module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MCheckableComboBoxes.html">mView.MCheckableComboBoxes module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MConfigGui.html">mView.MConfigGui module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MDataSetConfigGUI.html">mView.MDataSetConfigGUI module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MDevice.html">mView.MDevice module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MDeviceContainerWidget.html">mView.MDeviceContainerWidget module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MFileTree.html">mView.MFileTree module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MFrame.html">mView.MFrame module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MGrapher.html">mView.MGrapher module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MGui.html">mView.MGui module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MMail.html">mView.MMail module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MPersistentData.html">mView.MPersistentData module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MPopUp.html">mView.MPopUp module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MPopoutGrapher.html">mView.MPopoutGrapher module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MReadout.html">mView.MReadout module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MWeb.html">mView.MWeb module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.NotifierGUI.html">mView.NotifierGUI module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.dataChestWrapper.html">mView.dataChestWrapper module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mView.html#module-mView">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">MVIEW</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="mView.html">mView package</a> &raquo;</li>
+      
+    <li>mView.MAlert module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/mView.MAlert.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="module-mView.MAlert">
 <span id="mview-malert-module"></span><h1>mView.MAlert module<a class="headerlink" href="#module-mView.MAlert" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="mView.MAlert.MAlert">
-<em class="property">class </em><code class="descclassname">mView.MAlert.</code><code class="descname">MAlert</code><a class="reference internal" href="_modules/mView/MAlert.html#MAlert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MAlert.MAlert" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">mView.MAlert.</code><code class="descname">MAlert</code><a class="headerlink" href="#mView.MAlert.MAlert" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
 <dt id="mView.MAlert.MAlert.begin">
-<code class="descname">begin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MAlert.html#MAlert.begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MAlert.MAlert.begin" title="Permalink to this definition">¶</a></dt>
+<code class="descname">begin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MAlert.MAlert.begin" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MAlert.MAlert.monitorReadings">
-<code class="descname">monitorReadings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MAlert.html#MAlert.monitorReadings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MAlert.MAlert.monitorReadings" title="Permalink to this definition">¶</a></dt>
+<code class="descname">monitorReadings</code><span class="sig-paren">(</span><em>dev</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MAlert.MAlert.monitorReadings" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MAlert.MAlert.sendMail">
-<code class="descname">sendMail</code><span class="sig-paren">(</span><em>device</em>, <em>y</em>, <em>reading</em>, <em>people</em>, <em>min</em>, <em>max</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MAlert.html#MAlert.sendMail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MAlert.MAlert.sendMail" title="Permalink to this definition">¶</a></dt>
+<code class="descname">sendMail</code><span class="sig-paren">(</span><em>device</em>, <em>param</em>, <em>reading</em>, <em>people</em>, <em>min</em>, <em>max</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MAlert.MAlert.sendMail" title="Permalink to this definition">¶</a></dt>
 <dd><p>Send mail if the given amount of time has elapsed.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="mView.MAlert.MAlert.stop">
-<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MAlert.html#MAlert.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MAlert.MAlert.stop" title="Permalink to this definition">¶</a></dt>
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mView.MAlert.MAlert.stop" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MAlert.MAlert.toFloat">
-<code class="descname">toFloat</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MAlert.html#MAlert.toFloat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MAlert.MAlert.toFloat" title="Permalink to this definition">¶</a></dt>
+<code class="descname">toFloat</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#mView.MAlert.MAlert.toFloat" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -79,56 +191,71 @@
 </div>
 
 
+           </div>
           </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="mView.MCheckableComboBoxes.html" class="btn btn-neutral float-right" title="mView.MCheckableComboBoxes module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="mView.MNodeEditor.MPipe.html" class="btn btn-neutral" title="mView.MNodeEditor.MPipe module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Noah Meltzer.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  <li><a href="mView.html">mView package</a><ul>
-      <li>Previous: <a href="mView.MNodeEditor.MPipe.html" title="previous chapter">mView.MNodeEditor.MPipe module</a></li>
-      <li>Next: <a href="mView.MCheckableComboBoxes.html" title="next chapter">mView.MCheckableComboBoxes module</a></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/mView.MAlert.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2017, Author.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
-      
-      |
-      <a href="_sources/mView.MAlert.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
 
-    
+    </section>
 
-    
-  </body>
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
 </html>

@@ -1,45 +1,130 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>mView.MDevices.Mhdf5Device &#8212; GUI  documentation</title>
-    
-    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../../',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="../../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <link rel="index" title="Index" href="../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../search.html" />
-   
-  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
   
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head>
-  <body role="document">
+  <title>mView.MDevices.Mhdf5Device &mdash; MVIEW  documentation</title>
   
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="MVIEW  documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> MVIEW
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../mView.html">mView package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">MVIEW</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>mView.MDevices.Mhdf5Device</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <h1>Source code for mView.MDevices.Mhdf5Device</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">MDevice</span>
@@ -48,7 +133,7 @@
 <span class="kn">from</span> <span class="nn">PyQt4</span> <span class="k">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtGui</span>
 <span class="kn">from</span> <span class="nn">MFileTree</span> <span class="k">import</span> <span class="n">MFileTree</span>
 <span class="kn">from</span> <span class="nn">dataChest</span> <span class="k">import</span> <span class="o">*</span>
-
+<span class="kn">from</span> <span class="nn">MGrapher</span> <span class="k">import</span> <span class="n">mGraph</span> <span class="k">as</span> <span class="n">MGrapher</span>
 <div class="viewcode-block" id="Mhdf5Device"><a class="viewcode-back" href="../../../mView.MDevices.Mhdf5Device.html#mView.MDevices.Mhdf5Device.Mhdf5Device">[docs]</a><span class="k">class</span> <span class="nc">Mhdf5Device</span><span class="p">(</span><span class="n">MDevice</span><span class="o">.</span><span class="n">MDevice</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
          <span class="nb">super</span><span class="p">(</span><span class="n">Mhdf5Device</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
@@ -61,43 +146,57 @@
 <div class="viewcode-block" id="Mhdf5Device.onLoad"><a class="viewcode-back" href="../../../mView.MDevices.Mhdf5Device.html#mView.MDevices.Mhdf5Device.Mhdf5Device.onLoad">[docs]</a>    <span class="k">def</span> <span class="nf">onLoad</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setupMenus</span><span class="p">()</span></div>
         
+        
 <div class="viewcode-block" id="Mhdf5Device.setupMenus"><a class="viewcode-back" href="../../../mView.MDevices.Mhdf5Device.html#mView.MDevices.Mhdf5Device.Mhdf5Device.setupMenus">[docs]</a>    <span class="k">def</span> <span class="nf">setupMenus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="n">root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;DATA_CHEST_ROOT&#39;</span><span class="p">]</span>
             <span class="n">container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getContainer</span><span class="p">()</span>
-            <span class="n">HBox</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">getTopHBox</span><span class="p">()</span>
-            <span class="n">filetree</span> <span class="o">=</span> <span class="n">MFileTree</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
-            <span class="n">HBox</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">filetree</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">HBox</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">getTopHBox</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">BHBox</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">getBottomHBox</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filetree</span> <span class="o">=</span> <span class="n">MFileTree</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filetree</span><span class="o">.</span><span class="n">setCallback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prompt</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grapher</span> <span class="o">=</span> <span class="n">MGrapher</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">setPlot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grapher</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">HBox</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filetree</span><span class="p">)</span></div>
             
-<div class="viewcode-block" id="Mhdf5Device.prompt"><a class="viewcode-back" href="../../../mView.MDevices.Mhdf5Device.html#mView.MDevices.Mhdf5Device.Mhdf5Device.prompt">[docs]</a>    <span class="k">def</span> <span class="nf">prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">button</span><span class="p">):</span>
+
+            
+
+       
+<div class="viewcode-block" id="Mhdf5Device.prompt"><a class="viewcode-back" href="../../../mView.MDevices.Mhdf5Device.html#mView.MDevices.Mhdf5Device.Mhdf5Device.prompt">[docs]</a>    <span class="k">def</span> <span class="nf">prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Called when button is pushed&#39;&#39;&#39;</span>
         <span class="n">root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;DATA_CHEST_ROOT&#39;</span><span class="p">]</span>
-        <span class="nb">dir</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getOpenFileName</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Open Data Set...&quot;</span><span class="p">,</span>
-                <span class="n">root</span><span class="p">,</span> <span class="s2">&quot;Data Chest Files (*.hdf5)&quot;</span><span class="p">)</span>
+<span class="c1">#        dir = QtGui.QFileDialog.getOpenFileName(None, &quot;Open Data Set...&quot;,</span>
+<span class="c1">#                root, &quot;Data Chest Files (*.hdf5)&quot;)</span>
         <span class="nb">dir</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span>
         <span class="c1"># Get rid of the file namse, use just the path</span>
-        <span class="nb">print</span> <span class="s2">&quot;before dir:&quot;</span><span class="p">,</span> <span class="nb">dir</span>
+        <span class="c1">#print &quot;before dir:&quot;, dir</span>
         <span class="n">path</span> <span class="o">=</span> <span class="nb">dir</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">filename</span> <span class="o">=</span> <span class="nb">dir</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="nb">dir</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="nb">print</span> <span class="s2">&quot;selected dir:&quot;</span><span class="p">,</span> <span class="nb">dir</span>
+        <span class="c1">#print &quot;selected dir:&quot;, dir</span>
         <span class="n">root</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
-        <span class="nb">print</span> <span class="s2">&quot;datachest root:&quot;</span><span class="p">,</span> <span class="n">root</span>
+        <span class="c1">#print &quot;datachest root:&quot;, root</span>
         
         <span class="nb">dir</span> <span class="o">=</span> <span class="nb">dir</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
         <span class="nb">dir</span> <span class="o">=</span> <span class="nb">dir</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">relpath</span> <span class="o">=</span> <span class="nb">dir</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="nb">print</span> <span class="s2">&quot;relative path:&quot;</span><span class="p">,</span> <span class="nb">dir</span>
+        <span class="c1">#print &quot;relative path:&quot;, dir</span>
         <span class="c1">#print &quot;current chest directory:&quot;, chest.pwd()</span>
         <span class="n">chest</span> <span class="o">=</span> <span class="n">dataChest</span><span class="p">(</span><span class="n">relpath</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">chest</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">relpath</span><span class="p">)</span><span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
             <span class="n">chest</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="n">relpath</span><span class="p">[</span><span class="mi">2</span><span class="p">::])</span>
-        <span class="nb">print</span> <span class="s2">&quot;current chest directory:&quot;</span><span class="p">,</span> <span class="n">chest</span><span class="o">.</span><span class="n">pwd</span><span class="p">()</span>
+        <span class="c1">#print &quot;current chest directory:&quot;, chest.pwd()</span>
         <span class="n">chest</span><span class="o">.</span><span class="n">openDataset</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-        <span class="nb">print</span> <span class="s2">&quot;opened dataset:&quot;</span><span class="p">,</span> <span class="n">chest</span>
+        <span class="c1">#print &quot;opened dataset:&quot;, chest</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">setDataSet</span><span class="p">(</span><span class="n">chest</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grapher</span><span class="o">.</span><span class="n">deleteLater</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grapher</span> <span class="o">=</span> <span class="n">MGrapher</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span> <span class="o">=</span> <span class="n">filename</span><span class="p">)</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getPlot</span><span class="p">()</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">BHBox</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grapher</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grapher</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+        <span class="c1">#self.getFrame().getPlot().plot(time = None)</span>
+        
 <div class="viewcode-block" id="Mhdf5Device.addButton"><a class="viewcode-back" href="../../../mView.MDevices.Mhdf5Device.html#mView.MDevices.Mhdf5Device.Mhdf5Device.addButton">[docs]</a>    <span class="k">def</span> <span class="nf">addButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Add a simple button.&#39;&#39;&#39;</span>
         <span class="n">button</span> <span class="o">=</span> <span class="p">[]</span>
@@ -106,44 +205,62 @@
         
 </pre></div>
 
+           </div>
           </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Noah Meltzer.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../../index.html">Documentation overview</a><ul>
-  <li><a href="../../index.html">Module code</a><ul>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2017, Author.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
-      
-    </div>
 
-    
+    </section>
 
-    
-  </body>
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
 </html>

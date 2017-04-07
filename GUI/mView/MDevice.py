@@ -40,53 +40,62 @@ class MDevice(QThread):
   only one generic device driver needs to be created for one interface 
   (RS232, LabRad Servers, HDF5 files, etc.) and it can then be applied 
   to all devices that use the same interface.
+  
+  Constructor arguments:
+        
+  :param name: The name of the device
+    
   '''
+    # Signal sent to main thread which triggers a MDeviceContainerWidget GUI update.
     updateSignal = pyqtSignal()
     lock = threading.Lock()
-    
-    def __init__(self, name, *args):
+    lockLogSettings = False
+    defaultLogLocation = None
+    def __init__(self, name, *args, **kwargs):
         '''Initializes the device:
         
-    1. Sets the frame title. 1.
-    2. Sets the refresh rate. 2.
-   
-    Function arguments:
-        
-    :param name: The name of the device
-    
-   '''
+           1. Sets the frame title. 1.
+           2. Sets the refresh rate. 2.
+          
+           Function arguments:
+               
+           :param name: The name of the device
+            
+        '''
         super(MDevice, self).__init__()
         # Create a new MFrame
+        self.lockLogSettings = kwargs.get('lock_log_settings', False);
+       
+        self.defaultLogLocation = kwargs.get('default_log_location', None)
         web.devices.append(self)
         self.frame = MFrame()
-        #print "Setting title to:", name, args
         self.frame.setTitle(name)
+        print "init", self, "lock_log_settings:", self.lockLogSettings
         self.name = name
         self.refreshRate = 1
         self.container = None
         self.datachest = None
         self.keepGoing = True
         self.settingResultIndices = []
-        
         self.hardParams = {}
         self.doneLoading = False
         
-        #self.memory_tracker = tracker.SummaryTracker()
     def log(self, log):
         """ Tell the device whether to log data or not
         
-        :param log: Boolean
+        :param log (boolean): Boolean, whether or not to log. NOTE: This can be overridden
+        using the GUI menus.
         
-    """
+        """
         self.frame.enableDataLogging(log)
         if not log:
             self.plot(False)
     def isLogging(self):
         '''Getter for whether or not datalogging is enabled for this device.
-        
-      :rtype: boolean
-      
-   '''
+            
+          :rtype: Boolean indicating whether or not data is being logged.
+          
+        '''
         return self.frame.isDataLogging()
         
     def setContainer(self, container):
@@ -173,6 +182,10 @@ class MDevice(QThread):
                 print self, "is datalogging"
                 self.frame.DataLoggingInfo()['name'] = self.name
                 self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self)
+                self.frame.DataLoggingInfo()['lock_settings'] = self.lockLogSettings
+                print "Set lock settings on", self, "to:", self.lockLogSettings
+                if self.defaultLogLocation != None:
+                    self.frame.DataLoggingInfo()['location'] = self.defaultLogLocation
                 self.datachest = self.frame.DataLoggingInfo()['chest']
     def onBegin(self):
         '''Called at the end of MDevice.begin(). This is called before 
@@ -357,7 +370,7 @@ class MDevice(QThread):
         precision = kwargs.get('precision', 2)
         show = kwargs.get("show", True)
         units = kwargs.get('units', None)
-
+        
         self.frame.addParameter((name, units, precision))
         
         #print "args:", args

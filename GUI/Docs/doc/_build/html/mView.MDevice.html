@@ -1,47 +1,159 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>mView.MDevice module &#8212; GUI  documentation</title>
-    
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="mView.MDeviceContainerWidget module" href="mView.MDeviceContainerWidget.html" />
-    <link rel="prev" title="mView.MDataSetConfigGUI module" href="mView.MDataSetConfigGUI.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
   
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head>
-  <body role="document">
+  <title>mView.MDevice module &mdash; MVIEW  documentation</title>
   
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="MVIEW  documentation" href="index.html"/>
+        <link rel="up" title="mView package" href="mView.html"/>
+        <link rel="next" title="mView.MDeviceContainerWidget module" href="mView.MDeviceContainerWidget.html"/>
+        <link rel="prev" title="mView.MDataSetConfigGUI module" href="mView.MDataSetConfigGUI.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> MVIEW
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="mView.html">mView package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="mView.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mView.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mView.MAlert.html">mView.MAlert module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MCheckableComboBoxes.html">mView.MCheckableComboBoxes module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MConfigGui.html">mView.MConfigGui module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MDataSetConfigGUI.html">mView.MDataSetConfigGUI module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">mView.MDevice module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MDeviceContainerWidget.html">mView.MDeviceContainerWidget module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MFileTree.html">mView.MFileTree module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MFrame.html">mView.MFrame module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MGrapher.html">mView.MGrapher module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MGui.html">mView.MGui module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MMail.html">mView.MMail module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MPersistentData.html">mView.MPersistentData module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MPopUp.html">mView.MPopUp module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MPopoutGrapher.html">mView.MPopoutGrapher module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MReadout.html">mView.MReadout module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.MWeb.html">mView.MWeb module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.NotifierGUI.html">mView.NotifierGUI module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mView.dataChestWrapper.html">mView.dataChestWrapper module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mView.html#module-mView">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">MVIEW</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="mView.html">mView package</a> &raquo;</li>
+      
+    <li>mView.MDevice module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/mView.MDevice.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="module-mView.MDevice">
 <span id="mview-mdevice-module"></span><h1>mView.MDevice module<a class="headerlink" href="#module-mView.MDevice" title="Permalink to this headline">¶</a></h1>
@@ -59,6 +171,15 @@ we create two instances of the RS232 device driver. This means that
 only one generic device driver needs to be created for one interface 
 (RS232, LabRad Servers, HDF5 files, etc.) and it can then be applied 
 to all devices that use the same interface.</p>
+<p>Constructor arguments:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> &#8211; The name of the device</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="mView.MDevice.MDevice.addButton">
 <code class="descname">addButton</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.addButton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.addButton" title="Permalink to this definition">¶</a></dt>
@@ -86,7 +207,7 @@ to all devices that use the same interface.</p>
 
 <dl class="method">
 <dt id="mView.MDevice.MDevice.begin">
-<code class="descname">begin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.begin" title="Permalink to this definition">¶</a></dt>
+<code class="descname">begin</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.begin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Start the device.</p>
 </dd></dl>
 
@@ -110,6 +231,16 @@ function with which the refresh rate can be configured.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="mView.MDevice.MDevice.disableRange">
+<code class="descname">disableRange</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.disableRange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.disableRange" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.getCommand">
+<code class="descname">getCommand</code><span class="sig-paren">(</span><em>parameter</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.getCommand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.getCommand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="mView.MDevice.MDevice.getContainer">
 <code class="descname">getContainer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.getContainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.getContainer" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -121,6 +252,46 @@ function with which the refresh rate can be configured.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="mView.MDevice.MDevice.getNicknames">
+<code class="descname">getNicknames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.getNicknames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.getNicknames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.getParamVisibility">
+<code class="descname">getParamVisibility</code><span class="sig-paren">(</span><em>paramteter</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.getParamVisibility"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.getParamVisibility" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.getParameters">
+<code class="descname">getParameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.getParameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.getParameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.getPrecision">
+<code class="descname">getPrecision</code><span class="sig-paren">(</span><em>parameter</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.getPrecision"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.getPrecision" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.getReading">
+<code class="descname">getReading</code><span class="sig-paren">(</span><em>parameter</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.getReading"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.getReading" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.getReadingIndex">
+<code class="descname">getReadingIndex</code><span class="sig-paren">(</span><em>parameter</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.getReadingIndex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.getReadingIndex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.getUnit">
+<code class="descname">getUnit</code><span class="sig-paren">(</span><em>parameter</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.getUnit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.getUnit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.isLoaded">
+<code class="descname">isLoaded</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.isLoaded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.isLoaded" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="mView.MDevice.MDevice.isLogging">
 <code class="descname">isLogging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.isLogging"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.isLogging" title="Permalink to this definition">¶</a></dt>
 <dd><p>Getter for whether or not datalogging is enabled for this device.</p>
@@ -128,11 +299,26 @@ function with which the refresh rate can be configured.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">boolean</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">Boolean indicating whether or not data is being logged.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.isOutOfRange">
+<code class="descname">isOutOfRange</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.isOutOfRange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.isOutOfRange" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.loaded">
+<code class="descname">loaded</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.loaded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.loaded" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mView.MDevice.MDevice.lock">
+<code class="descname">lock</code><em class="property"> = &lt;thread.lock object at 0x0000000005DBD0D0&gt;</em><a class="headerlink" href="#mView.MDevice.MDevice.lock" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MDevice.MDevice.log">
@@ -142,10 +328,11 @@ function with which the refresh rate can be configured.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>log</strong> &#8211; Boolean</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>log</strong><strong>(</strong><strong>boolean</strong><strong>)</strong><strong></strong> &#8211; Boolean, whether or not to log. NOTE: This can be overridden</td>
 </tr>
 </tbody>
 </table>
+<p>using the GUI menus.</p>
 </dd></dl>
 
 <dl class="method">
@@ -155,7 +342,7 @@ function with which the refresh rate can be configured.</p>
 
 <dl class="method">
 <dt id="mView.MDevice.MDevice.onAddParameter">
-<code class="descname">onAddParameter</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.onAddParameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.onAddParameter" title="Permalink to this definition">¶</a></dt>
+<code class="descname">onAddParameter</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.onAddParameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.onAddParameter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called when when a new parameter is added. 
 It is passed whatever MDevice.addParameter() is passed. 
 (Note: MDevice.onAddParameter() and MDevice.addParameter() 
@@ -204,8 +391,28 @@ what to do based on the button pushed.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="mView.MDevice.MDevice.setCommand">
+<code class="descname">setCommand</code><span class="sig-paren">(</span><em>parameter</em>, <em>command</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setCommand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setCommand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="mView.MDevice.MDevice.setContainer">
 <code class="descname">setContainer</code><span class="sig-paren">(</span><em>container</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setContainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setContainer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.setInRange">
+<code class="descname">setInRange</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setInRange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setInRange" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.setOutOfRange">
+<code class="descname">setOutOfRange</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setOutOfRange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setOutOfRange" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.setParamVisibility">
+<code class="descname">setParamVisibility</code><span class="sig-paren">(</span><em>parameter</em>, <em>visible</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setParamVisibility"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setParamVisibility" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -214,18 +421,24 @@ what to do based on the button pushed.</p>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="mView.MDevice.MDevice.setReadings">
-<code class="descname">setReadings</code><span class="sig-paren">(</span><em>readings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setReadings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setReadings" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tell the frame what the readings are so that they can be logged.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>readings</strong> &#8211; Type: list</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
+<dt id="mView.MDevice.MDevice.setPrecision">
+<code class="descname">setPrecision</code><span class="sig-paren">(</span><em>parameter</em>, <em>precision</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setPrecision"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setPrecision" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.setPrecisions">
+<code class="descname">setPrecisions</code><span class="sig-paren">(</span><em>precisions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setPrecisions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setPrecisions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.setReading">
+<code class="descname">setReading</code><span class="sig-paren">(</span><em>parameter</em>, <em>reading</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setReading"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setReading" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.setReadingIndex">
+<code class="descname">setReadingIndex</code><span class="sig-paren">(</span><em>parameter</em>, <em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setReadingIndex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setReadingIndex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="mView.MDevice.MDevice.setRefreshRate">
@@ -235,6 +448,11 @@ what to do based on the button pushed.</p>
 <dl class="method">
 <dt id="mView.MDevice.MDevice.setTitle">
 <code class="descname">setTitle</code><span class="sig-paren">(</span><em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setTitle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setTitle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mView.MDevice.MDevice.setUnit">
+<code class="descname">setUnit</code><span class="sig-paren">(</span><em>parameter</em>, <em>unit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mView/MDevice.html#MDevice.setUnit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mView.MDevice.MDevice.setUnit" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -264,56 +482,71 @@ by emitting an update signal</p>
 </div>
 
 
+           </div>
           </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="mView.MDeviceContainerWidget.html" class="btn btn-neutral float-right" title="mView.MDeviceContainerWidget module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="mView.MDataSetConfigGUI.html" class="btn btn-neutral" title="mView.MDataSetConfigGUI module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Noah Meltzer.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  <li><a href="mView.html">mView package</a><ul>
-      <li>Previous: <a href="mView.MDataSetConfigGUI.html" title="previous chapter">mView.MDataSetConfigGUI module</a></li>
-      <li>Next: <a href="mView.MDeviceContainerWidget.html" title="next chapter">mView.MDeviceContainerWidget module</a></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/mView.MDevice.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2017, Author.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
-      
-      |
-      <a href="_sources/mView.MDevice.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
 
-    
+    </section>
 
-    
-  </body>
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
 </html>

@@ -1,45 +1,130 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>mView.MFrame &#8212; GUI  documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-   
-  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
   
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head>
-  <body role="document">
+  <title>mView.MFrame &mdash; MVIEW  documentation</title>
   
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="MVIEW  documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> MVIEW
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../mView.html">mView package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">MVIEW</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>mView.MFrame</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <h1>Source code for mView.MFrame</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright (C) 2016 Noah Meltzer</span>
@@ -66,6 +151,10 @@
 
 <span class="kn">from</span> <span class="nn">MWeb</span> <span class="k">import</span> <span class="n">web</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
+<span class="kn">import</span> <span class="nn">time</span>
 <div class="viewcode-block" id="MFrame"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame">[docs]</a><span class="k">class</span> <span class="nc">MFrame</span><span class="p">:</span>
   
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -74,13 +163,13 @@
         <span class="c1"># Name of device&#39;s server.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">serverTitle</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># Parameter names to be displayed on the GUI.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1">#self.nicknames = []</span>
         <span class="c1"># Settings which are called by the GUI.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">serverSettings</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1">#self.serverSettings = None</span>
         <span class="c1"># Device readings.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">readings</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1">#self.readings = []</span>
         <span class="c1"># Precisions.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1">#self.precisions = []</span>
         <span class="c1"># Errors.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="c1"># Error messages.</span>
@@ -88,7 +177,7 @@
         <span class="c1"># Label on the y axis of the dataChest dataplot.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">yLabel</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="c1"># Units used for each parameter.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1">#self.units = []</span>
         <span class="c1"># Buttons on the GUI used to control the device.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span> <span class="o">=</span> <span class="p">[[]]</span>
         <span class="c1"># Stores an index of a certain button.</span>
@@ -124,11 +213,12 @@
         <span class="n">restoredSettings</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="s2">&quot;DataLoggingInfo&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">serverTitle</span><span class="p">)</span>
         <span class="c1"># Is the parameter visible?</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">paramVisibility</span> <span class="o">=</span> <span class="p">{}</span>
-        
+        <span class="c1"># name:[name, readings, units, precision]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">restoredSettings</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">datalogsettingsDict</span> <span class="o">=</span> <span class="n">restoredSettings</span>
-        <span class="c1"># Is there a reading out of range?</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">outOfRange</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">container</span> <span class="o">=</span> <span class="kc">None</span>
 <div class="viewcode-block" id="MFrame.setTitle"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setTitle">[docs]</a>    <span class="k">def</span> <span class="nf">setTitle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
@@ -141,29 +231,85 @@
 
 <div class="viewcode-block" id="MFrame.getNicknames"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getNicknames">[docs]</a>    <span class="k">def</span> <span class="nf">getNicknames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1">#print &quot;----------NICKNAMES WAS Got&quot;, self.nicknames</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span></div>
-
-<div class="viewcode-block" id="MFrame.setNicknames"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setNicknames">[docs]</a>    <span class="k">def</span> <span class="nf">setNicknames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nicknames</span><span class="p">):</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getListOfParameterItems</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+        <span class="c1">#print &quot;Getting nicknames:&quot;, names</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getListOfParameterItems</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span></div>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span> <span class="o">=</span> <span class="n">nicknames</span></div>
+    <span class="k">def</span> <span class="nf">_setNicknames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nicknames</span><span class="p">):</span>
+        <span class="c1">#print &quot;Trying to set nicknames:&quot;, nicknames</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nicknames</span><span class="p">)</span><span class="o">!=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The length of nicknames did not match the number of parameters.&quot;</span>\
+                            <span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">names: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">nicknames</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>\
+                            <span class="o">+</span><span class="s2">&quot;Available Parameters: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+            
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setNickname</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">nicknames</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="c1">#pprint(self.parameters)</span>
+        
         <span class="c1">#print &quot;---------- set nicknames NICKNAMES WAS SET&quot;, self.nicknames</span>
-<div class="viewcode-block" id="MFrame.setReadings"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setReadings">[docs]</a>    <span class="k">def</span> <span class="nf">setReadings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">readings</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">readings</span> <span class="o">=</span> <span class="n">readings</span></div>
-
-<div class="viewcode-block" id="MFrame.getReadings"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getReadings">[docs]</a>    <span class="k">def</span> <span class="nf">getReadings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">readings</span></div>
+<div class="viewcode-block" id="MFrame.setName"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setName">[docs]</a>    <span class="k">def</span> <span class="nf">setName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span></div>
         
-<div class="viewcode-block" id="MFrame.setPrecisions"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setPrecisions">[docs]</a>    <span class="k">def</span> <span class="nf">setPrecisions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precisions</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span> <span class="o">=</span> <span class="n">precisions</span></div>
+    <span class="k">def</span> <span class="nf">_setReadings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">readings</span><span class="p">):</span>
+        <span class="c1">#print &quot;-----Set Readings called:&quot;, readings</span>
+        <span class="c1">#pprint(self.parameters)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">readings</span><span class="p">)</span><span class="o">!=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The length of readings did not match the number of parameters.&quot;</span>\
+                            <span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">readings: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">readings</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>\
+                            <span class="o">+</span><span class="s2">&quot;Available Parameters: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setReading</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">readings</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 
-<div class="viewcode-block" id="MFrame.getPrecisions"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getPrecisions">[docs]</a>    <span class="k">def</span> <span class="nf">getPrecisions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span></div>
-        
-<div class="viewcode-block" id="MFrame.setReadingIndices"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setReadingIndices">[docs]</a>    <span class="k">def</span> <span class="nf">setReadingIndices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">readingIndices</span> <span class="o">=</span> <span class="n">index</span></div>
+        <span class="c1">#pprint(self.parameters)</span>
+<div class="viewcode-block" id="MFrame.setReading"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setReading">[docs]</a>    <span class="k">def</span> <span class="nf">setReading</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">reading</span><span class="p">):</span>
+        <span class="c1">#traceback.print_stack()</span>
+        <span class="c1">#print &quot;name in MFrame:&quot;, name, reading</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;reading&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reading</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Could not set reading of &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;, it does not </span><span class="se">\</span>
+<span class="s2">                        appear to be a parameter of &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()))</span></div>
+    <span class="k">def</span> <span class="nf">_getReadings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getListOfParameterItems</span><span class="p">(</span><span class="s1">&#39;reading&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="MFrame.getReading"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getReading">[docs]</a>    <span class="k">def</span> <span class="nf">getReading</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">parameter</span><span class="p">][</span><span class="s1">&#39;reading&#39;</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Could not get reading of &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">parameter</span><span class="p">))</span>  </div>
+    <span class="k">def</span> <span class="nf">_setPrecisions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precisions</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">precisions</span><span class="p">)</span><span class="o">!=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The length of precisions did not match the number of parameters.&quot;</span>\
+                            <span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">precisions: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">precisions</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>\
+                            <span class="o">+</span><span class="s2">&quot;Available Parameters: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setPrecision</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">precisions</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            
+<div class="viewcode-block" id="MFrame.setPrecision"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setPrecision">[docs]</a>    <span class="k">def</span> <span class="nf">setPrecision</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">precision</span><span class="p">):</span>    
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;precision&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">precision</span></div>
+<div class="viewcode-block" id="MFrame.getPrecision"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getPrecision">[docs]</a>    <span class="k">def</span> <span class="nf">getPrecision</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;precision&#39;</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Could not get precision of &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>  </div>
+    <span class="k">def</span> <span class="nf">_getPrecisions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getListOfParameterItems</span><span class="p">(</span><span class="s1">&#39;precision&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="MFrame.setCommand"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setCommand">[docs]</a>    <span class="k">def</span> <span class="nf">setCommand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">command</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;command&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">command</span></div>
+<div class="viewcode-block" id="MFrame.getCommand"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getCommand">[docs]</a>    <span class="k">def</span> <span class="nf">getCommand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;command&#39;</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Could not get command of &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>   </div>
+<div class="viewcode-block" id="MFrame.setReadingIndex"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setReadingIndex">[docs]</a>    <span class="k">def</span> <span class="nf">setReadingIndex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="c1">#traceback.print_stack()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;reading_index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Could not set reading index of &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>               </div>
 
-<div class="viewcode-block" id="MFrame.getReadingIndices"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getReadingIndices">[docs]</a>    <span class="k">def</span> <span class="nf">getReadingIndices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">readingIndices</span></div>
+<div class="viewcode-block" id="MFrame.getReadingIndex"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getReadingIndex">[docs]</a>    <span class="k">def</span> <span class="nf">getReadingIndex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;reading_index&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
        
 <div class="viewcode-block" id="MFrame.raiseError"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.raiseError">[docs]</a>    <span class="k">def</span> <span class="nf">raiseError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="kc">True</span>
@@ -179,12 +325,31 @@
 <div class="viewcode-block" id="MFrame.errorMsg"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.errorMsg">[docs]</a>    <span class="k">def</span> <span class="nf">errorMsg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">errmsg</span></div>
 
-<div class="viewcode-block" id="MFrame.setUnits"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setUnits">[docs]</a>    <span class="k">def</span> <span class="nf">setUnits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">units</span></div>
-
-<div class="viewcode-block" id="MFrame.getUnits"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getUnits">[docs]</a>    <span class="k">def</span> <span class="nf">getUnits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span></div>
-
+    <span class="k">def</span> <span class="nf">_setUnits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">units</span><span class="p">)</span><span class="o">!=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The length of units did not match the number of parameters.&quot;</span>\
+                            <span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">units: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">units</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>\
+                            <span class="o">+</span><span class="s2">&quot;Available Parameters: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setUnit</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">units</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<div class="viewcode-block" id="MFrame.setUnit"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setUnit">[docs]</a>    <span class="k">def</span> <span class="nf">setUnit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">unit</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unit</span></div>
+<div class="viewcode-block" id="MFrame.getUnit"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getUnit">[docs]</a>    <span class="k">def</span> <span class="nf">getUnit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">parameter</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Could not get unit of &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;, it does not </span><span class="se">\</span>
+<span class="s2">                        appear to be a parameter of &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()))</span>   
+            <span class="k">return</span> <span class="kc">None</span></div>
+<div class="viewcode-block" id="MFrame.getListOfParameterItems"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getListOfParameterItems">[docs]</a>    <span class="k">def</span> <span class="nf">getListOfParameterItems</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">itemkey</span><span class="p">):</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">param</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">param</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">itemkey</span> <span class="ow">in</span> <span class="n">param</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="n">itemkey</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">items</span></div>
 <div class="viewcode-block" id="MFrame.getCustomUnits"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getCustomUnits">[docs]</a>    <span class="k">def</span> <span class="nf">getCustomUnits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">custUnits</span></div>
 
@@ -275,18 +440,19 @@
         <span class="c1">#print &quot;DATALOGGING INFO ACCESSED&quot;, self.datalogsettingsDict</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">datalogsettingsDict</span></div>
        
-<div class="viewcode-block" id="MFrame.getOutOfRangeStatus"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getOutOfRangeStatus">[docs]</a>    <span class="k">def</span> <span class="nf">getOutOfRangeStatus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">outOfRange</span></div>
+<div class="viewcode-block" id="MFrame.getOutOfRangeStatus"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getOutOfRangeStatus">[docs]</a>    <span class="k">def</span> <span class="nf">getOutOfRangeStatus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;out_of_range&#39;</span><span class="p">]</span></div>
         
 <div class="viewcode-block" id="MFrame.setOutOfRange"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setOutOfRange">[docs]</a>    <span class="k">def</span> <span class="nf">setOutOfRange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">outOfRange</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;out_of_range&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="MFrame.setInRange"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setInRange">[docs]</a>    <span class="k">def</span> <span class="nf">setInRange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">outOfRange</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;out_of_range&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span></div>
 
 <div class="viewcode-block" id="MFrame.disableRange"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.disableRange">[docs]</a>    <span class="k">def</span> <span class="nf">disableRange</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">outOfRange</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="kc">False</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outOfRange</span><span class="p">}</span></div>
-    
+        
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;out_of_range&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span></div>
 <div class="viewcode-block" id="MFrame.setNode"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setNode">[docs]</a>    <span class="k">def</span> <span class="nf">setNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">node</span></div>
         
@@ -298,23 +464,47 @@
         
 <div class="viewcode-block" id="MFrame.getContainer"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getContainer">[docs]</a>    <span class="k">def</span> <span class="nf">getContainer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span></div>
-        
+<div class="viewcode-block" id="MFrame.setParameters"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setParameters">[docs]</a>    <span class="k">def</span> <span class="nf">setParameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">params</span></div>
+    
+<div class="viewcode-block" id="MFrame.getParameter"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getParameter">[docs]</a>    <span class="k">def</span> <span class="nf">getParameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;Problem getting parameters for&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s2">&quot;, could not find parameters.&quot;</span></div>
+<div class="viewcode-block" id="MFrame.getParameters"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getParameters">[docs]</a>    <span class="k">def</span> <span class="nf">getParameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span></div>
+<div class="viewcode-block" id="MFrame.getParamAttr"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getParamAttr">[docs]</a>    <span class="k">def</span> <span class="nf">getParamAttr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">default</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">curr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">::]:</span>
+            <span class="k">if</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">curr</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">curr</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">default</span></div>
 <div class="viewcode-block" id="MFrame.addParameter"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.addParameter">[docs]</a>    <span class="k">def</span> <span class="nf">addParameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Adds to list of parameters displayed on the gui.&#39;&#39;&#39;</span>
-        <span class="nb">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">getTitle</span><span class="p">(),</span> <span class="s2">&quot;----------add parameter called&quot;</span><span class="p">,</span> <span class="n">params</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span></div>
-        
-        <span class="c1">#print &quot;---------- add parameter NICKNAMES WAS SET&quot;, self.nicknames</span>
+        <span class="c1">#print self.getTitle(), &quot;----------add parameter called&quot;, params</span>
+<span class="c1">#        self.nicknames.append(params[0])</span>
+<span class="c1">#        self.precisions.append(params[1])</span>
+<span class="c1">#        self.units.append(params[2])</span>
+<span class="c1">#        self.readings.append(None)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;reading&quot;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;units&quot;</span><span class="p">:</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;precision&quot;</span><span class="p">:</span><span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;out_of_range&quot;</span><span class="p">:</span><span class="kc">False</span><span class="p">}</span></div>
+        <span class="c1">#print &quot;---------- add parameter NICKNAMES WAS SET&quot;, self.parameters</span>
 <div class="viewcode-block" id="MFrame.setParamVisibility"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setParamVisibility">[docs]</a>    <span class="k">def</span> <span class="nf">setParamVisibility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">visible</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Set whether or not a parameter shows up on the GUI.&#39;&#39;&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">paramVisibility</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">visible</span></div>
+        <span class="k">if</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="s1">&#39;visible&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">visible</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="s1">&#39;visible&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">visible</span></div>
 <div class="viewcode-block" id="MFrame.isParamVisible"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.isParamVisible">[docs]</a>    <span class="k">def</span> <span class="nf">isParamVisible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Get the visibility of a parameter.&#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">paramVisibility</span><span class="p">[</span><span class="n">param</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="s1">&#39;visible&#39;</span><span class="p">]</span></div>
 <div class="viewcode-block" id="MFrame.getRawDataSet"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getRawDataSet">[docs]</a>    <span class="k">def</span> <span class="nf">getRawDataSet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Get a tuple structured as (name, units, [1-d data]).&#39;&#39;&#39;</span>
+        
+        <span class="n">origparam</span> <span class="o">=</span> <span class="n">param</span>
         <span class="n">param</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
         <span class="c1">#print &quot;looking for&quot;, param</span>
         <span class="c1">#print &quot;Variables: &quot;, self.dataSet.getVariables()</span>
@@ -330,52 +520,82 @@
                     <span class="n">loc</span> <span class="o">=</span> <span class="n">i</span>
             <span class="k">if</span> <span class="n">loc</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">None</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">getData</span><span class="p">())[</span><span class="n">loc</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">getData</span><span class="p">())[</span><span class="n">loc</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">t2</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="c1"># Append the most recent reading as it is not yet in </span>
+            <span class="c1"># the data set.</span>
+            
+            <span class="c1">#data.append(self.parameters[origparam][&#39;reading&#39;])</span>
+            <span class="c1">#print &quot;data retreived&quot;</span>
             <span class="n">variable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">getVariables</span><span class="p">()[</span><span class="mi">1</span><span class="p">][</span><span class="n">loc</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">return</span> <span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">[</span><span class="n">loc</span><span class="p">],</span> <span class="n">data</span><span class="p">)</span>
+            
+            <span class="c1">#print &quot;------Time to get Raw data:&quot;, t2-t1</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">origparam</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">],</span> <span class="n">data</span><span class="p">)</span>
         <span class="k">except</span><span class="p">:</span>
+            <span class="c1">#traceback.print_exc ()</span>
             <span class="k">return</span> <span class="kc">None</span></div></div>
+      
+      
         <span class="c1">#return self.dataSet.getVariables</span>
 </pre></div>
 
+           </div>
           </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Noah Meltzer.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../index.html">Module code</a><ul>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2017, Author.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
-      
-    </div>
 
-    
+    </section>
 
-    
-  </body>
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
 </html>

@@ -1,45 +1,130 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>mView.MNodeEditor.MAnchor &#8212; GUI  documentation</title>
-    
-    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../../',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="../../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <link rel="index" title="Index" href="../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../search.html" />
-   
-  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
   
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head>
-  <body role="document">
+  <title>mView.MNodeEditor.MAnchor &mdash; MVIEW  documentation</title>
   
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="MVIEW  documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> MVIEW
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../mView.html">mView package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">MVIEW</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>mView.MNodeEditor.MAnchor</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <h1>Source code for mView.MNodeEditor.MAnchor</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright (C) 2016 Noah Meltzer</span>
@@ -85,7 +170,7 @@
         <span class="c1"># Initialize the base class.</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">MAnchor</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="c1"># No pipe connected on instatiation.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="c1"># The parent node.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">node</span>
         <span class="c1"># The data on the anchor.</span>
@@ -94,7 +179,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">directInputData</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="c1"># Name displayed next to the anchor</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">param</span> <span class="o">=</span> <span class="n">name</span>
-
+        <span class="c1"># Holds metadata</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Propagate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="kc">True</span>
 <div class="viewcode-block" id="MAnchor.parentNode"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.parentNode">[docs]</a>    <span class="k">def</span> <span class="nf">parentNode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Return the node that the anchor belongs to.&#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span></div>
@@ -107,97 +195,143 @@
         <span class="sd">&#39;&#39;&#39;Get the anchor type&#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span></div>
         
-<div class="viewcode-block" id="MAnchor.getPipe"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.getPipe">[docs]</a>    <span class="k">def</span> <span class="nf">getPipe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MAnchor.getPipes"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.getPipes">[docs]</a>    <span class="k">def</span> <span class="nf">getPipes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Get the pipe connected to the anchor&#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span></div>
         
-<div class="viewcode-block" id="MAnchor.setPipe"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.setPipe">[docs]</a>    <span class="k">def</span> <span class="nf">setPipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span> <span class="o">=</span> <span class="n">pipe</span></div>
+<div class="viewcode-block" id="MAnchor.setPipes"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.setPipes">[docs]</a>    <span class="k">def</span> <span class="nf">setPipes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipes</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span> <span class="o">=</span> <span class="n">pipes</span></div>
+        
+<div class="viewcode-block" id="MAnchor.addPipe"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.addPipe">[docs]</a>    <span class="k">def</span> <span class="nf">addPipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span></div>
         
 <div class="viewcode-block" id="MAnchor.pipeConnected"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.pipeConnected">[docs]</a>    <span class="k">def</span> <span class="nf">pipeConnected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe</span><span class="p">):</span>
-        <span class="nb">print</span> <span class="s2">&quot;anchor-&gt;pipeConnected:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setPipe</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span>
+        <span class="c1">#print &quot;anchor-&gt;pipeConnected:&quot;, pipe</span>
+        <span class="c1">#self.addPipe(pipe)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">getType</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;output&#39;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">setData</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pipe</span><span class="o">.</span><span class="n">getData</span><span class="p">()</span></div>
             
-<div class="viewcode-block" id="MAnchor.update"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parentNode</span><span class="p">()</span><span class="o">.</span><span class="n">isDevice</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">parentNode</span><span class="p">()</span><span class="o">.</span><span class="n">getDevice</span><span class="p">()</span><span class="o">.</span><span class="n">updateContainer</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">graphicsItem</span><span class="o">.</span><span class="n">refresh</span><span class="p">()</span></div>
+    <span class="c1"># def update(self):</span>
+        <span class="c1"># if self.parentNode().isDevice:</span>
+                <span class="c1"># self.parentNode().getDevice().updateContainer()</span>
+        <span class="c1"># self.graphicsItem.refresh()</span>
         
 <div class="viewcode-block" id="MAnchor.getData"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.getData">[docs]</a>    <span class="k">def</span> <span class="nf">getData</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">pipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPipe</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">pipe</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPipe</span><span class="p">()</span><span class="o">.</span><span class="n">getData</span><span class="p">()</span>
+       
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPipes</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">getData</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> </div>
-            
-            
-<div class="viewcode-block" id="MAnchor.setData"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.setData">[docs]</a>    <span class="k">def</span> <span class="nf">setData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="c1">#print &quot;set data called&quot;</span>
-        <span class="n">pipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPipe</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">pipe</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;output&#39;</span><span class="p">:</span>
-            <span class="n">pipe</span><span class="o">.</span><span class="n">setData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;input&#39;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">parentNode</span><span class="p">()</span><span class="o">.</span><span class="n">refreshData</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span></div>
-        <span class="c1">#self.lcd.display(data)</span>
+<div class="viewcode-block" id="MAnchor.propagateData"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.propagateData">[docs]</a>    <span class="k">def</span> <span class="nf">propagateData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="c1">#traceback.print_stack()</span>
+        <span class="c1">#print &quot;-------propagate set&quot;, p</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="n">p</span></div>
         
+<div class="viewcode-block" id="MAnchor.setMetaData"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.setMetaData">[docs]</a>    <span class="k">def</span> <span class="nf">setMetaData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">pipe</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pipe</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;output&#39;</span><span class="p">:</span>
+                <span class="n">pipe</span><span class="o">.</span><span class="n">setMetaData</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+       
+            <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span></div>
+<div class="viewcode-block" id="MAnchor.getMetaData"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.getMetaData">[docs]</a>    <span class="k">def</span> <span class="nf">getMetaData</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span></div>
+        
+<div class="viewcode-block" id="MAnchor.setData"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.setData">[docs]</a>    <span class="k">def</span> <span class="nf">setData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1">#print &quot;anchor&quot;, self, &quot;set data called&quot;</span>
+        <span class="n">holdRefresh</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;hold_refresh&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">holdRefresh</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">pipe</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">pipe</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;output&#39;</span><span class="p">:</span>
+                    <span class="c1">#print &quot;Anchor&quot;, self, &quot;of&quot;, self.parent, &quot;setting pipe data&quot;</span>
+                    <span class="n">pipe</span><span class="o">.</span><span class="n">setData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;input&#39;</span><span class="p">:</span>
+                    <span class="c1">#print &quot;Input anchor&quot;, self.parentNode()</span>
+                    <span class="c1">#print &quot;propagateData:&quot;, self.propagate</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">propagate</span><span class="p">:</span>
+                        <span class="c1">#print &quot;Pipes:&quot;, [str(pipe) for pipe in self.pipes]</span>
+                        <span class="c1">#print &quot;Calling refresh data from node:&quot;, self.parent, &quot;, Anchor:&quot;, self</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">parentNode</span><span class="p">()</span><span class="o">.</span><span class="n">refreshData</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parentNode</span><span class="p">()</span><span class="o">.</span><span class="n">getDevice</span><span class="p">()</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">parentNode</span><span class="p">()</span><span class="o">.</span><span class="n">getDevice</span><span class="p">()</span><span class="o">.</span><span class="n">updateContainer</span><span class="p">()</span>
+                        <span class="k">pass</span></div>
+            
+        <span class="c1">#self.lcd.display(data)</span>
+<div class="viewcode-block" id="MAnchor.propogateRefresh"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.propogateRefresh">[docs]</a>    <span class="k">def</span> <span class="nf">propogateRefresh</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setData</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
 <div class="viewcode-block" id="MAnchor.disconnect"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.disconnect">[docs]</a>    <span class="k">def</span> <span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Disconnect and delete the pipe&#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">deletePipe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe</span><span class="p">)</span></div>
         
 <div class="viewcode-block" id="MAnchor.connect"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe</span><span class="p">):</span>
-        <span class="nb">print</span> <span class="s2">&quot;connect function called&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span> <span class="o">=</span> <span class="n">pipe</span></div>
+        <span class="c1">#print &quot;connect function called&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addPipe</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MAnchor.isConnected"><a class="viewcode-back" href="../../../mView.MNodeEditor.MAnchor.html#mView.MNodeEditor.MAnchor.MAnchor.isConnected">[docs]</a>    <span class="k">def</span> <span class="nf">isConnected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPipe</span><span class="p">()</span> <span class="o">==</span> <span class="kc">None</span></div>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPipes</span><span class="p">()</span> <span class="o">==</span> <span class="p">[]</span></div>
     <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param</span><span class="p">)</span></div>
    
 </pre></div>
 
+           </div>
           </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Noah Meltzer.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../../index.html">Documentation overview</a><ul>
-  <li><a href="../../index.html">Module code</a><ul>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2017, Author.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
-      
-    </div>
 
-    
+    </section>
 
-    
-  </body>
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
 </html>

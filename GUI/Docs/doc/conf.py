@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # GUI documentation build configuration file, created by
-# sphinx-quickstart on Mon Mar 06 17:53:48 2017.
+# sphinx-quickstart on Mon Mar 27 15:14:37 2017.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -19,6 +19,8 @@
 # import os
 # import sys
 # sys.path.insert(0, u'C:\Users\Noah\OneDrive\mcDermott\Servers\GUI')
+
+import sphinx_rtd_theme
 
 
 # -- General configuration ------------------------------------------------
@@ -47,9 +49,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'GUI'
-copyright = u'2017, Author'
-author = u'Author'
+project = u'MVIEW'
+copyright = u'2017, Noah Meltzer'
+author = u'Noah Meltzer'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -84,7 +86,9 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = "sphinx_rtd_theme"
+
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

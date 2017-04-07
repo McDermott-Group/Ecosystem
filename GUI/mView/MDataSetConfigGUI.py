@@ -47,7 +47,7 @@ class DataSetConfigGUI(QtGui.QDialog):
         mainLayout.addLayout(buttonLayout)
         self.setLayout(mainLayout)
         self.setWindowTitle("DataChest Config")
-    
+        self.lockSettings = False
     def saveState(self):
        pass
 
@@ -123,8 +123,11 @@ class DataSetSettings(QtGui.QWidget):
             title.setFont(font)
             grid.addWidget(title,0,0)
             location =  QtGui.QLabel(web.devices[0].getFrame().DataLoggingInfo()['location'])
+            
             grid.addWidget(location, 0, 1)
             button = QtGui.QPushButton("Browse...",self)
+
+                    
             button.clicked.connect(partial(self.openFileDialog, None, grid, 0))
             buttonHbox = QtGui.QHBoxLayout()
             grid.addLayout(buttonHbox, 0, 3)
@@ -149,6 +152,10 @@ class DataSetSettings(QtGui.QWidget):
                 self.locationLabels.append(location)
                 grid.addWidget(location,row,1)
                 button = QtGui.QPushButton("Browse...",self)
+                lockSettings = device.getFrame().DataLoggingInfo()['lock_settings']
+                print "lock settings for", device, ":", lockSettings
+                if lockSettings:
+                    button.setEnabled(False)
                 button.clicked.connect(partial(self.openFileDialog, device, grid, row))
                 buttonHbox = QtGui.QHBoxLayout()
                 grid.addLayout(buttonHbox, row, 3)
@@ -163,6 +170,8 @@ class DataSetSettings(QtGui.QWidget):
                     #print device, "Data logging info: ", device.getFrame().DataLoggingInfo()
                     checkbox.setChecked(device.getFrame().DataLoggingInfo()['channels'][nickname])
                     #grid.addLayout(hBox, row, 0)
+                    if lockSettings:
+                        checkbox.setEnabled(False)
                     grid.addWidget(QtGui.QLabel(nickname), row, 0)
                     grid.addWidget(checkbox, row, 1)
                     #hBox.addWidget(checkbox)
@@ -171,8 +180,11 @@ class DataSetSettings(QtGui.QWidget):
     def resetToDefault(self,grid):
 
         for i,device in enumerate(web.devices):
+            lockSettings = device.getFrame().DataLoggingInfo()['lock_settings']
+            
             device.getFrame().DataLoggingInfo()['name'] = device.getFrame().getTitle()
-            device.getFrame().DataLoggingInfo()['location'] = None
+            if not self.lockSettings:
+                device.getFrame().DataLoggingInfo()['location'] = None
             try:
                 chest = device.getFrame().DataLoggingInfo()['chest']
                 if chest != None:

@@ -1,45 +1,130 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>mView.MDevices.Device &#8212; GUI  documentation</title>
-    
-    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../../',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="../../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <link rel="index" title="Index" href="../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../search.html" />
-   
-  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
   
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head>
-  <body role="document">
+  <title>mView.MDevices.Device &mdash; MVIEW  documentation</title>
   
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="MVIEW  documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> MVIEW
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../mView.html">mView package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">MVIEW</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>mView.MDevices.Device</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <h1>Source code for mView.MDevices.Device</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright (C) 2016 Noah Meltzer</span>
@@ -78,6 +163,7 @@
 
 <span class="kn">from</span> <span class="nn">MWeb</span> <span class="k">import</span> <span class="n">web</span>
 <span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">getsizeof</span>
 <div class="viewcode-block" id="Device"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device">[docs]</a><span class="k">class</span> <span class="nc">Device</span><span class="p">(</span><span class="n">MDevice</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The device class handles a LabRAD device.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
@@ -90,15 +176,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">foundDevice</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="c1"># Nicknames of settings (the ones that show up on the GUI).</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1">#self.nicknames = []</span>
         <span class="c1">#Units for the settings to be used with the values on the GUI.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">settingUnits</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1">#self.settingUnits = []</span>
         <span class="c1"># List of the precisions for the values on the GUI.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1">#self.precisions = []</span>
         <span class="c1"># List of settings that the user wants run on their device.</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="c1"># The actual names of the settings.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">settingNames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1">#self.settingNames = []</span>
         <span class="c1"># Stores the actual reference to the labrad server.</span>
         <span class="n">deviceServer</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># True if device is functioning correctly.</span>
@@ -111,8 +197,8 @@
         <span class="c1"># Store the buttons along with their parameters.</span>
         <span class="n">buttons</span> <span class="o">=</span> <span class="p">[[]]</span>
         <span class="c1"># Arguments that should be passed to settings if necessary.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">settingArgs</span> <span class="o">=</span><span class="p">[]</span>    
-        <span class="bp">self</span><span class="o">.</span><span class="n">settingResultIndices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1">#self.settingArgs =[]    </span>
+        <span class="c1">#self.settingResultIndices = []</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setYLabel</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
         
         <span class="c1"># Determine which buttons get messages.</span>
@@ -131,17 +217,22 @@
 <div class="viewcode-block" id="Device.setServerName"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.setServerName">[docs]</a>    <span class="k">def</span> <span class="nf">setServerName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">serverName</span> <span class="o">=</span> <span class="n">name</span></div>
         
-<div class="viewcode-block" id="Device.addParameter"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.addParameter">[docs]</a>    <span class="k">def</span> <span class="nf">addParameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">setting</span><span class="p">,</span> <span class="n">arg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        
+<div class="viewcode-block" id="Device.onAddParameter"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.onAddParameter">[docs]</a>    <span class="k">def</span> <span class="nf">onAddParameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">setting</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">arg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;precision&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;units&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;channels&#39;</span><span class="p">][</span><span class="n">parameter</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">settingNames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">setting</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">settingResultIndices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">settingArgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">settingUnits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setParamVisibility</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></div>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">setCommand</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="p">[</span><span class="n">setting</span><span class="p">,</span> <span class="n">arg</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setReadingIndex</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setPrecision</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span>
+        <span class="c1">#self.nicknames.append(parameter)</span>
+        <span class="c1">#self.settingArgs.append(arg)</span>
+        <span class="c1">#self.settingUnits.append(units)</span>
+        <span class="c1">#self.precisions.append(precision)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setParamVisibility</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span></div>
 <div class="viewcode-block" id="Device.connection"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.connection">[docs]</a>    <span class="k">def</span> <span class="nf">connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cxn</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cxn</span> <span class="o">=</span> <span class="n">cxn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">cxn</span><span class="o">.</span><span class="n">context</span><span class="p">()</span></div>
@@ -163,9 +254,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">selectedDevice</span> <span class="o">=</span> <span class="n">arg</span></div>
     
 <div class="viewcode-block" id="Device.onBegin"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.onBegin">[docs]</a>    <span class="k">def</span> <span class="nf">onBegin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">print</span> <span class="s2">&quot;onbegin here&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setNicknames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setReadingIndices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settingResultIndices</span><span class="p">)</span>
+        <span class="c1">#print &quot;onbegin here&quot;</span>
+        <span class="c1">#self.frame.setNicknames(self.nicknames)</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;chest&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataChestWrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">datachest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;chest&#39;</span><span class="p">]</span></div>
@@ -209,7 +300,7 @@
                 <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deviceServer</span><span class="p">,</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">setDeviceCmd</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">selectedDevice</span><span class="p">,</span>
                                            <span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Found device: </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">serverName</span><span class="p">)</span>
+            <span class="c1">#print(&quot;Found device: %s.&quot; %self.serverName)</span>
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="c1"># The nFrame class can pass an error along with a message.</span>
@@ -226,7 +317,7 @@
     
 <div class="viewcode-block" id="Device.prompt"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.prompt">[docs]</a>    <span class="k">def</span> <span class="nf">prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">button</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;If a button is clicked, handle it.&quot;&quot;&quot;</span><span class="c1">#name action msg arg</span>
-        <span class="nb">print</span> <span class="s2">&quot;button clicked:&quot;</span><span class="p">,</span> <span class="n">button</span>
+        <span class="c1">#print &quot;button clicked:&quot;, button</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">actual_button</span> <span class="o">=</span> <span class="n">button</span>
             <span class="c1"># If the button has a warning message attatched.</span>
@@ -239,6 +330,7 @@
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">warning</span><span class="o">.</span><span class="n">consent</span><span class="p">:</span>
                     <span class="c1"># If the setting associated with the button also </span>
                     <span class="c1"># has an argument for the setting.</span>
+                    
                     <span class="k">if</span> <span class="n">actual_button</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deviceServer</span><span class="p">,</span>
                                 <span class="n">actual_button</span><span class="p">[</span><span class="mi">1</span><span class="p">])(</span><span class="n">actual_button</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
@@ -261,6 +353,7 @@
 
 <div class="viewcode-block" id="Device.query"><a class="viewcode-back" href="../../../mView.MDevices.Device.html#mView.MDevices.Device.Device.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Query the device for readings.&quot;&quot;&quot;</span>
+        <span class="c1">#print &quot;size of&quot;, self, &quot;:&quot;, getsizeof(self)</span>
         <span class="c1"># If the device is attached.</span>
         <span class="c1">#print &quot;querying device&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isDevice</span><span class="p">:</span>
@@ -269,91 +362,107 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isDevice</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">isDevice</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="c1"># Otherwise, if the device is already connected.</span>
+        
         <span class="k">else</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">readings</span> <span class="o">=</span> <span class="p">[]</span>   <span class="c1"># Stores the readings.</span>
-                <span class="n">units</span> <span class="o">=</span> <span class="p">[]</span>      <span class="c1"># Stores the units.</span>
-                <span class="n">precisions</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settingNames</span><span class="p">)):</span>
+                <span class="c1">#readings = []   # Stores the readings.</span>
+                <span class="c1">#units = []      # Stores the units.</span>
+                <span class="c1">#precisions = []</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getParameters</span><span class="p">()):</span>
+                    <span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCommand</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+                   <span class="c1"># print &quot;command:&quot;, command</span>
+                    <span class="k">if</span> <span class="n">command</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="c1">#print &quot;found none setting for&quot;, name</span>
+                        <span class="c1">#units.append(None)</span>
+                        <span class="c1">#readings.append(None)</span>
+                        <span class="c1">#precisions.append(None)</span>
+                        <span class="k">continue</span>
                     <span class="c1"># If the setting needs to be passed arguments</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settingArgs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+              
+                    <span class="c1">#print &quot;Name of setting&quot;, self.settingNames[i]</span>
+                    <span class="k">if</span> <span class="n">command</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="n">reading</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deviceServer</span><span class="p">,</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">settingNames</span><span class="p">[</span><span class="n">i</span><span class="p">])(</span><span class="bp">self</span><span class="o">.</span><span class="n">settingArgs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                <span class="n">command</span><span class="p">[</span><span class="mi">0</span><span class="p">])(</span><span class="n">command</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
                                 <span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">reading</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deviceServer</span><span class="p">,</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">settingNames</span><span class="p">[</span><span class="n">i</span><span class="p">])(</span><span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="p">)</span>
-                    <span class="c1"># If the reading has a value and units.</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reading</span><span class="p">,</span> <span class="n">Value</span><span class="p">):</span>
-                        <span class="k">pass</span>
+                                <span class="n">command</span><span class="p">[</span><span class="mi">0</span><span class="p">])(</span><span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="p">)</span>
+
                     <span class="c1"># If the reading is an array of values and units.</span>
                     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reading</span><span class="p">,</span> <span class="n">ValueArray</span><span class="p">):</span>
-                        <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settingResultIndices</span>
-                        <span class="k">if</span> <span class="n">indices</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> \
-                                <span class="nb">isinstance</span><span class="p">(</span><span class="n">reading</span><span class="p">[</span><span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">Value</span><span class="p">):</span>
-                            <span class="n">reading</span> <span class="o">=</span> <span class="n">reading</span><span class="p">[</span><span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+                        <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getReadingIndex</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+                        <span class="n">units</span> <span class="o">=</span> <span class="n">reading</span><span class="o">.</span><span class="n">units</span>
+                        <span class="k">if</span> <span class="n">index</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> \
+                                <span class="nb">isinstance</span><span class="p">(</span><span class="n">reading</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">Value</span><span class="p">):</span>
+                            <span class="n">reading</span> <span class="o">=</span> <span class="n">reading</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
                         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">reading</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                             <span class="n">reading</span> <span class="o">=</span> <span class="n">reading</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">reading</span> <span class="o">=</span> <span class="n">reading</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                            
+                        <span class="bp">self</span><span class="o">.</span><span class="n">setReading</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">reading</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">setUnit</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span>
                     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reading</span><span class="p">,</span> <span class="n">Value</span><span class="p">):</span>
                         <span class="c1">#print &quot;Received labrad Value type&quot;</span>
-                        <span class="n">preferredUnits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settingUnits</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                        
+                        <span class="n">preferredUnits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getUnit</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">preferredUnits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> \
                                 <span class="n">reading</span><span class="o">.</span><span class="n">isCompatible</span><span class="p">(</span><span class="n">preferredUnits</span><span class="p">):</span>
                             <span class="n">reading</span> <span class="o">=</span> <span class="n">reading</span><span class="o">.</span><span class="n">inUnitsOf</span><span class="p">(</span><span class="n">preferredUnits</span><span class="p">)</span>
                         <span class="n">u</span> <span class="o">=</span> <span class="n">reading</span><span class="o">.</span><span class="n">units</span>
-                        <span class="c1">#print &quot;units:&quot;, u</span>
-                        <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reading</span><span class="p">[</span><span class="n">u</span><span class="p">])</span>
-                        <span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-                        <span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">precisions</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<span class="c1">#                        print &quot;---------------------&quot;</span>
+<span class="c1">#                        print &quot;name:&quot;, name                        </span>
+<span class="c1">#                        print &quot;units:&quot;, u</span>
+<span class="c1">#                        print &quot;value:&quot;, reading._value</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">setReading</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">reading</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">setUnit</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+                        
                     <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">reading</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
                         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">reading</span><span class="p">)):</span>
                             <span class="n">rd</span> <span class="o">=</span> <span class="n">reading</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
                             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rd</span><span class="p">,</span> <span class="n">Value</span><span class="p">):</span>
-                                <span class="n">preferredUnits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settingUnits</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                                <span class="n">preferredUnits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getUnit</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
                                 <span class="k">if</span> <span class="n">preferredUnits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> \
                                         <span class="n">rd</span><span class="o">.</span><span class="n">isCompatible</span><span class="p">(</span><span class="n">preferredUnits</span><span class="p">):</span>
                                     <span class="n">rd</span> <span class="o">=</span> <span class="n">rd</span><span class="o">.</span><span class="n">inUnitsOf</span><span class="p">(</span><span class="n">preferredUnits</span><span class="p">)</span>
                                 <span class="n">u</span> <span class="o">=</span> <span class="n">rd</span><span class="o">.</span><span class="n">units</span>
-                                <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rd</span><span class="p">[</span><span class="n">u</span><span class="p">])</span>
-                                <span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-                                <span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">precisions</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+         
+                                <span class="bp">self</span><span class="o">.</span><span class="n">setReading</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">rd</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">setUnit</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+                                <span class="c1">#precisions.append(self.precisions[i])</span>
                             <span class="k">else</span><span class="p">:</span>
-                                <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reading</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-                                <span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-                                <span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settingPrecisions</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">setReading</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">reading</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">setUnit</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                                <span class="c1">#precisions.append(self.settingPrecisions[i])</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="k">try</span><span class="p">:</span>
-                            <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reading</span><span class="p">)</span>
-                            <span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-                            <span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">precisions</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">setReading</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">reading</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">setUnit</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                            <span class="c1">#precisions.append(self.precisions[i])</span>
                         <span class="k">except</span><span class="p">:</span>
                             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Problem with readings, type &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span>
                                   <span class="s2">&quot;cannot be displayed.&quot;</span>
                                   <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">reading</span><span class="p">)))</span>
+
                 <span class="c1"># Pass the readings and units to the frame.</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">setReadings</span><span class="p">(</span><span class="n">readings</span><span class="p">)</span>
+                <span class="c1">#self.setReadings(readings, False)</span>
                 <span class="c1">#print &quot;setting units&quot;</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setUnits</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setPrecisions</span><span class="p">(</span><span class="n">precisions</span><span class="p">)</span>
+                <span class="c1">#self.frame.setUnits(units)</span>
+                <span class="c1">#self.frame.setPrecisions(precisions)</span>
 
                 <span class="c1"># If there was an error, retract it.</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">retractError</span><span class="p">()</span>
             <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                <span class="nb">print</span> <span class="n">e</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%s</span><span class="s2">] Something appears to be wrong with what &quot;</span>
                       <span class="s2">&quot;the labrad server is returning.&quot;</span>
                       <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()))</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Reading: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">readings</span><span class="p">))</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Units: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">units</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
             <span class="k">except</span><span class="p">:</span>
                 <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">raiseError</span><span class="p">(</span><span class="s2">&quot;Problem communicating with </span><span class="si">%s</span><span class="s2">.&quot;</span>
                         <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">setReadings</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+               <span class="c1"># self.frame.setReading(str(self),None)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">isDevice</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="c1"># Query calls itself again, this keeps the thread alive.</span>
         <span class="c1">#if self.keepGoing:</span>
@@ -362,44 +471,62 @@
         <span class="k">return</span></div></div>
 </pre></div>
 
+           </div>
           </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Noah Meltzer.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../../index.html">Documentation overview</a><ul>
-  <li><a href="../../index.html">Module code</a><ul>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2017, Author.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
-      
-    </div>
 
-    
+    </section>
 
-    
-  </body>
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
 </html>

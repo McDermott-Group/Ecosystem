@@ -1,45 +1,130 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>mView.dataChestWrapper &#8212; GUI  documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-   
-  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
   
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head>
-  <body role="document">
+  <title>mView.dataChestWrapper &mdash; MVIEW  documentation</title>
   
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="MVIEW  documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> MVIEW
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../mView.html">mView package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">MVIEW</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>mView.dataChestWrapper</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <h1>Source code for mView.dataChestWrapper</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright (C) 2016 Noah Meltzer</span>
@@ -70,11 +155,12 @@
 <span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 <span class="c1">#from PyQt4 import QtCore, QtGui</span>
 <span class="kn">from</span> <span class="nn">MWeb</span> <span class="k">import</span> <span class="n">web</span>
-
+<span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">from</span> <span class="nn">dateStamp</span> <span class="k">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">dataChest</span> <span class="k">import</span> <span class="o">*</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">getsizeof</span>
 <div class="viewcode-block" id="dataChestWrapper"><a class="viewcode-back" href="../../mView.dataChestWrapper.html#mView.dataChestWrapper.dataChestWrapper">[docs]</a><span class="k">class</span> <span class="nc">dataChestWrapper</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The dataChestWrapper class handles all datalogging. An instance </span>
@@ -82,7 +168,9 @@
 <span class="sd">    begin datalogging.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initiallize the dataChest.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Initiallize the dataChest.</span>
+<span class="sd">        :param device: The device to graph.        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Define the current time.</span>
        
         <span class="n">now</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
@@ -92,7 +180,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">setDataChestWrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="c1"># These arrays will hold all dataChest data sets.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">hasData</span> <span class="o">=</span> <span class="kc">None</span>
+        
         <span class="c1"># The done function must be called when the GUI exits.</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span> <span class="o">=</span> <span class="kc">None</span>
@@ -102,11 +190,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">restoreState</span><span class="p">()</span>
         
 <div class="viewcode-block" id="dataChestWrapper.restoreState"><a class="viewcode-back" href="../../mView.dataChestWrapper.html#mView.dataChestWrapper.dataChestWrapper.restoreState">[docs]</a>    <span class="k">def</span> <span class="nf">restoreState</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load saved data from previous MView session using MPerisistentData.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dataname</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;DataLoggingInfo&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">),</span> <span class="s1">&#39;name&#39;</span><span class="p">)</span>
         <span class="n">channels</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;DataLoggingInfo&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">),</span> <span class="s1">&#39;channels&#39;</span><span class="p">)</span>
         <span class="n">location</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;DataLoggingInfo&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>  <span class="s1">&#39;location&#39;</span><span class="p">)</span>
         <span class="c1">#Do a sanity check</span>
-        <span class="nb">print</span> <span class="s2">&quot;device:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
         <span class="k">for</span> <span class="n">nickname</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">channels</span> <span class="o">==</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">nickname</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">channels</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="n">channels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;channels&#39;</span><span class="p">]</span>
@@ -118,25 +208,23 @@
         <span class="k">if</span> <span class="n">channels</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;channels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">channels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">location</span></div>
+        
 <div class="viewcode-block" id="dataChestWrapper.saveState"><a class="viewcode-back" href="../../mView.dataChestWrapper.html#mView.dataChestWrapper.dataChestWrapper.saveState">[docs]</a>    <span class="k">def</span> <span class="nf">saveState</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1">#print &quot;saving&quot;</span>
-        
-        
-            <span class="c1">#web.persistentData.persistentDataAccess(device.getFrame().DataLoggingInfo(),&quot;DataLoggingInfo&quot;, str(device))</span>
-        <span class="nb">print</span> <span class="s2">&quot;saving datachest state to persistent data...&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Use MPersistentData to save certain variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dataname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
         <span class="n">channels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;channels&#39;</span><span class="p">]</span>
         <span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;location&#39;</span><span class="p">]</span>
         <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="n">dataname</span><span class="p">,</span> <span class="s1">&#39;DataLoggingInfo&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">),</span> <span class="s1">&#39;name&#39;</span><span class="p">)</span>
         <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="n">channels</span><span class="p">,</span> <span class="s1">&#39;DataLoggingInfo&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">),</span> <span class="s1">&#39;channels&#39;</span><span class="p">)</span>
-        <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="s1">&#39;DataLoggingInfo&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">),</span> <span class="s1">&#39;location&#39;</span><span class="p">)</span>
-        <span class="nb">print</span> <span class="s2">&quot;datachest persistent data saved.&quot;</span></div>
+        <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="s1">&#39;DataLoggingInfo&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">),</span> <span class="s1">&#39;location&#39;</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="dataChestWrapper.configureDataSets"><a class="viewcode-back" href="../../mView.dataChestWrapper.html#mView.dataChestWrapper.dataChestWrapper.configureDataSets">[docs]</a>    <span class="k">def</span> <span class="nf">configureDataSets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the datalogger, if datasets already exist, use them.</span>
 <span class="sd">        Otherwise create new ones.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
         <span class="n">now</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hasData</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="c1"># Generate a title for the dataset. NOTE: if </span>
@@ -150,43 +238,20 @@
         <span class="c1"># Try to access the current month&#39;s folder, if it does not</span>
         <span class="c1"># exist, make it.</span>
         <span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;location&#39;</span><span class="p">]</span>
-        <span class="c1"># root = os.environ[&#39;DATA_CHEST_ROOT&#39;]</span>
-        <span class="c1"># relativePath =  os.path.relpath(root, dir)</span>
-        <span class="c1"># print &quot;Configuring datalogging for&quot;, str(self.device)+&quot; located at&quot;, location</span>
         <span class="k">if</span> <span class="n">location</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
-               
-               <span class="c1"># self.dataSet = dataChest()</span>
-                
-                <span class="c1">#self.dataSet.cd(&quot;&quot;)</span>
-                <span class="c1">#root =   os.path.abspath(self.dataSet.pwd())</span>
                 <span class="n">root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;DATA_CHEST_ROOT&#39;</span><span class="p">]</span>
                 <span class="n">relativePath</span> <span class="o">=</span>  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">root</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">relativePath</span> <span class="o">==</span> <span class="s1">&#39;.&#39;</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Cannot create dataset directly under DATA_CHEST_ROOT.&quot;</span><span class="p">)</span>
-                    
-                <span class="c1">#print &quot;Root Location:&quot;, root</span>
-                <span class="c1">#print &quot;relativePath:&quot;, relativePath</span>
                 <span class="n">path</span> <span class="o">=</span> <span class="n">relativePath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="c1">#print &quot;path:&quot;,path</span>
-                <span class="c1">#self.dataSet.cd(&#39;&#39;)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span> <span class="o">=</span> <span class="n">dataChest</span><span class="p">(</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="c1">#print &quot;path:&quot;, str(path[0])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span> <span class="o">=</span> <span class="n">dataChest</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-                <span class="c1">#print &quot;self.dataSet.pwd():&quot;, self.dataSet.pwd().replace(&quot;/&quot;,&quot;\\&quot;)</span>
-                <span class="c1">#print &quot;location:&quot;,location</span>
                 <span class="n">relativepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">pwd</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">))</span>
-                <span class="c1">#print &quot;second relative path:&quot;, relativePath</span>
-               
                 <span class="n">path</span> <span class="o">=</span> <span class="n">relativePath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">)</span>
                 
                 <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">::]:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
-               
-
-                <span class="c1">#self.dataSet = dataChest(path[0])</span>
-                <span class="c1">#self.dataSet.cd(relativePath)</span>
-                
-                <span class="nb">print</span> <span class="s2">&quot;Configuring datalogging for&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot; located at&quot;</span><span class="p">,</span> <span class="n">location</span>
-                
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">cd</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>  
         <span class="k">if</span> <span class="n">location</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
            <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span> <span class="o">=</span> <span class="n">dataChest</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">now</span><span class="o">.</span><span class="n">year</span><span class="p">))</span>
            <span class="k">try</span><span class="p">:</span>
@@ -218,12 +283,17 @@
             <span class="k">if</span> <span class="n">title</span> <span class="ow">in</span> <span class="n">existingFiles</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">y</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">openDataset</span><span class="p">(</span><span class="n">existingFiles</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">y</span><span class="p">],</span> 
                     <span class="n">modify</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+             
                 <span class="n">foundit</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Existing data set found for </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">.&quot;</span>
-                        <span class="o">%</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">existingFiles</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">y</span><span class="p">]))</span>
+                <span class="c1"># If the number of variables in the data set has changed since last time,</span>
+                <span class="c1"># Then we do not want to use the old dataset.</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">getVariables</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">()):</span>
+                    
+                    <span class="n">foundit</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                     <span class="k">pass</span>
         <span class="c1"># If the dataset does not already exist, we must create it.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">foundit</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Creating dataset for </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span><span class="n">title</span><span class="p">)</span>
             <span class="c1"># Name of the parameter. This is the name of the parameter</span>
             <span class="c1"># displayed on the gui except without spaces or </span>
             <span class="c1"># non-alphanumerical characters.</span>
@@ -234,22 +304,21 @@
             <span class="c1"># For each device, assume it is not connected and we should</span>
             <span class="c1"># not log data until the GUI actually gets readings.</span>
             <span class="c1"># Loop through all parameters in the device.</span>
-            <span class="nb">print</span> <span class="s2">&quot;Setting up datalogging for device&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span>
+            <span class="c1"># print &quot;Setting up datalogging for device&quot;, self.device.getFrame().getTitle()</span>
             <span class="n">nicknames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">()</span>
-            <span class="nb">print</span> <span class="s2">&quot;Nicknames:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nicknames</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">y</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nicknames</span><span class="p">):</span>
                 <span class="c1"># If the name of the parameter has not been defined as</span>
                 <span class="c1"># None in the constructor, then we want to log it.</span>
-                <span class="k">if</span> <span class="n">nicknames</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="c1"># The name of the parameter in the dataset is</span>
                     <span class="c1"># the same name displayed on the GUI except without </span>
                     <span class="c1"># non-alphanumerical characters. Use regular</span>
                     <span class="c1"># expressions to do this.</span>
-                    <span class="n">paramName</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">nicknames</span><span class="p">[</span><span class="n">y</span><span class="p">])</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+                    <span class="n">paramName</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
                     <span class="n">paramName</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\W+&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">paramName</span><span class="p">)</span>
                     <span class="c1"># Create the tuple that defines the parameter.</span>
                     <span class="n">tup</span> <span class="o">=</span> <span class="p">(</span><span class="n">paramName</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;float64&quot;</span><span class="p">,</span>
-                            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getUnits</span><span class="p">()[</span><span class="n">y</span><span class="p">]))</span>
+                            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getUnit</span><span class="p">(</span><span class="n">name</span><span class="p">)))</span>
                     <span class="c1"># Add it to the array of dependent variables.</span>
                     <span class="n">depvars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tup</span><span class="p">)</span>
             <span class="c1"># Get the datestamp from the datachest helper class.</span>
@@ -266,11 +335,6 @@
             <span class="c1"># (independent and dependent) make up the dataset.</span>
             <span class="c1"># DataWidth is used internally only.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="s2">&quot;DataWidth&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nb">vars</span><span class="p">))</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getYLabel</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># Configure the label of the y axis given in the</span>
-                <span class="c1"># device&#39;s constructor.</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="s2">&quot;Y Label&quot;</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getYLabel</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">setDataSet</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="dataChestWrapper.done"><a class="viewcode-back" href="../../mView.dataChestWrapper.html#mView.dataChestWrapper.dataChestWrapper.done">[docs]</a>    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -278,6 +342,7 @@
 <span class="sd">        Run when GUI is exited. Cleanly terminates the dataset </span>
 <span class="sd">        with NaN values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="n">dStamp</span> <span class="o">=</span> <span class="n">dateStamp</span><span class="p">()</span>
         <span class="c1"># If the dataset was being logged.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasData</span><span class="p">:</span>
@@ -292,55 +357,48 @@
                 <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span></div>
                 
 <div class="viewcode-block" id="dataChestWrapper.save"><a class="viewcode-back" href="../../mView.dataChestWrapper.html#mView.dataChestWrapper.dataChestWrapper.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Stores the data&#39;&#39;&#39;</span>
-        <span class="c1"># For all datasets, check if there are readings</span>
-        <span class="c1">#for i in range(0, len(self.devices)):</span>
-       <span class="c1"># dStamp = dateStamp()</span>
-        <span class="c1">#dStamp.utcNowFloat()</span>
-        
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getReadings</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># If the device did not have any readings and now it does</span>
-            <span class="c1"># then we want to create a dataset.</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasData</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">configureDataSets</span><span class="p">()</span>
+        <span class="sd">&#39;&#39;&#39;Stores current data points of all curves.&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasData</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">configureDataSets</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasData</span><span class="p">:</span>
             <span class="n">depvars</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">indepvars</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="nb">vars</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">readings</span> <span class="o">=</span> <span class="p">[]</span>
-
             <span class="n">currentlyLogging</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">())):</span>
+            <span class="n">enabled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;channels&#39;</span><span class="p">]</span>            
+            <span class="n">custUnits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getCustomUnits</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">custUnits</span> <span class="ow">is</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                <span class="n">nickname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">custUnits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getUnit</span><span class="p">(</span><span class="n">nickname</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">custUnits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">custUnits</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="s2">&quot;y_label&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getYLabel</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="s2">&quot;custom_units&quot;</span><span class="p">,</span> <span class="n">custUnits</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">y</span><span class="p">,</span><span class="n">param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getParameters</span><span class="p">()):</span>
                 <span class="c1"># Channels that should be logged</span>
-                <span class="n">enabled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;channels&#39;</span><span class="p">]</span>
-                <span class="n">nickname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">()[</span><span class="n">y</span><span class="p">]</span> 
                 <span class="c1"># This checks if the reading is displayed on the GUI</span>
                 <span class="c1"># if it is not, then it does not include it in</span>
                 <span class="c1"># the dataset.</span>
-                <span class="k">if</span> <span class="n">nickname</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">enabled</span><span class="p">[</span><span class="n">nickname</span><span class="p">]:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">keepLoggingNan</span><span class="o">=</span> <span class="kc">True</span>
-                    <span class="n">currentlyLogging</span> <span class="o">=</span> <span class="kc">True</span>
-                    <span class="n">devReadings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getReadings</span><span class="p">()</span>
-                    <span class="c1"># If the device has readings.</span>
-                    <span class="k">if</span> <span class="n">devReadings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">devReadings</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                            <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">devReadings</span><span class="p">[</span><span class="n">y</span><span class="p">]))</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">param</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">enabled</span><span class="p">[</span><span class="n">param</span><span class="p">]:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">keepLoggingNan</span><span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">currentlyLogging</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                <span class="c1"># If the device has readings.</span>
+                <span class="n">reading</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getReading</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">reading</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">enabled</span><span class="p">[</span><span class="n">param</span><span class="p">]:</span>
+                    <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">reading</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">readings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-
             <span class="c1"># If the device has readings, add data to dataset.</span>
             <span class="k">if</span><span class="p">(</span><span class="n">readings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">currentlyLogging</span><span class="p">):</span>
-              
                 <span class="n">indepvars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dStamp</span><span class="o">.</span><span class="n">utcNowFloat</span><span class="p">())</span>
                 <span class="n">depvars</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">readings</span><span class="p">)</span>
                 <span class="nb">vars</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">indepvars</span><span class="p">)</span>
                 <span class="nb">vars</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">depvars</span><span class="p">)</span>
                 <span class="n">varslist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">getVariables</span><span class="p">()</span>
-                <span class="c1">#print vars</span>
                 <span class="k">try</span><span class="p">:</span>
                       <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">addData</span><span class="p">([</span><span class="nb">vars</span><span class="p">])</span>        
                 <span class="k">except</span><span class="p">:</span>
@@ -348,52 +406,69 @@
                     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: Problem storing data. Will try to reconfigure data sets.&quot;</span>
                           <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">())</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">configureDataSets</span><span class="p">()</span>
-                
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keepLoggingNan</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">currentlyLogging</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="s2">&quot;not logging&quot;</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
-
                 <span class="bp">self</span><span class="o">.</span><span class="n">keepLoggingNan</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="n">currentlyLogging</span> <span class="o">=</span> <span class="kc">False</span></div></div>
 </pre></div>
 
+           </div>
           </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Noah Meltzer.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../index.html">Module code</a><ul>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2017, Author.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
-      
-    </div>
 
-    
+    </section>
 
-    
-  </body>
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
 </html>

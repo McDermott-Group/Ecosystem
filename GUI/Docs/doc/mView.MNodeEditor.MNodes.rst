@@ -7,7 +7,7 @@ Submodules
 .. toctree::
 
    mView.MNodeEditor.MNodes.MCompare
-   mView.MNodeEditor.MNodes.MLabradNode
+   mView.MNodeEditor.MNodes.MDeviceNode
    mView.MNodeEditor.MNodes.MVirtualDeviceNode
    mView.MNodeEditor.MNodes.grapher
    mView.MNodeEditor.MNodes.runningAverage

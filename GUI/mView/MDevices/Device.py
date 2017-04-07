@@ -38,9 +38,9 @@ from sys import getsizeof
 from PyQt4 import QtGui, QtCore
 class Device(MDevice):
     """The device class handles a LabRAD device."""
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
 
-        super(Device, self).__init__(*args)
+        super(Device, self).__init__(*args, **kwargs)
 
         # Get all the stuff from the constructor.
         # Has a the device made an appearance, this is so we dont alert
@@ -128,10 +128,10 @@ class Device(MDevice):
     def onBegin(self):
         #print "onbegin here"
         #self.frame.setNicknames(self.nicknames)
-        
-        self.frame.DataLoggingInfo()['name'] = self.name
-        self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self)
-        self.datachest = self.frame.DataLoggingInfo()['chest']
+        pass
+        #self.frame.DataLoggingInfo()['name'] = self.name
+        #self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self)
+       # self.datachest = self.frame.DataLoggingInfo()['chest']
         # # Each device NEEDS to run on a different thread 
         # # than the main thread (which ALWAYS runs the GUI).
         # # This thread is responsible for querying the devices.
