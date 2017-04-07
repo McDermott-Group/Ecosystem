@@ -260,7 +260,7 @@ class ADRServer(DeviceServer):
                 'Heat Switch':['Heat Switch','addr'],
                 'Compressor':['CP2800 Compressor','addr'],
                 'Pressure Guage':['Varian Guage Controller','addr'],
-                'Log Path': "Z:\\mcdermott-group\\data\\fridgeLogs\\ADR3",
+                'Log Path': ["fridgeLogs"],
                 'Start Compressor Datetime': None,
                 'Stop Compressor Datetime': None
         }
@@ -351,10 +351,10 @@ class ADRServer(DeviceServer):
         _,settingsList = yield reg.dir()
         for setting in settingsList:
             self.ADRSettings[setting] = yield reg.get(setting)
-
+    
     def initLogFiles(self):
         startDatetime = self.ADRSettings['Start Compressor Datetime']
-        self.tempDataChest = dataChest(['fridgeLogs',self.name])
+        self.tempDataChest = dataChest(self.ADRSettings['Log Path'])
         dts = dateStamp()
         iso = startDatetime.isoformat().split('+')[0] # strip timezone (or dateStamp will fail)
         dtstamp = dts.dateStamp(iso)
@@ -499,7 +499,8 @@ class ADRServer(DeviceServer):
         self.logMessages.append( (dt,message,alert) )
         messageWithTimeStamp = dt.strftime("[%m/%d/%y %H:%M:%S] ") + message
         try:
-            fname = self.ADRSettings['Log Path'] + \
+            fname = os.path.join(os.environ['DATA_CHEST_ROOT'], 
+                                    self.tempDataChest.pwd()) + \
                 self.ADRSettings['Start Compressor Datetime'].strftime("\\log_%y%m%d_%H%M.txt")
             with open(fname, 'a') as f:
                 f.write( messageWithTimeStamp + '\n' )
