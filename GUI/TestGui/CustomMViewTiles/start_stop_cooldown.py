@@ -22,6 +22,7 @@ Created on Fri Apr 07 12:33:18 2017
 from PyQt4 import QtGui, QtCore
 from MWeb import web
 from MWidget import MWidget
+
 import time
 import re
 class MStartStopCooldownWidget(MWidget):
@@ -33,14 +34,21 @@ class MStartStopCooldownWidget(MWidget):
         font.setWeight(50)
         font.setKerning(True)
         hbox = self.getHBox()
-        self.cdButton = QtGui.QPushButton("Start Cooldown")
+        self.cdButton = QtGui.QPushButton()
         self.cdButton.setFont(font)
-        self.cdButton.setStyleSheet("background:rgb(70,88,70);color:rgb(189,195, 199)")
+       
         self.cdButton.clicked.connect(self.toggleCD)
         hbox.addWidget(self.cdButton)
-        self.coolDown = False
+        self.coolDown = web.persistentData.persistentDataAccess(None, 'cooldown_mode', default = True)
+        if not self.coolDown:
+             self.cdButton.setStyleSheet("background:rgb(70,88,70);color:rgb(189,195, 199)")
+             self.cdButton.setText("Start Cooldown")
+        else:
+            self.cdButton.setStyleSheet("background:rgb(88,70,70);color:rgb(189,195, 199)")
+            self.cdButton.setText("Stop Cooldown")
         self.stbyLoc = stbyLoc
         self.cdLoc = cdLoc
+        
     def toggleCD(self):
         if self.coolDown:
             msg = "You are about to stop cooldown data collection."
@@ -54,11 +62,14 @@ class MStartStopCooldownWidget(MWidget):
         if result == QtGui.QMessageBox.Ok:
             if self.coolDown:
                 self.coolDown = False
+                web.persistentData.persistentDataAccess(False, 'cooldown_mode')
+
                 loc = self.stbyLoc
                 self.cdButton.setStyleSheet("background:rgb(70,88,70);color:rgb(189,195, 199)")
                 self.cdButton.setText("Start Cooldown")
             else:
                 self.coolDown = True
+                web.persistentData.persistentDataAccess(True, 'cooldown_mode')
                 loc = self.cdLoc
                 self.cdButton.setStyleSheet("background:rgb(88,70,70);color:rgb(189,195, 199)")
                 self.cdButton.setText("Stop Cooldown")
