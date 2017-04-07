@@ -44,7 +44,7 @@ class MDevice(QThread):
     updateSignal = pyqtSignal()
     lock = threading.Lock()
     
-    def __init__(self, name, *args):
+    def __init__(self, name, *args, **kwargs):
         '''Initializes the device:
         
     1. Sets the frame title. 1.
@@ -56,6 +56,8 @@ class MDevice(QThread):
     
    '''
         super(MDevice, self).__init__()
+        self.lockLoggingSettings = kwargs.get("lock_logging_settings", False)
+        self.defaultLogLocation = kwargs.get("default_log_location", None)
         # Create a new MFrame
         web.devices.append(self)
         self.frame = MFrame()
@@ -153,8 +155,8 @@ class MDevice(QThread):
    '''
         # Automatically refresh node data in callQuery
         self.refreshNodeDataInCallQuery = kwargs.get('auto_refresh_node', True)
-        if not self.refreshNodeDataInCallQuery:
-            print self, "will not automatically refresh node data"
+        #if not self.refreshNodeDataInCallQuery:
+            #print self, "will not automatically refresh node data"
         # traceback.print_stack()
         self.onBegin()
         #self.frame.setReadingIndex(self.settingResultIndices)
@@ -170,9 +172,19 @@ class MDevice(QThread):
         self.callQuery()
     def configureDataLogging(self):
          if self.isLogging():
-                print self, "is datalogging"
+                #print self, "is datalogging"
                 self.frame.DataLoggingInfo()['name'] = self.name
                 self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self)
+                self.frame.DataLoggingInfo()['lock_logging_settings'] = self.lockLoggingSettings
+                if self.defaultLogLocation != None:
+                    # If the current directory is a subdirectory of the default,
+                    # then that is ok and the current directory should not be changed.
+                    print "current location:", self.frame.DataLoggingInfo()['location']
+                    print "default:", self.defaultLogLocation
+                    if not(self.defaultLogLocation in self.frame.DataLoggingInfo()['location'] ):
+                        print "Paths not ok"
+
+                        self.frame.DataLoggingInfo()['location'] = self.defaultLogLocation
                 self.datachest = self.frame.DataLoggingInfo()['chest']
     def onBegin(self):
         '''Called at the end of MDevice.begin(). This is called before 

@@ -78,7 +78,8 @@ class MFrame:
                 "dataset"   :     self.dataSet,
                 "channels":     {},
                 "chest"        :      None,
-                "name"           :      self.serverTitle
+                "name"           :      self.serverTitle,
+                "lock_logging_settings" : False
                 }
 
         restoredSettings = web.persistentData.persistentDataAccess(None,"DataLoggingInfo", self.serverTitle)

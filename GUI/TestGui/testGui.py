@@ -1,7 +1,7 @@
 import sys
 sys.dont_write_bytecode = True
 import MGui             # Handles all gui operations. Independent of labrad.
-
+import CustomMViewTiles.start_stop_cooldown as ssc
 #from PyQt4 import QtCore, QtGui
 from PyQt4 import QtCore, QtGui
 from MDevices.Device import Device
@@ -47,12 +47,12 @@ class nViewer:
        # self.devices.append(Random)
         self.gui.addDevice(Random)
         
-        localTemp = Device("Local Temperatures")
+        localTemp = Device("Local Temperatures", lock_logging_settings = True)
         localTemp.connection(cxn)
         localTemp.setServerName("my_server2")
-        localTemp.addParameter("Outside Temperature", "temperature", None)
-        localTemp.addParameter("Outside pressure", "pressure", None)
-        localTemp.addParameter("Humidity", "moisture", None)
+        localTemp.addParameter("Outside Temperature", "temperature", None, log = True)
+        localTemp.addParameter("Outside pressure", "pressure", None, log = True)
+        localTemp.addParameter("Humidity", "moisture", None, log = True)
         
         localTemp.addButton("Madison Weather",  None, "changeLocation", 5)
         localTemp.addButton("St. Paul Weather", None,  "changeLocation", 2)
@@ -69,6 +69,8 @@ class nViewer:
         grapher.begin()
         
         self.gui.addDevice(grapher)
+        self.gui.addWidget(ssc.MStartStopCooldownWidget( 'C:\\Users\\Noah\\Documents\\College\\McDermott\\DatachestRoot\\testBigButton\\cooldown',
+                                                         'C:\\Users\\Noah\\Documents\\College\\McDermott\\DatachestRoot\\testBigButton\\standby'))
        # Start the datalogger. This line can be commented
         #out if no datalogging is required.
        # print self.devices

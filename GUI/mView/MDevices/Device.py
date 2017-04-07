@@ -38,9 +38,9 @@ from sys import getsizeof
 from PyQt4 import QtGui, QtCore
 class Device(MDevice):
     """The device class handles a LabRAD device."""
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
 
-        super(Device, self).__init__(*args)
+        super(Device, self).__init__(*args, **kwargs)
 
         # Get all the stuff from the constructor.
         # Has a the device made an appearance, this is so we dont alert
