@@ -187,6 +187,7 @@ class TetrixBoard(QtGui.QFrame):
         self.timer.start(self.timeoutTime(), self)
 
     def pause(self):
+        self.setFocus()
         if not self.isStarted:
             return
 
