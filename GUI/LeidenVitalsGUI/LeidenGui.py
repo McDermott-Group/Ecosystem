@@ -24,7 +24,7 @@ import MGui # Handles all GUI operations. Independent of LabRAD.
 from MDevices.Device import Device
 from MDevices.Mhdf5Device import Mhdf5Device
 import CustomMViewTiles.start_stop_cooldown as ssc
-
+from CustomMViewTiles.tetris import tetris
 class nViewer:
     gui = None
     devices =[]
@@ -161,6 +161,7 @@ class nViewer:
         grapher.begin()
         
         self.gui.addDevice(grapher)
+        self.gui.addWidget(tetris())
         # Create the gui.
         
         self.gui.startGui('Leiden DR GUI',tele)
