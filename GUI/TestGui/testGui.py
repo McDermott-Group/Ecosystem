@@ -2,6 +2,8 @@ import sys
 sys.dont_write_bytecode = True
 import MGui             # Handles all gui operations. Independent of labrad.
 import CustomMViewTiles.start_stop_cooldown as ssc
+
+
 #from PyQt4 import QtCore, QtGui
 from PyQt4 import QtCore, QtGui
 from MDevices.Device import Device
@@ -12,6 +14,7 @@ import labrad
 import grapher as alexGrapher
 from MNodeEditor.MNodes import runningAverage
 from MNodeEditor import MNodeTree
+from CustomMViewTiles.tetris import tetris
 
 from MNodeEditor.MNodes import MDeviceNode
 
@@ -71,6 +74,7 @@ class nViewer:
         self.gui.addDevice(grapher)
         self.gui.addWidget(ssc.MStartStopCooldownWidget( 'C:\\Users\\Noah\\Documents\\College\\McDermott\\DatachestRoot\\testBigButton\\cooldown',
                                                          'C:\\Users\\Noah\\Documents\\College\\McDermott\\DatachestRoot\\testBigButton\\standby'))
+        self.gui.addWidget(tetris())
        # Start the datalogger. This line can be commented
         #out if no datalogging is required.
        # print self.devices
