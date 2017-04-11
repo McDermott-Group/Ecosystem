@@ -30,7 +30,6 @@ from MNodeEditor.MNodes import MDeviceNode
 from MNodeEditor.MNodes import runningAverage
 
 import labrad
-import labrad.units as units
 import time
 
 from tendo import singleton
@@ -60,7 +59,7 @@ class mViewer:
             time.sleep(2)
             sys.exit(1)
     
-        
+        self.gui = MGui.MGui()
         lm3000 = RS232Device("Light Meter 3000", "COM7", baud = 115200)
         lm3000.addButton("Off", 'b0', message = "You are about to turn off the LED.")
         lm3000.addButton("20%", 'b2')
@@ -71,17 +70,17 @@ class mViewer:
         lm3000.setYLabel("Light Level")
         lm3000.addPlot()
         lm3000.begin()
-        self.devices.append(lm3000)
+        self.gui.addDevice(lm3000)
 
         self.nodeTree = MNodeTree.NodeTree()
         
         lightMeterNode = MDeviceNode.MDeviceNode(lm3000)
         self.nodeTree.addNode(lightMeterNode)
         rawLightOutput = lightMeterNode.getAnchorByName("Light Level")
-        avgLight = lightMeterNode.addAnchor(name = "Average Light Level", type = "input")
+        avgLight = lightMeterNode.addAnchor(name = "Average Light Level", type = "input", terminate = True)
 
         avg = runningAverage.runningAverage()
-        avg.setWindowWidth(2)
+        avg.setWindowWidth(100)
         avgInput = avg.getAnchorByName("data")
         avgOutput = avg.getAnchorByName("running avg")
         
@@ -90,8 +89,8 @@ class mViewer:
         # self.nodeTree.connect(output, virtAvgInput)
          
         # Create the gui.
-        self.gui = MGui.MGui()
-        self.gui.startGui(self.devices, 'Leiden DR GUI', tele)
+        
+        self.gui.startGui('Leiden DR GUI', tele)
         
         
 # In Python, the main class's __init__() IS NOT automatically called.
