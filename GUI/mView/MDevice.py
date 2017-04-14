@@ -70,7 +70,7 @@ class MDevice(QThread):
         self.keepGoing = True
         self.settingResultIndices = []
         
-        self.hardParams = {}
+  
         self.doneLoading = False
         
         #self.memory_tracker = tracker.SummaryTracker()
@@ -369,21 +369,27 @@ class MDevice(QThread):
         precision = kwargs.get('precision', 2)
         show = kwargs.get("show", True)
         units = kwargs.get('units', None)
-
+        precision = kwargs.get('precision', 2)
+        index = kwargs.get('index', None)
+        log = kwargs.get("log", self.isLogging())
         self.frame.addParameter((name, units, precision))
+        self.setReadingIndex(name, index)
+        self.setPrecision(name, precision)
+       
+        
         
         #print "args:", args
         #print "kwargs:", kwargs
-        params = self.onAddParameter(*args, **kwargs)
+        self.setUnit(name, units)
+        self.onAddParameter(*args, **kwargs)
         
         self.frame.setParamVisibility(name, show)
-        if(len(args) < 2):
-            raise TypeError("Too Few arguments. Needs (name, units, precision).")
+        
        
         
         # print "params to be added:", params
         # The kwarg 'log' is can override the default
-        log = kwargs.get("log", self.isLogging())
+        
         self.frame.DataLoggingInfo()['channels'][name] = log
         
 

@@ -23,7 +23,8 @@ from dataChestWrapper import *
 import MGui # Handles all GUI operations. Independent of LabRAD.
 from MDevices.Device import Device
 from MDevices.Mhdf5Device import Mhdf5Device
-
+import CustomMViewTiles.start_stop_cooldown as ssc
+from CustomMViewTiles.tetris import tetris
 class nViewer:
     gui = None
     devices =[]
@@ -153,11 +154,14 @@ class nViewer:
         Flow.addPlot()
         Flow.begin()
         self.gui.addDevice(Flow)
-        
+        self.gui.addWidget(ssc.MStartStopCooldownWidget( 'Z:\\mcdermott-group\\data\\fridgeLogs\\dr2\\cooldown',
+                                                         'Z:\\mcdermott-group\\data\\fridgeLogs\\dr2\\standbyData'))
+
         grapher = Mhdf5Device("Grapher")
         grapher.begin()
         
         self.gui.addDevice(grapher)
+        self.gui.addWidget(tetris())
         # Create the gui.
         
         self.gui.startGui('Leiden DR GUI',tele)

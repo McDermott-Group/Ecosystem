@@ -102,7 +102,7 @@ class Device(MDevice):
         #self.settingArgs.append(arg)
         #self.settingUnits.append(units)
         #self.precisions.append(precision)
-        self.setParamVisibility(parameter, True)
+        
         
         return (parameter, units, precision)
     def connection(self, cxn):

@@ -51,7 +51,7 @@ class RS232Device(MDevice):
         # Default baud rate is 9600.
         self.baud = kwargs.get("baud", 9600)
         
-    def onAddParameter(self, paramName, command, **kwargs):
+    def onAddParameter(self, paramName, command, *args, **kwargs):
         # Look for keyword arguments
         precision = kwargs.get("precision", None)
         units = kwargs.get("units", None)
@@ -63,8 +63,8 @@ class RS232Device(MDevice):
         thisParam["command"] = command
         thisParam["precision"] = precision
         thisParam["units"] = units
-        # Return the tuple in the REQUIRED format.
-        return (paramName, precision, units)
+
+        
 
     def addButton(self, text, command, **kwargs):
         # Look for a message keyword argument
@@ -122,15 +122,11 @@ class RS232Device(MDevice):
 
     def connect(self):
          '''Open the serial port and try to connect to it.'''
-         #print "Querying C"
          try: 
-            #print "Querying D"
             self.port = serial.Serial(self.portname, int(self.baud), timeout=self.timeout, write_timeout = 10)
             self.connected = True
-            #print "Querying E"
             return self.port
          except:
-            #print "Querying F"
             traceback.print_exc()
             self.connected = False
             print "ERROR: port:", self.port, "will try again."
@@ -142,48 +138,37 @@ class RS232Device(MDevice):
         should set the readings by calling self.frame.setReadings([readings]). 
         Where [readings] is an array of readings.
     '''
-      #  print "Querying"
         try:
-        #    print "Querying A"
             readings = []
             if not self.connected:
-          #      print "Querying B"
                 # if not connected, connect.
                 self.connect()
-          #      print "Querying G"
             # If self.port is not None.
             if self.port is not None:
-           #     print "Querying H"
                 # For each parameter, get readings
-                #print "param info:", self.paramInfo
-                for key in self.hardParams.keys():
-           #         print "Querying I"
+                for param in self.getParameters():
+                    print "param:",param
                     # Flush anything that might on the port.
                     self.port.flush()
-             #       print "Querying J"
                     # Write the command to the port.
-                    #print "self.paramInfo[self.paramInfo.keys()[i]]['command']:", self.paramInfo[self.paramInfo.keys()[i]]['command']
-                    self.port.write(self.paramInfo[key]['command'])
-             #       print "Querying K"
-                    # Wait while there is nothing on the port.
-                    while(not self.port.in_waiting > 0):
-                        time.sleep(0.01)
-               #     print "Querying L"
-                    # While there is stuff on the port, read it.
-                    reading = self.port.readline()
-                #    print "Querying M"
-                    # Strip whitespace and newline characters off the received value.
-                    readings.append(int(reading.strip()))
-                # Tell the device what the readings were.\
-                #print "-------Readings:", readings
-            self.setReadings(readings)
+                    command = self.paramInfo[param]['command']
+                    if command != None:
+                        self.port.write(self.paramInfo[param]['command'])
+                        # Wait while there is nothing on the port.
+                        while(not self.port.in_waiting > 0):
+                            time.sleep(0.01)
+                        # While there is stuff on the port, read it.
+                        reading = self.port.readline()
+                        # Strip whitespace and newline characters off the received value.
+                        reading = int(reading.strip())
+                    # Tell the device what the readings were.
+                        self.setReading(param, reading)
         except:
             try:
                 self.port.close()
             except:
                 pass
             traceback.print_exc()
-            #print "Serial Device:", self, "on", self.port, "was disconnected."
             self.connected = False
             pass
     def close(self):
