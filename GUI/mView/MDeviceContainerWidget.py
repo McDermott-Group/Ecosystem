@@ -233,7 +233,7 @@ class MDeviceContainerWidget(QtGui.QFrame):
                             #print "turning it red", self.device, key
                             self.params[key]["lcd_readout"].setStyle("color:rgb(210, 100, 10);\n")
                             self.params[key]["nickname_label"].setStyleSheet("color:rgb(210, 100, 10);\n")
-                            self.params[param]["unit_label"].setStyleSheet("color:rgb(210, 100, 10);\n")
+                            self.params[key]["unit_label"].setStyleSheet("color:rgb(210, 100, 10);\n")
                             self.isRed[key] = True
                         elif self.isRed.get(key, False) and not self.device.isOutOfRange(key):
                             #print "turning it white"

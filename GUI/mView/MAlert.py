@@ -129,7 +129,7 @@ class MAlert:
                     for key in self.mailSent:
                         self.mailSent[key] = False
                     success, address = self.tele.send_sms(
-                        key, 
+                        str(device), 
                         str(self.message), 
                         [str(person).strip() for person in people.split(',')],
                         "labrad_physics")
