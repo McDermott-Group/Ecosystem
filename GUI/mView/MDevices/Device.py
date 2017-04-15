@@ -299,8 +299,8 @@ class Device(MDevice):
 #                        print "---------------------"
 #                        print "name:", name                        
 #                        print "units:", u
-#                        print "value:", reading._value
-                        self.setReading(name, reading._value)
+#                        print "value:", reading[u]
+                        self.setReading(name, reading[u])
                         self.setUnit(name, u)
                         
                     elif type(reading) is list:
@@ -313,7 +313,7 @@ class Device(MDevice):
                                     rd = rd.inUnitsOf(preferredUnits)
                                 u = rd.units
          
-                                self.setReading(name, rd._value)
+                                self.setReading(name, rd[u])
                                 self.setUnit(name, u)
                                 #precisions.append(self.precisions[i])
                             else:
