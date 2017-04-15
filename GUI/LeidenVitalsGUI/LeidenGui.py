@@ -75,12 +75,17 @@ class nViewer:
         LeidenDRTemperature = Device("Dilution Unit Temperatures")
         LeidenDRTemperature.connection(cxn)
         LeidenDRTemperature.setServerName("leiden_dr_temperature")
+        
+       
         LeidenDRTemperature.addParameter("Still Temperature",
                 "still_temperature", None)
         LeidenDRTemperature.addParameter("Exchange Temperature",
                 "exchange_temperature", None)
+
         LeidenDRTemperature.addParameter("Mix Temperature",
                 "mix_temperature", None)
+
+
         LeidenDRTemperature.addPlot()
         LeidenDRTemperature.begin()
         LeidenDRTemperature.setYLabel("Temperature")
@@ -99,9 +104,9 @@ class nViewer:
         Vacuum = Device("Vacuum")
         Vacuum.connection(cxn)
         Vacuum.setServerName("pfeiffer_vacuum_maxigauge")
-        Vacuum.addParameter("OVC Pressure", "get_pressures", None, index = 3)
-        Vacuum.addParameter("IVC Pressure", "get_pressures", None, index = 4)
-        Vacuum.addParameter("Still Pressure", "get_pressures", None, index = 5)
+        Vacuum.addParameter("OVC Pressure", "get_pressures", None, index = 3, precision = 4)
+        Vacuum.addParameter("IVC Pressure", "get_pressures", None, index = 4, precision = 4)
+        Vacuum.addParameter("Still Pressure", "get_pressures", None, index = 5, precision = 4)
         Vacuum.setYLabel("Pressure")
         Vacuum.selectDeviceCommand("select_device", 0)
         Vacuum.addPlot()
@@ -132,13 +137,13 @@ class nViewer:
                 None,
                 "elapsed_time", None)
         Compressor.addParameter("Input Water Temperature",
-                "current_temperatures_only", None, index =0)
+                "current_temperatures_only", None, index =0, units = 'degC')
         Compressor.addParameter("Output Water Temperature",
-                "current_temperatures_only", None, index =1)
+                "current_temperatures_only", None, index =1, units = 'degC')
         Compressor.addParameter("Helium Temperature",
-                "current_temperatures_only", None, index =2)
+                "current_temperatures_only", None, index =2, units = 'degC')
         Compressor.addParameter("Oil Temperature",
-                "current_temperatures_only", None, index =3)
+                "current_temperatures_only", None, index =3, units = 'degC')
         Compressor.selectDeviceCommand("select_device", 0)
         Compressor.setYLabel("Temperature")
         Compressor.addPlot()

@@ -89,10 +89,10 @@ class MFrame:
         self.parameters = {}
         if restoredSettings != None:
             self.datalogsettingsDict = restoredSettings
-        
-        
         self.node = None
         self.container = None
+        # Keeps track of order of parameters on GUI
+        self.paramKeyOrder = []
     def setTitle(self, title):
        # print "Set title:", title
         self.serverTitle = title
@@ -182,7 +182,7 @@ class MFrame:
 
     def getReadingIndex(self, name):
         return self.parameters[name].get('reading_index', None)
-       
+   
     def raiseError(self, msg):
         self.error = True
         self.errmsg = msg
@@ -222,6 +222,9 @@ class MFrame:
             else:
                 items.append(None)
         return items
+    def getParamKeyOrder(self):
+        return self.paramKeyOrder
+        
     def getCustomUnits(self):
         return self.custUnits
 
@@ -361,7 +364,10 @@ class MFrame:
 #        self.precisions.append(params[1])
 #        self.units.append(params[2])
 #        self.readings.append(None)
+        order = len(self.parameters)
+        
         self.parameters[params[0]]={"name":params[0], "reading":None, "units":params[1], "precision":params[2], "out_of_range":False}
+        self.paramKeyOrder.append(params[0])
         #print "---------- add parameter NICKNAMES WAS SET", self.parameters
     def setParamVisibility(self, param, visible):
         '''Set whether or not a parameter shows up on the GUI.'''

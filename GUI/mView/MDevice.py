@@ -375,28 +375,15 @@ class MDevice(QThread):
         self.frame.addParameter((name, units, precision))
         self.setReadingIndex(name, index)
         self.setPrecision(name, precision)
-       
-        
-        
-        #print "args:", args
-        #print "kwargs:", kwargs
         self.setUnit(name, units)
         self.onAddParameter(*args, **kwargs)
-        
         self.frame.setParamVisibility(name, show)
-        
-       
-        
-        # print "params to be added:", params
-        # The kwarg 'log' is can override the default
-        
         self.frame.DataLoggingInfo()['channels'][name] = log
-        
-
-        
-    def logData(self, b, channels = None):
-        if channels!= None:
-            self.frame.DataLoggingInfo['channels'] = channels
+  
+    def logData(self, b):
+        """Enable or disable datalogging for the device."""
+        #if channels!= None:
+        #    self.frame.DataLoggingInfo['channels'] = channels
         self.frame.enableDataLogging(b)
         
     def __str__(self):

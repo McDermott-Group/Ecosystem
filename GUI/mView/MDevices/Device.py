@@ -84,7 +84,7 @@ class Device(MDevice):
         self.keepGoing = True
         
         self.frame.setTitle(self.name)
-        
+        self.preferredUnits = {}
 
     def setServerName(self, name):
         self.serverName = name
@@ -94,7 +94,7 @@ class Device(MDevice):
         units = kwargs.get('units', None)
         index = kwargs.get('index', None)
         self.frame.DataLoggingInfo()['channels'][parameter] = kwargs.get('log', True)
-        
+        self.setPreferredUnit(parameter,units)
         self.setCommand(parameter, [setting, arg])
         self.setReadingIndex(parameter, index)
         self.setPrecision(parameter, precision)
@@ -160,7 +160,10 @@ class Device(MDevice):
         # Datalogging must be enabled if we want to plot data.
         self.frame.enableDataLogging(True)
         return self.frame.getPlot()
-
+    def getPreferredUnit(self, name):
+        return self.preferredUnits[name]
+    def setPreferredUnit(self, name, unit):
+        self.preferredUnits[name] = unit
     def connect(self):  
         """Connect to the device."""
         try:
@@ -291,7 +294,8 @@ class Device(MDevice):
                     if isinstance(reading, Value):
                         #print "Received labrad Value type"
                         
-                        preferredUnits = self.getUnit(name)
+                        preferredUnits = self.getPreferredUnit(name)
+                        #print "PreferredUnits:", preferredUnits
                         if preferredUnits is not None and \
                                 reading.isCompatible(preferredUnits):
                             reading = reading.inUnitsOf(preferredUnits)
@@ -307,7 +311,7 @@ class Device(MDevice):
                         for j in range(len(reading)):
                             rd = reading[j]
                             if isinstance(rd, Value):
-                                preferredUnits = self.getUnit(name)
+                                preferredUnits = self.getPreferredUnit(name)
                                 if preferredUnits is not None and \
                                         rd.isCompatible(preferredUnits):
                                     rd = rd.inUnitsOf(preferredUnits)

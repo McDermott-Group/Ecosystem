@@ -15,9 +15,10 @@ class MDeviceContainerWidget(QtGui.QFrame):
 
         device.setContainer(self)
         
-        self.nicknameLabels = []
-        self.unitLabels = []
+        #self.nicknameLabels = []
+        #self.unitLabels = []
         self.lcds = []
+        self.params = {}
         self.device = device
         self.dc = None
         
@@ -71,27 +72,30 @@ class MDeviceContainerWidget(QtGui.QFrame):
 
         grid.addLayout(buttonLayout, 0, 1, 1 , 2)
         
-        self.nicknames = device.getFrame().getNicknames()
+        self.nicknames = device.getFrame().getParamKeyOrder()
         for i, nickname in enumerate(self.nicknames):
             if nickname != None:
+                self.params[nickname] = {}
                 y = i+1
                 label = QtGui.QLabel(nickname, self)
                 label.setFont(self.font)
                 label.setWordWrap(True)
                 label.setStyleSheet("color:rgb(189, 195, 199);")
                 grid.addWidget(label, y, 0)
-                self.nicknameLabels.append(label)
-                
+                #self.nicknameLabels.append(label)
+                self.params[nickname]["nickname_label"] = label
               
                 units = QtGui.QLabel('')
                 grid.addWidget(units, y, 2)
                 units.setFont(self.fontBig)
                 units.setStyleSheet("color:rgb(189, 195, 199);")
-                self.unitLabels.append(units)
+               
+                self.params[nickname]["unit_label"] = units
                 
                 #lcd = QtGui.QLCDNumber(self)
                 lcd = MReadout(self)
                 self.lcds.append(lcd)
+                self.params[nickname]["lcd_readout"] = lcd
                 lcd.getLCD().setNumDigits(11)
                 lcd.getLCD().setSegmentStyle(QtGui.QLCDNumber.Flat)
                 lcd.getLCD().display("-")
@@ -130,6 +134,7 @@ class MDeviceContainerWidget(QtGui.QFrame):
         label = QtGui.QLabel('Untitled', self)
         lcd = QtGui.QLCDNumber(self)
         units = QtGui.QLabel('')
+        self.params[param] = {}
         if (not self.device.getFrame().isParamVisible(param)):
             lcd.hide()
             label.hide()
@@ -138,7 +143,7 @@ class MDeviceContainerWidget(QtGui.QFrame):
         label.setWordWrap(True)
         label.setStyleSheet("color:rgb(189, 195, 199);")
         self.grid.addWidget(label,self.grid.rowCount(), 0)
-        self.nicknameLabels.append(label)
+        self.params[param]["nickname_label"] = label
         
       
        
@@ -146,8 +151,9 @@ class MDeviceContainerWidget(QtGui.QFrame):
         
         units.setFont(self.fontBig)
         units.setStyleSheet("color:rgb(189, 195, 199);")
-        self.unitLabels.append(units)
+        self.params[param]["unit_label"] = units
         
+        self.params[param]["lcd_readout"] = lcd
         self.lcds.append(lcd)
         lcd.setNumDigits(11)
         lcd.setSegmentStyle(QtGui.QLCDNumber.Flat)
@@ -205,7 +211,7 @@ class MDeviceContainerWidget(QtGui.QFrame):
                 parameters = self.device.getParameters()
                 while len(nicknames) > len(self.lcds):
                         #print "device:", self.device
-                       #print "readings:", readings
+                        #print "readings:", readings
                         #print "len(self.lcds:)", len(self.lcds)
                         #print "nicknames:", self.device.getFrame().nicknames
                         difference = len(readings)- len(self.lcds)
@@ -225,15 +231,15 @@ class MDeviceContainerWidget(QtGui.QFrame):
                         
                         if self.device.isOutOfRange(key) and not self.isRed.get(key, False):
                             #print "turning it red", self.device, key
-                            self.lcds[y].setStyle("color:rgb(210, 100, 10);\n")
-                            self.nicknameLabels[y].setStyleSheet("color:rgb(210, 100, 10);\n")
-                            self.unitLabels[y].setStyleSheet("color:rgb(210, 100, 10);\n")
+                            self.params[key]["lcd_readout"].setStyle("color:rgb(210, 100, 10);\n")
+                            self.params[key]["nickname_label"].setStyleSheet("color:rgb(210, 100, 10);\n")
+                            self.params[param]["unit_label"].setStyleSheet("color:rgb(210, 100, 10);\n")
                             self.isRed[key] = True
                         elif self.isRed.get(key, False) and not self.device.isOutOfRange(key):
                             #print "turning it white"
-                            self.lcds[y].setStyle("color:rgb(189, 195, 199);")
-                            self.nicknameLabels[y].setStyleSheet("color:rgb(189, 195, 199);")
-                            self.unitLabels[y].setStyleSheet("color:rgb(189, 195, 199);")
+                            self.params[key]["lcd_readout"].setStyle("color:rgb(189, 195, 199);")
+                            self.params[key]["nickname_label"].setStyleSheet("color:rgb(189, 195, 199);")
+                            self.params[key]["unit_label"].setStyleSheet("color:rgb(189, 195, 199);")
                             self.isRed[key] = False
                         try:
                             precision = self.device.getPrecision(key)
@@ -255,23 +261,24 @@ class MDeviceContainerWidget(QtGui.QFrame):
                                 #print "it is a float"
                                 
                                 if not math.isnan(param['reading']):
-                                    self.lcds[y].display(format.format(param['reading']))
+                                    self.params[key]["lcd_readout"].display(format.format(param['reading']))
                                 else:
-                                    self.lcds[y].display("No Reading")
+                                    self.params[key]["lcd_readout"].display("No Reading")
                                 
                             else:
                                 #print "not a float", type(param['reading'])
-                                self.lcds[y].display(param['reading'])
+                                self.params[key]["lcd_readout"].display(param['reading'])
                                 
                         except:
                             traceback.print_exc()
-                        if len(self.unitLabels)>y:
-                            unit = frame.getUnit(key)
-                            #print "DEVICE CONTAINER WIDGET:", unit
-                            if unit != None:
-                                self.unitLabels[y].setText(str(unit))
+                        
+                        
+                        unit = frame.getUnit(key)
+                        #print "DEVICE CONTAINER WIDGET:", unit
+                        if unit != None:
+                            self.params[key]["unit_label"].setText(str(unit))
                     else:
-                        self.lcds[y].hide()
-                        self.nicknameLabels[y].hide()
-                        self.unitLabels[y].hide()
+                        self.params[key]["lcd_readout"].hide()
+                        self.params[key]["nickname_label"].hide()
+                        self.params[key]["unit_label"].hide()
 

@@ -102,15 +102,22 @@ class mGraph(QtGui.QWidget):
         self.lineSelect = MCheckableComboBox()
         self.lineSelect.setSizeAdjustPolicy(0)
         
-        self.autoscaleCheckBox = QtGui.QCheckBox("Auto Ranging", self)
+        self.autoscaleCheckBox = QtGui.QCheckBox("Auto Ranging")
         self.autoscaleCheckBox.setChecked(True)
         self.autoscaleCheckBox.clicked.connect(self.plot)
-        self.refreshColors = QtGui.QPushButton("Randomize Colors", self)
+        self.refreshColors = QtGui.QPushButton("Randomize Colors")
         self.refreshColors.clicked.connect(self.generateColors)
-        self.setY100 = QtGui.QPushButton("100% Y Axis", self)
+        self.setY100 = QtGui.QPushButton("Auto Y Axis")
         self.setY100.clicked.connect(self.yAxTo100)
-        self.lockYAx = QtGui.QCheckBox("Lock Y Axis", self)
+        self.setX100 = QtGui.QPushButton("Auto X Axis")
+        self.setX100.clicked.connect(self.xAxTo100)
+        self.lockYAx = QtGui.QCheckBox("Lock Y Axis")
         self.lockYAx.setChecked(True)
+        self.lockYAx.clicked.connect(self.lockYAxisClicked)
+        self.lockXAx = QtGui.QCheckBox("Lock X Axis")
+        self.lockXAx.setChecked(False)
+        self.lockXAx.clicked.connect(self.lockXAxisClicked)
+
         
         buttonLayout1 = QtGui.QHBoxLayout()
         buttonLayout1.addWidget(self.hideButton)
@@ -130,7 +137,9 @@ class mGraph(QtGui.QWidget):
         buttonLayout3 = QtGui.QHBoxLayout()
         buttonLayout3.addWidget(self.autoscaleCheckBox)
         buttonLayout3.addWidget(self.lockYAx)
+        buttonLayout3.addWidget(self.lockXAx)
         buttonLayout3.addWidget(self.setY100)
+        buttonLayout3.addWidget(self.setX100)
         buttonLayout3.addWidget(self.refreshColors)
         buttonLayout3.addStretch(0)
         
@@ -147,6 +156,8 @@ class mGraph(QtGui.QWidget):
         self.refreshColors.setFont(self.dropdownFont)
         self.lockYAx.setFont(self.dropdownFont)
         self.setY100.setFont(self.dropdownFont)
+        self.lockXAx.setFont(self.dropdownFont)
+        self.setX100.setFont(self.dropdownFont)
         self.initialized = False
         
         mainLayout = QtGui.QVBoxLayout()
@@ -329,9 +340,29 @@ class mGraph(QtGui.QWidget):
             self.autoscaleCheckBox.setChecked(False)
         if self.lockYAx.isChecked():
             self.yAxTo100()
-    
+
+        if self.lockXAx.isChecked():
+            self.xAxTo100()
+
     def yAxTo100(self):
         self.p.enableAutoRange(axis = 'y')
+    def xAxTo100(self):
+        self.p.enableAutoRange(axis = 'x')
+    def lockXAxisClicked(self):
+        
+        
+        self.lockYAx.setChecked(False)
+        self.lockXAx.setChecked(True)
+      
+        self.processRangeChangeSig = False
+        self.rangeChanged()
+        self.processRangeChangeSig = True
+    def lockYAxisClicked(self):
+        self.lockYAx.setChecked(True)
+        self.lockXAx.setChecked(False)
+        self.processRangeChangeSig = False
+        self.rangeChanged()
+        self.processRangeChangeSig = True
     def show(self):
         if self.hidden:
             self.togglePlot()
