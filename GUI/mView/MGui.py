@@ -21,6 +21,7 @@ __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
 import sys
+sys.dont_write_bytecode=True
 import math
 import atexit
 import traceback

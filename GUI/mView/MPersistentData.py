@@ -23,7 +23,8 @@ __status__ = "Beta"
 import cPickle as pickle
 import traceback 
 import os
-
+import sys
+sys.dont_write_bytecode=True
 
 class MPersistentData:
 

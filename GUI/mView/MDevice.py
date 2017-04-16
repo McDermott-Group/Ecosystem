@@ -58,6 +58,7 @@ class MDevice(QThread):
         super(MDevice, self).__init__()
         self.lockLoggingSettings = kwargs.get("lock_logging_settings", False)
         self.defaultLogLocation = kwargs.get("default_log_location", None)
+        self.dataType = kwargs.get("data_type", "float32")
         # Create a new MFrame
         web.devices.append(self)
         self.frame = MFrame()
@@ -174,7 +175,7 @@ class MDevice(QThread):
          if self.isLogging():
                 #print self, "is datalogging"
                 self.frame.DataLoggingInfo()['name'] = self.name
-                self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self)
+                self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self, data_type = self.dataType)
                 self.frame.DataLoggingInfo()['lock_logging_settings'] = self.lockLoggingSettings
                 if self.defaultLogLocation != None:
                     # If the current directory is a subdirectory of the default,

@@ -72,7 +72,7 @@ class nViewer:
         PT1000s.begin()
         self.gui.addDevice(PT1000s)
 
-        LeidenDRTemperature = Device("Dilution Unit Temperatures")
+        LeidenDRTemperature = Device("Dilution Unit Temperatures", data_type = 'float16')
         LeidenDRTemperature.connection(cxn)
         LeidenDRTemperature.setServerName("leiden_dr_temperature")
         
@@ -91,7 +91,7 @@ class nViewer:
         LeidenDRTemperature.setYLabel("Temperature")
         self.gui.addDevice(LeidenDRTemperature)
         
-        LeidenDRTemperature = Device("Mix Pt1000 Temperature")
+        LeidenDRTemperature = Device("Mix Pt1000 Temperature", data_type = 'float16')
         LeidenDRTemperature.connection(cxn)
         LeidenDRTemperature.setServerName("leiden_dr_temperature")
         LeidenDRTemperature.addParameter("Mix Temperature",
@@ -101,7 +101,7 @@ class nViewer:
         LeidenDRTemperature.setYLabel("Temperature")
         self.gui.addDevice(LeidenDRTemperature)
 
-        Vacuum = Device("Vacuum")
+        Vacuum = Device("Vacuum", data_type = 'float16')
         Vacuum.connection(cxn)
         Vacuum.setServerName("pfeiffer_vacuum_maxigauge")
         Vacuum.addParameter("OVC Pressure", "get_pressures", None, index = 3, precision = 4)
@@ -113,7 +113,7 @@ class nViewer:
         Vacuum.begin()
         self.gui.addDevice(Vacuum)
 
-        Temperature = Device("Water Temperature")
+        Temperature = Device("Water Temperature", data_type = 'float16')
         Temperature.connection(cxn)
         Temperature.setServerName("omega_temperature_monitor")
         Temperature.addParameter("Exteranal Water Temperature",
@@ -124,7 +124,7 @@ class nViewer:
         Temperature.begin()
         self.gui.addDevice(Temperature)
 
-        Compressor = Device("Compressor")
+        Compressor = Device("Compressor", data_type = 'float16')
         Compressor.connection(cxn)
         Compressor.setServerName("cp2800_compressor")
         Compressor.addButton("Turn Off",
@@ -150,7 +150,7 @@ class nViewer:
         Compressor.begin()
         self.gui.addDevice(Compressor)
 
-        Flow = Device("Water Flow")
+        Flow = Device("Water Flow", data_type = 'float16')
         Flow.connection(cxn)
         Flow.setServerName("omega_ratemeter")
         Flow.addParameter("External Water Flow Rate", "get_rate")

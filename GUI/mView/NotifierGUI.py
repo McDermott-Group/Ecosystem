@@ -25,7 +25,7 @@ __status__ = "Beta"
 # description = Allows user to configure notifications
 """
 import sys
-sys.dont_write_bytecode = True
+
 from PyQt4 import QtCore, QtGui
 from MWeb import web
 import inspect
@@ -33,7 +33,7 @@ import cPickle as pickle
 import os
 import inspect
 import traceback 
-
+sys.dont_write_bytecode = True
 class NotifierGUI(QtGui.QDialog):
     
     def __init__(self, parent = None):

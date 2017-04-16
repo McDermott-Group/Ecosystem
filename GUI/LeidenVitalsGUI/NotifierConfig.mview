@@ -2,7 +2,7 @@
 S'Vacuum:IVC Pressure'
 p2
 (lp3
-I00
+I01
 aF0
 aF0.10000000000000001
 acsip
@@ -17,9 +17,9 @@ ttRp7
 asS'Compressor:Output Water Temperature'
 p8
 (lp9
-I00
-aF274
-aF314
+I01
+aF0.84999999999999998
+aF40.850000000000001
 ag4
 (g5
 S'QString'
@@ -29,7 +29,7 @@ ttRp11
 asS'Dilution Unit Temperatures:Mix Temperature'
 p12
 (lp13
-I00
+I01
 aF1
 aF100
 ag4
@@ -41,7 +41,7 @@ ttRp15
 asS'Dilution Unit Temperatures:Exchange Temperature'
 p16
 (lp17
-I00
+I01
 aF10
 aF1000
 ag4
@@ -64,13 +64,13 @@ ttRp22
 asS'Water Temperature:Exteranal Water Temperature'
 p23
 (lp24
-I00
+I01
 aF1
 aF20
 ag4
 (g5
 S'QString'
-(VIVAN_EMAIL
+(VIVAN_EMAIL,alex,NOAH,NOAH_CELL,ED_EMAIL,CHRIS_CELL,CHRIS_EMAIL,NATE_EMAIL,NATE_CELL,RYAN_CELL,RYAN_EMAIL,JOHN_CELL,JOHN_EMAIL,MATT_CELL,MATT_EMAIL,ROBERTMCD
 p25
 ttRp26
 asS'Compressor:Helium Temperature'
@@ -88,8 +88,8 @@ ttRp30
 asS'Water Flow:External Water Flow Rate'
 p31
 (lp32
-I00
-aF1.2
+I01
+aF1
 aF3
 ag4
 (g5
@@ -111,7 +111,7 @@ ttRp37
 asS'Vacuum:OVC Pressure'
 p38
 (lp39
-I00
+I01
 aF0
 aF0.10000000000000001
 ag4
@@ -123,7 +123,7 @@ ttRp41
 asS'Dilution Unit Temperatures:Still Temperature'
 p42
 (lp43
-I00
+I01
 aF100
 aF10000
 ag4
@@ -152,23 +152,24 @@ aS''
 ag4
 (g5
 S'QString'
-(V
-ttRp51
+(VIVAN_EMAIL,alex,NOAH,NOAH_CELL,ED_EMAIL,CHRIS_CELL,CHRIS_EMAIL,NATE_EMAIL,NATE_CELL,RYAN_CELL,RYAN_EMAIL,JOHN_CELL,JOHN_EMAIL,MATT_CELL,MATT_EMAIL,ROBERTMCD
+p51
+ttRp52
 asS'Compressor:Input Water Temperature'
-p52
-(lp53
-I00
-aF274
-aF294
+p53
+(lp54
+I01
+aF0.84999999999999998
+aF20.850000000000001
 ag4
 (g5
 S'QString'
 (VIVAN_EMAIL
-p54
-ttRp55
+p55
+ttRp56
 asS'Compressor:Oil Temperature'
-p56
-(lp57
+p57
+(lp58
 I00
 aF1
 aF50
@@ -176,6 +177,6 @@ ag4
 (g5
 S'QString'
 (VIVAN_EMAIL
-p58
-ttRp59
+p59
+ttRp60
 as.

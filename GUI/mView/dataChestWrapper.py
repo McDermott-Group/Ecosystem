@@ -32,14 +32,16 @@ from dateStamp import *
 from dataChest import *
 import os
 import traceback
-from sys import getsizeof
+import numpy as np
+import sys
+sys.dont_write_bytecode=True
 class dataChestWrapper:
     """
     The dataChestWrapper class handles all datalogging. An instance 
     of dataChestWrapper should be created in the main class in order to
     begin datalogging.
     """
-    def __init__(self, device):
+    def __init__(self, device, **kwargs):
         """Initiallize the dataChest."""
         # Define the current time.
        
@@ -52,7 +54,7 @@ class dataChestWrapper:
         self.dataSet = None
         
         # The done function must be called when the GUI exits.
-        
+        self.dataType = kwargs.get("data_type", 'float32')
         self.dataSet = None
         self.hasData = False
         self.keepLoggingNan = True
@@ -213,7 +215,8 @@ class dataChestWrapper:
                     # Create the tuple that defines the parameter.
                     #print self.device, "device units: ", self.device.getFrame().getUnits()
                     #print "nicknames:", nicknames
-                    tup = (paramName, [1], "float64",
+                    print self.device, "datatype:", self.dataType
+                    tup = (paramName, [1], self.dataType,
                             str(self.device.getUnit(name)))
                     # Add it to the array of dependent variables.
                     depvars.append(tup)
@@ -326,7 +329,9 @@ class dataChestWrapper:
                 indepvars.append(self.dStamp.utcNowFloat())
                 depvars.extend(readings)
                 vars.extend(indepvars)
-                vars.extend(depvars)
+
+                newdepvars = [getattr(np, self.dataType)(var) for var in depvars]
+                vars.extend(newdepvars)
                 varslist = self.dataSet.getVariables()
                 #print vars
                 try:
@@ -336,6 +341,8 @@ class dataChestWrapper:
                     print("%s: Problem storing data. Will try to reconfigure data sets."
                           %self.device.getFrame().getTitle())
                     self.configureDataSets()
+
+
                 
             if self.keepLoggingNan and not currentlyLogging:
                 print self.device, "not logging"

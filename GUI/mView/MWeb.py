@@ -23,6 +23,8 @@ __status__ = "Beta"
 import traceback
 import inspect
 import MPersistentData
+import sys
+sys.dont_write_bytecode=True
 class web:
     """
     Organizes global variables. Allows all other classes to easily
