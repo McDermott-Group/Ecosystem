@@ -89,7 +89,7 @@ asS'Water Flow:External Water Flow Rate'
 p31
 (lp32
 I01
-aF1
+aF1.2
 aF3
 ag4
 (g5
@@ -152,12 +152,11 @@ aS''
 ag4
 (g5
 S'QString'
-(VIVAN_EMAIL,alex,NOAH,NOAH_CELL,ED_EMAIL,CHRIS_CELL,CHRIS_EMAIL,NATE_EMAIL,NATE_CELL,RYAN_CELL,RYAN_EMAIL,JOHN_CELL,JOHN_EMAIL,MATT_CELL,MATT_EMAIL,ROBERTMCD
-p51
-ttRp52
+(V
+ttRp51
 asS'Compressor:Input Water Temperature'
-p53
-(lp54
+p52
+(lp53
 I01
 aF0.84999999999999998
 aF20.850000000000001
@@ -165,11 +164,11 @@ ag4
 (g5
 S'QString'
 (VIVAN_EMAIL
-p55
-ttRp56
+p54
+ttRp55
 asS'Compressor:Oil Temperature'
-p57
-(lp58
+p56
+(lp57
 I00
 aF1
 aF50
@@ -177,6 +176,6 @@ ag4
 (g5
 S'QString'
 (VIVAN_EMAIL
-p59
-ttRp60
+p58
+ttRp59
 as.
