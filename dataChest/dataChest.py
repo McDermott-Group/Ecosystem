@@ -50,13 +50,13 @@ VALID_PARAMETER_TYPES = ["int", "long", "float", "complex", "bool",
                          "bool_", "int8", "int16", "int32", "int64",
                          "uint8", "uint16", "uint32", "uint64",
                          "float16", "float32", "float64",
-                         "complex64", "complex128", "ndarray"]
+                         "complex64", "complex128"]
 
 TYPE_CASTING_OBJECTS = [int, long, float, complex, bool, list,
                             str, unicode, tuple, dict, np.bool_, np.int8, np.int16,
                             np.int32, np.int64, np.uint8, np.uint16,
                             np.uint32, np.uint64, np.float16, np.float32,
-                            np.float64, np.complex64, np.complex128, np.array]
+                            np.float64, np.complex64, np.complex128]
 
 class dataChest(dateStamp):
 
@@ -79,7 +79,8 @@ class dataChest(dateStamp):
   def _initializeRoot(self, path):
     if isinstance(path, str):
       if len(path)>0:
-        if path not in self.ls()[1]:
+        directories = [x.lower() for x in self.ls()[1]]
+        if path.lower() not in directories:
           self.mkdir(path)
         self.cd(path)
         self.root = self.cwdPath
@@ -89,7 +90,7 @@ class dataChest(dateStamp):
       if len(path)>=1:
         for ii in range(0, len(path)):
           if len(path[ii]) > 0:
-            if path[ii] not in self.ls()[1]:
+            if path[ii].lower() not in directories:
               self.mkdir(path[ii])
             self.cd(path[ii])
             self.root = self.cwdPath
@@ -104,9 +105,9 @@ class dataChest(dateStamp):
 
   def mkdir(self, directoryToMake):
     """Makes a new directory within the current working directory."""
-    dirContents = self.ls()[1]
+    dirContents = [x.lower() for x in self.ls()[1]]
     if self._formatFilename(directoryToMake, " +-.") == directoryToMake:
-      if directoryToMake not in dirContents:
+      if directoryToMake.lower() not in dirContents:
         os.mkdir(self.cwdPath+"/"+directoryToMake) #Try except this even though safe guarded
       else:
         raise OSError(
@@ -169,7 +170,9 @@ class dataChest(dateStamp):
     if len(path)>0:
       for ii in range(0, len(path)):
         cwdContents = self.ls()
-        if (path[ii] in cwdContents[1]):
+        dirContents = [x.lower() for x in self.ls()[1]]
+        
+        if path[ii].lower() in dirContents:
           self.cwdPath = self.cwdPath+"/"+path[ii]
         elif path[ii]=="..":
           lastFolder = self.cwdPath.split("/")[-1]
@@ -327,7 +330,7 @@ class dataChest(dateStamp):
     else:
       raise Warning("No dataset is currently open.")
 
-  def getData(self, startIndex = np.nan, stopIndex = np.nan):
+  def getData(self, startIndex = np.nan, stopIndex = np.nan, variablesList = None):
     """Retrieves data from the current dataset."""
     if self.currentHDF5Filename is not None:
       dataDict = {}
@@ -336,9 +339,18 @@ class dataChest(dateStamp):
       if not isinstance(sliceIndices, list):
         raise self.exception
       startIndex, stopIndex = sliceIndices[0], sliceIndices[1]
-
+      
+      allVars = []
       for varTypes in self.varDict.keys():
-        for variables in self.file[varTypes].keys():
+        if variablesList is not None:
+          intersectedVariablesList = set(variablesList)
+          intersectedVariablesList = intersectedVariablesList.intersection(self.file[varTypes].keys())
+          intersectedVariablesList = list(intersectedVariablesList)
+        else:
+          intersectedVariablesList = self.file[varTypes].keys()
+          
+        allVars += intersectedVariablesList
+        for variables in intersectedVariablesList:
           varGrp = self.file[varTypes]
           dataset = varGrp[variables].value
           originalShape = varGrp[variables].attrs["shapes"]
@@ -357,8 +369,7 @@ class dataChest(dateStamp):
             dataDict[variables] = dataset
 
       data = []
-      allVars = (self.varDict["independents"]["names"]
-                 + self.varDict["dependents"]["names"])
+      
       if self.getDataCategory() == "Arbitrary Type 1":
         for ii in range(0, len(allVars)):
           data.append(dataDict[allVars[ii]])
@@ -425,11 +436,6 @@ class dataChest(dateStamp):
   def _getParamterTypeString(self, paramValue):
     paramTypeString = paramValue.__class__.__name__
     for ii in range(0, len(VALID_PARAMETER_TYPES)):
-      if paramTypeString == "ndarray":
-        if paramValue.dtype != "|O":
-            return paramTypeString
-        else:
-            return "Invalid"
       if paramTypeString == VALID_PARAMETER_TYPES[ii]:
         return paramTypeString
     return "Invalid"
