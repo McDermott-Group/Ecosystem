@@ -89,6 +89,7 @@ class dataChest(dateStamp):
     elif isinstance(path, list):
       if len(path)>=1:
         for ii in range(0, len(path)):
+          directories = [x.lower() for x in self.ls()[1]]
           if len(path[ii]) > 0:
             if path[ii].lower() not in directories:
               self.mkdir(path[ii])
