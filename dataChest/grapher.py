@@ -10,6 +10,7 @@ import matplotlib.cm as cm
 import matplotlib as mpl
 from functools import partial
 from datetime import datetime
+from dateutil import tz
 
 from dataChest import *
 from dataChest import dateStamp
@@ -33,6 +34,9 @@ class Main(QtGui.QWidget):
         self.filters.append("*.hdf5")
 
         self.dataChest = dataChest("", os.environ["DATA_CHEST_ROOT"])
+        
+        self.local_tz = tz.tzlocal()
+        self.utc = tz.gettz('UTC')
 
         # Directory browser configuration.
         self.model = QtGui.QFileSystemModel(self)
@@ -317,8 +321,7 @@ class Main(QtGui.QWidget):
         depVars = variables[1]
         if varsToIgnore == [depVars[ii][0] for ii in range(0,len(depVars))]:
             return fig
-        dataset = np.asarray(dataset)
-        print dataset[0]
+ #       dataset = np.asarray(dataset)
         xlabel = self.dataChest.getParameter("X Label", True)
         if xlabel is None:
             xlabel = indepVars[0][0]
@@ -334,7 +337,12 @@ class Main(QtGui.QWidget):
         ax.set_ylabel(ylabel+" "+"("+depVars[0][3]+")")
         # For multiple deps with different units this is ambiguous.
         imageType = self.dataChest.getParameter("Image Type", True)
+        if imageType is None and self.dataChest.getDataCategory() == '2D Scan':
+            imageType = '2D Scan'
+        print "imageType=", imageType
+            
         if imageType is None:
+            dataset = np.asarray(dataset)
             # Add or "scatter"
             imageType = "Scatter"
             print "Scatter"
@@ -350,6 +358,7 @@ class Main(QtGui.QWidget):
             xIncrement = self.dataChest.getParameter("X Increment", True)
             yGridRes = self.dataChest.getParameter("Y Resolution", True)
             yIncrement = self.dataChest.getParameter("Y Increment", True)
+            dataset = np.asarray(dataset)
             x = dataset[::,0].flatten()
             y = dataset[::,1].flatten()
             z = dataset[::,2].flatten()
@@ -365,11 +374,27 @@ class Main(QtGui.QWidget):
                 Z = new[2]
                 im = ax.imshow(Z, extent=(X.min(), X.max(), Y.min(), Y.max()), interpolation='nearest', cmap=cm.gist_rainbow, origin='lower')
                 fig.colorbar(im, fraction = 0.15)
-            else:
-                print "return jack shit"
+        elif imageType == '2D Scan':
+            nx = len(dataset)
+            ny = len(dataset[0][2])
+            z = []
+            for ii in range(0, nx):
+                z.append(dataset[ii][2])
+            x = [dataset[0][0], dataset[-1][0]]
+            x = np.asarray(x)
+            y = np.linspace(dataset[0][1][0], dataset[0][1][1], ny)
+            z = np.asarray(z)
+            z = z.flatten()
+            z = z.reshape(nx, ny)
+            im = ax.imshow(z, extent=(x.min(), x.max(), y.min(), y.max()), aspect='auto', interpolation='nearest', cmap=cm.gist_rainbow, origin='lower')
+            fig.colorbar(im, fraction = 0.15)
         elif imageType == "Buffered":
             print "Buffered"
         return fig
+
+    def _utc_to_local(self, utcDatetime):
+        localDatetime = utcDatetime.replace(tzinfo=self.utc)
+        return localDatetime.astimezone(self.local_tz)
     
     def basic1DPlot(self, dataset, variables, varsToIgnore):
         fig = Figure(dpi=100)
@@ -407,8 +432,9 @@ class Main(QtGui.QWidget):
                         dStamp = dateStamp()
                         dates = []
                         for jj in range(0, len(y)):
-                            dates.append(datetime.strptime(dStamp.floatToUtcDateStr(x[jj]), '%Y-%m-%dT%H:%M:%S.%f'))
+                            dates.append(self._utc_to_local(datetime.strptime(dStamp.floatToUtcDateStr(x[jj]), '%Y-%m-%dT%H:%M:%S.%f')))
                         dates = np.asarray(dates)
+                        print dates
                         dates = date2num(dates)
                         dateFmt = DateFormatter("%m/%d/%Y %H:%M:%S")
                         auto = AutoDateLocator()
@@ -427,7 +453,7 @@ class Main(QtGui.QWidget):
                     ax.set_xscale('log')
                 #ax.plot(x, y, "o", label = depVars[ii][0])
                 if containsDatetime:
-                    ax.plot_date(dates, y, linestyle='-', marker=',', label = depVars[ii][0])
+                    ax.plot_date(dates, y, tz=self.utc, linestyle='-', marker=',', label = depVars[ii][0])
                     fig.autofmt_xdate()
                     fig.tight_layout()  
                 else:

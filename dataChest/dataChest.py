@@ -434,6 +434,60 @@ class dataChest(dateStamp):
       if paramType == VALID_PARAMETER_TYPES[ii]:
         return TYPE_CASTING_OBJECTS[ii](paramValue)
 
+  def getParameterUnits(self, paramName):
+    if self.currentHDF5Filename is not None:
+      if paramName in self.file["parameters"].attrs.keys():
+        self._updateFileDate("Date Accessed")
+        return None
+      elif paramName in self.file["parameters"].keys():
+        self._updateFileDate("Date Accessed")
+        paramGrp = self.file["parameters"][paramName]
+        paramUnits = str(paramGrp.attrs["units"])
+        if paramUnits == "":
+          return None
+        else:
+          return paramUnits
+      else:
+        raise IOError("Parameter name not found.")
+    else:
+      raise Warning(
+        "No file is currently selected. First select a file\r\n\t"
+        + "using either openDataset() to open an existing set\r\n\t"
+        + "or with createDataset()."
+        )
+
+  def setParameterUnits(self, paramName, paramUnits, overwrite=False): 
+    if self.readOnlyFlag == True:
+      raise Warning(
+        "You cannot add parameters to this file as it was\r\n\t"
+        + "opened read only. Files opened with openDataset()\r\n\t"
+        + "are read only by design. You must make a new set\r\n\t"
+        + "if you wish to add parameters to one. or set\r\n\t"
+        + "modify = True."
+        )
+    elif self.currentHDF5Filename is not None:
+      if paramName in self.file["parameters"].keys():
+        if type(paramUnits) == str:
+          dateISO = self.dateStamp.utcDateIsoString()
+          self._updateFileDate("Date Accessed", dateISO)
+          self._updateFileDate("Date Modified", dateISO)
+    
+          paramGrp = self.file["parameters"][paramName]
+          paramGrp.attrs["units"] = paramUnits
+          self.file.flush()
+        else:
+          raise IOError("Parameter units must be of type string."
+                        + " " + str(type(paramUnits))
+                        + " are not allowed.")
+      else:
+        raise IOError("Parameter " + str(paramName)
+                      + " was not found in file.")
+    else:
+      raise Warning(
+        "No file is currently selected. Create a file using\r\n\t"
+        + "createDataset() before using addParameter()."
+        )
+
   def addParameter(self, paramName, paramValue, paramUnits="", overwrite=False): 
     if self.readOnlyFlag == True:
       raise Warning(
@@ -581,6 +635,40 @@ class dataChest(dateStamp):
       self._initDatasetGroup(varGrp, varDict[varTypes])
     self.file.flush()
 
+  def setVariableUnits(self, varName, varUnits):   
+    if self.readOnlyFlag == True:
+      raise Warning(
+        "You cannot change a variables units for a file\r\n\t"
+        + "opened read only. Files opened with openDataset()\r\n\t"
+        + "are read only by design. You must make a new set\r\n\t"
+        + "if you wish to add parameters to one. or set\r\n\t"
+        + "modify = True."
+        )
+    elif self.currentHDF5Filename is not None:
+      varDict = self.varDict
+      for varTypes in varDict.keys():
+        varList = varDict[varTypes]['names']
+        for ii in range(0, len(varList)):
+          if varName == varList[ii]:
+            varGrp = self.file[varTypes]
+            varDict[varTypes]['units'][ii] = varUnits
+            convertedShapesList = self._convertElementsToStr(varDict[varTypes]['units'])
+            varGrp.attrs['units'] = convertedShapesList
+            self.file[varTypes][varName].attrs['units'] = unicode(varUnits, "utf-8")
+            return
+    raise IOError("Variable name " + str(varName) + " not found.")
+    
+
+  def getVariableUnits(self, varName):
+    varsList = self.getVariables()
+    indepVarsList = varsList[0]
+    depVarsList = varsList[1]
+    netVarsList = indepVarsList + depVarsList
+    for ii in range(0, len(netVarsList)):
+      if varName == netVarsList[ii][0]:
+        return netVarsList[ii][3]
+    raise Warning("Variable with name " + varName + " was not found.")
+      
   def _convertElementsToStr(self, listToConvert):
     convertedList = []
     for ii in range(0, len(listToConvert)):
@@ -1075,10 +1163,6 @@ class dataChest(dateStamp):
         )
       return False
 
-  def _isStringUTCFormat(self, dateStr):
-    RE = re.compile(r'^\d{4}-\d{2}-\d{2}[T]\d{2}:\d{2}:\d{2}[.]\d{6}$')
-    return bool(RE.search(dateStr))
-
   def _categorizeDataset(self, varDict): #local
     
     indepShapes = varDict["independents"]["shapes"]
@@ -1470,18 +1554,6 @@ class dataChest(dateStamp):
         lastShape = depShapes[ii]
     return True
         
-
-  def _isDataArbitraryOption1(self, indepShapes, depShapes, data):
-    allShapes = indepShapes+depShapes
-    for shape in allShapes:
-      if shape != [1]:
-        return False
-    data = np.asarray(data)
-    if len(data.shape)==2 and data.shape[1] == len(allShapes):
-      return True
-    else:
-      return False
-
 #automatically close file when new one is created or object is killed
 #make sure that files are always closed and we dont run into file already open conflicts
 ##TODO:
