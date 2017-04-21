@@ -21,13 +21,14 @@ ACCEPTABLE_DATA_CATEGORIES = ["Arbitrary Type 1", "Arbitrary Type 2", "1D Scan"]
 
 
 class Grapher(QtGui.QWidget):
+
     def __init__(self, parent = None):
         super(Grapher, self).__init__(parent)
         self.setWindowTitle('Data Chest Image Browser')
         self.setWindowIcon(QtGui.QIcon('rabi.jpg'))
-        
+
         self.root = os.environ["DATA_CHEST_ROOT"]
-        
+
         self.filters =QtCore.QStringList()
         self.filters.append("*.hdf5")
 
@@ -46,7 +47,7 @@ class Grapher(QtGui.QWidget):
 
         self.directoryBrowserLabel = QtGui.QLabel(self)
         self.directoryBrowserLabel.setText("Directory Browser:")
-        
+
         self.directoryTree = QtGui.QTreeView(self)
         self.directoryTree.setModel(self.model)
         self.directoryTree.setRootIndex(self.indexRoot)
@@ -59,7 +60,7 @@ class Grapher(QtGui.QWidget):
         self.dirTreeWidget.setLayout(self.dirTreeLayout)
         self.dirTreeLayout.addWidget(self.directoryBrowserLabel)
         self.dirTreeLayout.addWidget(self.directoryTree)
-         
+
         # Plot types drop down list configuration.
         self.plotTypesComboBoxLabel = QtGui.QLabel(self)
         self.plotTypesComboBoxLabel.setText("Available Plot Types:")
@@ -67,7 +68,7 @@ class Grapher(QtGui.QWidget):
         self.plotTypesComboBox = QtGui.QComboBox(self)
         self.plotTypesComboBox.activated[str].connect(self.plotTypeSelected)
 
-##        # Configure scrolling widget.
+        # Configure scrolling widget.
         self.scrollWidget = QtGui.QWidget(self)
         self.scrollLayout = QtGui.QHBoxLayout()
         self.scrollWidget.setLayout(self.scrollLayout)
@@ -76,7 +77,7 @@ class Grapher(QtGui.QWidget):
         self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.scrollArea.setWidget(self.scrollWidget)
         self.scrollArea.setWidgetResizable(True) # What happens without?
-##
+
         self.plotOptionsWidget = QtGui.QWidget(self)
         self.plotOptionsLayout = QtGui.QVBoxLayout()
         self.plotOptionsWidget.setLayout(self.plotOptionsLayout)
@@ -96,17 +97,17 @@ class Grapher(QtGui.QWidget):
         self.graphicsLayout.setMinimumHeight(740)
 
         self.graphsWidget = QtGui.QWidget(self)
-        
+
         self.graphsLayout = QtGui.QVBoxLayout()
         self.graphsWidget.setLayout(self.graphsLayout)
         self.graphsLayout.addWidget(self.graphicsLayout)
-        
+
         self.graphScrollArea = QtGui.QScrollArea(self)
         self.graphScrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.graphScrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.graphScrollArea.setWidget(self.graphsWidget) 
+        self.graphScrollArea.setWidget(self.graphsWidget)
         self.graphScrollArea.setWidgetResizable(True) # What happens without?
-                       
+
         self.splitterHorizontal = QtGui.QSplitter(QtCore.Qt.Horizontal)
         self.splitterHorizontal.addWidget(self.splitterVertical)
         self.splitterHorizontal.addWidget(self.graphScrollArea)
@@ -116,7 +117,7 @@ class Grapher(QtGui.QWidget):
         QtGui.QApplication.setStyle(QtGui.QStyleFactory.create('Cleanlooks'))
 
         self.groupVarsWithCommonUnits = True
-        
+
         self.plotType = None # redundant
         self.plotTypeOptionsDict = {}
         #self.varsToIgnore = []
@@ -133,57 +134,72 @@ class Grapher(QtGui.QWidget):
             currentFileName = self.d.getDatasetName()
             currentFilePath = self.convertPathToArray(self.d.pwd())
             if currentFileName != fileName or currentFilePath != filePath:
-                if currentFileName != fileName or currentFilePath != filePath:
-                    self.plotData(fileName, filePath)
+                self.plotData(fileName, filePath)
 
     def plotData(self, fileName, filePath):
         d = self.d
         d.cd(filePath)
         d.openDataset(fileName)
-        
-        datasetVariables = d.getVariables()
-        datasetName = d.getDatasetName()
-        indepVarsList = datasetVariables[0]
+
+        self.datasetVariables = d.getVariables()
+        self.datasetName = d.getDatasetName()
+        indepVarsList = self.datasetVariables[0]
+        depVarsList = self.datasetVariables[1]
         datasetCategory = d.getDataCategory()
         d.cd("")
-        
-        if datasetCategory in ACCEPTABLE_DATA_CATEGORIES:
-            datasetDimension = len(indepVarsList)
-            if datasetDimension == 1:
-                if datasetCategory == "Arbitrary Type 1":
-                    data = [d.getData().T]                
-                elif datasetCategory == "Arbitrary Type 2":
-                    data = d.getData()
-                elif datasetCategory == "1D Scan":
-                    scanType = d.getParameter("Scan Type", bypassIOError=True)
-                    if scanType is None:
-                        print "Scan Type Not Found."
-                        return ""
-                    elif scanType == "Linear":
-                        data = d.getData()
-                        x = np.linspace(data[0][0][0], data[0][0][1], num = len(data[0][1]))
-                    elif scanType == "Logarithmic":
-                        data = d.getData()
-                        x = np.logspace(np.log10(data[0][0][0]), np.log10(data[0][0][1]), num = len(data[0][1]))
-                    else:
-                        return ""
-                    data[0][0] = x
-                self.plot1D(data, datasetName, datasetVariables, self.plotTypeOptionsDict)               
-            elif datasetDimension == 2:
-                if datasetCategory == "Arbitrary Type 1":
-                    print "2D Arbitrary Type 1 Data"
-                elif datasetCategory == "Arbitrary Type 2":
-                    print "2D Arbitrary Type 2 Data"
-                elif datasetCategory == "1D Scan":
-                    print "2D Scan" 
-            else:
-                print "Datasets with dimensions greater than 3 are not supported."
-        else:
-            print "Unknown category."
 
-    def plot1D(self, data, datasetName, datasetVariables, plotTypeOptionsDict):
-        indepVarsList = datasetVariables[0]
-        depVarsList = datasetVariables[1]
+        if datasetCategory not in ACCEPTABLE_DATA_CATEGORIES:
+            print "Unknown category."
+            return
+
+        if datasetCategory == "Arbitrary Type 1":
+            data = [d.getData().T]
+        elif datasetCategory == "Arbitrary Type 2":
+            data = d.getData()
+        elif datasetCategory == "1D Scan" or datasetCategory == "2D Scan":
+            data = d.getData()
+            l = depVarsList[0][1][0] # len of first dim in shape of first dep var
+            scanType = d.getParameter("Scan Type", bypassIOError=True)
+            for row in data:
+                for i in range(len(indepVarsList)):
+                    if indepVarsList[i][1] == 1:
+                        row[i] = row[i]*l
+                    elif indepVarsList[i][1] == 2:
+                        start,stop = row[i]
+                        if scanType is None:
+                            print "Scan Type Not Found."
+                            return
+                        elif scanType == "Linear":
+                            row[i] = np.linspace(start, stop, num = l)
+                        elif scanType == "Logarithmic":
+                            row[i] = np.logspace(np.log10(start), np.log10(stop), num = l)
+            if datasetCategory == "2D Scan":
+                data = np.concatenate(data, axis=1)
+
+        # Take the data and turn it into two arrays:
+        #   indepData is a list of dep vars ranges (ranges are sorted by value)
+        #   depData is the associated vector of values associated with the dep vars
+        # This is done by first skimming off the indep vars, sorting them, and then
+        # going through the rows of data and setting the value of each spot in the
+        # vector.
+        indepData = [np.array(data[i]).unique() for i in range(len(indepVarsList))]
+        indepShape = [len(v) for v in indepData]
+        depData = [np.full(indepShape, np.nan) for _ in range(len(depVarsList))]
+        for row in data.T:    # go though each row and fill data
+            indepVals = row[:len(indepData)]
+            indepIndicies = [indepData[i].index(indepVals[i]) for i in range(len(indepVals))]
+            for i in range(len(depData)):
+                depData[i][indepIndicies] = row[i+len(indepVarsList)]
+
+        self.selectedData = data
+        if len(indepVarsList) == 1:
+            self.plot1D()
+        elif len(indepVarsList) == 2:
+            self.plot2D()
+
+    def plot1D(self, plotTypeOptionsDict):
+        indepVarsList = self.datasetVariables[0]
+        depVarsList = self.datasetVariables[1]
         varsWithCommonUnitsDict = self.getVarsWithCommonUnitsDict(depVarsList)
         plotType = self.supportedPlotTypes("1D")[0] # defaults
         self.clearGraphicsLayout()
@@ -226,8 +242,8 @@ class Grapher(QtGui.QWidget):
         plotOptions["Enable Grid"] = False
         plotOptions["Hide Variable"] = False
         return plotOptions
-        
-            
+
+
     def basic1DPlot(self, graphicsLayout, commonUnitsData, commonNamesData, plotTypeOptionsDict):
         #graphicsLayout.clear()
         for ii in range(0, len(commonNamesData)):
@@ -245,7 +261,7 @@ class Grapher(QtGui.QWidget):
 
             xlabelStyle = {'color': HEX_COLOR_MAP['black'], 'font-size': '22px'}
             p1.setLabel('bottom', 'Time [s]', **xlabelStyle) #units = 's'
-                           
+
     def plotTypeSelected(self, plotType):
         # Called when a plotType selection is made from drop down.
         # self.plotTypesComboBox.adjustSize()
@@ -264,13 +280,13 @@ class Grapher(QtGui.QWidget):
         # Clear the plotType options layout and all widgets therein.
         for i in reversed(range(layout.count())):
             item = layout.itemAt(i)
-            
+
             if isinstance(item, QtGui.QWidgetItem):
                 item.widget().close()
             elif not isinstance(item, QtGui.QSpacerItem):
                 self.clearLayout(item.layout())
             # remove the item from layout
-            layout.removeItem(item) 
+            layout.removeItem(item)
 
     def convertPathToArray(self, path):
         print "self.root=", self.root
@@ -280,12 +296,12 @@ class Grapher(QtGui.QWidget):
         elif self.root in path:
             path = path.replace(self.root, '')
         return path.split('/')
-        
+
 
     def clearGraphicsLayout(self):
         # Remove all widgets from GraphicsLayoutWidget
         self.graphicsLayout.clear()
-        
+
     def getListOfAvailabePlotTypes(self, datasetDimension, datasetCategory, selectedVarsList):
         if datasetDimension == 1:
             if len(selectedVarsList) >= 2: # 1D Traj Plot Types require 2 selected dependent vars
@@ -301,14 +317,14 @@ class Grapher(QtGui.QWidget):
                 return ["2D Scan", "3D Contour", "Projection"]
         else:
             return ["There are no available plot types for "+str(datasetDimension)+ " dimensional data."]
-                
+
 
     def getVarsWithCommonUnitsDict(self, depVarsList):
         compatibleVarsDict = {}
         for depVar in depVarsList:
             # depVar of form (name, shape, dtype, units)
             name = depVar[0]
-            units = depVar[3] 
+            units = depVar[3]
             if units not in compatibleVarsDict.keys():
                 compatibleVarsDict[units] = [name]
             else:
@@ -334,14 +350,14 @@ class Grapher(QtGui.QWidget):
                 varsWithCommonShapeList.append(name)
 
         return varsWithCommonShapeList
-                                       
+
     def updatePlotTypesList(self, plotTypeOptionsList):
         # Update plotTypes list based on selected dataset.
         self.plotTypesComboBox.clear()
         for element in plotTypeOptionsList:
             if ".dir" not in str(element) and ".ini" not in str(element):
                 self.plotTypesComboBox.addItem(str(element))
-   
+
     def supportedPlotTypes(self, dimensionality):
         # Provide list of plotTypes based on datasetType.
         if dimensionality == "1D":
