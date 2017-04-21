@@ -17,7 +17,7 @@ from datetime import date, datetime, timedelta
 from dateutil import tz
 import re
 
-class dateStamp:
+class dateStamp(object):
     
   def _intToAlphabet(self, num):
       base = 26

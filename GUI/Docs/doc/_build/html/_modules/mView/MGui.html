@@ -1,0 +1,374 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mView.MGui &#8212; GUI  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mView.MGui</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016 Noah Meltzer</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 2 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2016, McDermott Group&quot;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s2">&quot;GPL&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;2.0.1&quot;</span>
+<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__status__</span> <span class="o">=</span> <span class="s2">&quot;Beta&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">atexit</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">PyQt4</span> <span class="k">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtGui</span>
+
+<span class="kn">from</span> <span class="nn">NotifierGUI</span> <span class="k">import</span> <span class="n">NotifierGUI</span>
+<span class="kn">from</span> <span class="nn">MConfigGui</span> <span class="k">import</span> <span class="n">ConfigGui</span>
+<span class="kn">from</span> <span class="nn">MDataSetConfigGUI</span> <span class="k">import</span> <span class="n">DataSetConfigGUI</span>
+<span class="kn">from</span> <span class="nn">MPersistentData</span> <span class="k">import</span> <span class="n">MPersistentData</span>
+<span class="kn">from</span> <span class="nn">MWeb</span> <span class="k">import</span> <span class="n">web</span>
+<span class="kn">import</span> <span class="nn">MGrapher</span>
+<span class="kn">import</span> <span class="nn">MAlert</span>
+<span class="kn">from</span> <span class="nn">MWeb</span> <span class="k">import</span> <span class="n">web</span>
+<span class="kn">from</span> <span class="nn">MNodeEditor.MNodeEditorHandler</span> <span class="k">import</span> <span class="n">MNodeEditorHandler</span>
+<span class="kn">from</span> <span class="nn">MDeviceContainerWidget</span> <span class="k">import</span> <span class="n">MDeviceContainerWidget</span>
+
+<div class="viewcode-block" id="MGui"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui">[docs]</a><span class="k">class</span> <span class="nc">MGui</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QMainWindow</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handles construction of GUI using mView framework.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;##########################################&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;## Starting mView (C) Noah Meltzer 2016 ##&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;##########################################&quot;</span><span class="p">)</span>
+    <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span> <span class="o">=</span> <span class="n">MPersistentData</span><span class="p">()</span>
+    <span class="c1"># Holds the Qlabels that label the parameters.</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="p">[[]]</span>
+    <span class="c1"># Each tile on the GUI is called a frame, this is the list of them.</span>
+    <span class="n">tiles</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># All layouts for each device.</span>
+    <span class="n">grids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># The main vertical box layout for the GUI.</span>
+    <span class="n">mainVBox</span> <span class="o">=</span> <span class="p">[</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()]</span>
+    <span class="c1"># The main horizontal box layout for the GUI.</span>
+    <span class="n">mainHBox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+    <span class="c1"># The titles of all devices.</span>
+    <span class="n">titles</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># The dataset for each device.</span>
+    <span class="n">dataSets</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Holds all lcds for all devices.</span>
+    <span class="n">lcds</span> <span class="o">=</span> <span class="p">[[]]</span>
+    <span class="c1"># Holds all units for all devices.</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="p">[[]]</span>
+    <span class="c1"># Holds all buttons for all devices.</span>
+    <span class="n">buttons</span> <span class="o">=</span> <span class="p">[[]]</span>
+    <span class="n">deviceWidgets</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># This is the main font used for text in the GUI.</span>
+    <span class="n">font</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFont</span><span class="p">()</span>
+    <span class="n">font</span><span class="o">.</span><span class="n">setBold</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">font</span><span class="o">.</span><span class="n">setWeight</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">font</span><span class="o">.</span><span class="n">setKerning</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># The staring column to put tiles in.</span>
+    <span class="n">VBoxColumn</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Used to allow query to keep calling itself.</span>
+    <span class="n">keepGoing</span> <span class="o">=</span> <span class="kc">True</span>
+    
+    <span class="c1"># splash_pix = QtGui.QPixmap(&#39;logo.png&#39;)</span>
+    <span class="c1"># splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)</span>
+    <span class="c1"># splash.show()</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">)</span>
+<div class="viewcode-block" id="MGui.initGui"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.initGui">[docs]</a>    <span class="k">def</span> <span class="nf">initGui</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">devices</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Configure all GUI elements.&quot;&quot;&quot;</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QWidget</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">setActiveWindow</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QStyleFactory</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s1">&#39;plastique&#39;</span><span class="p">))</span>
+        
+        <span class="n">web</span><span class="o">.</span><span class="n">gui</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="c1"># Make the GUI fullscreen.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">showMaximized</span><span class="p">()</span>
+       
+       
+        <span class="c1"># Make GUI area scrollable.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main_widget</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main_widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mainHBox</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scrollArea</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QScrollArea</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scrollArea</span><span class="o">.</span><span class="n">setWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">main_widget</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scrollArea</span><span class="o">.</span><span class="n">setWidgetResizable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setCentralWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scrollArea</span><span class="p">)</span>
+
+        <span class="c1"># Setup stylesheet.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scrollArea</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">&quot;background:rgb(70, 80, 88)&quot;</span><span class="p">)</span>
+        <span class="c1"># Configure the menu bar.</span>
+        <span class="n">menubar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">menuBar</span><span class="p">()</span>
+        <span class="n">menubar</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">&quot;QMenuBar {background-color: &quot;</span>
+                <span class="s2">&quot;rgb(189, 195, 199)}&quot;</span>
+                <span class="s2">&quot;QMenuBar::item {background: transparent} &quot;</span>
+                <span class="s2">&quot;QMenu{background-color:rgb(189, 195, 199)}&quot;</span><span class="p">)</span>
+        <span class="c1"># Menu bar menus.</span>
+        <span class="n">exitAction</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QAction</span><span class="p">(</span><span class="s1">&#39;&amp;Exit&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>        
+        <span class="n">exitAction</span><span class="o">.</span><span class="n">setShortcut</span><span class="p">(</span><span class="s1">&#39;Ctrl+Q&#39;</span><span class="p">)</span>
+        <span class="n">exitAction</span><span class="o">.</span><span class="n">setStatusTip</span><span class="p">(</span><span class="s1">&#39;Exit application&#39;</span><span class="p">)</span>
+        <span class="n">exitAction</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">qApp</span><span class="o">.</span><span class="n">quit</span><span class="p">)</span>
+                
+        <span class="n">NotifierSettingsAction</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QAction</span><span class="p">(</span><span class="s1">&#39;&amp;Settings...&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">NotifierSettingsAction</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">openNotifierSettings</span><span class="p">)</span>
+        
+        <span class="n">deviceSettingsAction</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QAction</span><span class="p">(</span><span class="s1">&#39;&amp;Configure...&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">deviceSettingsAction</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">openConfig</span><span class="p">)</span>
+        
+        <span class="n">newDataSetAction</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QAction</span><span class="p">(</span><span class="s1">&#39;&amp;Data Logging Configuration...&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">newDataSetAction</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">openNewDataSetConfig</span><span class="p">)</span>
+        
+        <span class="n">virtualDevicesConfigAction</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QAction</span><span class="p">(</span><span class="s1">&#39;&amp;Virtual devices editor...&#39;</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">virtualDevicesConfigAction</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">openVirtualDevicesConfig</span><span class="p">)</span>
+        
+        <span class="n">fileMenu</span> <span class="o">=</span> <span class="n">menubar</span><span class="o">.</span><span class="n">addMenu</span><span class="p">(</span><span class="s1">&#39;&amp;File&#39;</span><span class="p">)</span>
+        <span class="n">fileMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">exitAction</span><span class="p">)</span>
+        
+        <span class="n">NotifierMenu</span> <span class="o">=</span> <span class="n">menubar</span><span class="o">.</span><span class="n">addMenu</span><span class="p">(</span><span class="s1">&#39;&amp;Notifier&#39;</span><span class="p">)</span>
+        <span class="n">NotifierMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">NotifierSettingsAction</span><span class="p">)</span>
+        
+        <span class="n">DeviceMenu</span> <span class="o">=</span> <span class="n">menubar</span><span class="o">.</span><span class="n">addMenu</span><span class="p">(</span><span class="s1">&#39;&amp;Devices&#39;</span><span class="p">)</span>
+        <span class="n">DeviceMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">deviceSettingsAction</span><span class="p">)</span>
+        
+        <span class="n">DataChestMenu</span> <span class="o">=</span> <span class="n">menubar</span><span class="o">.</span><span class="n">addMenu</span><span class="p">(</span><span class="s1">&#39;&amp;DataChest&#39;</span><span class="p">)</span>
+        <span class="n">DataChestMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">newDataSetAction</span><span class="p">)</span>
+        
+        <span class="n">VirtualDevicesMenu</span> <span class="o">=</span> <span class="n">menubar</span><span class="o">.</span><span class="n">addMenu</span><span class="p">(</span><span class="s1">&#39;&amp;Virtual Devices&#39;</span><span class="p">)</span>
+        <span class="n">VirtualDevicesMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">virtualDevicesConfigAction</span><span class="p">)</span>
+        <span class="c1"># Keeps track of the number of widgets, used for placing tiles</span>
+        <span class="c1"># into the correct column.</span>
+        <span class="c1">#self.neh = MNodeEditorHandler()</span>
+        <span class="n">numWidgets</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Configure the size policy of all tiles.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frameSizePolicy</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QSizePolicy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frameSizePolicy</span><span class="o">.</span><span class="n">setVerticalPolicy</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frameSizePolicy</span><span class="o">.</span><span class="n">setHorizontalPolicy</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Preferred</span><span class="p">)</span>
+       
+        <span class="c1"># Configure the layouts.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mainVBox</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mainVBox</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mainHBox</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mainVBox</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mainHBox</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mainVBox</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mainVBox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">setAlignment</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignTop</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mainVBox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">setAlignment</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignTop</span><span class="p">)</span>
+
+        <span class="c1"># Which column are we adding a tile to next.</span>
+        <span class="c1">#devices = web.devices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">device</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">devices</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addDevice</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="c1">#self.mainVBox[0].addStretch(0)</span>
+        <span class="c1">#self.mainVBox[1].addStretch(0)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;GUI initialized.&quot;</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MGui.stop"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Stop MView.&#39;&#39;&#39;</span>
+        <span class="nb">print</span> <span class="s2">&quot;Shutting down MView.&quot;</span>
+        <span class="nb">print</span> <span class="s2">&quot;all devices:&quot;</span><span class="p">,</span> <span class="n">web</span><span class="o">.</span><span class="n">devices</span>
+        <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;stopping&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">device</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getDataChestWrapper</span><span class="p">()</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+            <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getDataChestWrapper</span><span class="p">()</span><span class="o">.</span><span class="n">saveState</span><span class="p">()</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">saveState</span><span class="p">()</span></div>
+        <span class="c1">#self.neh.stop()</span>
+        
+<div class="viewcode-block" id="MGui.addDevice"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.addDevice">[docs]</a>    <span class="k">def</span> <span class="nf">addDevice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">VBoxColumn</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">VBoxColumn</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">VBoxColumn</span> <span class="o">=</span> <span class="mi">0</span>
+       
+        <span class="n">container</span> <span class="o">=</span> <span class="n">MDeviceContainerWidget</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deviceWidgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">container</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mainVBox</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">VBoxColumn</span><span class="p">]</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">container</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MGui.addWidget"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.addWidget">[docs]</a>    <span class="k">def</span> <span class="nf">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">VBoxColumn</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">VBoxColumn</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">VBoxColumn</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mainVBox</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">VBoxColumn</span><span class="p">]</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MGui.mousePressEvent"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.mousePressEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mousePressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        
+        <span class="n">focused_widget</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">focusWidget</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">focused_widget</span><span class="p">,</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QScrollArea</span><span class="p">):</span>
+            <span class="n">focused_widget</span><span class="o">.</span><span class="n">clearFocus</span><span class="p">()</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QMainWindow</span><span class="o">.</span><span class="n">mousePressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MGui.closeEvent"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.closeEvent">[docs]</a>    <span class="k">def</span> <span class="nf">closeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Closing mView...&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="n">exit</span><span class="p">()</span></div>
+<div class="viewcode-block" id="MGui.openNotifierSettings"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.openNotifierSettings">[docs]</a>    <span class="k">def</span> <span class="nf">openNotifierSettings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;Open the notifier settings GUI.&quot;&quot;&quot;</span>
+        <span class="c1"># NOTE, this is run on the main thread, so while it is open</span>
+        <span class="c1"># the main GUI will not be running.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">NotifierGUI</span> <span class="o">=</span> <span class="n">NotifierGUI</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">NotifierGUI</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div>
+        
+<div class="viewcode-block" id="MGui.openNewDataSetConfig"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.openNewDataSetConfig">[docs]</a>    <span class="k">def</span> <span class="nf">openNewDataSetConfig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Open the new data set configuration GUI.&quot;&quot;&quot;</span>
+        <span class="c1"># NOTE, this is run on the main thread, so while it is open</span>
+        <span class="c1"># the main GUI will not be running.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DataSetConfigGUI</span> <span class="o">=</span> <span class="n">DataSetConfigGUI</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DataSetConfigGUI</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div>
+        
+<div class="viewcode-block" id="MGui.setRefreshRate"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.setRefreshRate">[docs]</a>    <span class="k">def</span> <span class="nf">setRefreshRate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="n">period</span><span class="p">,</span><span class="s1">&#39;guiRefreshRate&#39;</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="MGui.openVirtualDevicesConfig"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.openVirtualDevicesConfig">[docs]</a>    <span class="k">def</span> <span class="nf">openVirtualDevicesConfig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#self.neh.showEditor()</span>
+        <span class="nb">print</span> <span class="s2">&quot;no, I wont&quot;</span></div>
+<div class="viewcode-block" id="MGui.openConfig"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.openConfig">[docs]</a>    <span class="k">def</span> <span class="nf">openConfig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Config</span> <span class="o">=</span> <span class="n">ConfigGui</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Config</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MGui.startGui"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.startGui">[docs]</a>    <span class="k">def</span> <span class="nf">startGui</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">devices</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">tele</span><span class="p">,</span> <span class="n">autostart</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Start the GUI.&quot;&quot;&quot;</span>
+        <span class="nb">print</span> <span class="s2">&quot;Starting GUI.&quot;</span>
+        <span class="c1"># Used as the name of the dataChest data title.</span>
+        
+        <span class="c1">#web.devices = devices</span>
+        <span class="c1"># Start the notifier.</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">telecomm</span> <span class="o">=</span> <span class="n">tele</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">NotifierGUI</span> <span class="o">=</span> <span class="n">NotifierGUI</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">MAlert</span> <span class="o">=</span> <span class="n">MAlert</span><span class="o">.</span><span class="n">MAlert</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">MAlert</span><span class="o">.</span><span class="n">begin</span><span class="p">()</span>
+        
+        <span class="n">screen_resolution</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QDesktopWidget</span><span class="p">()</span><span class="o">.</span><span class="n">screenGeometry</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scrnWidth</span> <span class="o">=</span> <span class="n">screen_resolution</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scrnHeight</span> <span class="o">=</span> <span class="n">screen_resolution</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">scrnWidth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scrnWidth</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">scrnHeight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scrnHeight</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scrnWidth</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">scrnHeight</span><span class="p">:</span>
+            <span class="n">web</span><span class="o">.</span><span class="n">ratio</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scrnWidth</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1800</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">web</span><span class="o">.</span><span class="n">ratio</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scrnHeight</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1800</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="c1"># Call the class&#39;s initialization function.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initGui</span><span class="p">(</span><span class="n">devices</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+        <span class="c1"># Show the GUI.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QTimer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="c1">#self.neh.begin()</span>
+        <span class="c1"># Update the GUI every so often. This CAN ONLY be done </span>
+        <span class="c1"># in the main thread.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keepGoing</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">singleShot</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;guiRefreshRate&#39;</span><span class="p">,</span> <span class="n">default</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">guiRefreshRate</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">)</span>
+        <span class="c1"># try:</span>
+            <span class="c1"># QtGui.QApplication.focusWidget().clearFocus()</span>
+        <span class="c1"># except:</span>
+            <span class="c1"># pass</span>
+            
+        <span class="nb">print</span> <span class="n">web</span><span class="o">.</span><span class="n">nodes</span>
+        <span class="c1"># Begin all logic nodes</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">web</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">onLoad</span><span class="p">()</span>
+        <span class="c1"># Now that the gui is mostly loaded, all of teh onLoad functions can be called</span>
+        <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">:</span>
+            <span class="n">device</span><span class="o">.</span><span class="n">onLoad</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">autostart</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">showGui</span><span class="p">()</span></div>
+     
+<div class="viewcode-block" id="MGui.showGui"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.showGui">[docs]</a>    <span class="k">def</span> <span class="nf">showGui</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="MGui.update"><a class="viewcode-back" href="../../mView.MGui.html#mView.MGui.MGui.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the GUI.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+       
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QApplication</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

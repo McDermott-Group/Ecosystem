@@ -1,0 +1,321 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mView.MDataSetConfigGUI &#8212; GUI  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mView.MDataSetConfigGUI</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">PyQt4</span> <span class="k">import</span> <span class="n">QtGui</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">MWeb</span> <span class="k">import</span> <span class="n">web</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">dataChestWrapper</span> <span class="k">import</span> <span class="n">dataChestWrapper</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">MPopUp</span> <span class="k">import</span> <span class="n">PopUp</span>
+<span class="kn">import</span> <span class="nn">atexit</span>
+
+<div class="viewcode-block" id="DataSetConfigGUI"><a class="viewcode-back" href="../../mView.MDataSetConfigGUI.html#mView.MDataSetConfigGUI.DataSetConfigGUI">[docs]</a><span class="k">class</span> <span class="nc">DataSetConfigGUI</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Allows user to create custom data logs.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DataSetConfigGUI</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saveState</span><span class="p">)</span>
+
+        <span class="c1">#Save initial state just in case changes are canceled</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialStates</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initialStates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+       <span class="c1"># print self.initialStates</span>
+        <span class="c1">#Create a tab for new dataset settings</span>
+        <span class="n">mainTabWidget</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QTabWidget</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">advancedSettingsWidget</span> <span class="o">=</span> <span class="n">DataSetSettings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">advanced</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simpleSettingsWidget</span> <span class="o">=</span> <span class="n">DataSetSettings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">advanced</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        
+        <span class="n">mainTabWidget</span><span class="o">.</span><span class="n">addTab</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simpleSettingsWidget</span><span class="p">,</span> <span class="s2">&quot;Basic&quot;</span><span class="p">)</span>
+        <span class="n">mainTabWidget</span><span class="o">.</span><span class="n">addTab</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">advancedSettingsWidget</span><span class="p">,</span> <span class="s2">&quot;Advanced&quot;</span><span class="p">)</span>
+        
+        <span class="c1">#Create the main layout for the GUI.</span>
+        <span class="n">mainLayout</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="c1"># Add teh tab widget to the main layout.</span>
+        <span class="n">mainLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">mainTabWidget</span><span class="p">)</span>
+        <span class="c1"># The button layout that will hold the OK button.</span>
+        <span class="n">buttonLayout</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">okButton</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">okButton</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">&quot;OK&quot;</span><span class="p">)</span>
+        <span class="n">okButton</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">okClicked</span><span class="p">)</span>
+        <span class="n">cancelButton</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">cancelButton</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">&quot;Cancel&quot;</span><span class="p">)</span>
+        <span class="n">cancelButton</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cancel</span><span class="p">)</span>
+        <span class="c1"># Give the button some cusion so that it will not be streched</span>
+        <span class="c1"># out.</span>
+        <span class="n">buttonLayout</span><span class="o">.</span><span class="n">addStretch</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">buttonLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">okButton</span><span class="p">)</span>
+        <span class="n">buttonLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">cancelButton</span><span class="p">)</span>
+        <span class="c1"># Add the button.</span>
+        <span class="n">mainLayout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">buttonLayout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">mainLayout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;DataChest Config&quot;</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="DataSetConfigGUI.saveState"><a class="viewcode-back" href="../../mView.MDataSetConfigGUI.html#mView.MDataSetConfigGUI.DataSetConfigGUI.saveState">[docs]</a>    <span class="k">def</span> <span class="nf">saveState</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+       <span class="k">pass</span></div>
+
+    
+<div class="viewcode-block" id="DataSetConfigGUI.okClicked"><a class="viewcode-back" href="../../mView.MDataSetConfigGUI.html#mView.MDataSetConfigGUI.DataSetConfigGUI.okClicked">[docs]</a>    <span class="k">def</span> <span class="nf">okClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Take a look at what changed</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;DATA_CHEST_ROOT&#39;</span><span class="p">]</span>
+      
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">device</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">):</span>
+            <span class="c1">#print &quot;Data logging info:&quot;,device.getFrame().DataLoggingInfo()</span>
+            <span class="c1"># If any changes were made, reinitialize the datalogger.</span>
+            <span class="c1">#print &quot;initial: &quot;,self.initialStates[i]</span>
+            <span class="c1">#print &quot;final: &quot;,device.getFrame().DataLoggingInfo()</span>
+            <span class="nb">dir</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;location&#39;</span><span class="p">]</span>
+            
+        
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialStates</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">():</span>
+               <span class="c1"># print &quot;some info was changed&quot;</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;chest&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">configureDataSets</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">y</span><span class="p">,</span><span class="n">device</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">checkbox</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">advancedSettingsWidget</span><span class="o">.</span><span class="n">checkboxes</span><span class="p">[</span><span class="n">y</span><span class="p">]):</span>
+                    <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;channels&#39;</span><span class="p">][</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span>
+                        <span class="o">.</span><span class="n">getNicknames</span><span class="p">()[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">checkbox</span><span class="o">.</span><span class="n">checkState</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+                   <span class="c1"># traceback.print_exec()</span>
+                   
+                    
+                    
+                <span class="c1"># try:</span>
+                    <span class="c1"># device.getFrame().DataLoggingInfo()[&#39;chest&#39;] = dataChestWrapper(device)</span>
+                <span class="c1"># except:</span>
+                    <span class="c1"># traceback.print_exec()</span>
+       
+<div class="viewcode-block" id="DataSetConfigGUI.cancel"><a class="viewcode-back" href="../../mView.MDataSetConfigGUI.html#mView.MDataSetConfigGUI.DataSetConfigGUI.cancel">[docs]</a>    <span class="k">def</span> <span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Revert all changes</span>
+         <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">device</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialStates</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+
+         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+<div class="viewcode-block" id="DataSetSettings"><a class="viewcode-back" href="../../mView.MDataSetConfigGUI.html#mView.MDataSetConfigGUI.DataSetSettings">[docs]</a><span class="k">class</span> <span class="nc">DataSetSettings</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">configGui</span><span class="p">,</span> <span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DataSetSettings</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="n">isAdvanced</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;advanced&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configGui</span> <span class="o">=</span> <span class="n">configGui</span>
+        <span class="n">font</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFont</span><span class="p">()</span>
+        <span class="n">font</span><span class="o">.</span><span class="n">setPointSize</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">locationLabels</span><span class="o">=</span><span class="p">[]</span>
+        <span class="n">hbox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">mainLayout</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checkboxes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QGridLayout</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">mainLayout</span><span class="p">)</span>
+        <span class="n">mainLayout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">hbox</span><span class="p">)</span>
+        <span class="n">mainLayout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+        <span class="n">rootlbl</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;DATA_CHEST_ROOT:&quot;</span><span class="p">)</span>
+        <span class="n">rootlbl</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">font</span><span class="p">)</span>
+        <span class="n">hbox</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">rootlbl</span><span class="p">)</span>
+        <span class="n">hbox</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;DATA_CHEST_ROOT&#39;</span><span class="p">])))</span>
+        <span class="c1">#self.checkboxes.append([])</span>
+       <span class="c1"># grid.addWidget(QtGui.QLabel(&quot;Data Log Locations: &quot;),1,0,1,2)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">isAdvanced</span><span class="p">:</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QGridLayout</span><span class="p">()</span>
+            <span class="n">mainLayout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Log Folder: &quot;</span><span class="p">))</span>
+            <span class="n">title</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">font</span><span class="p">)</span>
+            <span class="n">grid</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">title</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">location</span> <span class="o">=</span>  <span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;location&#39;</span><span class="p">])</span>
+            <span class="n">grid</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">button</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Browse...&quot;</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">openFileDialog</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="n">buttonHbox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+            <span class="n">grid</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">buttonHbox</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="n">buttonHbox</span><span class="o">.</span><span class="n">addStretch</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">buttonHbox</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">button</span><span class="p">)</span>
+            
+            <span class="n">defaultButton</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Automatically Configure Data Sets&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="n">defaultButton</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resetToDefault</span><span class="p">,</span><span class="n">grid</span><span class="p">))</span>
+            <span class="n">mainLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">defaultButton</span><span class="p">)</span>
+            <span class="n">mainLayout</span><span class="o">.</span><span class="n">addStretch</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="mi">2</span>
+           
+            <span class="k">for</span> <span class="n">y</span><span class="p">,</span><span class="n">device</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">):</span>
+                <span class="nb">print</span> <span class="s2">&quot; device:&quot;</span><span class="p">,</span> <span class="n">device</span>
+                <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">device</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;: &quot;</span><span class="p">)</span>
+                <span class="n">title</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">font</span><span class="p">)</span>
+                <span class="n">grid</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">title</span><span class="p">,</span><span class="n">row</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">location</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span>
+                    <span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;location&#39;</span><span class="p">]))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">locationLabels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+                <span class="n">grid</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">location</span><span class="p">,</span><span class="n">row</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">button</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Browse...&quot;</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span>
+                <span class="n">button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">openFileDialog</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">row</span><span class="p">))</span>
+                <span class="n">buttonHbox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+                <span class="n">grid</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">buttonHbox</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+                <span class="n">buttonHbox</span><span class="o">.</span><span class="n">addStretch</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">buttonHbox</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">button</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">checkboxes</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+                <span class="k">for</span> <span class="n">nickname</span> <span class="ow">in</span> <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getNicknames</span><span class="p">():</span>
+                    <span class="n">row</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="c1">#hBox = QtGui.QHBoxLayout()</span>
+                    <span class="n">checkbox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">checkboxes</span><span class="p">[</span><span class="n">y</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">checkbox</span><span class="p">)</span>
+                    <span class="c1">#print device, &quot;Data logging info: &quot;, device.getFrame().DataLoggingInfo()</span>
+                    <span class="n">checkbox</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;channels&#39;</span><span class="p">][</span><span class="n">nickname</span><span class="p">])</span>
+                    <span class="c1">#grid.addLayout(hBox, row, 0)</span>
+                    <span class="n">grid</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="n">nickname</span><span class="p">),</span> <span class="n">row</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="n">grid</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">checkbox</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="c1">#hBox.addWidget(checkbox)</span>
+                    <span class="c1">#hBox.addWidget(QtGui.QLabel(nickname))</span>
+                    <span class="c1">#hBox.addStretch(0)</span>
+<div class="viewcode-block" id="DataSetSettings.resetToDefault"><a class="viewcode-back" href="../../mView.MDataSetConfigGUI.html#mView.MDataSetConfigGUI.DataSetSettings.resetToDefault">[docs]</a>    <span class="k">def</span> <span class="nf">resetToDefault</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">grid</span><span class="p">):</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">device</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">):</span>
+            <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span>
+            <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;chest&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">configureDataSets</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="n">location</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;location&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">configGui</span><span class="o">.</span><span class="n">advancedSettingsWidget</span><span class="o">.</span><span class="n">locationLabels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+        
+           
+        <span class="n">grid</span><span class="o">.</span><span class="n">itemAtPosition</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">location</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="DataSetSettings.openFileDialog"><a class="viewcode-back" href="../../mView.MDataSetConfigGUI.html#mView.MDataSetConfigGUI.DataSetSettings.openFileDialog">[docs]</a>    <span class="k">def</span> <span class="nf">openFileDialog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span>  <span class="n">row</span><span class="p">):</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;DATA_CHEST_ROOT&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">device</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span>   <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+            <span class="nb">dir</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getSaveFileName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Save New Data Set...&quot;</span><span class="p">,</span> 
+                <span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;location&#39;</span><span class="p">],</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="nb">dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">location</span> <span class="o">=</span> <span class="nb">dir</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">dir</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">dir</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getExistingDirectory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Save Data In...&quot;</span><span class="p">,</span>
+                <span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;location&#39;</span><span class="p">])</span>
+            <span class="n">location</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">dir</span><span class="p">))</span>
+        <span class="c1">#print dir</span>
+        
+       
+        <span class="c1">#print &quot;root:&quot;, root</span>
+        <span class="c1">#print &quot;location:&quot;,location</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span> <span class="ow">in</span> <span class="n">location</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s2">&quot;ERROR&quot;</span>
+                <span class="n">errorMsg</span> <span class="o">=</span> <span class="n">PopUp</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span>
+                    <span class="s2">&quot;ERROR: Directory must be inside of directory in DATA_CHEST_ROOT.&quot;</span>
+                    <span class="p">))</span>
+                <span class="n">errorMsg</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">root</span> <span class="o">==</span> <span class="n">location</span><span class="p">:</span>
+          <span class="nb">print</span> <span class="s2">&quot;ERROR&quot;</span>
+          <span class="n">errorMsg</span> <span class="o">=</span> <span class="n">PopUp</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span>
+              <span class="s2">&quot;ERROR: Data must be stored inside of a &quot;</span>
+              <span class="s2">&quot;DIRECTORY which is itself under DATA_CHEST_ROOT.&quot;</span>
+              <span class="p">))</span>
+          <span class="n">errorMsg</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">relativePath</span> <span class="o">=</span>  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">root</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">device</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            
+                <span class="c1">#print &quot;New path for&quot;, str(device)+&quot;:&quot;, location</span>
+                <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+                <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">location</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1">#print &quot;location labels size : &quot;,len(self.configGui.advancedSettingsWidget.locationLabels)</span>
+                <span class="c1">#print &quot;location labels: &quot;,self.configGui.advancedSettingsWidget.locationLabels</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">device</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">devices</span><span class="p">):</span>
+                    <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span>
+                    <span class="n">device</span><span class="o">.</span><span class="n">getFrame</span><span class="p">()</span><span class="o">.</span><span class="n">DataLoggingInfo</span><span class="p">()[</span><span class="s1">&#39;location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">location</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">configGui</span><span class="o">.</span><span class="n">advancedSettingsWidget</span><span class="o">.</span><span class="n">locationLabels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+            <span class="n">grid</span><span class="o">.</span><span class="n">itemAtPosition</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+        <span class="c1"># else:</span>
+            <span class="c1"># print &quot;DATA_CHEST_ROOT Directory must be a parent directory of datalogging location.&quot;</span>
+        <span class="c1">#grid.itemAtPosition(row, 2).widget().setText(dir.replace(root, &#39;&#39;))</span>
+        <span class="k">return</span> <span class="nb">dir</span></div></div>
+        
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

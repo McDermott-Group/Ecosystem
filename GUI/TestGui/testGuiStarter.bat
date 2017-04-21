@@ -4,6 +4,9 @@ start /b python C:\Users\Noah\OneDrive\mcDermott\Servers\telecommServer.py
 timeout 2
 start /b python C:\Users\Noah\OneDrive\mcDermott\Servers\GUI\TestGui\dummyServer.py
 timeoout 2
+start /b python C:\Users\Noah\OneDrive\mcDermott\Servers\GUI\TestGui\dummyServer2.py
+timeoout 2
+
 start /b python C:\Users\Noah\OneDrive\mcDermott\Servers\GUI\TestGui\testGui.py
 
 exit

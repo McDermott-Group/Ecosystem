@@ -34,6 +34,7 @@ from labrad.server import setting
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad import units
+import numpy as np
 
 class SIM921Server(GPIBManagedServer):
     """Provides basic control for SRS SIM921 AC Resistance Bridge Module"""
@@ -55,7 +56,10 @@ class SIM921Server(GPIBManagedServer):
         """Get temperature being read by the AC Res Bridge right now."""
         dev = self.selectedDevice(c)
         gpibstring = yield dev.query("TVAL?")
-        T = float(gpibstring.strip('\x00'))*units.K
+        try:
+            T = float(gpibstring.strip('\x00'))*units.K
+        except ValueError:
+            T = np.NaN
         returnValue( T )
     
     @setting(103, 'Set Curve', curve=['v'])

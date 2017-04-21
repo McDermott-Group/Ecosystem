@@ -50,13 +50,13 @@ VALID_PARAMETER_TYPES = ["int", "long", "float", "complex", "bool",
                          "bool_", "int8", "int16", "int32", "int64",
                          "uint8", "uint16", "uint32", "uint64",
                          "float16", "float32", "float64",
-                         "complex64", "complex128"]
+                         "complex64", "complex128", "ndarray"]
 
 TYPE_CASTING_OBJECTS = [int, long, float, complex, bool, list,
                             str, unicode, tuple, dict, np.bool_, np.int8, np.int16,
                             np.int32, np.int64, np.uint8, np.uint16,
                             np.uint32, np.uint64, np.float16, np.float32,
-                            np.float64, np.complex64, np.complex128]
+                            np.float64, np.complex64, np.complex128, np.array]
 
 class dataChest(dateStamp):
 
@@ -425,6 +425,11 @@ class dataChest(dateStamp):
   def _getParamterTypeString(self, paramValue):
     paramTypeString = paramValue.__class__.__name__
     for ii in range(0, len(VALID_PARAMETER_TYPES)):
+      if paramTypeString == "ndarray":
+        if paramValue.dtype != "|O":
+            return paramTypeString
+        else:
+            return "Invalid"
       if paramTypeString == VALID_PARAMETER_TYPES[ii]:
         return paramTypeString
     return "Invalid"

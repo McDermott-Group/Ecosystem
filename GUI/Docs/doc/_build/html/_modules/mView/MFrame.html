@@ -1,0 +1,381 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mView.MFrame &#8212; GUI  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mView.MFrame</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016 Noah Meltzer</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 2 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2016, McDermott Group&quot;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s2">&quot;GPL&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.5.2&quot;</span>
+<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s2">&quot;Noah Meltzer&quot;</span>
+<span class="n">__status__</span> <span class="o">=</span> <span class="s2">&quot;Beta&quot;</span>
+
+<span class="kn">from</span> <span class="nn">MWeb</span> <span class="k">import</span> <span class="n">web</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="viewcode-block" id="MFrame"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame">[docs]</a><span class="k">class</span> <span class="nc">MFrame</span><span class="p">:</span>
+  
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This class acts as the interface between the devices and all</span>
+<span class="sd">    classes which use the device or any of its parameters.&quot;&quot;&quot;</span>
+        <span class="c1"># Name of device&#39;s server.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">serverTitle</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Parameter names to be displayed on the GUI.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Settings which are called by the GUI.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">serverSettings</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Device readings.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">readings</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Precisions.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Errors.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># Error messages.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">errmsg</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Label on the y axis of the dataChest dataplot.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yLabel</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="c1"># Units used for each parameter.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Buttons on the GUI used to control the device.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span> <span class="o">=</span> <span class="p">[[]]</span>
+        <span class="c1"># Stores an index of a certain button.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttonInd</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Is a specified button pushed?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttonPushed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># Store the plots.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isPlotBool</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># Just in case the user wants to label their NGui plot with</span>
+        <span class="c1"># custom units (note these are only the units displayed onscreen,</span>
+        <span class="c1"># not the units that the data is logged with).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">custUnits</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="c1"># If the length of the graph should be plotted over a fixed interval.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotLength</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Hold the datachest object.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Hold the plot.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># # Datalogging disabled by default</span>
+        <span class="c1"># self.logData = False</span>
+        <span class="c1">#Datachest wrapper class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataChestWrapper</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Dictionary holding datalogging settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datalogsettingsDict</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;logData&quot;</span>   <span class="p">:</span>   <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;location&quot;</span><span class="p">:</span>     <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">&quot;dataset&quot;</span>   <span class="p">:</span>     <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="p">,</span>
+                <span class="s2">&quot;channels&quot;</span><span class="p">:</span>     <span class="p">{},</span>
+                <span class="s2">&quot;chest&quot;</span>        <span class="p">:</span>      <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">&quot;name&quot;</span>           <span class="p">:</span>      <span class="bp">self</span><span class="o">.</span><span class="n">serverTitle</span>
+                <span class="p">}</span>
+
+        <span class="n">restoredSettings</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="s2">&quot;DataLoggingInfo&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">serverTitle</span><span class="p">)</span>
+        <span class="c1"># Is the parameter visible?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paramVisibility</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="k">if</span> <span class="n">restoredSettings</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">datalogsettingsDict</span> <span class="o">=</span> <span class="n">restoredSettings</span>
+        <span class="c1"># Is there a reading out of range?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outOfRange</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">container</span> <span class="o">=</span> <span class="kc">None</span>
+<div class="viewcode-block" id="MFrame.setTitle"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setTitle">[docs]</a>    <span class="k">def</span> <span class="nf">setTitle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+       <span class="c1"># print &quot;Set title:&quot;, title</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">serverTitle</span> <span class="o">=</span> <span class="n">title</span></div>
+    
+<div class="viewcode-block" id="MFrame.getTitle"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getTitle">[docs]</a>    <span class="k">def</span> <span class="nf">getTitle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#print &quot;Get Title:&quot;,self.serverTitle</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">serverTitle</span></div>
+
+<div class="viewcode-block" id="MFrame.getNicknames"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getNicknames">[docs]</a>    <span class="k">def</span> <span class="nf">getNicknames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#print &quot;----------NICKNAMES WAS Got&quot;, self.nicknames</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span></div>
+
+<div class="viewcode-block" id="MFrame.setNicknames"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setNicknames">[docs]</a>    <span class="k">def</span> <span class="nf">setNicknames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nicknames</span><span class="p">):</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span> <span class="o">=</span> <span class="n">nicknames</span></div>
+        <span class="c1">#print &quot;---------- set nicknames NICKNAMES WAS SET&quot;, self.nicknames</span>
+<div class="viewcode-block" id="MFrame.setReadings"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setReadings">[docs]</a>    <span class="k">def</span> <span class="nf">setReadings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">readings</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">readings</span> <span class="o">=</span> <span class="n">readings</span></div>
+
+<div class="viewcode-block" id="MFrame.getReadings"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getReadings">[docs]</a>    <span class="k">def</span> <span class="nf">getReadings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">readings</span></div>
+        
+<div class="viewcode-block" id="MFrame.setPrecisions"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setPrecisions">[docs]</a>    <span class="k">def</span> <span class="nf">setPrecisions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precisions</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span> <span class="o">=</span> <span class="n">precisions</span></div>
+
+<div class="viewcode-block" id="MFrame.getPrecisions"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getPrecisions">[docs]</a>    <span class="k">def</span> <span class="nf">getPrecisions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span></div>
+        
+<div class="viewcode-block" id="MFrame.setReadingIndices"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setReadingIndices">[docs]</a>    <span class="k">def</span> <span class="nf">setReadingIndices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">readingIndices</span> <span class="o">=</span> <span class="n">index</span></div>
+
+<div class="viewcode-block" id="MFrame.getReadingIndices"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getReadingIndices">[docs]</a>    <span class="k">def</span> <span class="nf">getReadingIndices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">readingIndices</span></div>
+       
+<div class="viewcode-block" id="MFrame.raiseError"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.raiseError">[docs]</a>    <span class="k">def</span> <span class="nf">raiseError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">errmsg</span> <span class="o">=</span> <span class="n">msg</span></div>
+
+<div class="viewcode-block" id="MFrame.retractError"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.retractError">[docs]</a>    <span class="k">def</span> <span class="nf">retractError</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">errmsg</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="MFrame.isError"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.isError">[docs]</a>    <span class="k">def</span> <span class="nf">isError</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">error</span></div>
+
+<div class="viewcode-block" id="MFrame.errorMsg"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.errorMsg">[docs]</a>    <span class="k">def</span> <span class="nf">errorMsg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">errmsg</span></div>
+
+<div class="viewcode-block" id="MFrame.setUnits"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setUnits">[docs]</a>    <span class="k">def</span> <span class="nf">setUnits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">units</span></div>
+
+<div class="viewcode-block" id="MFrame.getUnits"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getUnits">[docs]</a>    <span class="k">def</span> <span class="nf">getUnits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span></div>
+
+<div class="viewcode-block" id="MFrame.getCustomUnits"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getCustomUnits">[docs]</a>    <span class="k">def</span> <span class="nf">getCustomUnits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">custUnits</span></div>
+
+<div class="viewcode-block" id="MFrame.getButtons"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getButtons">[docs]</a>    <span class="k">def</span> <span class="nf">getButtons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span></div>
+
+<div class="viewcode-block" id="MFrame.setButtons"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setButtons">[docs]</a>    <span class="k">def</span> <span class="nf">setButtons</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buttons</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span> <span class="o">=</span> <span class="n">buttons</span></div>
+        
+<div class="viewcode-block" id="MFrame.appendButton"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.appendButton">[docs]</a>    <span class="k">def</span> <span class="nf">appendButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">button</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; Add another button to GUI.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">button</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="MFrame.buttonPressed"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.buttonPressed">[docs]</a>    <span class="k">def</span> <span class="nf">buttonPressed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buttonInd</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttonInd</span> <span class="o">=</span> <span class="n">buttonInd</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttonPushed</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="MFrame.getButtonPressed"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getButtonPressed">[docs]</a>    <span class="k">def</span> <span class="nf">getButtonPressed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttonPushed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">buttonInd</span></div>
+
+<div class="viewcode-block" id="MFrame.isButtonPressed"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.isButtonPressed">[docs]</a>    <span class="k">def</span> <span class="nf">isButtonPressed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">buttonPushed</span></div>
+
+<div class="viewcode-block" id="MFrame.setYLabel"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setYLabel">[docs]</a>    <span class="k">def</span> <span class="nf">setYLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">custUnits</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">custUnits</span> <span class="o">=</span> <span class="n">custUnits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yLabel</span> <span class="o">=</span> <span class="n">y</span></div>
+
+<div class="viewcode-block" id="MFrame.getYLabel"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getYLabel">[docs]</a>    <span class="k">def</span> <span class="nf">getYLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">yLabel</span></div>
+
+<div class="viewcode-block" id="MFrame.addPlot"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.addPlot">[docs]</a>    <span class="k">def</span> <span class="nf">addPlot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isPlotBool</span><span class="o">=</span><span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotLength</span> <span class="o">=</span> <span class="n">length</span></div>
+<div class="viewcode-block" id="MFrame.setHasPlot"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setHasPlot">[docs]</a>    <span class="k">def</span> <span class="nf">setHasPlot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hasPlot</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isPlotBool</span> <span class="o">=</span> <span class="n">hasPlot</span></div>
+<div class="viewcode-block" id="MFrame.isPlot"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.isPlot">[docs]</a>    <span class="k">def</span> <span class="nf">isPlot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#print &quot;is plot set to true&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">isPlotBool</span></div>
+
+<div class="viewcode-block" id="MFrame.setPlot"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setPlot">[docs]</a>    <span class="k">def</span> <span class="nf">setPlot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">p</span></div>
+
+<div class="viewcode-block" id="MFrame.getPlot"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getPlot">[docs]</a>    <span class="k">def</span> <span class="nf">getPlot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span></div>
+
+<div class="viewcode-block" id="MFrame.setPlotRefreshRate"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setPlotRefreshRate">[docs]</a>    <span class="k">def</span> <span class="nf">setPlotRefreshRate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
+        <span class="k">if</span>  <span class="bp">self</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span><span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Refresh Rates cannot be set until name is given to device.&quot;</span><span class="p">)</span>
+        <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="s1">&#39;deviceRefreshRates&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">getTitle</span><span class="p">(),</span><span class="s1">&#39;plot&#39;</span><span class="p">)</span></div>
+      
+<div class="viewcode-block" id="MFrame.getPlotRefreshRate"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getPlotRefreshRate">[docs]</a>    <span class="k">def</span> <span class="nf">getPlotRefreshRate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#pprint.pprint(web.persistentDataDict)</span>
+        <span class="k">if</span>  <span class="bp">self</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span><span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Refresh Rates cannot be set until name is given to device.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;deviceRefreshRates&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">getTitle</span><span class="p">(),</span><span class="s1">&#39;plot&#39;</span><span class="p">,</span> <span class="n">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="MFrame.setRefreshRate"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setRefreshRate">[docs]</a>    <span class="k">def</span> <span class="nf">setRefreshRate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
+        <span class="k">if</span>  <span class="bp">self</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span><span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Refresh Rates cannot be set until name is given to device.&quot;</span><span class="p">)</span>
+        
+        <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="s1">&#39;deviceRefreshRates&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">getTitle</span><span class="p">(),</span><span class="s1">&#39;readings&#39;</span><span class="p">)</span> </div>
+        
+<div class="viewcode-block" id="MFrame.getRefreshRate"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getRefreshRate">[docs]</a>    <span class="k">def</span> <span class="nf">getRefreshRate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span>  <span class="bp">self</span><span class="o">.</span><span class="n">getTitle</span><span class="p">()</span><span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Refresh Rates cannot be set until name is given to device.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">web</span><span class="o">.</span><span class="n">persistentData</span><span class="o">.</span><span class="n">persistentDataAccess</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;deviceRefreshRates&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">getTitle</span><span class="p">(),</span><span class="s1">&#39;readings&#39;</span><span class="p">,</span> <span class="n">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="MFrame.getPlotLength"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getPlotLength">[docs]</a>    <span class="k">def</span> <span class="nf">getPlotLength</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plotLength</span></div>
+
+<div class="viewcode-block" id="MFrame.setDataSet"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setDataSet">[docs]</a>    <span class="k">def</span> <span class="nf">setDataSet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataSet</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span> <span class="o">=</span> <span class="n">dataSet</span></div>
+
+<div class="viewcode-block" id="MFrame.getDataSet"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getDataSet">[docs]</a>    <span class="k">def</span> <span class="nf">getDataSet</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span></div>
+<div class="viewcode-block" id="MFrame.getDataChestWrapper"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getDataChestWrapper">[docs]</a>    <span class="k">def</span> <span class="nf">getDataChestWrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataChestWrapper</span></div>
+<div class="viewcode-block" id="MFrame.setDataChestWrapper"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setDataChestWrapper">[docs]</a>    <span class="k">def</span> <span class="nf">setDataChestWrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wrapper</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataChestWrapper</span> <span class="o">=</span> <span class="n">wrapper</span></div>
+<div class="viewcode-block" id="MFrame.enableDataLogging"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.enableDataLogging">[docs]</a>    <span class="k">def</span> <span class="nf">enableDataLogging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">datalogsettingsDict</span><span class="p">[</span><span class="s1">&#39;logData&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span></div>
+
+<div class="viewcode-block" id="MFrame.isDataLogging"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.isDataLogging">[docs]</a>    <span class="k">def</span> <span class="nf">isDataLogging</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">datalogsettingsDict</span><span class="p">[</span><span class="s1">&#39;logData&#39;</span><span class="p">]</span></div>
+        
+<div class="viewcode-block" id="MFrame.DataLoggingInfo"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.DataLoggingInfo">[docs]</a>    <span class="k">def</span> <span class="nf">DataLoggingInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#print &quot;DATALOGGING INFO ACCESSED&quot;, self.datalogsettingsDict</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">datalogsettingsDict</span></div>
+       
+<div class="viewcode-block" id="MFrame.getOutOfRangeStatus"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getOutOfRangeStatus">[docs]</a>    <span class="k">def</span> <span class="nf">getOutOfRangeStatus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">outOfRange</span></div>
+        
+<div class="viewcode-block" id="MFrame.setOutOfRange"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setOutOfRange">[docs]</a>    <span class="k">def</span> <span class="nf">setOutOfRange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outOfRange</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="MFrame.setInRange"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setInRange">[docs]</a>    <span class="k">def</span> <span class="nf">setInRange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outOfRange</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="MFrame.disableRange"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.disableRange">[docs]</a>    <span class="k">def</span> <span class="nf">disableRange</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">outOfRange</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="kc">False</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outOfRange</span><span class="p">}</span></div>
+    
+<div class="viewcode-block" id="MFrame.setNode"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setNode">[docs]</a>    <span class="k">def</span> <span class="nf">setNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">node</span></div>
+        
+<div class="viewcode-block" id="MFrame.getNode"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getNode">[docs]</a>    <span class="k">def</span> <span class="nf">getNode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span></div>
+        
+<div class="viewcode-block" id="MFrame.setContainer"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setContainer">[docs]</a>    <span class="k">def</span> <span class="nf">setContainer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">container</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">container</span> <span class="o">=</span> <span class="n">container</span></div>
+        
+<div class="viewcode-block" id="MFrame.getContainer"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getContainer">[docs]</a>    <span class="k">def</span> <span class="nf">getContainer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span></div>
+        
+<div class="viewcode-block" id="MFrame.addParameter"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.addParameter">[docs]</a>    <span class="k">def</span> <span class="nf">addParameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Adds to list of parameters displayed on the gui.&#39;&#39;&#39;</span>
+        <span class="nb">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">getTitle</span><span class="p">(),</span> <span class="s2">&quot;----------add parameter called&quot;</span><span class="p">,</span> <span class="n">params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nicknames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span></div>
+        
+        <span class="c1">#print &quot;---------- add parameter NICKNAMES WAS SET&quot;, self.nicknames</span>
+<div class="viewcode-block" id="MFrame.setParamVisibility"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.setParamVisibility">[docs]</a>    <span class="k">def</span> <span class="nf">setParamVisibility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">visible</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Set whether or not a parameter shows up on the GUI.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paramVisibility</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">visible</span></div>
+<div class="viewcode-block" id="MFrame.isParamVisible"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.isParamVisible">[docs]</a>    <span class="k">def</span> <span class="nf">isParamVisible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Get the visibility of a parameter.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">paramVisibility</span><span class="p">[</span><span class="n">param</span><span class="p">]</span></div>
+<div class="viewcode-block" id="MFrame.getRawDataSet"><a class="viewcode-back" href="../../mView.MFrame.html#mView.MFrame.MFrame.getRawDataSet">[docs]</a>    <span class="k">def</span> <span class="nf">getRawDataSet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Get a tuple structured as (name, units, [1-d data]).&#39;&#39;&#39;</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
+        <span class="c1">#print &quot;looking for&quot;, param</span>
+        <span class="c1">#print &quot;Variables: &quot;, self.dataSet.getVariables()</span>
+        <span class="c1">#print &quot;data: &quot;, np.transpose(self.dataSet.getData())</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1">#print &quot;enumerate(self.dataSet.getVariables())&quot;, enumerate(self.dataSet.getVariables())</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">getVariables</span><span class="p">()[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="c1">#print &quot;var[0]:&quot;, var[0]</span>
+                <span class="k">if</span> <span class="n">param</span> <span class="o">==</span> <span class="n">var</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="c1">#print &quot;Found it!&quot;</span>
+                    <span class="n">loc</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="k">if</span> <span class="n">loc</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">getData</span><span class="p">())[</span><span class="n">loc</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">variable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataSet</span><span class="o">.</span><span class="n">getVariables</span><span class="p">()[</span><span class="mi">1</span><span class="p">][</span><span class="n">loc</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">[</span><span class="n">loc</span><span class="p">],</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div></div>
+        <span class="c1">#return self.dataSet.getVariables</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

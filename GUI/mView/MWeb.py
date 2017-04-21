@@ -23,6 +23,8 @@ __status__ = "Beta"
 import traceback
 import inspect
 import MPersistentData
+import sys
+sys.dont_write_bytecode=True
 class web:
     """
     Organizes global variables. Allows all other classes to easily
@@ -42,8 +44,14 @@ class web:
     telecomm = None
     # DPI scaling ratio.
     ratio = 1
+    scrnHeight = None
+    scrnWidth = None
+    # List of virtual devices
+    virtualDevices = []
+    gui = None
     title = None
-
+    nodeFilenames = []
+    nodes = []
     persistentData = None
     
    

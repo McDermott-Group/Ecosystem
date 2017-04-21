@@ -1,6 +1,6 @@
 # Copyright (C) 2008  Matthew Neeley
-#           (C) 2015  Chris Wilen, Ivan Pechenezhskiy 
-#          
+#           (C) 2015  Chris Wilen, Ivan Pechenezhskiy
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
@@ -18,7 +18,7 @@
 ### BEGIN NODE INFO
 [info]
 name = SIM900
-version = 1.4.1
+version = 1.5.0
 description = Gives access to GPIB devices in the SIM900 mainframe.
 instancename = SIM900
 
@@ -32,22 +32,23 @@ timeout = 20
 ### END NODE INFO
 """
 
+import string
+import random
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.reactor import callLater
 
+from labrad import util
 from labrad.server import LabradServer, setting
 from labrad.errors import DeviceNotSelectedError
 import labrad.units as units
 from labrad.gpib import GPIBManagedServer
 
-import string
 
 class SIM900(GPIBManagedServer):
     """Provides direct access to GPIB-enabled devices."""
     name = 'SIM900'
     deviceName = 'STANFORD RESEARCH SYSTEMS SIM900'
-    # refreshInterval = 10
-    defaultTimeout = 1.0*units.s
+    defaultTimeout = 1.0 * units.s
 
     def initServer(self):
         GPIBManagedServer.initServer(self)
@@ -61,12 +62,12 @@ class SIM900(GPIBManagedServer):
     def handleDeviceMessage(self, *args):
         """We override this function so that whenever a new SIM900 is
         added, and a message is sent out, we refresh the devices. This
-        has the benefit of being able to start this server, the 
+        has the benefit of being able to start this server, the
         GPIB Device Manager, and the GPIB Bus Server, in any order."""
         yield GPIBManagedServer.handleDeviceMessage(self, *args)
-        if args[0] == self.deviceName: 
+        if args[0] == self.deviceName:
             self.refreshDevices()
-    
+
     @inlineCallbacks
     def refreshDevices(self):
         """
@@ -82,17 +83,23 @@ class SIM900(GPIBManagedServer):
             except KeyError as e:
                 callLater(0.1, self.refreshDevices)
                 return
-            res = yield p.select_device(SIM900addr).gpib_write('*RST').gpib_write('*CLS').gpib_query('CTCR?').send()
-            statusStr = res['gpib_query']
-            # Ask the SIM900 which slots have an active module, and only deal with those.
-            statusCodes = [bool(int(x)) for x in "{0:016b}".format(int(statusStr))]
+            p.select_device(SIM900addr)
+            p.gpib_write('*RST').gpib_write('*CLS')
+            p.gpib_write('FLSH').gpib_write('SRST')
+            p.gpib_query('CTCR?')
+            statusStr = (yield p.send())['gpib_query']
+            # Ask the SIM900 which slots have an active module, and only
+            # deal with those.
+            statusCodes = [bool(int(x))
+                           for x in "{0:016b}".format(int(statusStr))]
             statusCodes.reverse()
-            for i in range(1, 9): # slots 1-8 in rack
-                if statusCodes[i]: # added or changed
+            for i in range(1, 9):  # slots 1-8 in rack
+                if statusCodes[i]:  # added or changed
                     # Ex: mcdermott5125 GPIB Bus - GPIB0::2[::INSTR]::SIM900::4
-                    devName = ('::'.join(SIM900addr.split(' - ')[-1].split('::')[:-1] + 
-                            ['SIM900', str(i)]))
-                    devName = SIM900addr+'::SIM900::'+str(i)
+                    devName = ('::'.join(SIM900addr.split(' - ')
+                                         [-1].split('::')[:-1] +
+                                         ['SIM900', str(i)]))
+                    devName = '%s::SIM900::%s' % (SIM900addr, str(i))
                     addresses.append(devName)
         additions = set(addresses) - set(self.mydevices.keys())
         deletions = set(self.mydevices.keys()) - set(addresses)
@@ -116,11 +123,15 @@ class SIM900(GPIBManagedServer):
         return self.rm.list_resources()
 
     def sendDeviceMessage(self, msg, addr):
-        print(msg + ': ' + addr)
+        print('%s: %s' % (msg, addr))
         self.client.manager.send_named_message(msg, (self.name, addr))
 
     def initContext(self, c):
         c['timeout'] = self.defaultTimeout
+
+    def escapeString(self):
+        chars = string.ascii_uppercase + string.ascii_lowercase
+        return 'xZy' + ''.join(random.choice(chars) for _ in range(3))
 
     @setting(19, returns='*s')
     def list_addresses(self, c):
@@ -131,7 +142,7 @@ class SIM900(GPIBManagedServer):
     def refresh_devices(self, c):
         '''Manually refresh devices.'''
         self.refreshDevices()
- 
+
     @setting(20, addr='s', returns='s')
     def address(self, c, addr=None):
         """Get or set the GPIB address for this context.
@@ -148,24 +159,25 @@ class SIM900(GPIBManagedServer):
         """Get or set the GPIB timeout."""
         if time is not None:
             c['timeout'] = time
-        return c['timeout'] 
-  
+        return c['timeout']
+
     @setting(23, data='s', returns='')
     def write(self, c, data):
         """Write a string to the GPIB bus."""
         if 'addr' not in c:
             raise DeviceNotSelectedError("No GPIB address selected")
         if c['addr'] not in self.mydevices:
-            raise Exception('Could not find device ' + c['addr'])
+            raise Exception('Could not find device %s' % c['addr'])
         # Ex: mcdermott5125 GPIB Bus - GPIB0::2::SIM900::4
         gpibBusServName = c['addr'].split(' - ')[0]
         slot = c['addr'][-1]
         p = self.client[gpibBusServName].packet()
         p.address(self.mydevices[c['addr']])
         p.timeout(c['timeout'])
-        p.write("CONN " + str(slot) + ",'xZy'")
+        escape = self.escapeString()
+        p.write("CONN %s,'%s'" % (str(slot), escape))
         p.write(data)
-        p.write('xZy')
+        p.write(escape)
         p.send()
 
     @setting(24, bytes='w', returns='s')
@@ -178,16 +190,17 @@ class SIM900(GPIBManagedServer):
         if 'addr' not in c:
             raise DeviceNotSelectedError("No GPIB address selected")
         if c['addr'] not in self.mydevices:
-            raise Exception('Could not find device ' + c['addr'])
+            raise Exception('Could not find device %s' % c['addr'])
         # Ex: mcdermott5125 GPIB Bus - GPIB0::2::SIM900::4
         gpibBusServName = c['addr'].split(' - ')[0]
         slot = c['addr'][-1]
         p = self.client[gpibBusServName].packet()
         p.address(self.mydevices[c['addr']])
         p.timeout(c['timeout'])
-        p.write("CONN " + str(slot) + ",'xZy'")
+        escape = self.escapeString()
+        p.write("CONN %s,'%s'" % (str(slot), escape))
         p.read_raw(bytes)
-        p.write('xZy')
+        p.write(escape)
         resp = yield p.send()
         returnValue(resp['read_raw'])
 
@@ -197,16 +210,17 @@ class SIM900(GPIBManagedServer):
         if 'addr' not in c:
             raise DeviceNotSelectedError("No GPIB address selected")
         if c['addr'] not in self.mydevices:
-            raise Exception('Could not find device ' + c['addr'])
+            raise Exception('Could not find device %s' % c['addr'])
         # Ex: mcdermott5125 GPIB Bus - GPIB0::2::INSTR::SIM900::4
         gpibBusServName = c['addr'].split(' - ')[0]
         slot = c['addr'][-1]
         p = self.client[gpibBusServName].packet()
         p.address(self.mydevices[c['addr']])
         p.timeout(c['timeout'])
-        p.write("CONN " + str(slot) + ",'xZy'")
+        escape = self.escapeString()
+        p.write("CONN %s,'%s'" % (str(slot), escape))
         p.read()
-        p.write('xZy')
+        p.write(escape)
         resp = yield p.send()
         returnValue(resp['read'])
 
@@ -220,21 +234,23 @@ class SIM900(GPIBManagedServer):
         if 'addr' not in c:
             raise DeviceNotSelectedError("No GPIB address selected")
         if c['addr'] not in self.mydevices:
-            raise Exception('Could not find device ' + c['addr'])
+            raise Exception('Could not find device %s' % c['addr'])
         # Ex: mcdermott5125 GPIB Bus - GPIB0::2[::INSTR]::SIM900::4
         gpibBusServName = c['addr'].split(' - ')[0]
         slot = c['addr'][-1]
         p = self.client[gpibBusServName].packet()
         p.address(self.mydevices[c['addr']])
         p.timeout(c['timeout'])
-        p.write("CONN " + str(slot) + ",'xZy'")
+        escape = self.escapeString()
+        p.write("CONN %s,'%s'" % (str(slot), escape))
         p.query(data)
-        p.write('xZy')
+        p.write(escape)
         resp = yield p.send()
         returnValue(resp['query'])
 
+
 __server__ = SIM900()
 
+
 if __name__ == '__main__':
-    from labrad import util
     util.runServer(__server__)

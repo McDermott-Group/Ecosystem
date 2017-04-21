@@ -6,7 +6,9 @@ class MCheckableComboBox(QtGui.QComboBox):
         super(MCheckableComboBox, self).__init__()
         self.view().pressed.connect(self.handleItemPressed)
         self.setModel(QtGui.QStandardItemModel(self))
-
+        self.setStyleSheet("\
+                    background-color:rgb(70, 80, 88);\
+                    color:rgb(189,195, 199);")       
     def handleItemPressed(self, index):
         item = self.model().itemFromIndex(index)
         if item.checkState() == QtCore.Qt.Checked:

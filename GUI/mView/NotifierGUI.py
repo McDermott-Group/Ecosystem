@@ -25,7 +25,7 @@ __status__ = "Beta"
 # description = Allows user to configure notifications
 """
 import sys
-sys.dont_write_bytecode = True
+
 from PyQt4 import QtCore, QtGui
 from MWeb import web
 import inspect
@@ -33,7 +33,7 @@ import cPickle as pickle
 import os
 import inspect
 import traceback 
-
+sys.dont_write_bytecode = True
 class NotifierGUI(QtGui.QDialog):
     
     def __init__(self, parent = None):
@@ -45,7 +45,7 @@ class NotifierGUI(QtGui.QDialog):
         self.location = os.path.dirname(traceback.extract_stack()[0][0])
         # Dictionary that will store all data
         self.allDataDict = {}
-        print "Looking for config file in: ", self.location
+        #print "Looking for config file in: ", self.location
         # New widget
         self.alert = AlertConfig(self.location)
         # AlDatatxt holds the text contents of all data entered in table
@@ -216,15 +216,14 @@ class AlertConfig(QtGui.QWidget):
                     layout.addWidget(self.allWidgetDict[key][3],z, 7)
                     layout.addWidget(self.allWidgetDict[key][0],z, 2)
                     
-                    if(len(web.devices[j].getFrame().getUnits())>(y-1)):
-                        unitLabel = QtGui.QLabel()
-                        unitLabel.setText(web.devices[j].getFrame()
-                            .getUnits()[y-1])
+                   
+                    unitLabel = QtGui.QLabel()
+                    if web.devices[j].getFrame().getUnit(paramName) is not None:
+                        unitLabel.setText(str(web.devices[j].getFrame()
+                            .getUnit(paramName)))
                         layout.addWidget(unitLabel,z,4)
-                        unitLabel = QtGui.QLabel()
-                        unitLabel.setText(web.devices[j].getFrame()
-                            .getUnits()[y-1])
-                        layout.addWidget(unitLabel,z,6)
+                  
+                    layout.addWidget(unitLabel,z,6)
                     # These are used for indexing
                     z = z+1
                     x = x+1
