@@ -325,7 +325,8 @@ class MDevice(QThread):
         self.query()
         #self.lock.release()
         node = self.frame.getNode()        
-        
+        if node is not None and self.refreshNodeDataInCallQuery:
+            self.frame.getNode().refreshData()
         if self.datachest is not None and self.doneLoading:
             try:
                 t1 = time.time() 
@@ -334,8 +335,7 @@ class MDevice(QThread):
             except:
                 traceback.print_exc()
                 
-        if node is not None and self.refreshNodeDataInCallQuery:
-            self.frame.getNode().refreshData()
+
 
         if web.gui != None and web.gui.MAlert != None:
             web.gui.MAlert.monitorReadings(self)

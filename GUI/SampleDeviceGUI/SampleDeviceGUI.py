@@ -28,7 +28,7 @@ from MDevices.RS232Device import RS232Device
 from MNodeEditor import MNodeTree
 from MNodeEditor.MNodes import MDeviceNode
 from MNodeEditor.MNodes import runningAverage
-
+from MNodeEditor.MNodes import spikeFilter
 import labrad
 import time
 
@@ -60,13 +60,14 @@ class mViewer:
             sys.exit(1)
     
         self.gui = MGui.MGui()
-        lm3000 = RS232Device("Light Meter 3000", "COM7", baud = 115200)
+        lm3000 = RS232Device("Light Meter 3000", "COM7", baud = 115200, lock_logging_settings = True)
+
         lm3000.addButton("Off", 'b0', message = "You are about to turn off the LED.")
         lm3000.addButton("20%", 'b2')
         lm3000.addButton("50%", 'b5')
         lm3000.addButton("80%", 'b8')
         lm3000.addButton("100%", 'b9')
-        lm3000.addParameter("Light Level", "s")
+        lm3000.addParameter("Light Level", "s", log = False, show = False)
         lm3000.setYLabel("Light Level")
         lm3000.addPlot()
         lm3000.begin()
@@ -77,20 +78,23 @@ class mViewer:
         lightMeterNode = MDeviceNode.MDeviceNode(lm3000)
         self.nodeTree.addNode(lightMeterNode)
         rawLightOutput = lightMeterNode.getAnchorByName("Light Level")
-        avgLight = lightMeterNode.addAnchor(name = "Average Light Level", type = "input", terminate = True)
+        filtLight = lightMeterNode.addAnchor(name = "Filtered Light Level", type = "input", terminate = True)
 
-        avg = runningAverage.runningAverage()
-        avg.setWindowWidth(100)
-        avgInput = avg.getAnchorByName("data")
-        avgOutput = avg.getAnchorByName("running avg")
+        # avg = runningAverage.runningAverage()
+        # avg.setWindowWidth(100)
+        # avgInput = avg.getAnchorByName("data")
+        # avgOutput = avg.getAnchorByName("running avg")
         
-        self.nodeTree.connect(rawLightOutput, avgInput)
-        self.nodeTree.connect(avgOutput, avgLight)
-        # self.nodeTree.connect(output, virtAvgInput)
-         
-        # Create the gui.
+        spikeFilt = spikeFilter.spikeFilter()
+        # You can set the data of an input anchor when nothing is connected.
+        spikeFilt.getAnchorByName("threshold").setData(50)
+        rawSpikeDataInput = spikeFilt.getAnchorByName("raw_data")
+        deSpikedData = spikeFilt.getAnchorByName("filtered_data")
         
-        self.gui.startGui('Leiden DR GUI', tele)
+        self.nodeTree.connect(rawLightOutput, rawSpikeDataInput)
+        self.nodeTree.connect(deSpikedData, filtLight)
+
+        self.gui.startGui('Light Meter 3000 GUI', tele)
         
         
 # In Python, the main class's __init__() IS NOT automatically called.

@@ -29,18 +29,16 @@ class MNode(object):
     # Attribute that lets MView find this MNode
     
     def __init__(self, *args, **kwargs):
-        
+        '''Initialize the new node.'''
         web.nodes.append(self)
-        
-
         self.tree = None
-        #self.begin()
         self.anchors = []
         self.callAnchorAdded  = False
         
     def begin(self,  *args,  **kwargs):
-        ''' Create a new node'''
-        #print "wrong begin called"
+        ''' Create a new node. Calls onBegin of 
+       child if child has overridden onBegin().
+   '''
         self.onBegin()
         pass
     def onBegin(self):

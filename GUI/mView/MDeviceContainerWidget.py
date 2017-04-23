@@ -263,7 +263,7 @@ class MDeviceContainerWidget(QtGui.QFrame):
                                 if not math.isnan(param['reading']):
                                     self.params[key]["lcd_readout"].display(format.format(param['reading']))
                                 else:
-                                    self.params[key]["lcd_readout"].display("No Reading")
+                                    self.params[key]["lcd_readout"].display("---")
                                 
                             else:
                                 #print "not a float", type(param['reading'])

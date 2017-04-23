@@ -33,7 +33,7 @@ from PyQt4 import QtGui
 class RS232Device(MDevice):
     def __init__(self, *args, **kwargs):
         '''Initialize variables. Most of the device parameters cannot yet be initialized.'''
-        super(RS232Device, self).__init__(*args)
+        super(RS232Device, self).__init__(*args, **kwargs)
         # The name of the device is passed as the first argument.
         self.name = args[0]
         # The name of the port (i.e. COMx) is given as the second argument.
