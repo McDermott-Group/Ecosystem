@@ -13,7 +13,7 @@ p5
 S'QString'
 (V
 ttRp6
-asS'Lakeshore 218:XCH'
+asS'Still:Pressure 2'
 p7
 (lp8
 I00
@@ -24,7 +24,7 @@ ag4
 S'QString'
 (V
 ttRp9
-asS'Still:Pressure 2'
+asS'Return:Pressure 1'
 p10
 (lp11
 I00
@@ -35,7 +35,7 @@ ag4
 S'QString'
 (V
 ttRp12
-asS'Return:Pressure 1'
+asS'Return:Pressure 2'
 p13
 (lp14
 I00
@@ -46,7 +46,7 @@ ag4
 S'QString'
 (V
 ttRp15
-asS'Return:Pressure 2'
+asS'Lakeshore 218:4IN'
 p16
 (lp17
 I00
@@ -57,7 +57,7 @@ ag4
 S'QString'
 (V
 ttRp18
-asS'Lakeshore 218:4IN'
+asS'Lakeshore 370:Still'
 p19
 (lp20
 I00
@@ -68,7 +68,7 @@ ag4
 S'QString'
 (V
 ttRp21
-asS'Lakeshore 370:Still'
+asS'Lakeshore 218:STILL'
 p22
 (lp23
 I00
@@ -79,7 +79,7 @@ ag4
 S'QString'
 (V
 ttRp24
-asS'Lakeshore 218:STILL'
+asS'Lakeshore 218:Sensor 3'
 p25
 (lp26
 I00
@@ -90,7 +90,7 @@ ag4
 S'QString'
 (V
 ttRp27
-asS'Lakeshore 218:Sensor 3'
+asS'Lakeshore 370:Mix 1'
 p28
 (lp29
 I00
@@ -101,7 +101,7 @@ ag4
 S'QString'
 (V
 ttRp30
-asS'Lakeshore 370:Mix 1'
+asS'Keg:Pressure 1'
 p31
 (lp32
 I00
@@ -112,7 +112,7 @@ ag4
 S'QString'
 (V
 ttRp33
-asS'Keg:Pressure 1'
+asS'Keg:Pressure 2'
 p34
 (lp35
 I00
@@ -123,7 +123,7 @@ ag4
 S'QString'
 (V
 ttRp36
-asS'Keg:Pressure 2'
+asS'Lakeshore 370:Mix 2'
 p37
 (lp38
 I00
@@ -134,7 +134,7 @@ ag4
 S'QString'
 (V
 ttRp39
-asS'Lakeshore 370:Mix 2'
+asS'Lakeshore 218:4OUT'
 p40
 (lp41
 I00
@@ -200,7 +200,7 @@ ag4
 S'QString'
 (V
 ttRp57
-asS'Lakeshore 218:4OUT'
+asS'Lakeshore 218:XCH'
 p58
 (lp59
 I00
