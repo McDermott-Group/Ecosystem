@@ -255,7 +255,7 @@ class dataChestWrapper:
             # Append NaN.
             try:
                 for y in range(1, self.dataSet.getParameter("DataWidth")):
-                    vars.append(np.nan)
+                    vars.append(float(np.nan))
                 self.dataSet.addData([vars])
             except:
                 traceback.print_exc()

@@ -50,7 +50,7 @@ class nViewer:
        # self.devices.append(Random)
         self.gui.addDevice(Random)
         
-        localTemp = Device("Local Temperatures", lock_logging_settings = True)
+        localTemp = Device("Local Temperatures")
         localTemp.connection(cxn)
         localTemp.setServerName("my_server2")
         localTemp.addParameter("Outside Temperature", "temperature", None, log = True)
