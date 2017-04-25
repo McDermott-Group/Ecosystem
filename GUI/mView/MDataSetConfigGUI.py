@@ -59,7 +59,7 @@ class DataSetConfigGUI(QtGui.QDialog):
     def okClicked(self):
         # Take a look at what changed
         root = os.environ['DATA_CHEST_ROOT']
-
+        root = root.replace("/","\\")
         for i, device in enumerate(web.devices):
             # print "Data logging info:",device.getFrame().DataLoggingInfo()
             # If any changes were made, reinitialize the datalogger.
@@ -116,7 +116,7 @@ class DataSetSettings(QtGui.QWidget):
         rootlbl = QtGui.QLabel("DATA_CHEST_ROOT:")
         rootlbl.setFont(font)
         hbox.addWidget(rootlbl)
-        hbox.addWidget(QtGui.QLabel("\t" + str(os.environ['DATA_CHEST_ROOT'])))
+        hbox.addWidget(QtGui.QLabel("\t" + str(os.environ['DATA_CHEST_ROOT']).replace("/","\\")))
         # self.checkboxes.append([])
         # grid.addWidget(QtGui.QLabel("Data Log Locations: "),1,0,1,2)
 
@@ -223,6 +223,7 @@ class DataSetSettings(QtGui.QWidget):
 
     def openFileDialog(self, device, grid,  row):
         root = os.environ['DATA_CHEST_ROOT']
+        root = root.replace("/","\\")
         if device != None:
             name = device.getFrame().DataLoggingInfo()['name']
             dir = QtGui.QFileDialog.getSaveFileName(self, "Save New Data Set...",

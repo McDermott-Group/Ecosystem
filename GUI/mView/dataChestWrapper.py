@@ -132,6 +132,7 @@ class dataChestWrapper:
 
         if location != None:
             root = os.environ['DATA_CHEST_ROOT']
+            root = root.replace("/","\\")
             relativePath = os.path.relpath(location, root)
             print "relativePath:", relativePath
             if relativePath == '.':
