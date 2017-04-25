@@ -27,53 +27,55 @@ from MNodeEditor.MAnchor import MAnchor
 from MDevices.MVirtualDevice import MVirtualDevice
 from MWeb import web
 from functools import partial
+
+
 class MVirtualDeviceNode(MNode):
     def __init__(self, name, *args, **kwargs):
-        
-        super( MVirtualDeviceNode, self).__init__(None, *args, **kwargs)
+
+        super(MVirtualDeviceNode, self).__init__(None, *args, **kwargs)
         self.name = name
         self.setColor(52, 94, 73)
         self.associatedDevice = None
         self.device = None
         self.keywordArgs = kwargs
-        
-        
-    def begin(self,*args):
-        super( MVirtualDeviceNode, self).begin()
-        #print "initializing MVirtualDeviceNode"
+
+    def begin(self, *args):
+        super(MVirtualDeviceNode, self).begin()
+        # print "initializing MVirtualDeviceNode"
         #self.addAnchor(name = 'Self', type = 'output')
-        #self.propogateData(False)
+        # self.propogateData(False)
         #self.setTitle("Virtual Device")
-        #print "creating new virtual device named", self.getTitle()
+        # print "creating new virtual device named", self.getTitle()
         self.associatedDevice = MVirtualDevice(self.name, **self.keywordArgs)
         self.setDevice(self.associatedDevice)
         self.associatedDevice.addPlot()
         #self.associatedDevice.addParameter(str(self.getAnchors()[0]), None, None, show = False)
         self.associatedDevice.getFrame().setNode(self)
         editButton = QtGui.QPushButton("Edit")
-        
+
         #self.showOnGui = QtGui.QCheckBox("Show", self.nodeFrame)
         #self.showOnGui.setStyleSheet("color:rgb(189,195,199);\n background:rgb(52,94,73,0)")
-        #self.showOnGui.setChecked(True)
+        # self.showOnGui.setChecked(True)
         #self.nodeLayout.addWidget(editButton, 0, 1)
         #self.nodeLayout.addWidget(self.showOnGui, 1, 0)
-        #editButton.clicked.connect(self.openVirtualDeviceGui)
+        # editButton.clicked.connect(self.openVirtualDeviceGui)
         #web.gui.color = (52,94,73)
-        
-        #self.showOnGui.clicked.connect(partial(self.associatedDevice.getFrame().getContainer().visible))
+
+        # self.showOnGui.clicked.connect(partial(self.associatedDevice.getFrame().getContainer().visible))
     def onLoad(self):
         web.gui.addDevice(self.associatedDevice)
-        
+
     def setDevice(self, device):
         self.device = device
+
     def refreshData(self):
-        #print "virtual device refreshing data"
-        
+        # print "virtual device refreshing data"
+
         reading = []
         units = []
         paramNames = []
         precisions = []
-        for i,anchor in enumerate(self.getAnchors()[0::]):
+        for i, anchor in enumerate(self.getAnchors()[0::]):
            # print "anchor:", anchor
             metadata = anchor.getMetaData()
             data = anchor.getData()
@@ -82,33 +84,35 @@ class MVirtualDeviceNode(MNode):
                 precisions.append(None)
                # paramNames.append(metadata[0])
             else:
-                #print self.associatedDevice, "units", self.associatedDevice.getFrame().getUnits()
+                # print self.associatedDevice, "units",
+                # self.associatedDevice.getFrame().getUnits()
                 units.append(self.associatedDevice.getUnit(str(anchor)))
-                
+
                 precisions.append(None)
             paramNames.append(self.associatedDevice.getFrame().nicknames[i])
-            #print "data:", data
+            # print "data:", data
             if type(data) is list:
-                #print "its a tuple, saving", data[2][-1]
-                
+                # print "its a tuple, saving", data[2][-1]
+
                 reading.append(data[-1])
-                
+
             else:
                 reading.append(data)
           #  anchor.getLcd().display(reading[-1])
-        #print "setting virt dev readings:", reading
+        # print "setting virt dev readings:", reading
         self.associatedDevice.getFrame().setUnits(units)
-        
+
         self.associatedDevice.getFrame().nicknames = paramNames
         self.associatedDevice.setReadings(reading)
         self.associatedDevice.setPrecisions(precisions)
     # def onAddAnchor(self, anchor, **kwargs):
-        # 
-        # 
+        #
+        #
+
     def anchorAdded(self, anchor, **kwargs):
-        #print "---------Adding parameter"
+        # print "---------Adding parameter"
         self.associatedDevice.addParameter(str(anchor), None, None)
-        
+
     def pipeConnected(self, anchor, pipe):
         '''called when a pipe is added'''
 
@@ -116,18 +120,20 @@ class MVirtualDeviceNode(MNode):
         #newAnchor = self.addAnchor(name = 'New Input', type = 'input')
         #self.associatedDevice.addParameter(str(newAnchor), None, None)
         # elif anchor.getLabel() == 'Self':
-            # anchor.setData(self.getDevice())
+        # anchor.setData(self.getDevice())
         pass
+
     def pipeDisconnected(self):
 
-       self.removeAnchor()
-       
+        self.removeAnchor()
+
     def openVirtualDeviceGui(self):
         dialog = MVirtualDeviceGui(self.associatedDevice, self)
         dialog.exec_()
-        
+
+
 class MVirtualDeviceGui(QtGui.QDialog):
-    def __init__(self,associatedDevice,node,  parent = None):
+    def __init__(self, associatedDevice, node,  parent=None):
         super(MVirtualDeviceGui, self).__init__(parent)
         self.node = node
         self.associatedDevice = associatedDevice
@@ -143,15 +149,16 @@ class MVirtualDeviceGui(QtGui.QDialog):
         closebtn.clicked.connect(self.close)
         layout.addRow(closebtn)
         self.setLayout(layout)
-        
+
     def getName(self, name, index, label, anchor):
-        text, ok = QtGui.QInputDialog.getText(self, "Virtual Device Name Editor", name)
+        text, ok = QtGui.QInputDialog.getText(
+            self, "Virtual Device Name Editor", name)
         if ok:
             nicknames = self.associatedDevice.getFrame().getNicknames()
             nicknames[index] = text
             self.associatedDevice.getFrame().setNicknames(nicknames)
-            self.associatedDevice.getContainer().nicknameLabels[index].setText(text)
+            self.associatedDevice.getContainer(
+            ).nicknameLabels[index].setText(text)
             self.node.getAnchors()[index].setLabel(text)
             label.setText(text)
         return text
-        

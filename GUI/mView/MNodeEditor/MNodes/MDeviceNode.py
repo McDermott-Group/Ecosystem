@@ -28,15 +28,17 @@ from PyQt4 import QtCore, QtGui
 from functools import partial
 import numpy as np
 import time
+
+
 class MDeviceNode(MNode):
     def __init__(self, device, *args, **kwargs):
-        super(MDeviceNode, self).__init__(None,*args, **kwargs)
+        super(MDeviceNode, self).__init__(None, *args, **kwargs)
 
         self.device = device
         self.title = str(device)
-        #print "Adding Node for device:", device
+        # print "Adding Node for device:", device
         self.dontAddanotherparam = False
-        
+
     def onBegin(self):
         self.device.getFrame().setNode(self)
         # If the node represents a labrad device, then the title displayed on the node
@@ -48,16 +50,17 @@ class MDeviceNode(MNode):
         nicknames = self.device.getFrame().getNicknames()
         self.dontAddanotherparam = True
 
-        for i,param in enumerate(nicknames):
-            self.addAnchor(MAnchor(param,self,  i+1, type = 'output'))
-        devAnchor = self.addAnchor(name = 'Self', type = 'output')
+        for i, param in enumerate(nicknames):
+            self.addAnchor(MAnchor(param, self,  i + 1, type='output'))
+        devAnchor = self.addAnchor(name='Self', type='output')
         devAnchor.setData(self.getDevice())
-        
+
         self.dontAddanotherparam = False
-            #print "Adding anchor", self.getAnchors()[-1]
+        # print "Adding anchor", self.getAnchors()[-1]
+
     def isPropogateData(self):
         return self.propogateData
-        
+
     def getDevice(self):
         return self.device
 
@@ -65,19 +68,21 @@ class MDeviceNode(MNode):
         if not self.dontAddanotherparam:
             self.device.addParameter(str(anchor), None, None, **kwargs)
             pass
+
     def onRefreshData(self):
         try:
             for i, anchor in enumerate(self.getAnchors()):
-               
-                if str(anchor)=='Self':   
+
+                if str(anchor) == 'Self':
                     continue
                 reading = self.device.getReading(str(anchor))
-               
+
                 if anchor.getType() == 'output' and anchor.param != 'Self' and reading != None:
                     try:
-                        
+
                         data = self.device.getReading(str(anchor))
-                        metadata = (str(anchor), self.device.getUnit(str(anchor)), None)
+                        metadata = (str(anchor), self.device.getUnit(
+                            str(anchor)), None)
                         if data != None:
                             anchor.setMetaData(metadata)
                             anchor.setData(data)
@@ -86,11 +91,10 @@ class MDeviceNode(MNode):
                 elif anchor.getType() == 'input':
                     data = anchor.getData()
                     metadata = anchor.getMetaData()
-                    if data != None:      
+                    if data != None:
                         reading = data
                         self.device.setReading(str(anchor), reading)
                     if metadata != None:
                         self.device.setUnit(str(anchor), metadata[1])
         except:
             traceback.print_exc()
-      
