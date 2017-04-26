@@ -330,7 +330,7 @@ class dataChest(dateStamp):
       return numRows
     else:
       raise Warning("No dataset is currently open.")
-
+      
   def getData(self, startIndex = np.nan, stopIndex = np.nan, variablesList = None):
     """Retrieves data from the current dataset."""
     if self.currentHDF5Filename is not None:
@@ -340,18 +340,15 @@ class dataChest(dateStamp):
       if not isinstance(sliceIndices, list):
         raise self.exception
       startIndex, stopIndex = sliceIndices[0], sliceIndices[1]
-      
-      allVars = []
       for varTypes in self.varDict.keys():
         if variablesList is not None:
-          intersectedVariablesList = set(variablesList)
-          intersectedVariablesList = intersectedVariablesList.intersection(self.file[varTypes].keys())
-          intersectedVariablesList = list(intersectedVariablesList)
+          desiredVarList = []
+          for element in self.file[varTypes].keys():
+            if element in variablesList:
+                desiredVarList.append(element)
         else:
-          intersectedVariablesList = self.file[varTypes].keys()
-          
-        allVars += intersectedVariablesList
-        for variables in intersectedVariablesList:
+          desiredVarList = self.file[varTypes].keys()
+        for variables in desiredVarList:
           varGrp = self.file[varTypes]
           dataset = varGrp[variables].value
           originalShape = varGrp[variables].attrs["shapes"]
@@ -370,6 +367,12 @@ class dataChest(dateStamp):
             dataDict[variables] = dataset
 
       data = []
+      allVars = []
+      if variablesList is not None:
+        allVars = variablesList
+      else:
+        allVars = (self.varDict["independents"]["names"]
+                 + self.varDict["dependents"]["names"])
       
       if self.getDataCategory() == "Arbitrary Type 1":
         for ii in range(0, len(allVars)):
