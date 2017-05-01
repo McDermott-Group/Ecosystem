@@ -21,20 +21,22 @@ __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
 from PyQt4 import QtGui, QtCore
+
+
 class MAnchorGraphicsItem(QtGui.QGraphicsItem):
-    def __init__(self, parent = None, *args, **kwargs):
-        QtGui.QGraphicsItem.__init__(self,parent)
+    def __init__(self, parent=None, *args, **kwargs):
+        QtGui.QGraphicsItem.__init__(self, parent)
         self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QtGui.QGraphicsItem.ItemIsFocusable, True)
         self.setAcceptsHoverEvents(True)
          # The QGraphics scene
-        self.scene  = node.scene
+        self.scene = node.scene
         # Add the anchor to the scene
         self.scene.addItem(self)
         # Configure the anchor based on its type
         self.setParentItem(node)
         # Configure the brush
-        self.posY = 70+30*self.index
+        self.posY = 70 + 30 * self.index
         # Where is the anchor relative to the rest
         self.index = index
         self.directInput = None
@@ -42,58 +44,60 @@ class MAnchorGraphicsItem(QtGui.QGraphicsItem):
         self.directInputLayout = None
         self.directInputData = 0
         self.nodeBrush = QtGui.QBrush(QtGui.QColor(*node.getColor()))
-        
-        self.anchorSize = int(8*web.ratio)
-        self.rect = QtCore.QRectF(self.posX,  self.posY, self.anchorSize,  self.anchorSize)
-        
+
+        self.anchorSize = int(8 * web.ratio)
+        self.rect = QtCore.QRectF(
+            self.posX,  self.posY, self.anchorSize,  self.anchorSize)
+
         # The QPen
         self.textPen = QtGui.QPen()
         self.textPen.setStyle(2);
         self.textPen.setWidth(2)
         self.textPen.setColor(QtGui.QColor(189, 195, 199))
-        
+
         self.label = QtCore.QString(self.param)
-        
+
     if self.type == 'output':
         # Bounding rectangle of the anchor
         self.posX = self.nodeFrame.width()
-      
+
     elif self.type == 'input':
         self.posX = -20
     self.width = QtGui.QFontMetrics(self.font).boundingRect(label).width()
-    #self.update(self.rect)
+    # self.update(self.rect)
     self.labelWidget = QtGui.QLabel(self.label, self.nodeFrame)
     self.labelWidget.setStyleSheet("color:rgb(189, 195, 199)")
-    self.nodeLayout.addWidget(self.labelWidget, self.index+2, 0)
+    self.nodeLayout.addWidget(self.labelWidget, self.index + 2, 0)
     self.lcd = MReadout(self.nodeFrame)
 
     self.lcd.setStyleSheet("color:rgb(189, 195, 199);\n")
-    self.nodeLayout.addWidget(self.lcd, self.index+2, 1)
-    
+    self.nodeLayout.addWidget(self.lcd, self.index + 2, 1)
+
     label = QtCore.QString(self.param)
     self.font = QtGui.QFont()
     self.font.setPointSize(10)
 
     if self.suggestedDataType == 'float':
-       
-        self.directInput = QtGui.QLineEdit(str(self.directInputData),self.nodeFrame)
+
+        self.directInput = QtGui.QLineEdit(
+            str(self.directInputData), self.nodeFrame)
         self.directInput.setValidator(QtGui.QDoubleValidator())
-        self.directInput.textEdited.connect(partial(self.directInput.setStyleSheet, "background:rgb(0,255,0);"))
+        self.directInput.textEdited.connect(
+            partial(self.directInput.setStyleSheet, "background:rgb(0,255,0);"))
         self.directInputLayout = QtGui.QHBoxLayout()
-        
+
         self.okDirectInput = QtGui.QPushButton("Set", self.nodeFrame)
-        self.okDirectInput.clicked.connect(partial(self.directInputHandler, 'float',  self.directInput.text))
+        self.okDirectInput.clicked.connect(
+            partial(self.directInputHandler, 'float',  self.directInput.text))
         width = self.okDirectInput.fontMetrics().boundingRect("Set").width()
         height = self.okDirectInput.fontMetrics().boundingRect("Set").height()
-        self.okDirectInput.setMaximumWidth(width+10)
-        self.okDirectInput.setMaximumHeight(height+5)
+        self.okDirectInput.setMaximumWidth(width + 10)
+        self.okDirectInput.setMaximumHeight(height + 5)
         self.lcd.hide()
     if self.directInput != None:
         self.directInputLayout.addWidget(self.directInput)
         self.directInputLayout.addWidget(self.okDirectInput)
-        self.nodeLayout.addLayout(self.directInputLayout, self.index+2, 1)
-    
-
+        self.nodeLayout.addLayout(self.directInputLayout, self.index + 2, 1)
 
     self.prepareGeometryChange()
      def setParentNode(self, node):
@@ -101,21 +105,22 @@ class MAnchorGraphicsItem(QtGui.QGraphicsItem):
         self.setParentItem(node)
         # Repaint the scene
         self.update()
+
      def delete(self):
-        #print "deleting anchor"
+        # print "deleting anchor"
 
         self.nodeLayout.removeWidget(self.lcd)
         self.nodeLayout.removeWidget(self.labelWidget)
-        
+
         self.labelWidget.deleteLater()
         self.lcd.deleteLater()
-        
+
         self.setParentItem(None)
         self.scene.removeItem(self)
-        
+
     def getLabel(self):
         return str(self.label)
-        
+
     def setLabel(self, text):
         self.label = text
      def validate(self, type, val):
@@ -125,14 +130,14 @@ class MAnchorGraphicsItem(QtGui.QGraphicsItem):
                 return value
         return None
     def directInputHandler(self, type,  callback):
-        #print "type:", type
+        # print "type:", type
         try:
             value = self.validate(type, callback())
         except:
              self.directInput.setStyleSheet( "background:rgb(255,0,0);")
              traceback.print_exc()
              return
-        #print "value:", value
+        # print "value:", value
         self.directInput.setStyleSheet( "background:rgb(255,255,255);")
 
         if self.pipe != None and self.type == 'output':
@@ -164,7 +169,7 @@ class MAnchorGraphicsItem(QtGui.QGraphicsItem):
             
         elif self.type == 'input':
             self.posX = -20
-        #print "pipe:", self.pipe
+        # print "pipe:", self.pipe
         if self.pipe != None:
             self.nodeBrush = QtGui.QBrush(QtGui.QColor(200,0,0))
         else:
@@ -181,11 +186,11 @@ class MAnchorGraphicsItem(QtGui.QGraphicsItem):
         # if self.label is None:
             # self.label = 'New Pipe'
         
-        #painter.drawText(150-self.width, 105+40*self.index, self.label)
+        # painter.drawText(150-self.width, 105+40*self.index, self.label)
         self.rect.moveTo(self.posX, self.posY)
         
-        #painter.drawRect(self.rect)
-        #print "posX", self.posX
+        # painter.drawRect(self.rect)
+        # print "posX", self.posX
         
         painter.drawEllipse(self.posX,  self.posY, self.anchorSize,  self.anchorSize)
  def boundingRect(self):
@@ -205,7 +210,7 @@ class MAnchorGraphicsItem(QtGui.QGraphicsItem):
                 self.directInput.hide()
                 self.okDirectInput.hide()
                 self.lcd.show()
-            #print "disconnecting ", self.param
+            # print "disconnecting ", self.param
 
             
         self.update()

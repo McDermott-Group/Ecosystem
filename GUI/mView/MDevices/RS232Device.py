@@ -30,6 +30,7 @@ import traceback
 # Import necessary Qt libraries
 from PyQt4 import QtGui
 
+
 class RS232Device(MDevice):
     def __init__(self, *args, **kwargs):
         '''Initialize variables. Most of the device parameters cannot yet be initialized.'''
@@ -41,16 +42,16 @@ class RS232Device(MDevice):
         # This dictionary will hold basic information about different parameters.
         # This dictionary will just be used by us.
         self.paramInfo = {}
-        # This will hold a reference to the pySerial instance that 
+        # This will hold a reference to the pySerial instance that
         # is used to communicate with the device.
         self.port = None
         # Is the device connected?
         self.connected = False
         # The serial timeout, default 10ms.
-        self.timeout = kwargs.get("timeout",10)
+        self.timeout = kwargs.get("timeout", 10)
         # Default baud rate is 9600.
         self.baud = kwargs.get("baud", 9600)
-        
+
     def onAddParameter(self, paramName, command, *args, **kwargs):
         # Look for keyword arguments
         precision = kwargs.get("precision", None)
@@ -64,12 +65,11 @@ class RS232Device(MDevice):
         thisParam["precision"] = precision
         thisParam["units"] = units
 
-        
-
     def addButton(self, text, command, **kwargs):
         # Look for a message keyword argument
         message = kwargs.get("message", None)
-        # Build the list.  The QPush button object will be appended to the end of this list.
+        # Build the list.  The QPush button object will be appended to the end
+        # of this list.
         button = []
         # We will make the first element of the list hold
         # the text that is displayed on the button.
@@ -81,6 +81,7 @@ class RS232Device(MDevice):
         button.append(message)
         # Add the button to the gui
         self.addButtonToGui(button)
+
     def prompt(self, button):
         # We stored the warning message in the 3rd element of the button array.
         # If it is None, do not display a warning message, if it is not, display about
@@ -93,7 +94,8 @@ class RS232Device(MDevice):
             # Our warning message text is in the 3rd element of our array.
             msg.setText(button[2])
             # Add ok and cancel buttons.
-            msg.setStandardButtons(QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
+            msg.setStandardButtons(QtGui.QMessageBox.Ok |
+                                   QtGui.QMessageBox.Cancel)
             # The window title.
             msg.setWindowTitle("Warning")
             # Execute the class and retrieve the value clicked.
@@ -102,16 +104,17 @@ class RS232Device(MDevice):
             if retval == QtGui.QMessageBox.Ok:
                 # The command was put into the 2nd element of the array.
                 self.port.write(button[1])
-        # If no warning message was given, then just go ahead and send the command.
+        # If no warning message was given, then just go ahead and send the
+        # command.
         else:
             # The command was put into the 2nd element of the array.
             self.port.write(button[1])
-            
-    def setPort(self, portname, timeout = 10):
+
+    def setPort(self, portname, timeout=10):
         '''Set the name of the port. i.e. COMx. Keyword args: timeout = 10.'''
         self.portname = portname
         self.timeout = timeout
-        
+
     def setYLabel(self, yLbl, units=''):
         '''Set the label to be displayed on the independent variable axis.'''
         self.frame.setYLabel(yLbl, units)
@@ -121,17 +124,18 @@ class RS232Device(MDevice):
         self.connect()
 
     def connect(self):
-         '''Open the serial port and try to connect to it.'''
-         try: 
-            self.port = serial.Serial(self.portname, int(self.baud), timeout=self.timeout, write_timeout = 10)
+        '''Open the serial port and try to connect to it.'''
+        try:
+            self.port = serial.Serial(self.portname, int(
+                self.baud), timeout=self.timeout, write_timeout=10)
             self.connected = True
             return self.port
-         except:
+        except:
             traceback.print_exc()
             self.connected = False
             print "ERROR: port:", self.port, "will try again."
             return None
-            
+
     def query(self):
         '''The query function is called with a period defined 
         by MDevice.frame.getRefreshRate().  At the end it 
@@ -147,7 +151,7 @@ class RS232Device(MDevice):
             if self.port is not None:
                 # For each parameter, get readings
                 for param in self.getParameters():
-                    print "param:",param
+                    print "param:", param
                     # Flush anything that might on the port.
                     self.port.flush()
                     # Write the command to the port.
@@ -159,7 +163,8 @@ class RS232Device(MDevice):
                             time.sleep(0.01)
                         # While there is stuff on the port, read it.
                         reading = self.port.readline()
-                        # Strip whitespace and newline characters off the received value.
+                        # Strip whitespace and newline characters off the
+                        # received value.
                         reading = int(reading.strip())
                     # Tell the device what the readings were.
                         self.setReading(param, reading)
@@ -171,10 +176,10 @@ class RS232Device(MDevice):
             traceback.print_exc()
             self.connected = False
             pass
+
     def close(self):
         '''Stop the device. This includes closing the port.'''
         try:
             self.port.close()
         except:
             print "Could not close port."
-            

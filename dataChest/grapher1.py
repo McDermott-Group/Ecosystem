@@ -1,6 +1,5 @@
 import os
 import sys
-import pyqtgraph as pg
 from PyQt4 import QtCore, QtGui
 from functools import partial
 import pyqtgraph as pg
@@ -16,7 +15,7 @@ HEX_COLOR_MAP = {'white': '#FFFFFF', 'silver': '#FFFFFF', 'gray': '#808080',
                  'blue':'#0000FF','navy':'#000080', 'fuchsia':'#FF00FF',
                  'purple':'#800080'}
 
-ACCEPTABLE_DATA_CATEGORIES = ["Arbitrary Type 1", "Arbitrary Type 2", "1D Scan"]#, "2D Scan"]
+ACCEPTABLE_DATA_CATEGORIES = ["Arbitrary Type 1", "Arbitrary Type 2", "1D Scan", "2D Scan"]
 
 
 
@@ -156,48 +155,57 @@ class Grapher(QtGui.QWidget):
             data = [d.getData().T]
         elif datasetCategory == "Arbitrary Type 2":
             data = d.getData()
+        # extract scan part of data so it is a complete, normal data set
         elif datasetCategory == "1D Scan" or datasetCategory == "2D Scan":
             data = d.getData()
             l = depVarsList[0][1][0] # len of first dim in shape of first dep var
             scanType = d.getParameter("Scan Type", bypassIOError=True)
-            for row in data:
+            for j in range(len(data)):
+                row = data[j]
                 for i in range(len(indepVarsList)):
-                    if indepVarsList[i][1] == 1:
-                        row[i] = row[i]*l
-                    elif indepVarsList[i][1] == 2:
+                    if indepVarsList[i][1] == [1]:
+                        data[j][i] = [row[i]]*l
+                    elif indepVarsList[i][1] == [2]:
                         start,stop = row[i]
                         if scanType is None:
-                            print "Scan Type Not Found."
-                            return
+                            print "Scan Type Not Found.  Assuming Linear."
+                            data[j][i] = np.linspace(start, stop, num = l)
                         elif scanType == "Linear":
-                            row[i] = np.linspace(start, stop, num = l)
+                            data[j][i] = np.linspace(start, stop, num = l)
                         elif scanType == "Logarithmic":
-                            row[i] = np.logspace(np.log10(start), np.log10(stop), num = l)
+                            data[j][i] = np.logspace(np.log10(start), np.log10(stop), num = l)
             if datasetCategory == "2D Scan":
                 data = np.concatenate(data, axis=1)
 
-        # Take the data and turn it into two arrays:
-        #   indepData is a list of dep vars ranges (ranges are sorted by value)
-        #   depData is the associated vector of values associated with the dep vars
-        # This is done by first skimming off the indep vars, sorting them, and then
-        # going through the rows of data and setting the value of each spot in the
-        # vector.
-        indepData = [np.array(data[i]).unique() for i in range(len(indepVarsList))]
+        self.selectedData = data
+        if len(indepVarsList) == 1:
+            self.plot1D(data, self.plotTypeOptionsDict)
+        elif len(indepVarsList) == 2:
+            self.plot2D()
+
+    def extractIndepData(self, data):
+        """
+        Take the data and turn it into two arrays:
+          indepData is a list of dep vars ranges (ranges are sorted by value)
+          depData is the associated vector of values associated with the dep vars
+        This is done by first skimming off the indep vars, sorting them, and then
+        going through the rows of data and setting the value of each spot in the
+        vector.  The data must be in the form where each column is a point in the
+        dataset (Type 2 data).
+        """
+        indepVarsList = self.datasetVariables[0]
+        depVarsList = self.datasetVariables[1]
+        indepData = [np.unique(np.array(data[i])) for i in range(len(indepVarsList))]
         indepShape = [len(v) for v in indepData]
         depData = [np.full(indepShape, np.nan) for _ in range(len(depVarsList))]
         for row in data.T:    # go though each row and fill data
             indepVals = row[:len(indepData)]
-            indepIndicies = [indepData[i].index(indepVals[i]) for i in range(len(indepVals))]
+            indepIndicies = tuple([np.where(indepData[i]==indepVals[i])[0][0] for i in range(len(indepVals))])
             for i in range(len(depData)):
                 depData[i][indepIndicies] = row[i+len(indepVarsList)]
+        return indepData, depData
 
-        self.selectedData = data
-        if len(indepVarsList) == 1:
-            self.plot1D()
-        elif len(indepVarsList) == 2:
-            self.plot2D()
-
-    def plot1D(self, plotTypeOptionsDict):
+    def plot1D(self, data, plotTypeOptionsDict):
         indepVarsList = self.datasetVariables[0]
         depVarsList = self.datasetVariables[1]
         varsWithCommonUnitsDict = self.getVarsWithCommonUnitsDict(depVarsList)
@@ -222,11 +230,37 @@ class Grapher(QtGui.QWidget):
                                 print "varName=", varName
                                 commonUnitsData.append(data[0][ii+1])
                                 commonNamesData.append(varName)
-                                plotTypeOptionsDict[varName] = self.initializeBasic1DPlotOptions(datasetName,
+                                plotTypeOptionsDict[varName] = self.initializeBasic1DPlotOptions(self.datasetName,
                                                                                                  indepVarsList[0][0],
                                                                                                  indepVarsList[0][3],
                                                                                                  varName, commonUnit)
                     self.basic1DPlot(self.graphicsLayout, commonUnitsData, commonNamesData, plotTypeOptionsDict)
+
+    def plot2D(self):
+        (xVals, yVals), depGrids = self.extractIndepData(self.selectedData)
+        self.graphicsLayout.clear()
+        p1 = self.graphicsLayout.addPlot(title="Test Title", size='22pt')
+        p1.titleLabel.setText("Test Title", size ='22pt')
+        indepVarsList = self.datasetVariables[0]
+        p1.setLabel('bottom', indepVarsList[0][0], units=indepVarsList[0][3])
+        p1.setLabel('left', indepVarsList[1][0], units=indepVarsList[1][3])
+        p1.addLegend()
+        img = pg.ImageItem()
+        img.setImage(depGrids[0])
+        p1.addItem(img)
+        pixelX = (xVals[-1]-xVals[0])/len(xVals)
+        pixelY = (yVals[-1]-yVals[0])/len(yVals)
+        img.translate(xVals[0],yVals[0])
+        img.scale(pixelX,pixelY)
+
+        # bipolar colormap
+        pos = np.array([0., 1., 0.5, 0.25, 0.75])
+        color = np.array([[0,255,255,255], [255,255,0,255], [0,0,0,255], (0, 0, 255, 255), (255, 0, 0, 255)], dtype=np.ubyte)
+        cmap = pg.ColorMap(pos, color)
+        lut = cmap.getLookupTable(0.0, 1.0, 256)
+        img.setLookupTable(lut)
+
+        p1.autoRange()
 
     def initializeBasic1DPlotOptions(self, datasetName, xVarName, xUnits, yVarName, yUnits):
         plotOptions = {}

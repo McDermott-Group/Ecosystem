@@ -26,9 +26,10 @@ from email.mime.text import MIMEText
 
 class MMail:
     """Very simple email client."""
+
     def __init__(self, To, From, Subject, Body):
         msg = MIMEText(Body)
-        msg['Subject'] =  Subject
+        msg['Subject'] = Subject
         msg['From'] = From
         msg['To'] = To
         smtpObj = smtplib.SMTP('smtp.gmail.com')
@@ -40,6 +41,6 @@ class MMail:
             smtpObj.login('physics.labrad@gmail.com', 'mcdermott')
             # Send the email.
             smtpObj.sendmail('physics.labrad@gmail.com', To.split(','),
-                    msg.as_string())         
+                             msg.as_string())
             print("Successfully sent mail.")
         smtpObj.quit()

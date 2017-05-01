@@ -24,10 +24,9 @@ __status__ = "Beta"
 class NodeTreeGraphicsHandler:
     def deletePipe(self, pipeToDel):
         self.scene.removeItem(pipeToDel)
-        
+
     def setScene(self, scene):
         self.scene = scene
-        
+
     def getScene(self):
         return self.scene
-        

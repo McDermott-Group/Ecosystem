@@ -21,8 +21,6 @@ __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
 
-
-
 import labrad
 from labrad.units import Value, ValueArray
 from dataChestWrapper import dataChestWrapper
@@ -36,8 +34,11 @@ from MWeb import web
 import traceback
 from sys import getsizeof
 from PyQt4 import QtGui, QtCore
+
+
 class Device(MDevice):
     """The device class handles a LabRAD device."""
+
     def __init__(self, *args, **kwargs):
 
         super(Device, self).__init__(*args, **kwargs)
@@ -49,7 +50,7 @@ class Device(MDevice):
         self.name = args[0]
         # Nicknames of settings (the ones that show up on the GUI).
         #self.nicknames = []
-        #Units for the settings to be used with the values on the GUI.
+        # Units for the settings to be used with the values on the GUI.
         #self.settingUnits = []
         # List of the precisions for the values on the GUI.
         #self.precisions = []
@@ -65,46 +66,47 @@ class Device(MDevice):
         self.selectedDevice = 0
         # Store the setting to select device (almost always
         # 'select_device').
-        self.setDeviceCmd = None    
+        self.setDeviceCmd = None
         # Store the buttons along with their parameters.
         buttons = [[]]
         # Arguments that should be passed to settings if necessary.
-        #self.settingArgs =[]    
+        #self.settingArgs =[]
         #self.settingResultIndices = []
         self.frame.setYLabel(None)
-        
+
         # Determine which buttons get messages.
         self.buttonMessages = []
         # Setup all buttons.
         self.buttonNames = []
         self.buttonSettings = []
         self.buttons = []
-    
+
         # Tells thread to keep going.
         self.keepGoing = True
-        
+
         self.frame.setTitle(self.name)
         self.preferredUnits = {}
 
     def setServerName(self, name):
         self.serverName = name
-        
-    def onAddParameter(self, parameter, setting = None, arg=None, **kwargs):
+
+    def onAddParameter(self, parameter, setting=None, arg=None, **kwargs):
         precision = kwargs.get('precision', 2)
         units = kwargs.get('units', None)
         index = kwargs.get('index', None)
-        self.frame.DataLoggingInfo()['channels'][parameter] = kwargs.get('log', True)
-        self.setPreferredUnit(parameter,units)
+        self.frame.DataLoggingInfo()[
+            'channels'][parameter] = kwargs.get('log', True)
+        self.setPreferredUnit(parameter, units)
         self.setCommand(parameter, [setting, arg])
         self.setReadingIndex(parameter, index)
         self.setPrecision(parameter, precision)
-        #self.nicknames.append(parameter)
-        #self.settingArgs.append(arg)
-        #self.settingUnits.append(units)
-        #self.precisions.append(precision)
-        
-        
+        # self.nicknames.append(parameter)
+        # self.settingArgs.append(arg)
+        # self.settingUnits.append(units)
+        # self.precisions.append(precision)
+
         return (parameter, units, precision)
+
     def connection(self, cxn):
         self.cxn = cxn
         self.ctx = cxn.context()
@@ -117,22 +119,22 @@ class Device(MDevice):
         button.append(msg)
         button.append(arg)
         self.addButtonToGui(button)
-        
+
     def setYLabel(self, yLbl, units=''):
         self.frame.setYLabel(yLbl, units)
 
-    def selectDeviceCommand(self, cmd=None, arg=0):  
+    def selectDeviceCommand(self, cmd=None, arg=0):
         self.setDeviceCmd = cmd
         self.selectedDevice = arg
-    
+
     def onBegin(self):
-        #print "onbegin here"
-        #self.frame.setNicknames(self.nicknames)
-        
+        # print "onbegin here"
+        # self.frame.setNicknames(self.nicknames)
+
         self.frame.DataLoggingInfo()['name'] = self.name
         self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(self)
         self.datachest = self.frame.DataLoggingInfo()['chest']
-        # # Each device NEEDS to run on a different thread 
+        # # Each device NEEDS to run on a different thread
         # # than the main thread (which ALWAYS runs the GUI).
         # # This thread is responsible for querying the devices.
         # self.deviceThread = threading.Thread(target=self.query, args=[])
@@ -142,16 +144,19 @@ class Device(MDevice):
         # self.deviceThread.start()
 
     def setRefreshRate(self, period):
-      
-        if  self.frame.getTitle()is None:
-            raise IOError("Refresh Rates cannot be set until name is given to device.")
-       
+
+        if self.frame.getTitle()is None:
+            raise IOError(
+                "Refresh Rates cannot be set until name is given to device.")
+
         if self.frame.getRefreshRate() == None:
-             self.frame.setRefreshRate(period)
+            self.frame.setRefreshRate(period)
+
     def setPlotRefreshRate(self, period):
 
-        if  self.frame.getTitle()is None:
-            raise IOError("Refresh Rates cannot be set until name is given to device.")
+        if self.frame.getTitle()is None:
+            raise IOError(
+                "Refresh Rates cannot be set until name is given to device.")
         if self.frame.getPlotRefreshRate() == None:
             self.frame.setPlotRefreshRate(period)
 
@@ -160,14 +165,17 @@ class Device(MDevice):
         # Datalogging must be enabled if we want to plot data.
         self.frame.enableDataLogging(True)
         return self.frame.getPlot()
+
     def getPreferredUnit(self, name):
         return self.preferredUnits[name]
+
     def setPreferredUnit(self, name, unit):
         self.preferredUnits[name] = unit
-    def connect(self):  
+
+    def connect(self):
         """Connect to the device."""
         try:
-            # Attempt to connect to the server given the connection 
+            # Attempt to connect to the server given the connection
             # and the server name.
             self.deviceServer = getattr(self.cxn, self.serverName)()
             # If the select device command is not None, run it.
@@ -182,17 +190,17 @@ class Device(MDevice):
             traceback.print_exc()
             self.frame.raiseError("LabRAD issue.")
             return False
-        
+
     # def getFrame(self):
         # """Return the device's frame."""
         # return self.frame
 
     # def logData(self, b):
         # self.frame.enableDataLogging(b)
-    
+
     def prompt(self, button):
-        """If a button is clicked, handle it."""#name action msg arg
-        #print "button clicked:", button
+        """If a button is clicked, handle it."""  # name action msg arg
+        # print "button clicked:", button
         # button.append(name)
         # button.append(action)
         # button.append(msg)
@@ -210,16 +218,17 @@ class Device(MDevice):
                 self.warning.exec_()
                 # If and only if the 'ok' button is pressed.
                 if self.warning.consent:
-                    # If the setting associated with the button also 
+                    # If the setting associated with the button also
                     # has an argument for the setting.
-                    
+
                     if actual_button[3] is not None:
                         resp = getattr(self.deviceServer,
-                                actual_button[1])(actual_button[3], context=self.ctx)
+                                       actual_button[1])(actual_button[3], context=self.ctx)
                     # If just the setting needs to be run.
                     else:
                         print "actual button:", actual_button
-                        resp = getattr(self.deviceServer, actual_button[1])(context=self.ctx)
+                        resp = getattr(self.deviceServer, actual_button[1])(
+                            context=self.ctx)
             # Otherwise if there is no warning message, do not make
             # a popup.
             else:
@@ -227,14 +236,15 @@ class Device(MDevice):
                 # the setting.
                 if actual_button[3] is not None:
                     resp = getattr(self.deviceServer,
-                            actual_button[1])(actual_button[3], context=self.ctx)
+                                   actual_button[1])(actual_button[3], context=self.ctx)
                 else:
-                    resp = getattr(self.deviceServer, actual_button[1])(context=self.ctx)
+                    resp = getattr(self.deviceServer, actual_button[1])(
+                        context=self.ctx)
             print "Response:", resp
-            
+
             if resp != None:
                 p = QtGui.QMessageBox()
-                p.setText(str("Response: "+str(resp)))
+                p.setText(str("Response: " + str(resp)))
                 p.setWindowTitle("Query Response")
                 p.exec_()
         except:
@@ -243,40 +253,40 @@ class Device(MDevice):
 
     def query(self):
         """Query the device for readings."""
-        #print "size of", self, ":", getsizeof(self)
+        # print "size of", self, ":", getsizeof(self)
         # If the device is attached.
-        #print "querying device"
+        # print "querying device"
         if not self.isDevice:
-            # Try to connect again, if the value changes, then we know 
+            # Try to connect again, if the value changes, then we know
             # that the device has connected.
             if self.connect() is not self.isDevice:
                 self.isDevice = True
         # Otherwise, if the device is already connected.
-        
+
         else:
             try:
-                #readings = []   # Stores the readings.
-                #units = []      # Stores the units.
+                # readings = []   # Stores the readings.
+                # units = []      # Stores the units.
                 #precisions = []
                 for i, name in enumerate(self.getParameters()):
                     command = self.getCommand(name)
                    # print "command:", command
                     if command[0] is None:
-                        #print "found none setting for", name
-                        #units.append(None)
-                        #readings.append(None)
-                        #precisions.append(None)
+                        # print "found none setting for", name
+                        # units.append(None)
+                        # readings.append(None)
+                        # precisions.append(None)
                         continue
                     # If the setting needs to be passed arguments
-              
-                    #print "Name of setting", self.settingNames[i]
+
+                    # print "Name of setting", self.settingNames[i]
                     if command[1] is not None:
                         reading = getattr(self.deviceServer,
-                                command[0])(command[1],
-                                context=self.ctx)
+                                          command[0])(command[1],
+                                                      context=self.ctx)
                     else:
                         reading = getattr(self.deviceServer,
-                                command[0])(context=self.ctx)
+                                          command[0])(context=self.ctx)
 
                     # If the reading is an array of values and units.
                     if isinstance(reading, ValueArray):
@@ -292,21 +302,21 @@ class Device(MDevice):
                         self.setReading(name, reading)
                         self.setUnit(name, units)
                     if isinstance(reading, Value):
-                        #print "Received labrad Value type"
-                        
+                        # print "Received labrad Value type"
+
                         preferredUnits = self.getPreferredUnit(name)
-                        #print "PreferredUnits:", preferredUnits
+                        # print "PreferredUnits:", preferredUnits
                         if preferredUnits is not None and \
                                 reading.isCompatible(preferredUnits):
                             reading = reading.inUnitsOf(preferredUnits)
                         u = reading.units
 #                        print "---------------------"
-#                        print "name:", name                        
+#                        print "name:", name
 #                        print "units:", u
 #                        print "value:", reading[u]
                         self.setReading(name, reading[u])
                         self.setUnit(name, u)
-                        
+
                     elif type(reading) is list:
                         for j in range(len(reading)):
                             rd = reading[j]
@@ -316,29 +326,29 @@ class Device(MDevice):
                                         rd.isCompatible(preferredUnits):
                                     rd = rd.inUnitsOf(preferredUnits)
                                 u = rd.units
-         
+
                                 self.setReading(name, rd[u])
                                 self.setUnit(name, u)
-                                #precisions.append(self.precisions[i])
+                                # precisions.append(self.precisions[i])
                             else:
-                                self.setReading(name,reading[i])
+                                self.setReading(name, reading[i])
                                 self.setUnit(name, "")
-                                #precisions.append(self.settingPrecisions[i])
+                                # precisions.append(self.settingPrecisions[i])
                     else:
                         try:
-                            self.setReading(name,reading)
+                            self.setReading(name, reading)
                             self.setUnit(name, "")
-                            #precisions.append(self.precisions[i])
+                            # precisions.append(self.precisions[i])
                         except:
                             print("Problem with readings, type '%s' "
                                   "cannot be displayed."
-                                  %str(type(reading)))
+                                  % str(type(reading)))
 
                 # Pass the readings and units to the frame.
                 #self.setReadings(readings, False)
-                #print "setting units"
-                #self.frame.setUnits(units)
-                #self.frame.setPrecisions(precisions)
+                # print "setting units"
+                # self.frame.setUnits(units)
+                # self.frame.setPrecisions(precisions)
 
                 # If there was an error, retract it.
                 self.frame.retractError()
@@ -347,16 +357,15 @@ class Device(MDevice):
                 print e
                 print("[%s] Something appears to be wrong with what "
                       "the labrad server is returning."
-                      %str(self.frame.getTitle()))
+                      % str(self.frame.getTitle()))
 
             except:
                 traceback.print_exc()
                 self.frame.raiseError("Problem communicating with %s."
-                        %self.name)
+                                      % self.name)
                # self.frame.setReading(str(self),None)
                 self.isDevice = False
         # Query calls itself again, this keeps the thread alive.
-        #if self.keepGoing:
-     
-        
+        # if self.keepGoing:
+
         return

@@ -28,8 +28,10 @@ import time
 from functools import partial
 import traceback
 from MReadout import MReadout
+
+
 class MAnchor(object):
-    def __init__(self, name, node, index,  parent = None, **kwargs):
+    def __init__(self, name, node, index,  parent=None, **kwargs):
         # Get the keyword arguments
         self.type = kwargs.get('type', 'output')
         self.suggestedDataType = kwargs.get('data', None)
@@ -54,94 +56,100 @@ class MAnchor(object):
         self.metadata = None
         # Propagate
         self.propagate = True
+
     def parentNode(self):
         '''Return the node that the anchor belongs to.'''
         return self.parent
-        
+
     def setParentNode(self, node):
         '''Set the parent node.'''
-        self.parent  = node
+        self.parent = node
 
     def getType(self):
         '''Get the anchor type'''
         return self.type
-        
+
     def getPipes(self):
         '''Get the pipe connected to the anchor'''
         return self.pipes
-        
+
     def setPipes(self, pipes):
         self.pipes = pipes
-        
+
     def addPipe(self, pipe):
         self.pipes.append(pipe)
-        
+
     def pipeConnected(self, pipe):
-        #print "anchor->pipeConnected:", pipe
-        #self.addPipe(pipe)
+        # print "anchor->pipeConnected:", pipe
+        # self.addPipe(pipe)
         if self.getType() == 'output':
             self.setData(self.data)
         else:
             self.data = pipe.getData()
-            
+
     # def update(self):
         # if self.parentNode().isDevice:
-                # self.parentNode().getDevice().updateContainer()
+            # self.parentNode().getDevice().updateContainer()
         # self.graphicsItem.refresh()
-        
+
     def getData(self):
-       
+
         if len(self.pipes) != 0:
             return self.getPipes()[0].getData()
         else:
-            return self.data 
+            return self.data
+
     def propagateData(self, p):
-        #traceback.print_stack()
-        #print "-------propagate set", p
+        # traceback.print_stack()
+        # print "-------propagate set", p
         self.propagate = p
-        
+
     def setMetaData(self, metadata):
         for pipe in self.pipes:
             if pipe != None and self.type == 'output':
                 pipe.setMetaData(metadata)
-       
+
             self.metadata = metadata
+
     def getMetaData(self):
         return self.metadata
-        
+
     def setData(self, data, **kwargs):
-        #print "anchor", self, "set data called"
+        # print "anchor", self, "set data called"
         holdRefresh = kwargs.get('hold_refresh', False)
         self.data = data
         if not holdRefresh:
             for pipe in self.pipes:
                 if pipe != None and self.type == 'output':
-                    #print "Anchor", self, "of", self.parent, "setting pipe data"
+                    # print "Anchor", self, "of", self.parent, "setting pipe
+                    # data"
                     pipe.setData(data)
                 if self.type == 'input':
-                    #print "Input anchor", self.parentNode()
-                    #print "propagateData:", self.propagate
+                    # print "Input anchor", self.parentNode()
+                    # print "propagateData:", self.propagate
                     if self.propagate:
-                        #print "Pipes:", [str(pipe) for pipe in self.pipes]
-                        #print "Calling refresh data from node:", self.parent, ", Anchor:", self
+                        # print "Pipes:", [str(pipe) for pipe in self.pipes]
+                        # print "Calling refresh data from node:", self.parent,
+                        # ", Anchor:", self
                         self.parentNode().refreshData()
                         if self.parentNode().getDevice() != None:
                             self.parentNode().getDevice().updateContainer()
                         pass
-            
-        #self.lcd.display(data)
+
+        # self.lcd.display(data)
     def propogateRefresh():
-            self.setData(self.data)
+        self.setData(self.data)
+
     def disconnect(self):
         '''Disconnect and delete the pipe'''
         self.tree.deletePipe(self.pipe)
-        
+
     def connect(self, pipe):
-        #print "connect function called"
+        # print "connect function called"
         self.addPipe(pipe)
 
     def isConnected(self):
         return not self.getPipes() == []
+
     def __str__(self):
         return str(self.param)
-   
