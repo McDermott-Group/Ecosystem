@@ -1164,7 +1164,7 @@ class dataChest(dateStamp):
         #lists must be of one type or else type conversion occurs
         #[12.0, 5e-67, "stringy"] --> ['12.0', '5e-67', 'stringy']
         return False
-      elif type(paramUnits) != str:
+      elif type(paramUnits) != str and type(paramUnits) != np.string_:
         self.exception = ValueError("Parameter units must be type str.")
       elif overwrite is False and paramName in self.file["parameters"].attrs.keys():
         self.exception = RuntimeError(
