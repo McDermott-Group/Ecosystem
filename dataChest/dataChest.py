@@ -195,7 +195,6 @@ class dataChest(dateStamp):
   def createDataset(self, datasetName, indepVarsList,
                     depVarsList, dateStamp = None):
     "Creates a new dataset within the current working directory."""
-    
     self.currentHDF5Filename = None
     self.readOnlyFlag = False
     self.dataCategory = None #treat self.dataCategory consistently
@@ -685,7 +684,7 @@ class dataChest(dateStamp):
     depVarsList = varsList[1]
     netVarsList = indepVarsList + depVarsList
     for ii in range(0, len(netVarsList)):
-      if varName == netVarsList[ii][0]:
+      if varName == str(netVarsList[ii][0]):
         return netVarsList[ii][3]
     raise Warning("Variable with name " + varName + " was not found.")
       
