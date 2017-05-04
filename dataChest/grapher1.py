@@ -168,8 +168,8 @@ class Grapher(QtGui.QWidget):
                     elif indepVarsList[i][1] == [2]:
                         start,stop = row[i]
                         if scanType is None:
-                            print "Scan Type Not Found."
-                            return
+                            print "Scan Type Not Found.  Assuming Linear."
+                            data[j][i] = np.linspace(start, stop, num = l)
                         elif scanType == "Linear":
                             data[j][i] = np.linspace(start, stop, num = l)
                         elif scanType == "Logarithmic":
@@ -179,7 +179,7 @@ class Grapher(QtGui.QWidget):
 
         self.selectedData = data
         if len(indepVarsList) == 1:
-            self.plot1D()
+            self.plot1D(data, self.plotTypeOptionsDict)
         elif len(indepVarsList) == 2:
             self.plot2D()
 
@@ -205,7 +205,7 @@ class Grapher(QtGui.QWidget):
                 depData[i][indepIndicies] = row[i+len(indepVarsList)]
         return indepData, depData
 
-    def plot1D(self, plotTypeOptionsDict):
+    def plot1D(self, data, plotTypeOptionsDict):
         indepVarsList = self.datasetVariables[0]
         depVarsList = self.datasetVariables[1]
         varsWithCommonUnitsDict = self.getVarsWithCommonUnitsDict(depVarsList)
@@ -230,7 +230,7 @@ class Grapher(QtGui.QWidget):
                                 print "varName=", varName
                                 commonUnitsData.append(data[0][ii+1])
                                 commonNamesData.append(varName)
-                                plotTypeOptionsDict[varName] = self.initializeBasic1DPlotOptions(datasetName,
+                                plotTypeOptionsDict[varName] = self.initializeBasic1DPlotOptions(self.datasetName,
                                                                                                  indepVarsList[0][0],
                                                                                                  indepVarsList[0][3],
                                                                                                  varName, commonUnit)
@@ -252,6 +252,14 @@ class Grapher(QtGui.QWidget):
         pixelY = (yVals[-1]-yVals[0])/len(yVals)
         img.translate(xVals[0],yVals[0])
         img.scale(pixelX,pixelY)
+
+        # bipolar colormap
+        pos = np.array([0., 1., 0.5, 0.25, 0.75])
+        color = np.array([[0,255,255,255], [255,255,0,255], [0,0,0,255], (0, 0, 255, 255), (255, 0, 0, 255)], dtype=np.ubyte)
+        cmap = pg.ColorMap(pos, color)
+        lut = cmap.getLookupTable(0.0, 1.0, 256)
+        img.setLookupTable(lut)
+
         p1.autoRange()
 
     def initializeBasic1DPlotOptions(self, datasetName, xVarName, xUnits, yVarName, yUnits):
