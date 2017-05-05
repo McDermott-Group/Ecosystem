@@ -31,14 +31,15 @@ class MPersistentData:
 
     persistentDataDict = {}
 
-    def __init__(self):
+    def __init__(self,name):
         # print "Loading persistent data..."
         self.location = os.path.dirname(traceback.extract_stack()[0][0])
-        self.name = 'mview.config'
+
+        self.name = str(name)+'_mview.config'
         try:
             self.restoreState()
         except:
-            print "The mview.config file was not found."
+            print "No config file found, will make a new one."
 
     def saveState(self):
        # traceback.print_stack()

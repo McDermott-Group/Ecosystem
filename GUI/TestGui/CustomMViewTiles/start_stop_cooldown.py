@@ -77,12 +77,17 @@ class MStartStopCooldownWidget(MWidget):
                  chest = device.getFrame().getDataChestWrapper()
                  path = loc.split('\\')
                  r = re.compile('.{2}_.{2}_.{2}')
-                 print "Switching path to:", path
+
                  if not r.match(path[-1]):
+
                       dateFolderName = time.strftime('%x').replace(' ', '_')
                       dateFolderName = dateFolderName.replace('/','_')
                       loc = loc+'\\'+dateFolderName
+                      print "\tNew location:", loc
+                 else:
+                     print "\tFound location:", loc
                  if chest != None:
+                     print str(str(device) + ":\t"), "Switching path to:\t", loc
                      chest.changeLocation(loc, True)
                    
             

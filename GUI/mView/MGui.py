@@ -38,15 +38,17 @@ import MAlert
 from MWeb import web
 from MNodeEditor.MNodeEditorHandler import MNodeEditorHandler
 from MDeviceContainerWidget import MDeviceContainerWidget
-
+import __main__
 
 class MGui(QtGui.QMainWindow):
     """Handles construction of GUI using mView framework."""
     print("#############################################")
     print("# Starting mView (C) Noah Meltzer 2016-2017 #")
     print("#############################################")
-
-    web.persistentData = MPersistentData()
+    loader = str(__main__.__file__).replace("\\","/").split('/')[-1]
+    loader = loader[:loader.index('.py')]
+    print "Loader:", loader
+    web.persistentData = MPersistentData(loader)
     # Holds the Qlabels that label the parameters.
     parameters = [[]]
     # Each tile on the GUI is called a frame, this is the list of them.
@@ -235,7 +237,7 @@ class MGui(QtGui.QMainWindow):
         """Open the notifier settings GUI."""
         # NOTE, this is run on the main thread, so while it is open
         # the main GUI will not be running.
-        self.NotifierGUI = NotifierGUI()
+        self.NotifierGUI = NotifierGUI(self.loader)
         self.NotifierGUI.exec_()
 
     def openNewDataSetConfig(self):
@@ -271,7 +273,7 @@ class MGui(QtGui.QMainWindow):
         # Start the notifier.
         self.started = True
         web.telecomm = tele
-        self.NotifierGUI = NotifierGUI()
+        self.NotifierGUI = NotifierGUI(self.loader)
         self.startMAlert()
 
         screen_resolution = QtGui.QDesktopWidget().screenGeometry()

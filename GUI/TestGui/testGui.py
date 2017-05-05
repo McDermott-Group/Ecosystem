@@ -35,7 +35,7 @@ class nViewer:
             print("Please start the telecomm server")
             sys.exit(1)
         self.gui = MGui.MGui()
-        Random = Device("Random")
+        Random = Device("Random", data_type="float32")
         Random.connection(cxn)
 
         Random.setServerName("my_server")

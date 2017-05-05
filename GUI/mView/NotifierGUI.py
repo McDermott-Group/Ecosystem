@@ -38,18 +38,20 @@ sys.dont_write_bytecode = True
 
 class NotifierGUI(QtGui.QDialog):
 
-    def __init__(self, parent=None):
+    def __init__(self, loader, parent=None):
         '''Initialize the Notifier Gui'''
         super(NotifierGUI, self).__init__(parent)
         # Create a new tab
         tabWidget = QtGui.QTabWidget()
+        # The name of the main MView program
+        self.loader = loader
         # The the config data should be stored with the the main class
         self.location = os.path.dirname(traceback.extract_stack()[0][0])
         # Dictionary that will store all data
         self.allDataDict = {}
         # print "Looking for config file in: ", self.location
         # New widget
-        self.alert = AlertConfig(self.location)
+        self.alert = AlertConfig(self.location, loader)
         # AlDatatxt holds the text contents of all data entered in table
         self.allDatatxt = [[], [], [], []]
         # The settings window has a tab
@@ -117,7 +119,7 @@ class NotifierGUI(QtGui.QDialog):
                                          nickname] = deviceDataArray
                 # Pickle the arrays and store them
             pickle.dump(self.allDataDict, open(
-                os.path.join(self.location, 'NotifierConfig.mview'), 'wb'))
+                os.path.join(self.location, str(self.loader)+'_NotifierSettings.config'), 'wb'))
             self.alert.allDataDict = self.allDataDict
             web.limitDict = self.allDataDict
         except ValueError:
@@ -136,7 +138,7 @@ class NotifierGUI(QtGui.QDialog):
 
 
 class AlertConfig(QtGui.QWidget):
-    def __init__(self, location, parent=None):
+    def __init__(self, location, loader, parent=None):
         super(AlertConfig, self).__init__(parent)
         # Configure the layout
         layout = QtGui.QGridLayout()
@@ -144,6 +146,7 @@ class AlertConfig(QtGui.QWidget):
         self.location = location
         # Set the layout
         self.setLayout(layout)
+        self.loader = loader
         self.mins = {}
         self.maxs = {}
         self.contacts = {}
@@ -236,13 +239,14 @@ class AlertConfig(QtGui.QWidget):
     def openData(self):
         '''Retreive a user's previous settings.'''
         try:
+            print "Starting notifier, looking for config file: ",str(self.loader)+'_NotifierSettings.config'
             self.allDataDict = pickle.load(open(os.path.join(
-                self.location, 'NotifierConfig.mview'), 'rb'))
+                self.location, str(self.loader)+'_NotifierSettings.config'), 'rb'))
             NotifierGUI.allDataDict = self.allDataDict
             print "Config Data Opened"
 
         except:
-            # traceback.print_exc()
+            traceback.print_exc()
             self.allDataDict = {}
-            print("No config file found")
+            print("No notifier config file found")
         return self.allDataDict

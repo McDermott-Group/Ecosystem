@@ -104,13 +104,15 @@ class dataChestWrapper:
             location, 'DataLoggingInfo', str(self.device), 'location')
         # print "datachest persistent data saved."
 
-    def configureDataSets(self):
+    def configureDataSets(self, **kwargs):
         """
         Initialize the datalogger, if datasets already exist, use them.
         Otherwise create new ones.
         """
 
         now = dt.datetime.now()
+        # Force creation of new dataset?
+        force_new = kwargs.get('force_new', False)
         self.hasData = True
         # Generate a title for the dataset. NOTE: if
         # the title of the device is changed in the device's constructor
@@ -134,33 +136,55 @@ class dataChestWrapper:
             root = os.environ['DATA_CHEST_ROOT']
             root = root.replace("/","\\")
             relativePath = os.path.relpath(location, root)
-            print "relativePath:", relativePath
-            if relativePath == '.':
-                raise IOError(
-                    "Cannot create dataset directly under DATA_CHEST_ROOT.")
+            #print "relativePath:", relativePath
+            #if relativePath == '.':
+             #   raise IOError(
+             #       "Cannot create dataset directly under DATA_CHEST_ROOT.")
             path = relativePath.split("\\")
-            print "path:", str(path)
+            if force_new:
+
+                try:
+                    print "Could not store in:",path[-1]
+
+                    folder_version = int(path[-1][path[-1].index('__') + 2::])
+                    path[-1] = path[-1][:path[-1].index('__')]
+                    folder_version += 1
+                    path[-1] += str('__' + str(folder_version))
+                except:
+                    traceback.print_exc()
+                    path[-1] += '__0'
+                #print str(self.device)+":", "New data location forced:", path
+            print "Path:", path
             self.dataSet = dataChest(str(path[0]))
             self.dataSet.cd('')
-            relativepath = os.path.relpath(
-                location, self.dataSet.pwd().replace("/", "\\"))
-            path = relativePath.split("\\")
-            dateFolderName = time.strftime('%x').replace(' ', '_')
-            dateFolderName = dateFolderName.replace('/', '_')
+            # relativepath = os.path.relpath(
+            #    location, self.dataSet.pwd().replace("/", "\\"))
+            # path = relativePath.split("\\")
+
+            #print "path:", str(path)
+            # dateFolderName = time.strftime('%x').replace(' ', '_')
+            # dateFolderName = dateFolderName.replace('/', '_')
+            folder_version = 0
+            #path[-1]+=str("__"+str(folder_version))
+
             for folder in path[1::]:
                 try:
+                    #print "folder:", folder
                     self.dataSet.cd(folder)
                 except:
                     try:
                         self.dataSet.mkdir(folder)
                         self.dataSet.cd(folder)
+
                     except:
                         print "ERROR: Could not create dataset at:", path
+                        #folder_version += 1
+                        #path[-1] = folder[0:folder.index('__')]+str("__"+str(folder_version))
+
                         traceback.print_exc()
 
             # print "Configuring datalogging for", str(self.device)+" located
             # at", location
-
         if location == None:
             folderName = time.strftime('%x').replace(' ', '_')
             folderName = folderName.replace('/', '_')
@@ -231,7 +255,7 @@ class dataChestWrapper:
                     # Create the tuple that defines the parameter.
                     # print self.device, "device units: ", self.device.getFrame().getUnits()
                     # print "nicknames:", nicknames
-                    print self.device, "datatype:", self.dataType
+                    #print self.device, "datatype:", self.dataType
                     tup = (paramName, [1], self.dataType,
                            str(self.device.getUnit(name)))
                     # Add it to the array of dependent variables.
@@ -254,9 +278,8 @@ class dataChestWrapper:
             # if self.device.getFrame().getYLabel() is not None:
             # Configure the label of the y axis given in the
             # device's constructor.
-
+        self.device.getFrame().DataLoggingInfo()['location'] = self.dataSet.pwd()
         self.device.getFrame().setDataSet(self.dataSet)
-
     def done(self):
         """
         Run when GUI is exited. Cleanly terminates the dataset 
@@ -266,20 +289,27 @@ class dataChestWrapper:
         dStamp = dateStamp()
         # If the dataset was being logged.
         if self.hasData:
+
+            depvars = []
             vars = []
             vars.append(dStamp.utcNowFloat())
             # Append NaN.
             try:
                 for y in range(1, self.dataSet.getParameter("DataWidth")):
-                    vars.append(float(np.nan))
+                    depvars.append(float(np.nan))
+
+                newdepvars = [getattr(np, self.dataType)(var)
+                              for var in depvars]
+                vars.extend(newdepvars)
+                print "appending:", vars
                 self.dataSet.addData([vars])
             except:
                 traceback.print_exc()
 
-    def changeLocation(self, location, ignoreLocks):
+    def changeLocation(self, location, bypassLocks):
         lock = self.device.getFrame().DataLoggingInfo()[
             'lock_logging_settings']
-        if (not lock) or ignoreLocks:
+        if (not lock) or bypassLocks:
             self.device.getFrame().DataLoggingInfo()[
                 'name'] = self.device.getFrame().getTitle()
             self.device.getFrame().DataLoggingInfo()['location'] = location
@@ -293,81 +323,88 @@ class dataChestWrapper:
         # dStamp.utcNowFloat()
 
         t1 = time.time()
-        if not self.hasData:
-
-            self.configureDataSets()
-        if self.hasData:
-            # print "HERE E"
-
-            depvars = []
-            indepvars = []
-            vars = []
-            readings = []
-
-            currentlyLogging = False
-            #devReadings = self.device.getFrame().getReadings()
-            # print "DevReadings:", devReadings
-            enabled = self.device.getFrame().DataLoggingInfo()['channels']
-            # print "enabled:", enabled
-
-            custUnits = self.device.getFrame().getCustomUnits()
-            if custUnits is '':
-                nickname = self.device.getFrame().getNicknames()[0]
-                custUnits = self.device.getUnit(nickname)
-            if custUnits is None:
-                custUnits = ''
-            self.dataSet.addParameter(
-                "y_label", self.device.getFrame().getYLabel())
-            # print "setting units:", custUnits
-            self.dataSet.addParameter("custom_units", custUnits)
-            for y, param in enumerate(self.device.getParameters()):
-                # Channels that should be logged
-
-                nickname = param
-                # This checks if the reading is displayed on the GUI
-                # if it is not, then it does not include it in
-                # the dataset.
-                # print self.device, "enabled: ",enabled
+        try:
+            if not self.hasData:
                 try:
-                    if nickname is not None and enabled[nickname]:
-                        self.keepLoggingNan = True
-                        currentlyLogging = True
-                except:
-                    traceback.print_exc()
-
-                    # print "readings:", devReadings
-                    # If the device has readings.
-                reading = self.device.getReading(param)
-                if reading is not None and enabled[param]:
-                    readings.append(float(reading))
-                else:
-                    readings.append(np.nan)
-
-            # If the device has readings, add data to dataset.
-            if(readings is not None and currentlyLogging):
-                # print self.device, "is logging"
-                indepvars.append(self.dStamp.utcNowFloat())
-                depvars.extend(readings)
-                vars.extend(indepvars)
-
-                newdepvars = [getattr(np, self.dataType)(var)
-                              for var in depvars]
-                vars.extend(newdepvars)
-                varslist = self.dataSet.getVariables()
-                # print vars
-                try:
-                    self.dataSet.addData([vars])
-                except:
-                    traceback.print_exc()
-                    print("%s: Problem storing data. Will try to reconfigure data sets."
-                          % self.device.getFrame().getTitle())
                     self.configureDataSets()
+                except:
+                    self.configureDataSets(force_new=True)
+            if self.hasData:
+                # print "HERE E"
 
-            if self.keepLoggingNan and not currentlyLogging:
-                print self.device, "not logging"
-                self.done()
+                depvars = []
+                indepvars = []
+                vars = []
+                readings = []
 
-                self.keepLoggingNan = False
                 currentlyLogging = False
-            t2 = time.time()
-            # print "Time to save data for", self.device, ":", t2-t1
+                #devReadings = self.device.getFrame().getReadings()
+                # print "DevReadings:", devReadings
+                enabled = self.device.getFrame().DataLoggingInfo()['channels']
+                # print "enabled:", enabled
+
+                custUnits = self.device.getFrame().getCustomUnits()
+                if custUnits is '':
+                    nickname = self.device.getFrame().getNicknames()[0]
+                    custUnits = self.device.getUnit(nickname)
+                if custUnits is None:
+                    custUnits = ''
+                self.dataSet.addParameter(
+                    "y_label", self.device.getFrame().getYLabel())
+                # print "setting units:", custUnits
+                self.dataSet.addParameter("custom_units", custUnits)
+                for y, param in enumerate(self.device.getParameters()):
+                    # Channels that should be logged
+
+                    nickname = param
+                    # This checks if the reading is displayed on the GUI
+                    # if it is not, then it does not include it in
+                    # the dataset.
+                    # print self.device, "enabled: ",enabled
+                    try:
+                        if nickname is not None and enabled[nickname]:
+                            self.keepLoggingNan = True
+                            currentlyLogging = True
+                    except:
+                        traceback.print_exc()
+
+                        # print "readings:", devReadings
+                        # If the device has readings.
+                    reading = self.device.getReading(param)
+                    if reading is not None and enabled[param]:
+                        readings.append(float(reading))
+                    else:
+                        readings.append(np.nan)
+
+                # If the device has readings, add data to dataset.
+                if(readings is not None and currentlyLogging):
+                    # print self.device, "is logging"
+                    indepvars.append(self.dStamp.utcNowFloat())
+                    depvars.extend(readings)
+                    vars.extend(indepvars)
+
+                    newdepvars = [getattr(np, self.dataType)(var)
+                                  for var in depvars]
+                    vars.extend(newdepvars)
+                    varslist = self.dataSet.getVariables()
+                    # print vars
+                    try:
+                        self.dataSet.addData([vars])
+                    except:
+
+                        traceback.print_exc()
+                        print("%s: Problem storing data. Will try to reconfigure data sets."
+                              % self.device.getFrame().getTitle())
+                        self.configureDataSets(force_new=True)
+
+                if self.keepLoggingNan and not currentlyLogging:
+                    print self.device, "not logging"
+                    self.done()
+
+                    self.keepLoggingNan = False
+                    currentlyLogging = False
+                t2 = time.time()
+                # print "Time to save data for", self.device, ":", t2-t1
+        except:
+            traceback.print_exc()
+            self.configureDataSets(force_new=True)
