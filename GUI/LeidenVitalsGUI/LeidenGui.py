@@ -30,13 +30,13 @@ class nViewer:
     devices =[]
     def __init__(self, parent = None):
         # Establish a connection to LabRAD.
-        try:
-            # Thiss will sys.exit(-1) if other instance is running.
-            me = singleton.SingleInstance()
-        except:
-            print("Multiple instances cannot be running")
-            time.sleep(2)
-            sys.exit(1)
+        # try:
+            # # Thiss will sys.exit(-1) if other instance is running.
+            # me = singleton.SingleInstance()
+        # except:
+            # print("Multiple instances cannot be running")
+            # time.sleep(2)
+            # sys.exit(1)
         try:
             cxn = labrad.connect() # Attempt to establish a labrad connection.
         except:
@@ -55,7 +55,7 @@ class nViewer:
             time.sleep(2)
             sys.exit(1)
         self.gui = MGui.MGui()
-        PT1000s = Device("50K and 3K Pt1000 Temperatures", lock_logging_settings = True)
+        PT1000s = Device("50K and 3K Pt1000 Temperatures", lock_logging_settings = True, data_type="float16")
         PT1000s.connection(cxn)
         PT1000s.setServerName("goldstein_s_pt1000_temperature_monitor")
         PT1000s.addParameter("50K Stage Temperature",
