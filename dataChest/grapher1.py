@@ -121,6 +121,12 @@ class Grapher(QtGui.QWidget):
         self.plotTypeOptionsDict = {}
         #self.varsToIgnore = []
 
+        self.selectedFile = ''
+        self.lastModDate = 0
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.checkFileForUpdates)
+        self.timer.start(1000)
+
     @QtCore.pyqtSlot(QtCore.QModelIndex)
     def fileBrowserSelectionMade(self, index):
         # Called when a directory tree selection is made.
@@ -128,12 +134,21 @@ class Grapher(QtGui.QWidget):
         fileName = str(self.model.fileName(indexItem))
         filePath = str(self.model.filePath(indexItem))
         if ".hdf5" in filePath:
+            self.selectedFile = filePath
             filePath = filePath[:-(len(fileName)+1)] #strip fileName from path
             filePath = self.convertPathToArray(filePath)
             currentFileName = self.d.getDatasetName()
             currentFilePath = self.convertPathToArray(self.d.pwd())
             if currentFileName != fileName or currentFilePath != filePath:
+                self.plotFile = fileName, filePath
                 self.plotData(fileName, filePath)
+
+    def checkFileForUpdates(self):
+        if self.selectedFile != '':
+            modDate = os.stat(self.selectedFile).st_mtime
+            if self.lastModDate != modDate:
+                self.lastModDate = modDate
+                self.plotData(*self.plotFile)
 
     def plotData(self, fileName, filePath):
         d = self.d
@@ -175,7 +190,9 @@ class Grapher(QtGui.QWidget):
                         elif scanType == "Logarithmic":
                             data[j][i] = np.logspace(np.log10(start), np.log10(stop), num = l)
             if datasetCategory == "2D Scan":
-                data = np.concatenate(data, axis=1)
+                data = [np.concatenate(data, axis=1)]
+
+        data = np.array(data[0])
 
         self.selectedData = data
         if len(indepVarsList) == 1:
@@ -218,17 +235,17 @@ class Grapher(QtGui.QWidget):
                 for commonUnit in varsWithCommonUnitsDict.keys():
                     commonUnitsData = []
                     commonNamesData = []
-                    commonUnitsData.append(data[0][0])
+                    commonUnitsData.append(data[0])
                     for varName in varsWithCommonUnitsDict[commonUnit]:
                         for ii in range(0, len(depVarsList)):
                             #print "depVarsList[ii][0]=", depVarsList[ii][0]
                             #if ii == 0:
-                            #    commonUnitsData.append(data[0][0])
+                            #    commonUnitsData.append(data[0])
                             if depVarsList[ii][0] == varName:
                                 print "matched"
                                 print "depVarsList[ii][0]=", depVarsList[ii][0]
                                 print "varName=", varName
-                                commonUnitsData.append(data[0][ii+1])
+                                commonUnitsData.append(data[ii+1])
                                 commonNamesData.append(varName)
                                 plotTypeOptionsDict[varName] = self.initializeBasic1DPlotOptions(self.datasetName,
                                                                                                  indepVarsList[0][0],
