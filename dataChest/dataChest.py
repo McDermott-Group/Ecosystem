@@ -401,7 +401,7 @@ class dataChest(dateStamp):
       filename = filename+".hdf5"
     existingFiles = self.ls()[0]
     if filename in existingFiles:
-      if hasattr(self, 'currentFile'):
+      if hasattr(self, 'file'):
         self.file.close() #close current file if existent
       self.file = h5py.File(self.pwd()+"/"+filename,'r+') #read+write
       self.currentHDF5Filename = self.pwd() + "/" + filename
