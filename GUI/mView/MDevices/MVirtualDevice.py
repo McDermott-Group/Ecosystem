@@ -23,23 +23,25 @@ __status__ = "Beta"
 
 import MDevice
 from MWeb import web
+
+
 class MVirtualDevice(MDevice.MDevice):
     def __init__(self, *args, **kwargs):
-         super(MVirtualDevice, self).__init__(*args)
-         yLabel = kwargs.get("yLabel", '')
-         custUnits = kwargs.get("units", '')
-        # print "SETTING Y LABEL", yLabel, kwargs
-         self.frame.setYLabel(yLabel, custUnits)
-         
-         #print "args:", args
-         
-         #web.virtualDevices.append(self)
-         self.begin(auto_refresh_node = False)
-         
+        super(MVirtualDevice, self).__init__(*args)
+        yLabel = kwargs.get("yLabel", '')
+        custUnits = kwargs.get("units", '')
+       # print "SETTING Y LABEL", yLabel, kwargs
+        self.frame.setYLabel(yLabel, custUnits)
+
+        # print "args:", args
+
+        # web.virtualDevices.append(self)
+        self.begin(auto_refresh_node=False)
+
     def onBegin(self):
-        #print "--------beginning virt device---------"
+       # print "--------beginning virt device---------"
         self.log(True)
-        
+
     # def addParameter(self, *args, **kwargs):
         # name = args[0]
         # units = kwargs.get("units", None)
@@ -49,22 +51,28 @@ class MVirtualDevice(MDevice.MDevice):
         # self.frame.precisions.append(precision)
     def addButton(self, *args, **kwargs):
         pass
+
     def onLoad(self):
         self.log(True)
         self.plot(True)
         self.configureDataLogging()
+
     def setYLabel(self, yLbl, **kwargs):
         units = kwargs.get(units, '')
         self.frame.setYLabel(yLbl, units)
+
     def query(self, *args):
-        
+
         pass
+
     def setRefreshRate(self, *args):
         self.frame.setRefreshRate(period)
+
     def setPlotRefreshRate(self, period):
         self.frame.setPlotRefreshRate(period)
+
     def addPlot(self, length=None):
-        #self.frame.addPlot(length)
+        # self.frame.addPlot(length)
         # Datalogging must be enabled if we want to plot data.
         self.frame.enableDataLogging(False)
         return self.frame.getPlot()

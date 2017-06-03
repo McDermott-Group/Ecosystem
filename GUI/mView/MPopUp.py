@@ -28,6 +28,7 @@ class PopUp(QtGui.QDialog):
     and allows the user to select OK or Cancel."""
     # Property 'consent' holds the user's decision.
     consent = None
+
     def __init__(self, message, parent=None):
         """Initialize the pop-up."""
         # The user gives a message to display.
@@ -35,14 +36,14 @@ class PopUp(QtGui.QDialog):
         # Initialize the rest of the widget.
         QtGui.QWidget.__init__(self, parent)
         self.setupUi(self)
-        
+
     def setupUi(self, Dialog):
         """Configure the look and function of the popup."""
         self.setObjectName("Warning")
         # Create a new label that will display the message.
         self.warning = QtGui.QLabel()
         self.warning.setText(self.msg)
-        
+
         HBox = QtGui.QHBoxLayout()
         HBox.addWidget(self.warning)
         mainVBox = QtGui.QVBoxLayout()

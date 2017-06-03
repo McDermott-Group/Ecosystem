@@ -195,7 +195,6 @@ class dataChest(dateStamp):
   def createDataset(self, datasetName, indepVarsList,
                     depVarsList, dateStamp = None):
     "Creates a new dataset within the current working directory."""
-    
     self.currentHDF5Filename = None
     self.readOnlyFlag = False
     self.dataCategory = None #treat self.dataCategory consistently
@@ -330,7 +329,7 @@ class dataChest(dateStamp):
       return numRows
     else:
       raise Warning("No dataset is currently open.")
-
+      
   def getData(self, startIndex = np.nan, stopIndex = np.nan, variablesList = None):
     """Retrieves data from the current dataset."""
     if self.currentHDF5Filename is not None:
@@ -340,18 +339,15 @@ class dataChest(dateStamp):
       if not isinstance(sliceIndices, list):
         raise self.exception
       startIndex, stopIndex = sliceIndices[0], sliceIndices[1]
-      
-      allVars = []
       for varTypes in self.varDict.keys():
         if variablesList is not None:
-          intersectedVariablesList = set(variablesList)
-          intersectedVariablesList = intersectedVariablesList.intersection(self.file[varTypes].keys())
-          intersectedVariablesList = list(intersectedVariablesList)
+          desiredVarList = []
+          for element in self.file[varTypes].keys():
+            if element in variablesList:
+                desiredVarList.append(element)
         else:
-          intersectedVariablesList = self.file[varTypes].keys()
-          
-        allVars += intersectedVariablesList
-        for variables in intersectedVariablesList:
+          desiredVarList = self.file[varTypes].keys()
+        for variables in desiredVarList:
           varGrp = self.file[varTypes]
           dataset = varGrp[variables].value
           originalShape = varGrp[variables].attrs["shapes"]
@@ -370,6 +366,12 @@ class dataChest(dateStamp):
             dataDict[variables] = dataset
 
       data = []
+      allVars = []
+      if variablesList is not None:
+        allVars = variablesList
+      else:
+        allVars = (self.varDict["independents"]["names"]
+                 + self.varDict["dependents"]["names"])
       
       if self.getDataCategory() == "Arbitrary Type 1":
         for ii in range(0, len(allVars)):
@@ -399,7 +401,7 @@ class dataChest(dateStamp):
       filename = filename+".hdf5"
     existingFiles = self.ls()[0]
     if filename in existingFiles:
-      if hasattr(self, 'currentFile'):
+      if hasattr(self, 'file'):
         self.file.close() #close current file if existent
       self.file = h5py.File(self.pwd()+"/"+filename,'r+') #read+write
       self.currentHDF5Filename = self.pwd() + "/" + filename
@@ -682,7 +684,7 @@ class dataChest(dateStamp):
     depVarsList = varsList[1]
     netVarsList = indepVarsList + depVarsList
     for ii in range(0, len(netVarsList)):
-      if varName == netVarsList[ii][0]:
+      if varName == str(netVarsList[ii][0]):
         return netVarsList[ii][3]
     raise Warning("Variable with name " + varName + " was not found.")
       
@@ -1164,7 +1166,7 @@ class dataChest(dateStamp):
         #lists must be of one type or else type conversion occurs
         #[12.0, 5e-67, "stringy"] --> ['12.0', '5e-67', 'stringy']
         return False
-      elif type(paramUnits) != str:
+      elif type(paramUnits) != str and type(paramUnits) != np.string_:
         self.exception = ValueError("Parameter units must be type str.")
       elif overwrite is False and paramName in self.file["parameters"].attrs.keys():
         self.exception = RuntimeError(

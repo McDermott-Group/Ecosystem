@@ -21,75 +21,83 @@ __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
 
-
 from MAnchor import MAnchor
 import traceback
 from MWeb import web
+
+
 class MNode(object):
     # Attribute that lets MView find this MNode
-    
+
     def __init__(self, *args, **kwargs):
         '''Initialize the new node.'''
         web.nodes.append(self)
         self.tree = None
         self.anchors = []
-        self.callAnchorAdded  = False
-        
+        self.callAnchorAdded = False
+
     def begin(self,  *args,  **kwargs):
         ''' Create a new node. Calls onBegin of 
        child if child has overridden onBegin().
    '''
         self.onBegin()
         pass
+
     def onBegin(self):
         pass
+
     def setTree(self, tree):
         self.tree = tree
-        
-    def setTitle(self, title): 
+
+    def setTitle(self, title):
         self.title = title
+
     def propogateData(self, pd):
         self.propogateData = pd
-        
+
     def isPropogateData(self):
         return self.propogateData
-        
+
     def getTitle(self):
         return self.title
-        
+
     def refreshData(self):
-        #print "node:", str(self), "refresh data called"
+        # print "node:", str(self), "refresh data called"
         try:
-           self.onRefreshData()
+            self.onRefreshData()
         except:
             traceback.print_exc()
             pass
+
     def onRefreshData(self):
         pass
+
     def getAnchors(self):
         return self.anchors
-        
+
     def addAnchor(self, anchor=None, **kwargs):
         propagate = not kwargs.get('terminate', False)
         if anchor == None:
             name = kwargs.get('name', None)
             type = kwargs.get('type', None)
             suggestedData = kwargs.get('data', None)
-            
-            if name == None or type == None:
-                raise RuntimeError("If no anchor is passed to MNode.addAnchor(), then \'name\', \'type\' keyword arguments must be given.")
 
-            anchor = MAnchor(name, self, len(self.anchors), type = type, data = suggestedData) # adds itself
+            if name == None or type == None:
+                raise RuntimeError(
+                    "If no anchor is passed to MNode.addAnchor(), then \'name\', \'type\' keyword arguments must be given.")
+
+            anchor = MAnchor(name, self, len(self.anchors),
+                             type=type, data=suggestedData)  # adds itself
         anchor.propagateData(propagate)
         self.anchors.append(anchor)
         self.anchorAdded(anchor, **kwargs)
-        
+
         return anchor
 
-    def removeAnchor(self, anchor = None, **kwargs):
-        #print "specified anchor:", anchor
+    def removeAnchor(self, anchor=None, **kwargs):
+        # print "specified anchor:", anchor
         if anchor == None:
-            #print "deleting last anchor"
+            # print "deleting last anchor"
             self.anchors[-1].delete()
             del self.anchors[-1]
         else:
@@ -97,31 +105,33 @@ class MNode(object):
             for i, anc in enumerate(self.anchors):
                 if anc is anchor:
                     del anchor[i]
-    
+
     def getAnchorByName(self, name):
-        #print "self.anchors:", [str(anchor) for anchor in self.anchors]
+        # print "self.anchors:", [str(anchor) for anchor in self.anchors]
         for anchor in self.anchors:
             if str(anchor) == name:
-                #print "Found anchor: ", anchor
+                # print "Found anchor: ", anchor
                 return anchor
-        raise LookupError(str(name)+" is not a anchor in "+str(self)+".")
+        raise LookupError(str(name) + " is not a anchor in " + str(self) + ".")
+
     def onLoad(self):
         self.callAnchorAdded = True
         pass
+
     def pipeDisconnected(self):
         pass
-        
+
     def pipeConnected(self, anchor, pipe):
-       pass
-       
-    def anchorAdded(self, anchor, **kwargs):
-        pass
-        
-    def getDevice(self):
-        return None
-    def __str__(self):
-        return self.title
-    def setColor(self, r, g, b):
         pass
 
-        
+    def anchorAdded(self, anchor, **kwargs):
+        pass
+
+    def getDevice(self):
+        return None
+
+    def __str__(self):
+        return self.title
+
+    def setColor(self, r, g, b):
+        pass

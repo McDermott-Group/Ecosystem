@@ -24,7 +24,9 @@ import traceback
 import inspect
 import MPersistentData
 import sys
-sys.dont_write_bytecode=True
+sys.dont_write_bytecode = True
+
+
 class web:
     """
     Organizes global variables. Allows all other classes to easily
@@ -33,8 +35,7 @@ class web:
     """
     # Store minimum and maximum values for all readings. MAlert uses
     # this to check if readings are still in bounds.
-    
-    
+
     limitDict = {}
     # All devices.
     devices = []
@@ -53,6 +54,3 @@ class web:
     nodeFilenames = []
     nodes = []
     persistentData = None
-    
-   
-    

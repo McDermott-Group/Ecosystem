@@ -21,7 +21,7 @@ __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
 import sys
-sys.dont_write_bytecode=True
+sys.dont_write_bytecode = True
 import math
 import atexit
 import traceback
@@ -38,14 +38,17 @@ import MAlert
 from MWeb import web
 from MNodeEditor.MNodeEditorHandler import MNodeEditorHandler
 from MDeviceContainerWidget import MDeviceContainerWidget
+import __main__
 
 class MGui(QtGui.QMainWindow):
     """Handles construction of GUI using mView framework."""
     print("#############################################")
     print("# Starting mView (C) Noah Meltzer 2016-2017 #")
     print("#############################################")
-
-    web.persistentData = MPersistentData()
+    loader = str(__main__.__file__).replace("\\","/").split('/')[-1]
+    loader = loader[:loader.index('.py')]
+    print "Loader:", loader
+    web.persistentData = MPersistentData(loader)
     # Holds the Qlabels that label the parameters.
     parameters = [[]]
     # Each tile on the GUI is called a frame, this is the list of them.
@@ -76,29 +79,28 @@ class MGui(QtGui.QMainWindow):
     VBoxColumn = 0
     # Used to allow query to keep calling itself.
     keepGoing = True
-    MAlert=None
+    MAlert = None
     started = False
     widgetsToAdd = []
     # splash_pix = QtGui.QPixmap('logo.png')
     # splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
     # splash.show()
+
     def __init__(self):
-    #atexit.register(self.stop)
-        
+        # atexit.register(self.stop)
 
         web.gui = self
         self.devices = []
+
     def initGui(self, parent=None):
         """Configure all GUI elements."""
         QtGui.QWidget.__init__(self, parent)
         app.setActiveWindow(self)
         QtGui.QApplication.setStyle(QtGui.QStyleFactory.create('plastique'))
-        
-        
+
         # Make the GUI fullscreen.
         self.showMaximized()
-       
-       
+
         # Make GUI area scrollable.
         self.main_widget = QtGui.QWidget()
         self.main_widget.setLayout(self.mainHBox)
@@ -112,39 +114,42 @@ class MGui(QtGui.QMainWindow):
         # Configure the menu bar.
         menubar = self.menuBar()
         menubar.setStyleSheet("QMenuBar {background-color: "
-                "rgb(189, 195, 199)}"
-                "QMenuBar::item {background: transparent} "
-                "QMenu{background-color:rgb(189, 195, 199)}")
+                              "rgb(189, 195, 199)}"
+                              "QMenuBar::item {background: transparent} "
+                              "QMenu{background-color:rgb(189, 195, 199)}")
         # Menu bar menus.
-        exitAction = QtGui.QAction('&Exit', self)        
+        exitAction = QtGui.QAction('&Exit', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(QtGui.qApp.quit)
-                
+
         NotifierSettingsAction = QtGui.QAction('&Settings...', self)
         NotifierSettingsAction.triggered.connect(self.openNotifierSettings)
-        
+
         deviceSettingsAction = QtGui.QAction('&Configure...', self)
         deviceSettingsAction.triggered.connect(self.openConfig)
-        
-        newDataSetAction = QtGui.QAction('&Data Logging Configuration...', self)
+
+        newDataSetAction = QtGui.QAction(
+            '&Data Logging Configuration...', self)
         newDataSetAction.triggered.connect(self.openNewDataSetConfig)
-        
-        virtualDevicesConfigAction = QtGui.QAction('&Virtual devices editor...',self)
-        virtualDevicesConfigAction.triggered.connect(self.openVirtualDevicesConfig)
-        
+
+        virtualDevicesConfigAction = QtGui.QAction(
+            '&Virtual devices editor...', self)
+        virtualDevicesConfigAction.triggered.connect(
+            self.openVirtualDevicesConfig)
+
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(exitAction)
-        
+
         NotifierMenu = menubar.addMenu('&Notifier')
         NotifierMenu.addAction(NotifierSettingsAction)
-        
+
         DeviceMenu = menubar.addMenu('&Devices')
         DeviceMenu.addAction(deviceSettingsAction)
-        
+
         DataChestMenu = menubar.addMenu('&DataChest')
         DataChestMenu.addAction(newDataSetAction)
-        
+
         VirtualDevicesMenu = menubar.addMenu('&Virtual Devices')
         VirtualDevicesMenu.addAction(virtualDevicesConfigAction)
         # Keeps track of the number of widgets, used for placing tiles
@@ -155,7 +160,7 @@ class MGui(QtGui.QMainWindow):
         self.frameSizePolicy = QtGui.QSizePolicy()
         self.frameSizePolicy.setVerticalPolicy(4)
         self.frameSizePolicy.setHorizontalPolicy(QtGui.QSizePolicy.Preferred)
-       
+
         # Configure the layouts.
         self.mainVBox.append(QtGui.QVBoxLayout())
         self.mainVBox.append(QtGui.QVBoxLayout())
@@ -166,22 +171,23 @@ class MGui(QtGui.QMainWindow):
 
         # Which column are we adding a tile to next.
         #devices = web.devices
-        
+
         self.index = 0
-        for i,device in enumerate(self.devices):
+        for i, device in enumerate(self.devices):
             self.addDevice(device)
         for widget in self.widgetsToAdd:
             self.addWidget(widget)
-        #self.mainVBox[0].addStretch(0)
-        #self.mainVBox[1].addStretch(0)
+        # self.mainVBox[0].addStretch(0)
+        # self.mainVBox[1].addStretch(0)
         #print("GUI initialized.")
+
     def stop(self):
         '''Stop MView.'''
         print "Shutting down MView."
 
-        #print "all devices:", web.devices
+        # print "all devices:", web.devices
         for device in web.devices:
-            #print "stopping", str(device)
+            # print "stopping", str(device)
             device.stop()
             try:
                 device.getFrame().getDataChestWrapper().done()
@@ -189,20 +195,21 @@ class MGui(QtGui.QMainWindow):
             except:
                 pass
         web.persistentData.saveState()
-        #self.neh.stop()
-        
+        # self.neh.stop()
+
     def addDevice(self, device):
         if self.started:
             if self.VBoxColumn == 0:
                 self.VBoxColumn = 1
             else:
                 self.VBoxColumn = 0
-           
+
             container = MDeviceContainerWidget(device, self)
             self.deviceWidgets.append(container)
             self.mainVBox[self.VBoxColumn].addWidget(container)
         else:
             self.devices.append(device)
+
     def addWidget(self, widget):
         if self.started:
             if self.VBoxColumn == 0:
@@ -213,8 +220,9 @@ class MGui(QtGui.QMainWindow):
             widget.show()
         else:
             self.widgetsToAdd.append(widget)
+
     def mousePressEvent(self, event):
-        
+
         focused_widget = QtGui.QApplication.focusWidget()
         if isinstance(focused_widget, QtGui.QScrollArea):
             focused_widget.clearFocus()
@@ -224,27 +232,28 @@ class MGui(QtGui.QMainWindow):
         #print("Closing mView...")
         self.stop()
         exit()
+
     def openNotifierSettings(self):
-        
         """Open the notifier settings GUI."""
         # NOTE, this is run on the main thread, so while it is open
         # the main GUI will not be running.
-        self.NotifierGUI = NotifierGUI()
+        self.NotifierGUI = NotifierGUI(self.loader)
         self.NotifierGUI.exec_()
-        
+
     def openNewDataSetConfig(self):
         """Open the new data set configuration GUI."""
         # NOTE, this is run on the main thread, so while it is open
         # the main GUI will not be running.
         self.DataSetConfigGUI = DataSetConfigGUI()
         self.DataSetConfigGUI.exec_()
-        
+
     def setRefreshRate(self, period):
-        web.persistentData.persistentDataAccess(period,'guiRefreshRate')
-        
+        web.persistentData.persistentDataAccess(period, 'guiRefreshRate')
+
     def openVirtualDevicesConfig(self):
-        #self.neh.showEditor()
+        # self.neh.showEditor()
         print "no, I wont"
+
     def openConfig(self):
         self.Config = ConfigGui(self)
         self.Config.exec_()
@@ -254,18 +263,19 @@ class MGui(QtGui.QMainWindow):
             self.MAlert.stop()
         self.MAlert = MAlert.MAlert()
         self.MAlert.begin()
-    def startGui(self, title, tele, autostart = True):
+
+    def startGui(self, title, tele, autostart=True):
         """Start the GUI."""
-        #print "Starting GUI."
+        # print "Starting GUI."
         # Used as the name of the dataChest data title.
-        
+
         #web.devices = devices
         # Start the notifier.
         self.started = True
         web.telecomm = tele
-        self.NotifierGUI = NotifierGUI()
+        self.NotifierGUI = NotifierGUI(self.loader)
         self.startMAlert()
-        
+
         screen_resolution = QtGui.QDesktopWidget().screenGeometry()
         self.scrnWidth = screen_resolution.width()
         self.scrnHeight = screen_resolution.height()
@@ -282,34 +292,35 @@ class MGui(QtGui.QMainWindow):
         # Show the GUI.
         self.show()
         self.timer = QtCore.QTimer(self)
-        #self.neh.begin()
-        # Update the GUI every so often. This CAN ONLY be done 
+        # self.neh.begin()
+        # Update the GUI every so often. This CAN ONLY be done
         # in the main thread.
         if self.keepGoing:
-            self.timer.singleShot(web.persistentData.persistentDataAccess(None, 'guiRefreshRate', default = web.guiRefreshRate) * 1000, self.update)
+            self.timer.singleShot(web.persistentData.persistentDataAccess(
+                None, 'guiRefreshRate', default=web.guiRefreshRate) * 1000, self.update)
         # try:
             # QtGui.QApplication.focusWidget().clearFocus()
         # except:
             # pass
-            
-        #print web.nodes
+
+        # print web.nodes
         # Begin all logic nodes
         for node in web.nodes:
             node.onLoad()
-        # Now that the gui is mostly loaded, all of teh onLoad functions can be called
+        # Now that the gui is mostly loaded, all of teh onLoad functions can be
+        # called
         for device in web.devices:
             device.loaded()
-            
+
         if autostart:
             self.showGui()
-     
+
     def showGui(self):
         sys.exit(app.exec_())
 
     def update(self):
         """Update the GUI."""
         pass
-       
 
 
 app = QtGui.QApplication(sys.argv)

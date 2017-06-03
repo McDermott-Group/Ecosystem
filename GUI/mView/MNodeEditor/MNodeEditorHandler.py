@@ -6,11 +6,12 @@ from MWeb import web
 
 from MNodes.MDeviceNode import MDeviceNode
 
+
 class MNodeEditorHandler:
     def __init__(self):
         # Create a nodeTree
         self.nodeTree = MNodeTree.NodeTree()
-      
+
         # Create a nodeEditor GUI window
         self.nodeEditor = MNodeEditor.NodeGui(web.devices, self.nodeTree)
         self.scene = self.nodeTree.getScene()
@@ -27,17 +28,18 @@ class MNodeEditorHandler:
             dev.getFrame().setNode(newNode)
             # Create nodes representing the tiles in the main mView window
             #virtNode = MVirtualDeviceNode()
-            #self.nodeTree.addNode(virtNode)
+            # self.nodeTree.addNode(virtNode)
             #outnode = self.nodeTree.addNode(self.nodeTree, mode = 'output')
             # An anchor has been created on the device node for each parameter that it
             # has, create a ouput node that is able to connect to all of these
             self.scene = self.nodeTree.getScene()
-              
+
     def showEditor(self):
         self.nodeEditor.show()
+
     def getTree(self):
         return self.nodeTree
+
     def stop(self):
-        #print "stopping handler"
+        # print "stopping handler"
         web.keepGoing = False
-        

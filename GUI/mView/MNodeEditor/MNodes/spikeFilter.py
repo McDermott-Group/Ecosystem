@@ -26,6 +26,7 @@ from MNodeEditor.MAnchor import MAnchor
 # Numpy to help with numbers
 import numpy as np
 
+
 class spikeFilter(MNode):
     def __init__(self, *args, **kwargs):
         '''Initialize parent, and begin the parent.'''
@@ -37,37 +38,37 @@ class spikeFilter(MNode):
         # reading
         self.prev = np.nan
         self.curr = np.nan
-        
+
     def onBegin(self, *args, **kwargs):
         '''Called when parent finished beginning.'''
         # Anchor for the raw data input
-        self.dataAnchor = self.addAnchor(name = 'raw_data', type = 'input')
-        # Anchor for the threshold (we dont necessarily need 
+        self.dataAnchor = self.addAnchor(name='raw_data', type='input')
+        # Anchor for the threshold (we dont necessarily need
         # to create an anchor for this, but we will anyway.)
-        self.thresholdAnchor = self.addAnchor(name = 'threshold', type = 'input')
-        # An anchor for the data output. 
+        self.thresholdAnchor = self.addAnchor(name='threshold', type='input')
+        # An anchor for the data output.
         # Note that this anchor has an 'ouput' type.
-        self.output = self.addAnchor(name = 'filtered_data', type = 'output')
+        self.output = self.addAnchor(name='filtered_data', type='output')
         # Set the title of our node.
         self.setTitle("Spike Filter")
-        
+
     def onRefreshData(self):
         '''Refresh anchor data.'''
         # Get the current reading from the data anchor.
         self.curr = self.dataAnchor.getData()
         # Get the threshold value from the threshold anchor.
         threshold = self.thresholdAnchor.getData()
-        # If the previous reading is a valid number (not 
+        # If the previous reading is a valid number (not
         # necessarily the case on startup) then continue.
         if self.prev != np.nan or self.prev != None:
                 # If the absolute value of the difference is less than
                 # the threshold...
-               if abs(self.prev-self.curr) < threshold:
-                    # Then set the data on the output anchor to the current reading.
-                    self.output.setData(self.curr)
-               else:
-                    # Otherwise, the data should be nan.
-                    self.output.setData(np.nan)
+            if abs(self.prev - self.curr) < threshold:
+                # Then set the data on the output anchor to the current
+                # reading.
+                self.output.setData(self.curr)
+            else:
+                # Otherwise, the data should be nan.
+                self.output.setData(np.nan)
         # Update the previous value
         self.prev = self.curr
-          

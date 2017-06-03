@@ -25,6 +25,7 @@ from MWidget import MWidget
 
 import time
 import re
+
 class MStartStopCooldownWidget(MWidget):
     def __init__(self, cdLoc, stbyLoc):
         super(MStartStopCooldownWidget, self).__init__(None)

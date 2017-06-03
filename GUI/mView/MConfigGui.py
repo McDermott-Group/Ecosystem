@@ -31,6 +31,7 @@ class ConfigGui(QtGui.QDialog):
     Allows the user to configure the refresh rates for plots, devices
     and LCD numbers.
     """
+
     def __init__(self, parent=None):
         super(ConfigGui, self).__init__(parent)
         # Create a tab for update speed settings.
@@ -59,19 +60,19 @@ class ConfigGui(QtGui.QDialog):
 class refreshRateContents(QtGui.QWidget):
     def __init__(self, parent=None):
         super(refreshRateContents, self).__init__(parent)
-        
+
         mainLayout = QtGui.QVBoxLayout()
-        
-        self.setLayout(mainLayout) 
+
+        self.setLayout(mainLayout)
         self.refreshTabWidget = QtGui.QTabWidget()
-       
+
         mainLayout.addWidget(self.refreshTabWidget)
         self.refreshTabWidget.addTab(self.guiRefreshConfig(), "GUI")
-        
+
         for device in web.devices:
             self.refreshTabWidget.addTab(devRefRateConfig(device),
-                    device.getFrame().getTitle())
-            
+                                         device.getFrame().getTitle())
+
     def guiRefreshConfig(self):
         guiRefConfig = QtGui.QWidget()
         guiRefLayout = QtGui.QVBoxLayout()
@@ -79,57 +80,61 @@ class refreshRateContents(QtGui.QWidget):
         guiRefLayoutH.addWidget(QtGui.QLabel("GUI Refresh period:"))
         guiRefLayoutH.addStretch(0)
         self.refRateEdit = QtGui.QLineEdit()
-        #print "Gui ref rate:", web.persistentData(None, 'guiRefreshRate')
-        self.refRateEdit.setText(str(web.persistentData.persistentDataAccess(None, 'guiRefreshRate')))
+        # print "Gui ref rate:", web.persistentData(None, 'guiRefreshRate')
+        self.refRateEdit.setText(
+            str(web.persistentData.persistentDataAccess(None, 'guiRefreshRate')))
         guiRefLayoutH.addWidget(self.refRateEdit)
         guiRefLayoutH.addWidget(QtGui.QLabel('s'))
         self.refRateEdit.editingFinished.connect(self.updateMainGuiRefRate)
-        
+
         guiRefLayout.addLayout(guiRefLayoutH)
         guiRefConfig.setLayout(guiRefLayout)
         return guiRefConfig
-        
+
     def updateMainGuiRefRate(self):
-       try:
-           web.persistentData.persistentDataAccess(float(self.refRateEdit.text()), 'guiRefreshRate')
-            
-       except:
+        try:
+            web.persistentData.persistentDataAccess(
+                float(self.refRateEdit.text()), 'guiRefreshRate')
+
+        except:
             traceback.print_exc()
 
 
 class devRefRateConfig(QtGui.QWidget):
     def __init__(self, device, parent=None):
         super(devRefRateConfig, self).__init__(parent)
- 
+
         self.device = device
-        
+
         devRefConfig = QtGui.QWidget()
         devRefLayout = QtGui.QVBoxLayout()
         devRefLayoutH = QtGui.QHBoxLayout()
         title = device.getFrame().getTitle()
         devRefLayoutH.addWidget(QtGui.QLabel("%s update period:"
-                %title))
+                                             % title))
         devRefLayoutH.addStretch(0)
 
         devRefConfig.setLayout(devRefLayout)
         self.devRefRateEdit = QtGui.QLineEdit()
         self.devRefRateEdit.editingFinished.connect(self.updateDevRefRate)
-        
+
         self.devRefRateEdit.setText(str(device.getFrame().getRefreshRate()))
         devRefLayoutH.addWidget(self.devRefRateEdit)
         devRefLayoutH.addWidget(QtGui.QLabel('s'))
-        
+
         devRefLayout.addLayout(devRefLayoutH)
 
         if device.getFrame().isPlot():
             plotRefLayoutH = QtGui.QHBoxLayout()
             title = device.getFrame().getTitle()
             plotRefLayoutH.addWidget(QtGui.QLabel("%s plot refresh rate:"
-                    %title))
+                                                  % title))
             plotRefLayoutH.addStretch(0)
             self.plotRefRateEdit = QtGui.QLineEdit()
-            self.plotRefRateEdit.setText(str(device.getFrame().getPlotRefreshRate()))
-            self.plotRefRateEdit.editingFinished.connect(self.updateDevPlotRate)
+            self.plotRefRateEdit.setText(
+                str(device.getFrame().getPlotRefreshRate()))
+            self.plotRefRateEdit.editingFinished.connect(
+                self.updateDevPlotRate)
             plotRefLayoutH.addWidget(self.plotRefRateEdit)
             plotRefLayoutH.addWidget(QtGui.QLabel('s'))
             devRefLayout.addLayout(plotRefLayoutH)
@@ -142,7 +147,7 @@ class devRefRateConfig(QtGui.QWidget):
         except:
             traceback.print_exc()
             print("[%s]: %s is not a number."
-                    %(self.device.getFrame().getTitle(), refreshRate))
+                  % (self.device.getFrame().getTitle(), refreshRate))
 
     def updateDevRefRate(self):
         refreshRate = self.devRefRateEdit.text()
@@ -151,4 +156,4 @@ class devRefRateConfig(QtGui.QWidget):
         except:
             traceback.print_exc()
             print("[%s]: %s is not a number."
-                    %(self.device.getFrame().getTitle(), refreshRate))
+                  % (self.device.getFrame().getTitle(), refreshRate))

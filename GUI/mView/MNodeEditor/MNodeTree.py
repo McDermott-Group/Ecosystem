@@ -21,36 +21,38 @@ __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
 
-
 from MPipe import MPipe
 import os
-import sys, inspect
+import sys
+import inspect
 from glob import glob
 from MWeb import web
+
 
 class NodeTree:
     scene = None
     pipes = []
-    #def __init__(self):
+    # def __init__(self):
     nodes = []
-    #print os.getcwd()
-    path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) 
-    
-    os.chdir(path+"\MNodes")
-    #print os.getcwd()
+    # print os.getcwd()
+    path = os.path.dirname(os.path.abspath(
+        inspect.getfile(inspect.currentframe())))
+
+    os.chdir(path + "\MNodes")
+    # print os.getcwd()
     for file in glob("*.py"):
         web.nodeFilenames.append(file)
-        #print file
+        # print file
 
     def getPipes(self):
         '''Returns all pipes in the tree.'''
         return self.pipes
-        
-    def addPipe(self,pipe):
+
+    def addPipe(self, pipe):
         '''Add a pipe to the tree.'''
         self.pipes.append(pipe)
         return self.pipes[-1]
-        
+
     def deletePipe(self, pipeToDel):
         '''Delete pipe from tree'''
 
@@ -60,20 +62,20 @@ class NodeTree:
         start.connect(None)
         if end != None:
             end.connect(None)
-        
-        for i,pipe in enumerate(self.pipes):
+
+        for i, pipe in enumerate(self.pipes):
             if pipe is pipeToDel:
                 self.pipes[i] = None
                 del self.pipes[i]
         start.parentNode().pipeDisconnected()
         if end != None:
             end.parentNode().pipeDisconnected()
-                
-    def connect(self, anchor, endAnchor = None):
+
+    def connect(self, anchor, endAnchor=None):
         '''Connect anchors with a pipe.'''
         try:
-            #print "endAnchor:", endAnchor
-            #print "anchor:", anchor
+            # print "endAnchor:", endAnchor
+            # print "anchor:", anchor
             if endAnchor != None:
                 pipe = MPipe(anchor, self.scene)
                 self.pipes.append(pipe)
@@ -83,34 +85,34 @@ class NodeTree:
                 endAnchor.pipeConnected(self.pipes[-1])
             else:
                 if len(self.getPipes()) == 0:
-                    #print "adding pipe"
+                    # print "adding pipe"
                     pipe = self.addPipe(MPipe(anchor, self.scene))
                 else:
-                    #print "A pipe exists"
+                    # print "A pipe exists"
                     if self.getPipes()[-1].isUnconnected():
                         self.getPipes()[-1].connect(anchor)
-                        pipe =  self.getPipes()[-1]
+                        pipe = self.getPipes()[-1]
                     else:
                        # print "Creating pipe"
                         pipe = self.addPipe(MPipe(anchor, self.scene))
 
                 anchor.pipeConnected(pipe)
                 anchor.parentNode().pipeConnected(anchor, pipe)
-                
+
             anchor.connect(pipe)
-        except  ValueError, e:
-            #print "ERROR:",e
+        except ValueError, e:
+            # print "ERROR:",e
             self.deletePipe(self.pipes[-1])
-            
+
     def addNode(self, node):
-        #node.setScene(self.scene)
+        # node.setScene(self.scene)
         node.setTree(self)
         node.begin()
         self.nodes.append(node)
         return node
-        
+
     def getNodes(self):
         return self.nodes
-        
+
     def getGuiNodes(self):
         return [node for node in self.getNodes() if node.getType() == 'output']
