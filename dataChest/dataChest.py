@@ -106,10 +106,12 @@ class dataChest(dateStamp):
 
   def mkdir(self, directoryToMake):
     """Makes a new directory within the current working directory."""
+    directoryToMake= directoryToMake.replace("\\", "/")
     dirContents = [x.lower() for x in self.ls()[1]]
-    if self._formatFilename(directoryToMake, " +-.") == directoryToMake:
+    if self._formatFilename(directoryToMake, " /+-.") == directoryToMake:
       if directoryToMake.lower() not in dirContents:
-        os.mkdir(self.cwdPath+"/"+directoryToMake) #Try except this even though safe guarded
+        if not os.path.isdir(self.cwdPath+"/"+directoryToMake):
+            os.mkdir(self.cwdPath+"/"+directoryToMake) #Try except this even though safe guarded
       else:
         raise OSError(
           "Directory already exists.\r\n\t"
@@ -401,7 +403,7 @@ class dataChest(dateStamp):
       filename = filename+".hdf5"
     existingFiles = self.ls()[0]
     if filename in existingFiles:
-      if hasattr(self, 'currentFile'):
+      if hasattr(self, 'file'):
         self.file.close() #close current file if existent
       self.file = h5py.File(self.pwd()+"/"+filename,'r+') #read+write
       self.currentHDF5Filename = self.pwd() + "/" + filename

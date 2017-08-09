@@ -83,6 +83,10 @@ class dateStamp(object):
   def utcDateIsoString(self):
     utcDateISO = datetime.utcnow().isoformat()
     return utcDateISO
+
+  def localDateIsoString(self):
+    dateISO = datetime.now().isoformat()
+    return dateISO
     
 
   def invertDateStamp(self, dateStamp):
