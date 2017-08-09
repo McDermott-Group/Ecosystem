@@ -33,6 +33,7 @@ import labrad.units as units
 import traceback
 import start_stop_cooldown as ssc
 from MDevices.Mhdf5Device import Mhdf5Device
+import os
 class nViewer:
     gui = None
     devices =[]
@@ -139,8 +140,8 @@ class nViewer:
         grapher.begin()
         self.gui.addDevice(grapher)
         
-        bigButton = ssc.MStartStopCooldownWidget( 'Z:\\mcdermott-group\\data\\fridgeLogs\\dr1\\cooldown',
-                                                         'Z:\\mcdermott-group\\data\\fridgeLogs\\dr1\\standbyData')
+        bigButton = ssc.MStartStopCooldownWidget( os.environ['DATA_CHEST_ROOT']+'\\cooldown',
+                                                        os.environ['DATA_CHEST_ROOT']+'\\standbyData')
         self.gui.addWidget(bigButton)
         # Create the gui
 
