@@ -418,8 +418,8 @@ class TimeAxisItem(pg.AxisItem):
         #  super().__init__(*args, **kwargs)
 
         super(TimeAxisItem, self).__init__(*args, **kwargs)
-        # Timezone correction
-        self.timeOffset = -6 * 60 * 60
+        # Timezone correction, take daylight savings into account.
+        self.timeOffset = -(time.mktime(time.gmtime()) - time.mktime(time.localtime()))+3600*time.localtime().tm_isdst
 
     def tickStrings(self, values, scale, spacing):
         # PySide's QTime() initialiser fails miserably and dismisses args/kwargs
