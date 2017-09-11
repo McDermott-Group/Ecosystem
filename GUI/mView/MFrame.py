@@ -164,6 +164,15 @@ class MFrame:
         for i, key in enumerate(self.parameters.keys()):
             self.setPrecision(key, precisions[i])
 
+    def setSigFigs(self, name, sigfigs):
+        self.parameters[name]['sigfigs'] = sigfigs
+
+    def getSigFigs(self, name):
+        try:
+            return self.parameters[name]['sigfigs']
+        except:
+            warnings.warn("Could not get sigfigs of "+str(name))
+
     def setPrecision(self, name, precision):
         self.parameters[name]['precision'] = precision
 
