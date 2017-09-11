@@ -251,7 +251,6 @@ class MDeviceContainerWidget(QtGui.QFrame):
                     try:
                         precision = self.device.getPrecision(key)
                         sigfigs = self.device.getSigFigs(key)
-                        print "Sigfigs:", sigfigs
                         # print self.device, key, "precision:", precision
 
                         # print "precision:", precision
@@ -269,9 +268,6 @@ class MDeviceContainerWidget(QtGui.QFrame):
                         if type(param['reading']) is float or \
                            type(param['reading']) is np.float64:
 
-                            print "it is a float"
-                            print format.format(param['reading'])
-                            print format
                             if not math.isnan(param['reading']):
                                 self.params[key]["lcd_readout"].display(
                                     float(format.format(param['reading'])))
