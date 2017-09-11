@@ -53,7 +53,7 @@ class nViewer:
         localTemp = Device("Local Temperatures")
         localTemp.connection(cxn)
         localTemp.setServerName("my_server2")
-        localTemp.addParameter("Outside Temperature", "temperature", None, log = True)
+        localTemp.addParameter("Outside Temperature", "temperature", None, log = True, significant_figures=1)
         localTemp.addParameter("Outside pressure", "pressure", None, log = True)
         localTemp.addParameter("Humidity", "moisture", None, log = True)
         
