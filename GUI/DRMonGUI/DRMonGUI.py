@@ -103,8 +103,8 @@ class nViewer:
         
         lake370 = Device("Lakeshore 370")
         lake370.setServerName("lakeshore_ruox")
-        lake370.addParameter("Mix 1", "temperatures", None, index = 0)
-        lake370.addParameter("Mix 2", "temperatures", None, index = 1)
+        lake370.addParameter("Mix 1", "temperatures", None,  index = 0, significant_figures = 2)
+        lake370.addParameter("Mix 2", "temperatures", None, index = 1, significant_figures = 2)
         lake370.addParameter("Still", "temperatures", None, index = 2)
         lake370.addParameter("1K Pot", "temperatures", None, index = 3)
         lake370.addParameter("Exchange Plate", "temperatures", None, index = 4)
