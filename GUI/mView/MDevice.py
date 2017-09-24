@@ -231,6 +231,9 @@ class MDevice(QThread):
     def setPrecisions(self, precisions):
         self.frame.setPrecisions(precisions)
 
+    def setSigFigs(self, parameter, sigfigs):
+        self.frame.setSigFigs(parameter, sigfigs)
+
     def _setReadings(self, readings, update=True):
         '''Tell the frame what the readings are so that they can be logged.
 
@@ -288,6 +291,9 @@ class MDevice(QThread):
 
     def getPrecision(self, parameter):
         return self.frame.getPrecision(parameter)
+
+    def getSigFigs(self, parameter):
+        return self.frame.getSigFigs(parameter)
 
     def getReading(self, parameter):
         return self.frame.getReading(parameter)
@@ -392,15 +398,19 @@ class MDevice(QThread):
         except:
             raise AttributError(
                 "The first argument of addParameter() must be a name")
-        precision = kwargs.get('precision', 2)
+
         show = kwargs.get("show", True)
         units = kwargs.get('units', None)
-        precision = kwargs.get('precision', 2)
+        sigfigs = kwargs.get('significant_figures', None)
+        precision = kwargs.get('precision', None)
+        if sigfigs is None and precision is None:
+            precision = 2
         index = kwargs.get('index', None)
         log = kwargs.get("log", self.isLogging())
         self.frame.addParameter((name, units, precision))
         self.setReadingIndex(name, index)
         self.setPrecision(name, precision)
+        self.setSigFigs(name, sigfigs)
         self.setUnit(name, units)
         self.onAddParameter(*args, **kwargs)
         self.frame.setParamVisibility(name, show)

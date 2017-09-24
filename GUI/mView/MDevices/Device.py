@@ -91,7 +91,7 @@ class Device(MDevice):
         self.serverName = name
 
     def onAddParameter(self, parameter, setting=None, arg=None, **kwargs):
-        precision = kwargs.get('precision', 2)
+        precision = kwargs.get('precision', None)
         units = kwargs.get('units', None)
         index = kwargs.get('index', None)
         self.frame.DataLoggingInfo()[
@@ -99,7 +99,7 @@ class Device(MDevice):
         self.setPreferredUnit(parameter, units)
         self.setCommand(parameter, [setting, arg])
         self.setReadingIndex(parameter, index)
-        self.setPrecision(parameter, precision)
+        #self.setPrecision(parameter, precision)
         # self.nicknames.append(parameter)
         # self.settingArgs.append(arg)
         # self.settingUnits.append(units)

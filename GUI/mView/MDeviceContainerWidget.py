@@ -250,27 +250,28 @@ class MDeviceContainerWidget(QtGui.QFrame):
                         self.isRed[key] = False
                     try:
                         precision = self.device.getPrecision(key)
+                        sigfigs = self.device.getSigFigs(key)
                         # print self.device, key, "precision:", precision
 
                         # print "precision:", precision
                         if precision is not None:
                             format = "{0:." + str(int(precision)) + "f}"
+                        elif sigfigs is not None:
+                            format = "{0:." + str(int(sigfigs)) + "g}"
                         else:
                             format = "{0.0f}"
                         try:
                             param['reading'] = float(param['reading'])
                         except:
                             pass
-                        # print "readings:",param['reading'],
-                        # type(param['reading'])
+                        # Only try to format the readout if it is a floating point number
                         if type(param['reading']) is float or \
                            type(param['reading']) is np.float64:
 
-                            # print "it is a float"
-
                             if not math.isnan(param['reading']):
                                 self.params[key]["lcd_readout"].display(
-                                    format.format(param['reading']))
+                                    float(format.format(param['reading'])))
+
                             else:
                                 self.params[key]["lcd_readout"].display("---")
 
