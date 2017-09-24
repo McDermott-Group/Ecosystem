@@ -49,9 +49,10 @@ class SIM900(GPIBManagedServer):
     name = 'SIM900'
     deviceName = 'STANFORD RESEARCH SYSTEMS SIM900'
     defaultTimeout = 1.0 * units.s
-
+    
+    @inlineCallbacks  
     def initServer(self):
-        GPIBManagedServer.initServer(self)
+        yield GPIBManagedServer.initServer(self)
         self.mydevices = {}
         # start refreshing only after we have started serving
         # this ensures that we are added to the list of available
