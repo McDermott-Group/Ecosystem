@@ -42,12 +42,7 @@ LF = '\n' # Line Feed
 class SIM928Server(GPIBManagedServer):
     name = 'SIM928_test'
     deviceName = 'STANFORD RESEARCH SYSTEMS SIM900'
-    
-    @inlineCallbacks  
-    def initServer(self):
-        yield GPIBManagedServer.initServer(self)
-        self.sources_list = []
-    
+
     @inlineCallbacks   
     def write(self, c, slot_number, write_str):
         """A SIM specific write method."""
@@ -75,27 +70,27 @@ class SIM928Server(GPIBManagedServer):
         err_msg = "A SIM 928 on slot # %s was not found." % slot_number
         return err_msg
         
-    @setting(9, 'Find Sources', returns = '')
-    def find_sources(self, c):
+    @setting(9, 'Find Sources', slot_number = 'i', returns = 'b')
+    def find_source(self, c, slot_number):
         """Finds all slots with SIM 928s in them."""
         dev = self.selectedDevice(c)
         module_status = yield dev.query("CTCR?\n")
         module_status = '{0:b}'.format(int(module_status))[4:-1][::-1]
         module_status = [bool(int(char)) for char in module_status]
         for ii in range(0, len(module_status)):
-            slot_number = ii + 1
-            if module_status[ii]:
-                idn_str = yield self.query(c, slot_number, "*IDN?")
-                if 'SIM928' in idn_str:
-                    if slot_number not in self.sources_list:
-                        self.sources_list.append(slot_number)
-        
+            print "here for"
+            if slot_number == ii + 1:
+                if module_status[ii]:
+                    idn_str = yield self.query(c, slot_number, "*IDN?")
+                    if 'SIM928' in idn_str:
+                        returnValue(True)
+        returnValue(False)
+
     @setting(10, 'Select Source', slot_number = 'i', returns = '')
     def select_source(self, c, slot_number):
         """Selects a SIM 928 within the SIM 900 Mainframe."""
-        if self.sources_list == []:
-            yield self.find_sources(c)
-        if slot_number in self.sources_list:
+        source_found = yield self.find_source(c, slot_number)
+        if source_found:
             c['slot_number'] = slot_number
         else:
             raise ValueError(self.slot_not_found_msg(slot_number))
@@ -103,8 +98,6 @@ class SIM928Server(GPIBManagedServer):
     @setting(11, 'Get Voltage', returns = 'v[V]')
     def get_voltage(self, c):
         """Gets SIM 928 voltage for the selected slot number."""
-        if self.sources_list == []:
-            yield self.find_sources(c)
         if 'slot_number' in c.keys():
             slot_number = c['slot_number']
             voltage = yield self.query(c, slot_number, "VOLT?")
@@ -118,8 +111,6 @@ class SIM928Server(GPIBManagedServer):
              voltage = 'v[V]', returns = '')
     def set_voltage(self, c, voltage):
         """Sets SIM 928 voltage for the selected slot number."""
-        if self.sources_list == []:
-            yield self.find_sources(c)
         if 'slot_number' in c.keys():
             slot_number = c['slot_number']
             output_state = yield self.get_output_state(c)
@@ -134,8 +125,6 @@ class SIM928Server(GPIBManagedServer):
     def get_output_state(self, c):
         """Gets SIM 928 voltage output state 
            for the selected slot number."""
-        if self.sources_list == []:
-            yield self.find_sources(c)
         if 'slot_number' in c.keys():
             slot_number = c['slot_number']
             output_state = yield self.query(c, slot_number, "EXON?")
@@ -149,8 +138,6 @@ class SIM928Server(GPIBManagedServer):
     def set_output_state(self, c, output_on):
         """Sets SIM 928 voltage output state for 
            the selected slot number."""
-        if self.sources_list == []:
-            yield self.find_sources(c)
         if 'slot_number' in c.keys():
             slot_number = c['slot_number']
             if output_on:
