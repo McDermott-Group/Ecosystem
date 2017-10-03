@@ -78,7 +78,6 @@ class SIM928Server(GPIBManagedServer):
         module_status = '{0:b}'.format(int(module_status))[4:-1][::-1]
         module_status = [bool(int(char)) for char in module_status]
         for ii in range(0, len(module_status)):
-            print "here for"
             if slot_number == ii + 1:
                 if module_status[ii]:
                     idn_str = yield self.query(c, slot_number, "*IDN?")
