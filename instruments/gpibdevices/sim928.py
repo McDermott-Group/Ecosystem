@@ -16,7 +16,7 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = SIM 928
+name = SIM928_test
 version = 1.0.0
 description = 
   
@@ -62,7 +62,7 @@ class SIM928Server(GPIBManagedServer):
         yield dev.write(TC)
         returnValue(query_resp)
 
-    def no_selection_msg(self, slot_number):
+    def no_selection_msg(self):
         err_msg = "You must first select a slot for the SIM 928."
         return err_msg
         
@@ -94,7 +94,7 @@ class SIM928Server(GPIBManagedServer):
         else:
             raise ValueError(self.slot_not_found_msg(slot_number))
 
-    @setting(11, 'Get Voltage', returns = 'v[V]')
+    @setting(39, 'Get Voltage', returns = 'v[V]')
     def get_voltage(self, c):
         """Gets SIM 928 voltage for the selected slot number."""
         if 'slot_number' in c.keys():
@@ -105,6 +105,17 @@ class SIM928Server(GPIBManagedServer):
             raise ValueError(self.no_selection_msg())
            
         returnValue(voltage * units.V)
+        
+    @setting(11, 'Get Slot', returns = 'i')
+    def get_slot(self, c):
+        """Gets SIM 928 voltage for the selected slot number."""
+        if 'slot_number' in c.keys():
+            slot_number = c['slot_number']
+            return slot_number
+        else:
+            raise ValueError(self.no_selection_msg())
+           
+        # returnValue(voltage * units.V)
         
     @setting(12, 'Set Voltage',
              voltage = 'v[V]', returns = '')
@@ -126,11 +137,13 @@ class SIM928Server(GPIBManagedServer):
            for the selected slot number."""
         if 'slot_number' in c.keys():
             slot_number = c['slot_number']
-            output_state = yield self.query(c, slot_number, "EXON?")
-            output_state = bool(int(output_state))
+            if 'output_state' not in c.keys():
+                output_state = yield self.query(c, slot_number, "EXON?")
+                output_state = bool(int(output_state))
+                c['output_state'] = output_state  
         else:
             raise ValueError(self.no_selection_msg())
-        returnValue(output_state)    
+        returnValue(c['output_state'] )    
 
     @setting(14, 'Set Output State',
              output_on = 'b', returns = '')
@@ -141,8 +154,10 @@ class SIM928Server(GPIBManagedServer):
             slot_number = c['slot_number']
             if output_on:
                 output_state = yield self.write(c, slot_number, "OPON")
+                c['output_state'] = True
             else:
                 output_state = yield self.write(c, slot_number, "OPOF")
+                c['output_state'] = False
         else:
             raise ValueError(self.no_selection_msg())      
 
