@@ -1149,7 +1149,6 @@ class dataChest(dateStamp):
     return True
 
   def _isParameterValid(self, paramName, paramValue, paramUnits, overwrite = False):
-
     if isinstance(paramName, str):
       if self._formatFilename(paramName, " +-.[]") != paramName:
         self.exception = ValueError("Invalid parameter name provided.")
@@ -1169,6 +1168,12 @@ class dataChest(dateStamp):
       elif type(paramUnits) != str and type(paramUnits) != np.string_:
         self.exception = ValueError("Parameter units must be type str.")
       elif overwrite is False and paramName in self.file["parameters"].attrs.keys():
+        self.exception = RuntimeError(
+          "Parameter name already exists. \r\n\t"
+          +"Parameter values cannot be overwritten."
+          )
+        return False
+      elif overwrite is False and paramName in self.file["parameters"].keys():
         self.exception = RuntimeError(
           "Parameter name already exists. \r\n\t"
           +"Parameter values cannot be overwritten."
