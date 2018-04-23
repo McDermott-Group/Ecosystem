@@ -33,6 +33,7 @@ import labrad.units as units
 import traceback
 import start_stop_cooldown as ssc
 from MDevices.Mhdf5Device import Mhdf5Device
+import os
 class nViewer:
     gui = None
     devices =[]
@@ -102,8 +103,8 @@ class nViewer:
         
         lake370 = Device("Lakeshore 370")
         lake370.setServerName("lakeshore_ruox")
-        lake370.addParameter("Mix 1", "temperatures", None, index = 0)
-        lake370.addParameter("Mix 2", "temperatures", None, index = 1)
+        lake370.addParameter("Mix 1", "temperatures", None,  index = 0, significant_figures = 2)
+        lake370.addParameter("Mix 2", "temperatures", None, index = 1, significant_figures = 2)
         lake370.addParameter("Still", "temperatures", None, index = 2)
         lake370.addParameter("1K Pot", "temperatures", None, index = 3)
         lake370.addParameter("Exchange Plate", "temperatures", None, index = 4)
@@ -139,8 +140,8 @@ class nViewer:
         grapher.begin()
         self.gui.addDevice(grapher)
         
-        bigButton = ssc.MStartStopCooldownWidget( 'Z:\\mcdermott-group\\data\\fridgeLogs\\dr1\\cooldown',
-                                                         'Z:\\mcdermott-group\\data\\fridgeLogs\\dr1\\standbyData')
+        bigButton = ssc.MStartStopCooldownWidget( os.environ['DATA_CHEST_ROOT']+'\\cooldown',
+                                                        os.environ['DATA_CHEST_ROOT']+'\\standbyData')
         self.gui.addWidget(bigButton)
         # Create the gui
 

@@ -662,8 +662,8 @@ class AlazarTechServer(LabradServer):
         #     iqBuffer[i][0] = np.mean(chA * vA - chB * vB) # I
         #     iqBuffer[i][1] = np.mean(chB * vA + chA * vB) # Q
 
-        chs = np.stack([np.hstack([chA, -chB]).T,
-                        np.hstack([chB, chA]).T], axis=1)
+        chs = np.stack([np.hstack([chA, chB]).T,
+                        np.hstack([-chB, chA]).T], axis=1)
         np.dot(timeSeries.reshape(numberOfRecords, -1), np.float32(chs),
                iqBuffer)
         iqBuffer /= samplesPerRecord
