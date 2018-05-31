@@ -223,7 +223,6 @@ class dataChest(dateStamp):
 
   def getDatasetName(self):
     if self.currentHDF5Filename is not None:
-      self._updateFileDate("Date Accessed")
       currentDatasetName = self.currentHDF5Filename.split("/")[-1]
       return currentDatasetName
     else:
@@ -233,7 +232,6 @@ class dataChest(dateStamp):
     if self.currentHDF5Filename is not None:
       indepVarsList = self._varListFromGrp(self.file["independents"])
       depVarsList = self._varListFromGrp(self.file["dependents"])
-      self._updateFileDate("Date Accessed")
       return [indepVarsList, depVarsList]
     else:
       raise Warning(
@@ -319,14 +317,10 @@ class dataChest(dateStamp):
         "You must create a dataset before attempting to write.\r\n\t"
         + "Datasets are created using the createDataset().\r\n\t"
         )
-    
-    dateISO = self.dateStamp.utcDateIsoString()
-    self._updateFileDate("Date Accessed", dateISO)
-    self._updateFileDate("Date Modified", dateISO)
+
 
   def getNumRows(self):
     if self.currentHDF5Filename is not None:
-      self._updateFileDate("Date Accessed")
       numRows = self.file.attrs["Number Of Rows Added"]
       return numRows
     else:
@@ -380,7 +374,6 @@ class dataChest(dateStamp):
           data.append(dataDict[allVars[ii]])
         data = np.asarray(data)
         data = data.T
-        self._updateFileDate("Date Accessed")
         return data[startIndex:stopIndex]
       else:
         for ii in range(startIndex,stopIndex): #making slicing efficient
@@ -388,7 +381,6 @@ class dataChest(dateStamp):
           for jj in range(0,len(allVars)):
             row.append(dataDict[allVars[jj]][ii])
           data.append(row)
-        self._updateFileDate("Date Accessed")
         return data
     else:
       raise Warning(
@@ -411,7 +403,6 @@ class dataChest(dateStamp):
         self.readOnlyFlag = False
       else:
         self.readOnlyFlag = True
-      self._updateFileDate("Date Accessed")
   
       for varType in self.varDict.keys(): #copying varDict from file
         varGroupAttributes = self.file[varType].attrs.keys()
@@ -458,10 +449,8 @@ class dataChest(dateStamp):
   def getParameterUnits(self, paramName):
     if self.currentHDF5Filename is not None:
       if paramName in self.file["parameters"].attrs.keys():
-        self._updateFileDate("Date Accessed")
         return None
       elif paramName in self.file["parameters"].keys():
-        self._updateFileDate("Date Accessed")
         paramGrp = self.file["parameters"][paramName]
         paramUnits = str(paramGrp.attrs["units"])
         if paramUnits == "":
@@ -489,10 +478,6 @@ class dataChest(dateStamp):
     elif self.currentHDF5Filename is not None:
       if paramName in self.file["parameters"].keys():
         if type(paramUnits) == str:
-          dateISO = self.dateStamp.utcDateIsoString()
-          self._updateFileDate("Date Accessed", dateISO)
-          self._updateFileDate("Date Modified", dateISO)
-    
           paramGrp = self.file["parameters"][paramName]
           paramGrp.attrs["units"] = paramUnits
           self.file.flush()
@@ -519,11 +504,7 @@ class dataChest(dateStamp):
         + "modify = True."
         )
     elif self.currentHDF5Filename is not None:
-      if self._isParameterValid(paramName, paramValue, paramUnits, overwrite):
-        dateISO = self.dateStamp.utcDateIsoString()
-        self._updateFileDate("Date Accessed", dateISO)
-        self._updateFileDate("Date Modified", dateISO)
-  
+      if self._isParameterValid(paramName, paramValue, paramUnits, overwrite): 
         if paramName not in self.file["parameters"].keys():
           self.file["parameters"].create_group(paramName)
 
@@ -547,11 +528,9 @@ class dataChest(dateStamp):
   def getParameter(self, paramName, bypassIOError=False):
     if self.currentHDF5Filename is not None:
       if paramName in self.file["parameters"].attrs.keys():
-        self._updateFileDate("Date Accessed")
         paramValue = self.file["parameters"].attrs[paramName] # add in type preservation here
         return paramValue
       elif paramName in self.file["parameters"].keys():
-        self._updateFileDate("Date Accessed")
         paramGrp = self.file["parameters"][paramName]
         paramValue = paramGrp.attrs["value"]
         paramType = str(paramGrp.attrs["dtype"])
@@ -577,7 +556,6 @@ class dataChest(dateStamp):
 
   def getDataCategory(self):
     if self.currentHDF5Filename is not None:
-        self._updateFileDate("Date Accessed")
         return self.file.attrs["Data Category"]
     else:
       raise Warning(
@@ -588,7 +566,6 @@ class dataChest(dateStamp):
 
   def getParameterList(self):
     if self.currentHDF5Filename is not None:
-      self._updateFileDate("Date Accessed")
       #backwards compatibility
       paramList1 = self.file["parameters"].attrs.keys()
       paramList1 = [str(x) for x in paramList1] # convert from unicode
@@ -602,22 +579,6 @@ class dataChest(dateStamp):
         + "using either openDataset() to open an existing set or\r\n\t"
         + "with createDataset()."
         )
-    
-  def _updateFileDate(self, dateCategory, dateISO = None):
-    if self.currentHDF5Filename is not None:
-      if dateCategory in ["Date Created", "Date Modified", "Date Accessed"]:
-        if dateISO is None:
-          self.file.attrs[dateCategory] = self.dateStamp.utcDateIsoString()
-        else:
-          self.file.attrs[dateCategory] = dateISO
-      else:
-        raise ValueError("Invalid dateCategory provided.")
-
-    else:
-      raise IOError(
-        "Attempted to update metadata for a file that does not exist."
-        )
-    
 
   def _initDataset(self, varDict, filename):
 
@@ -635,11 +596,6 @@ class dataChest(dateStamp):
 
     self.file.attrs["Data Category"] = self.dataCategory
     self.file.attrs["Number Of Rows Added"] = 0
-    dateISO = self.dateStamp.invertDateStamp(filename.split("_")[0])
-    #date = self.dateStamp.invertDateStamp(filename.split("_")[0])
-    self._updateFileDate("Date Created", dateISO)
-    self._updateFileDate("Date Modified", dateISO)
-    self._updateFileDate("Date Accessed", dateISO)
     
 
     #varTypes in ['independents', 'dependents']
