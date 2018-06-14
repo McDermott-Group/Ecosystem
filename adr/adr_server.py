@@ -499,7 +499,7 @@ class ADRServer(DeviceServer):
         self.logMessages.append( (dt,message,alert) )
         messageWithTimeStamp = dt.strftime("[%m/%d/%y %H:%M:%S] ") + message
         try:
-            fname = os.path.join(os.environ['DATA_CHEST_ROOT'], 
+            fname = os.path.join(os.environ['DATA_ROOT'], 
                                     self.tempDataChest.pwd()) + \
                 self.ADRSettings['Start Compressor Datetime'].strftime("\\log_%y%m%d_%H%M.txt")
             with open(fname, 'a') as f:

@@ -140,8 +140,8 @@ class nViewer:
         grapher.begin()
         self.gui.addDevice(grapher)
         
-        bigButton = ssc.MStartStopCooldownWidget( os.environ['DATA_CHEST_ROOT']+'\\cooldown',
-                                                        os.environ['DATA_CHEST_ROOT']+'\\standbyData')
+        bigButton = ssc.MStartStopCooldownWidget( os.environ['DATA_ROOT']+'\\cooldown',
+                                                        os.environ['DATA_ROOT']+'\\standbyData')
         self.gui.addWidget(bigButton)
         # Create the gui
 

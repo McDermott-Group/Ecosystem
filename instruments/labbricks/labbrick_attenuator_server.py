@@ -52,40 +52,28 @@ class LBAttenuatorServer(LabradServer):
     name = '%LABRADNODE% Lab Brick Attenuators'
     refreshInterval = 60 * s
 
-    @inlineCallbacks
-    def getRegistryKeys(self):
-        """Get registry keys for the Lab Brick Attenuator Server."""
-        reg = self.client.registry()
-        yield reg.cd(['', 'Local', os.environ['COMPUTERNAME'].lower()])
-        dirs, keys = yield reg.dir()
-        if 'GIT_REPOSITORIES_PATH' in keys:
-            git = yield reg.get('GIT_REPOSITORIES_PATH')
-        else:
-            raise Exception("Registry key 'GIT_REPOSITORIES_PATH' "
-                            "is not specified.")
-        yield reg.cd(['', 'Servers', 'Lab Brick Attenuators'], True)
-        dirs, keys = yield reg.dir()
-        if 'Lab Brick Attenuator DLL Path' in keys:
-            self.DLL_path = yield reg.get('Lab Brick Attenuator DLL '
-                                          'Path')
-            self.DLL_path = os.path.join(git, self.DLL_path)
-        else:
-            raise Exception("Registry key 'Lab Brick Attenuator DLL "
-                            "Path' is not specified.")
-        print("Lab Brick Attenuator DLL Path is set to %s"
-              % self.DLL_path)
-        if 'Lab Brick Attenuator Server Autorefresh' not in keys:
-            self.autoRefresh = False
-        else:
-            self.autoRefresh = yield reg.get('Lab Brick Attenuator '
-                                             'Server Autorefresh')
-        print("Lab Brick Attenuator Server Autorefresh is set to %s"
-              % self.autoRefresh)
+   # # @inlineCallbacks
+    # def getRegistryKeys(self):
+        # """Get registry keys for the Lab Brick Attenuator Server."""
+        # #reg = self.client.registry()
+		# a = 10
+		# area51_root = os.path.join(os.environ['REPOSITORY_ROOT'], 'area51')
+		# self.DLL_path = os.path.join(area51_root, '\instruments\labbricks\VNX_atten.dll')
+		# self.autoRefresh = True
+        # # if 'Lab Brick Attenuator Server Autorefresh' not in keys:
+            # # self.autoRefresh = False
+        # # else:
+            # # self.autoRefresh = yield reg.get('Lab Brick Attenuator '
+                                             # # 'Server Autorefresh')
+        # print("Lab Brick Attenuator Server Autorefresh is set to %s"
+              # % self.autoRefresh)
 
     @inlineCallbacks
     def initServer(self):
         """Initialize the Lab Brick Attenuator Server."""
-        yield self.getRegistryKeys()
+        area51_root = os.path.join(os.environ['REPOSITORY_ROOT'], 'area51')
+        self.DLL_path = os.path.join(area51_root, 'instruments\\labbricks\\VNX_atten.dll')
+        self.autoRefresh = True
         try:
             self.VNXdll = yield ctypes.CDLL(self.DLL_path)
         except Exception:

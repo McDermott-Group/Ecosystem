@@ -3,6 +3,7 @@ import sys
 from PyQt4 import QtCore, QtGui
 from functools import partial
 import pyqtgraph as pg
+from time import sleep
 
 from dataChest import *
 
@@ -26,7 +27,7 @@ class Grapher(QtGui.QWidget):
         self.setWindowTitle('Data Chest Image Browser')
         self.setWindowIcon(QtGui.QIcon('rabi.jpg'))
 
-        self.root = os.environ["DATA_CHEST_ROOT"]
+        self.root = os.environ["DATA_ROOT"]
 
         self.filters =QtCore.QStringList()
         self.filters.append("*.hdf5")
@@ -137,16 +138,20 @@ class Grapher(QtGui.QWidget):
             self.selectedFile = filePath
             filePath = filePath[:-(len(fileName)+1)] #strip fileName from path
             filePath = self.convertPathToArray(filePath)
+            filePath = filePath[3:]
             currentFileName = self.d.getDatasetName()
             currentFilePath = self.convertPathToArray(self.d.pwd())
             if currentFileName != fileName or currentFilePath != filePath:
                 self.plotFile = fileName, filePath
                 self.plotData(fileName, filePath)
 
+
+
     def checkFileForUpdates(self):
         if self.selectedFile != '':
             modDate = os.stat(self.selectedFile).st_mtime
             if self.lastModDate != modDate:
+                print('OH JEEZ GOTTA UPDATE')
                 self.lastModDate = modDate
                 self.plotData(*self.plotFile)
 

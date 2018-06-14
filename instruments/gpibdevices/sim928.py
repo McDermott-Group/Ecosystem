@@ -1,23 +1,10 @@
-# Copyright (C) 2017 Alex Opremcak
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>
+# Use at your own risk
   
 """
 ### BEGIN NODE INFO
 [info]
 name = SIM928_test
-version = 1.0.0
+version = 1.1.0
 description = 
   
 [startup]
@@ -31,7 +18,6 @@ timeout = 5
 """
 
 from twisted.internet.defer import inlineCallbacks, returnValue
-
 from labrad.server import setting
 from labrad.gpib import GPIBManagedServer
 from labrad import units
@@ -45,7 +31,10 @@ class SIM928Server(GPIBManagedServer):
 
     @inlineCallbacks   
     def write(self, c, slot_number, write_str):
-        """A SIM specific write method."""
+        """A write method that addresses a particular slot
+           in the SIM 900 mainframe. Connection with the
+           instrument (slot) is closed after the message
+           is sent."""
         dev = self.selectedDevice(c)
         yield dev.write("CONN "+str(slot_number)+","+TC+LF)
         yield dev.write("TERM LF"+LF)
@@ -54,7 +43,10 @@ class SIM928Server(GPIBManagedServer):
         
     @inlineCallbacks   
     def query(self, c, slot_number, query_str):
-        """A SIM specific query method."""
+        """A query method that addresses a particular slot
+           in the SIM 900 mainframe. Connection with the
+           instrument (slot) is closed after the query is
+           finished."""
         dev = self.selectedDevice(c)
         yield dev.write("CONN "+str(slot_number)+","+TC+LF)
         yield dev.write("TERM LF"+LF)
@@ -70,9 +62,28 @@ class SIM928Server(GPIBManagedServer):
         err_msg = "A SIM 928 on slot # %s was not found." % slot_number
         return err_msg
         
-    @setting(9, 'Find Sources', slot_number = 'i', returns = 'b')
+    @setting(8, 'Initialize Mainframe', returns = 'b')
+    def initialize_mainframe(self, c):
+        """Mainframe initialization method used for resetting
+           the SIM 900 once it goes into an error state."""
+        dev = self.selectedDevice(c)
+        yield dev.write("*RST\n")
+        yield dev.write("VERB 127\n")
+        yield dev.write("CEOI ON\n")
+        yield dev.write("EOIX ON\n")
+        yield dev.write("TERM D,LF\n")
+        
+        for ii in range(0, 12):
+            yield dev.write("BAUD "+str(ii)+",9600\n")
+        
+        yield dev.write("FLSH\n")
+        yield dev.write("SRST\n")
+        returnValue(True)
+        
+    @setting(9, 'Find Source', slot_number = 'i', returns = 'b')
     def find_source(self, c, slot_number):
-        """Finds all slots with SIM 928s in them."""
+        """Determines if a SIM 928 voltage source with the
+           specified slot_number is present in the mainframe."""
         dev = self.selectedDevice(c)
         module_status = yield dev.query("CTCR?\n")
         module_status = '{0:b}'.format(int(module_status))[4:-1][::-1]
@@ -80,35 +91,82 @@ class SIM928Server(GPIBManagedServer):
         for ii in range(0, len(module_status)):
             if slot_number == ii + 1:
                 if module_status[ii]:
-                    idn_str = yield self.query(c, slot_number, "*IDN?")
+                    try:
+                        idn_str = yield self.query(c, 
+                                                   slot_number,
+                                                   "*IDN?")
+                    except:
+                        self.initialize_mainframe(c)
+                        idn_str = yield self.query(c, 
+                                                   slot_number,
+                                                   "*IDN?")
                     if 'SIM928' in idn_str:
                         returnValue(True)
         returnValue(False)
 
     @setting(10, 'Select Source', slot_number = 'i', returns = '')
     def select_source(self, c, slot_number):
-        """Selects a SIM 928 within the SIM 900 Mainframe."""
+        """Selects the SIM 928 voltage source you intend to
+           communicate with."""
         source_found = yield self.find_source(c, slot_number)
         if source_found:
             c['slot_number'] = slot_number
         else:
             raise ValueError(self.slot_not_found_msg(slot_number))
 
-    @setting(39, 'Get Voltage', returns = 'v[V]')
+    @setting(11, 'Get Voltage', returns = 'v[V]')
     def get_voltage(self, c):
-        """Gets SIM 928 voltage for the selected slot number."""
+        """Gets the SIM 928 voltage output value from the
+           selected source."""
         if 'slot_number' in c.keys():
             slot_number = c['slot_number']
-            voltage = yield self.query(c, slot_number, "VOLT?")
+            voltage = yield self.query(c,
+                                           slot_number, 
+                                           "VOLT?")
             voltage = float(voltage)
-        else:
-            raise ValueError(self.no_selection_msg())
-           
-        returnValue(voltage * units.V)
+            value = voltage * units.V
+            
+            # try:
+                # voltage = yield self.query(c,
+                                           # slot_number, 
+                                           # "VOLT?")
+                # try:
+                    # voltage = float(voltage)
+                # except:
+                    # self.initialize_mainframe(c)
+                    # voltage = yield self.query(c,
+                                               # slot_number,
+                                               # "VOLT?")
+                    # voltage = float(voltage)
+            # except:
+                # self.initialize_mainframe(c)
+                # voltage = yield self.query(c,
+                                           # slot_number,
+                                           # "VOLT?")
+                # try:
+                    # voltage = float(voltage)
+                # except:
+                    # self.initialize_mainframe(c)
+                    # voltage = yield self.query(c,
+                                               # slot_number,
+                                               # "VOLT?")
+                    # voltage = float(voltage)
+            # try:
+                # value = voltage * units.V
+            # except:
+                # self.initialize_mainframe(c)
+                # voltage = yield self.query(c,
+                                           # slot_number,
+                                           # "VOLT?")
+                # voltage = float(voltage)
+                # value = voltage * units.V
+        # else:
+            # raise ValueError(self.no_selection_msg())
+        returnValue(value)
         
-    @setting(11, 'Get Slot', returns = 'i')
+    @setting(12, 'Get Slot', returns = 'i')
     def get_slot(self, c):
-        """Gets SIM 928 voltage for the selected slot number."""
+        """Gets the slot_number of the selected SIM 928 source."""
         if 'slot_number' in c.keys():
             slot_number = c['slot_number']
             return slot_number
@@ -117,35 +175,53 @@ class SIM928Server(GPIBManagedServer):
            
         # returnValue(voltage * units.V)
         
-    @setting(12, 'Set Voltage',
+    @setting(13, 'Set Voltage',
              voltage = 'v[V]', returns = '')
     def set_voltage(self, c, voltage):
-        """Sets SIM 928 voltage for the selected slot number."""
+        """Sets SIM 928 voltage for the selected source."""
         if 'slot_number' in c.keys():
             slot_number = c['slot_number']
             output_state = yield self.get_output_state(c)
             if not output_state:
-                yield self.set_output_state(c, True)
+                try:
+                    yield self.set_output_state(c, True)
+                except:
+                    self.initialize_mainframe(c)
+                    yield self.set_output_state(c, True)
             write_str = "VOLT "+ str(voltage['V'])
-            yield self.write(c, slot_number, write_str)
+            try:
+                yield self.write(c, slot_number, write_str)
+            except:
+                self.initialize_mainframe(c)
+                yield self.write(c, slot_number, write_str)
         else:
             raise ValueError(self.no_selection_msg())
 
-    @setting(13, 'Get Output State', returns = 'b')
+    @setting(14, 'Get Output State', returns = 'b')
     def get_output_state(self, c):
         """Gets SIM 928 voltage output state 
            for the selected slot number."""
         if 'slot_number' in c.keys():
             slot_number = c['slot_number']
             if 'output_state' not in c.keys():
-                output_state = yield self.query(c, slot_number, "EXON?")
-                output_state = bool(int(output_state))
-                c['output_state'] = output_state  
+                try:
+                    output_state = yield self.query(c,
+                                                    slot_number,
+                                                    "EXON?")
+                    output_state = bool(int(output_state))
+                    c['output_state'] = output_state  
+                except:
+                    self.initialize_mainframe(c)
+                    output_state = yield self.query(c,
+                                                    slot_number,
+                                                    "EXON?")
+                    output_state = bool(int(output_state))
+                    c['output_state'] = output_state  
         else:
             raise ValueError(self.no_selection_msg())
         returnValue(c['output_state'] )    
 
-    @setting(14, 'Set Output State',
+    @setting(15, 'Set Output State',
              output_on = 'b', returns = '')
     def set_output_state(self, c, output_on):
         """Sets SIM 928 voltage output state for 
@@ -153,11 +229,29 @@ class SIM928Server(GPIBManagedServer):
         if 'slot_number' in c.keys():
             slot_number = c['slot_number']
             if output_on:
-                output_state = yield self.write(c, slot_number, "OPON")
-                c['output_state'] = True
+                try:
+                    output_state = yield self.write(c, 
+                                                    slot_number, 
+                                                    "OPON")
+                    c['output_state'] = True
+                except:
+                    self.initialize_mainframe(c)
+                    output_state = yield self.write(c, 
+                                                    slot_number, 
+                                                    "OPON")
+                    c['output_state'] = True
             else:
-                output_state = yield self.write(c, slot_number, "OPOF")
-                c['output_state'] = False
+                try:
+                    output_state = yield self.write(c,
+                                                    slot_number,
+                                                    "OPOF")
+                    c['output_state'] = False
+                except:
+                    self.initialize_mainframe(c)
+                    output_state = yield self.write(c,
+                                                    slot_number,
+                                                    "OPOF")
+                    c['output_state'] = False
         else:
             raise ValueError(self.no_selection_msg())      
 
