@@ -25,7 +25,7 @@ class Main(QtGui.QWidget):
         # Add in Rabi plot.
         self.setWindowIcon(QtGui.QIcon('rabi.jpg'))
         
-        self.root = os.environ["DATA_CHEST_ROOT"]
+        self.root = os.environ["DATA_ROOT"]
         if "\\" in self.root:
             self.root = self.root.replace("\\", '/')
         self.pathRoot=QtCore.QString(self.root)
@@ -33,7 +33,7 @@ class Main(QtGui.QWidget):
         self.filters =QtCore.QStringList()
         self.filters.append("*.hdf5")
 
-        self.dataChest = dataChest("", os.environ["DATA_CHEST_ROOT"])
+        self.dataChest = dataChest("", self.root)
         
         self.local_tz = tz.tzlocal()
         self.utc = tz.gettz('UTC')

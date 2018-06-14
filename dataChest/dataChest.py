@@ -61,7 +61,7 @@ TYPE_CASTING_OBJECTS = [int, long, float, complex, bool, list,
 class dataChest(dateStamp):
 
   def __init__(self, path, setWorkingDirectoryToRoot = False): #add for ability to set root path 
-    self.cwdPath = os.environ["DATA_CHEST_ROOT"] #Make sure this exists
+    self.cwdPath = os.environ["DATA_ROOT"] #Make sure this exists
     if "\\" in self.cwdPath:
       self.cwdPath = self.cwdPath.replace("\\", "/")
     if not setWorkingDirectoryToRoot:

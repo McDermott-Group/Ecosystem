@@ -51,41 +51,14 @@ MAX_MODEL_NAME = 32     # Maximum length of Lab Brick model name.
 class LBRFGenServer(LabradServer):
     name = '%LABRADNODE% Lab Brick RF Generators'
     refreshInterval = 60 * s
-
-    @inlineCallbacks
-    def getRegistryKeys(self):
-        """Get registry keys for the Lab Brick RF Generator Server."""
-        reg = self.client.registry()
-        yield reg.cd(['', 'Local', os.environ['COMPUTERNAME'].lower()])
-        dirs, keys = yield reg.dir()
-        if 'GIT_REPOSITORIES_PATH' in keys:
-            git = yield reg.get('GIT_REPOSITORIES_PATH')
-        else:
-            raise Exception("Registry key 'GIT_REPOSITORIES_PATH' "
-                            "is not specified.")
-        yield reg.cd(['', 'Servers', 'Lab Brick RF Generators'], True)
-        dirs, keys = yield reg.dir()
-        if 'Lab Brick RF Generator DLL Path' in keys:
-            self.DLL_path = \
-                yield reg.get('Lab Brick RF Generator DLL Path')
-            self.DLL_path = os.path.join(git, self.DLL_path)
-        else:
-            raise Exception("Registry key 'Lab Brick RF Generator DLL"
-                            " Path' is not specified.")
-        print("Lab Brick RF Generator DLL Path is set to %s"
-              % self.DLL_path)
-        if 'Lab Brick RF Generator Server Autorefresh' not in keys:
-            self.autoRefresh = True
-        else:
-            self.autoRefresh = yield reg.get('Lab Brick RF Generator '
-                                             'Server Autorefresh')
-        print("Lab Brick RF Generator Server Autorefresh is set to %s"
-              % self.autoRefresh)
-
+    
     @inlineCallbacks
     def initServer(self):
         """Initialize the Lab Brick RF Generator Server."""
-        yield self.getRegistryKeys()
+        #yield self.getRegistryKeys()
+        area51_root = os.path.join(os.environ['REPOSITORY_ROOT'], 'area51')
+        self.DLL_path = os.path.join(area51_root, 'instruments\\labbricks\\vnx_fmsynth.dll')
+        self.autoRefresh = True
         try:
             self.VNXdll = yield ctypes.CDLL(self.DLL_path)
         except Exception:
