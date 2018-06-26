@@ -302,34 +302,31 @@ class Grapher(QtGui.QWidget):
 
     def basic1DPlot(self, graphicsLayout, commonUnitsData, commonNamesData, plotTypeOptionsDict):
         #graphicsLayout.clear()
+        p = graphicsLayout.addPlot()
+        p.addLegend()
+        pOptions = plotTypeOptionsDict[commonNamesData[0]]
+        p.setTitle(pOptions['Title'], size='22pt')
+        p.setLabel('bottom', pOptions["X Label"], units=pOptions["X Units"], 
+                    color=HEX_COLOR_MAP['black'], size='22pt')
+        p.setLabel('left', pOptions["Y Label"], units=pOptions["Y Units"],  
+                    color=HEX_COLOR_MAP['black'], size='22pt')
         for ii in range(0, len(commonNamesData)):
-            #p1 = graphicsLayout.addPlot(title=plotTypeOptionsDict[commonNamesData[ii]]["Y Label"], size='22pt') #title="Common Unit 1"
-            if ii == 0:
-                p1 = graphicsLayout.addPlot(title=plotTypeOptionsDict[commonNamesData[ii]]["Title"], size='22pt')
-                p1.titleLabel.setText(plotTypeOptionsDict[commonNamesData[ii]]["Title"], size ='22pt')
-                p1.addLegend()
-            #print "commonUnitsData[ii]=", commonUnitsData[ii+1]
-            p1.plot(x=commonUnitsData[0], y=commonUnitsData[ii+1], name = plotTypeOptionsDict[commonNamesData[ii]]["Y Label"], pen=pg.mkPen(HEX_COLOR_MAP['blue']))
-            #p1.plot(x=xdataPlot1, y=ydata2Plot1, name = 'dset2', pen=pg.mkPen(HEX_COLOR_MAP['green']))
-
-            ylabelStyle = {'color': HEX_COLOR_MAP['black'], 'font-size': '22px'}
-            p1.setLabel('left', 'Volts [V]', **ylabelStyle) # units = 'V'
-
-            xlabelStyle = {'color': HEX_COLOR_MAP['black'], 'font-size': '22px'}
-            p1.setLabel('bottom', 'Time [s]', **xlabelStyle) #units = 's'
+            p.plot( x=commonUnitsData[0], y=commonUnitsData[ii+1], 
+                     name = plotTypeOptionsDict[commonNamesData[ii]]["Y Label"], 
+                     pen=pg.mkPen(HEX_COLOR_MAP['blue']))
 
     def plotTypeSelected(self, plotType):
         # Called when a plotType selection is made from drop down.
         # self.plotTypesComboBox.adjustSize()
         return "Grape Fruit"
-##        if plotType != self.plotType:
-##            self.clearGraphicsLayout()
-##            #self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, selectedPlotType = plotType)
-##            #self.addFigureToCanvas(self.currentFig)
-##            self.updatePlotTypeOptions(plotType)
-##            self.plotType = plotType
-##            # When is best time to do this?
-##            self.varsToIgnore = []
+       # if plotType != self.plotType:
+           # self.clearGraphicsLayout()
+           # #self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, selectedPlotType = plotType)
+           # #self.addFigureToCanvas(self.currentFig)
+           # self.updatePlotTypeOptions(plotType)
+           # self.plotType = plotType
+           # # When is best time to do this?
+           # self.varsToIgnore = []
 
 
     def clearLayout(self, layout):
