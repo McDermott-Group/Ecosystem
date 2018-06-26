@@ -274,12 +274,15 @@ class Grapher(QtGui.QWidget):
         pixelY = (yVals[-1]-yVals[0])/len(yVals)
         img.translate(xVals[0],yVals[0])
         img.scale(pixelX,pixelY)
+        max = depGrids[0].max()
+        min = depGrids[0].min()
+        print min, max
 
         # bipolar colormap
-        pos = np.array([0., 1., 0.5, 0.25, 0.75])
-        color = np.array([[0,255,255,255], [255,255,0,255], [0,0,0,255], (0, 0, 255, 255), (255, 0, 0, 255)], dtype=np.ubyte)
+        pos = np.array([0., 0.125, 0.375, 0.667, 0.933, 1.])*(max-min) + min
+        color = np.array([[0,0,143,255], [0,0,255,255], [0,255,255,255], (255, 255, 0, 255), (255, 0, 0, 255), (128, 0, 0, 255)], dtype=np.ubyte)
         cmap = pg.ColorMap(pos, color)
-        lut = cmap.getLookupTable(0.0, 1.0, 256)
+        lut = cmap.getLookupTable(min, max, 256)
         img.setLookupTable(lut)
 
         p1.autoRange()
