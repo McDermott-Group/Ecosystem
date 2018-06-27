@@ -122,7 +122,8 @@ class Grapher(QtGui.QWidget):
         self.plotTypeOptionsDict = {}
         #self.varsToIgnore = []
 
-        self.selectedFile = ''
+        self.filePathStr = ''
+        self.filePathArray = []
         self.lastModDate = 0
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.checkFileForUpdates)
@@ -135,30 +136,33 @@ class Grapher(QtGui.QWidget):
         fileName = str(self.model.fileName(indexItem))
         filePath = str(self.model.filePath(indexItem))
         if ".hdf5" in filePath:
-            self.selectedFile = filePath
+            self.filePathStr = filePath
             filePath = filePath[:-(len(fileName)+1)] #strip fileName from path
             filePath = self.convertPathToArray(filePath)
             filePath = filePath[3:]
             currentFileName = self.d.getDatasetName()
             currentFilePath = self.convertPathToArray(self.d.pwd())
             if currentFileName != fileName or currentFilePath != filePath:
-                self.plotFile = fileName, filePath
-                self.plotData(fileName, filePath)
+                self.filePathArray = filePath
+                self.filePathArray.append(fileName)
+                self.plotData()
 
 
 
     def checkFileForUpdates(self):
-        if self.selectedFile != '':
-            modDate = os.stat(self.selectedFile).st_mtime
+        if self.filePathStr != '':
+            modDate = os.stat(self.filePathStr).st_mtime
             if self.lastModDate != modDate:
                 print('OH JEEZ GOTTA UPDATE')
                 self.lastModDate = modDate
-                self.plotData(*self.plotFile)
+                # self.plotData()
 
-    def plotData(self, fileName, filePath):
+    def plotData(self):
         d = self.d
-        d.cd(filePath)
-        d.openDataset(fileName)
+        d.cd(self.filePathArray[:-2])
+        print self.d.pwd()
+        print self.filePathArray[-1]
+        d.openDataset(self.filePathArray[-1])
 
         self.datasetVariables = d.getVariables()
         self.datasetName = d.getDatasetName()
