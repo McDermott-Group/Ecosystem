@@ -145,6 +145,7 @@ class Grapher(QtGui.QWidget):
             if currentFileName != fileName or currentFilePath != filePath:
                 self.filePathArray = filePath
                 self.filePathArray.append(fileName)
+                self.prepareData()
                 self.plotData()
 
 
@@ -155,13 +156,12 @@ class Grapher(QtGui.QWidget):
             if self.lastModDate != modDate:
                 print('OH JEEZ GOTTA UPDATE')
                 self.lastModDate = modDate
-                # self.plotData()
+                self.prepareData()
+                self.plotData()
 
-    def plotData(self):
+    def prepareData(self):
         d = self.d
-        d.cd(self.filePathArray[:-2])
-        print self.d.pwd()
-        print self.filePathArray[-1]
+        d.cd(self.filePathArray[:-1])
         d.openDataset(self.filePathArray[-1])
 
         self.datasetVariables = d.getVariables()
@@ -204,8 +204,11 @@ class Grapher(QtGui.QWidget):
         data = np.array(data[0])
 
         self.selectedData = data
+    
+    def plotData(self):
+        indepVarsList = self.datasetVariables[0]
         if len(indepVarsList) == 1:
-            self.plot1D(data, self.plotTypeOptionsDict)
+            self.plot1D(self.selectedData, self.plotTypeOptionsDict)
         elif len(indepVarsList) == 2:
             self.plot2D()
 
@@ -256,10 +259,18 @@ class Grapher(QtGui.QWidget):
                                 print "varName=", varName
                                 commonUnitsData.append(data[ii+1])
                                 commonNamesData.append(varName)
-                                plotTypeOptionsDict[varName] = self.initializeBasic1DPlotOptions(self.datasetName,
-                                                                                                 indepVarsList[0][0],
-                                                                                                 indepVarsList[0][3],
-                                                                                                 varName, commonUnit)
+                                plotTypeOptionsDict[varName] = {
+                                        "X Scale": "Linear",
+                                        "X Label": indepVarsList[0][0],
+                                        "X Units": indepVarsList[0][3],
+                                        "Y Scale": "Linear",
+                                        "Y Label": varName,
+                                        "Y Units": commonUnit,
+                                        "Title": self.datasetName,
+                                        "Color": None,
+                                        "Marker Style": None,
+                                        "Enable Grid": False,
+                                        "Hide Variable": False}
                     self.basic1DPlot(self.graphicsLayout, commonUnitsData, commonNamesData, plotTypeOptionsDict)
 
     def plot2D(self):
@@ -290,21 +301,6 @@ class Grapher(QtGui.QWidget):
         img.setLookupTable(lut)
 
         p1.autoRange()
-
-    def initializeBasic1DPlotOptions(self, datasetName, xVarName, xUnits, yVarName, yUnits):
-        plotOptions = {}
-        plotOptions["X Scale"] = "Linear"
-        plotOptions["X Label"] = xVarName
-        plotOptions["X Units"] = xUnits
-        plotOptions["Y Scale"] = "Linear"
-        plotOptions["Y Label"] = yVarName
-        plotOptions["Y Units"] = yUnits
-        plotOptions["Title"] = datasetName
-        plotOptions["Color"] = None
-        plotOptions["Marker Style"] = None
-        plotOptions["Enable Grid"] = False
-        plotOptions["Hide Variable"] = False
-        return plotOptions
 
 
     def basic1DPlot(self, graphicsLayout, commonUnitsData, commonNamesData, plotTypeOptionsDict):
