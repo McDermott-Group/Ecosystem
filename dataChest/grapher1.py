@@ -4,6 +4,8 @@ from PyQt4 import QtCore, QtGui
 from functools import partial
 import pyqtgraph as pg
 from time import sleep
+import datetime
+from dateutil import tz
 
 from dataChest import *
 
@@ -18,7 +20,18 @@ HEX_COLOR_MAP = {'white': '#FFFFFF', 'silver': '#FFFFFF', 'gray': '#808080',
 
 ACCEPTABLE_DATA_CATEGORIES = ["Arbitrary Type 1", "Arbitrary Type 2", "1D Scan", "2D Scan"]
 
+class TimeAxisItem(pg.AxisItem):
+    def __init__(self, *args, **kwargs):
+        #  super().__init__(*args, **kwargs)
+        super(TimeAxisItem, self).__init__(*args, **kwargs)
 
+    def tickStrings(self, values, scale, spacing):
+        # PySide's QTime() initialiser fails miserably and dismisses args/kwargs
+        #return [QTime().addMSecs(value).toString('mm:ss') for value in values]
+        return [(datetime.datetime.utcfromtimestamp(value)
+                                  .replace(tzinfo=tz.tzutc())
+                                  .astimezone(tz.tzlocal())
+                                  .strftime("%H:%M:%S")) for value in values]
 
 class Grapher(QtGui.QWidget):
 
@@ -145,7 +158,7 @@ class Grapher(QtGui.QWidget):
             self.filePathStr = filePath
             filePath = filePath[:-(len(fileName)+1)] #strip fileName from path
             filePath = self.convertPathToArray(filePath)
-            # filePath = filePath[3:]
+            filePath = filePath[3:]
             currentFileName = self.d.getDatasetName()
             currentFilePath = self.convertPathToArray(self.d.pwd())
             if currentFileName != fileName or currentFilePath != filePath:
@@ -220,14 +233,13 @@ class Grapher(QtGui.QWidget):
         self.plotTypesComboBox.clear()
         listOfTypes = self.getListOfAvailabePlotTypes()
         for element in listOfTypes:
-            # if ".dir" not in str(element) and ".ini" not in str(element):
             self.plotTypesComboBox.addItem(str(element))
         if self.plotType in listOfTypes:
             index = self.plotTypesComboBox.findText(self.plotType)
             self.plotTypesComboBox.setCurrentIndex(index)
         else:
             self.plotTypesComboBox.setCurrentIndex(0)
-            self.plotTypeSelected(str(self.plotTypesComboBox.currentText()))
+        self.plotTypeSelected(str(self.plotTypesComboBox.currentText()))
 
     def plotTypeSelected(self, plotType):
         """Called when a plotType selection is made from drop down."""
@@ -318,7 +330,12 @@ class Grapher(QtGui.QWidget):
                 "Enable Grid": False,
                 "Hide Variable": False}
         self.clearGraphicsLayout()
-        p = self.graphicsLayout.addPlot()
+        if self.indepVarsList[0][2] == 'utc_datetime':
+            axis = {'bottom': TimeAxisItem(orientation='bottom')}
+            pOptions['X Units'] = None
+        else:
+            axis = None
+        p = self.graphicsLayout.addPlot(axisItems=axis)
         p.addLegend()
         p.setTitle(pOptions['Title'], size='22pt')
         p.setLabel('bottom', pOptions["X Label"], units=pOptions["X Units"],
@@ -335,8 +352,14 @@ class Grapher(QtGui.QWidget):
         varNames = [var[0] for var in self.depVarsList]
         index = varNames.index(self.selectedDepVars[0])
         self.graphicsLayout.clear()
-        p1 = self.graphicsLayout.addPlot(title="Test Title", size='22pt')
-        p1.titleLabel.setText("Test Title", size ='22pt')
+        axis = {}
+        for i in range(len(self.indepVarsList)):
+            if self.indepVarsList[i][2] == 'utc_datetime':
+                axis = {['bottom','left'][i]: TimeAxisItem(orientation=['bottom','left'][i])}
+                pOptions[['X Units','Y Units'][i]] = None
+        p1 = self.graphicsLayout.addPlot(axisItems=axis)
+        # p1.titleLabel.setText("Test Title", size ='22pt')
+        p1.setTitle(self.datasetName, size ='22pt')
         p1.setLabel('bottom', self.indepVarsList[0][0], units=self.indepVarsList[0][3])
         p1.setLabel('left', self.indepVarsList[1][0], units=self.indepVarsList[1][3])
         p1.addLegend()
@@ -442,7 +465,7 @@ if __name__ == "__main__":
 
     main = Grapher()
     main.resize(1000, 700)
-    main.move(app.desktop().screen().rect().center() - main.rect().center())
+    # main.move(app.desktop().screen().rect().center() - main.rect().center())
     main.show()
 
     sys.exit(app.exec_())
