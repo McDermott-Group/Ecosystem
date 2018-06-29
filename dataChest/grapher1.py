@@ -20,10 +20,15 @@ HEX_COLOR_MAP = {'white': '#FFFFFF', 'silver': '#FFFFFF', 'gray': '#808080',
 
 ACCEPTABLE_DATA_CATEGORIES = ["Arbitrary Type 1", "Arbitrary Type 2", "1D Scan", "2D Scan"]
 
+STYLE_DEFAULTS = {
+    'font-size':'22pt',
+    'font-color': 'black'}
+
 class TimeAxisItem(pg.AxisItem):
     def __init__(self, *args, **kwargs):
         #  super().__init__(*args, **kwargs)
         super(TimeAxisItem, self).__init__(*args, **kwargs)
+        self.autoSIPrefix = False
 
     def tickStrings(self, values, scale, spacing):
         # PySide's QTime() initialiser fails miserably and dismisses args/kwargs
@@ -64,6 +69,7 @@ class Grapher(QtGui.QWidget):
         self.directoryTree = QtGui.QTreeView(self)
         self.directoryTree.setModel(self.model)
         self.directoryTree.setRootIndex(self.indexRoot)
+        self.directoryTree.hideColumn(2)
         self.directoryTree.header().setResizeMode(QtGui.QHeaderView.ResizeToContents)
         self.directoryTree.header().setStretchLastSection(False)
         self.directoryTree.clicked.connect(self.fileBrowserSelectionMade)
@@ -322,7 +328,7 @@ class Grapher(QtGui.QWidget):
                 "X Label": self.indepVarsList[0][0],
                 "X Units": self.indepVarsList[0][3],
                 "Y Scale": "Linear",
-                "Y Label": self.selectedDepVars[0],
+                "Y Label": '',
                 "Y Units": commonUnit,
                 "Title": self.datasetName,
                 "Color": None,
@@ -339,9 +345,11 @@ class Grapher(QtGui.QWidget):
         p.addLegend()
         p.setTitle(pOptions['Title'], size='22pt')
         p.setLabel('bottom', pOptions["X Label"], units=pOptions["X Units"],
-                    color=HEX_COLOR_MAP['black'], size='22pt')
+                    **STYLE_DEFAULTS)
         p.setLabel('left', pOptions["Y Label"], units=pOptions["Y Units"],
-                    color=HEX_COLOR_MAP['black'], size='22pt')
+                    **STYLE_DEFAULTS)
+        # p.getAxis('bottom').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
+        # p.getAxis('left').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
         for i in range(len(self.selectedDepVars)):
             p.plot( x=self.selectedData[0], y=yVals[i],
                      name = self.selectedDepVars[i],
@@ -357,15 +365,16 @@ class Grapher(QtGui.QWidget):
             if self.indepVarsList[i][2] == 'utc_datetime':
                 axis = {['bottom','left'][i]: TimeAxisItem(orientation=['bottom','left'][i])}
                 pOptions[['X Units','Y Units'][i]] = None
-        p1 = self.graphicsLayout.addPlot(axisItems=axis)
-        # p1.titleLabel.setText("Test Title", size ='22pt')
-        p1.setTitle(self.datasetName, size ='22pt')
-        p1.setLabel('bottom', self.indepVarsList[0][0], units=self.indepVarsList[0][3])
-        p1.setLabel('left', self.indepVarsList[1][0], units=self.indepVarsList[1][3])
-        p1.addLegend()
+        p = self.graphicsLayout.addPlot(axisItems=axis)
+        p.setTitle(self.datasetName, size='22pt')
+        p.setLabel('bottom', self.indepVarsList[0][0], units=self.indepVarsList[0][3], **STYLE_DEFAULTS)
+        p.setLabel('left', self.indepVarsList[1][0], units=self.indepVarsList[1][3], **STYLE_DEFAULTS)
+        # p.getAxis('bottom').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
+        # p.getAxis('left').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
+        p.addLegend()
         img = pg.ImageItem()
         img.setImage(depGrids[index])
-        p1.addItem(img)
+        p.addItem(img)
         pixelX = (xVals[-1]-xVals[0])/len(xVals)
         pixelY = (yVals[-1]-yVals[0])/len(yVals)
         img.translate(xVals[0],yVals[0])
@@ -378,7 +387,7 @@ class Grapher(QtGui.QWidget):
         lut = cmap.getLookupTable(0., 1., 256)
         img.setLookupTable(lut)
 
-        p1.autoRange()
+        p.autoRange()
 
 
     def clearLayout(self, layout):
