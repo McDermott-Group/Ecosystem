@@ -111,6 +111,7 @@ class Grapher(QtGui.QWidget):
         self.splitterHorizontal = QtGui.QSplitter(QtCore.Qt.Horizontal)
         self.splitterHorizontal.addWidget(self.splitterVertical)
         self.splitterHorizontal.addWidget(self.graphScrollArea)
+        self.splitterHorizontal.setSizes([300,700])
 
         hbox.addWidget(self.splitterHorizontal)
         self.setLayout(hbox)
@@ -118,9 +119,7 @@ class Grapher(QtGui.QWidget):
 
         self.groupVarsWithCommonUnits = True
 
-        self.plotType = None # redundant
-        self.plotTypeOptionsDict = {}
-        #self.varsToIgnore = []
+        # self.varsToIgnore = []
 
         self.filePathStr = ''
         self.filePathArray = []
@@ -128,6 +127,13 @@ class Grapher(QtGui.QWidget):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.checkFileForUpdates)
         self.timer.start(1000)
+
+        self.indepVarsList = []
+        self.depVarsList = []
+        self.selectedData = None
+
+        self.plotType = None
+        self.selectedDepVars = []
 
     @QtCore.pyqtSlot(QtCore.QModelIndex)
     def fileBrowserSelectionMade(self, index):
@@ -139,16 +145,13 @@ class Grapher(QtGui.QWidget):
             self.filePathStr = filePath
             filePath = filePath[:-(len(fileName)+1)] #strip fileName from path
             filePath = self.convertPathToArray(filePath)
-            filePath = filePath[3:]
+            # filePath = filePath[3:]
             currentFileName = self.d.getDatasetName()
             currentFilePath = self.convertPathToArray(self.d.pwd())
             if currentFileName != fileName or currentFilePath != filePath:
                 self.filePathArray = filePath
                 self.filePathArray.append(fileName)
                 self.prepareData()
-                self.plotData()
-
-
 
     def checkFileForUpdates(self):
         if self.filePathStr != '':
@@ -157,17 +160,16 @@ class Grapher(QtGui.QWidget):
                 print('OH JEEZ GOTTA UPDATE')
                 self.lastModDate = modDate
                 self.prepareData()
-                self.plotData()
 
     def prepareData(self):
         d = self.d
         d.cd(self.filePathArray[:-1])
         d.openDataset(self.filePathArray[-1])
 
-        self.datasetVariables = d.getVariables()
+        datasetVariables = d.getVariables()
         self.datasetName = d.getDatasetName()
-        indepVarsList = self.datasetVariables[0]
-        depVarsList = self.datasetVariables[1]
+        self.indepVarsList = datasetVariables[0]
+        self.depVarsList = datasetVariables[1]
         datasetCategory = d.getDataCategory()
         d.cd("")
 
@@ -182,14 +184,14 @@ class Grapher(QtGui.QWidget):
         # extract scan part of data so it is a complete, normal data set
         elif datasetCategory == "1D Scan" or datasetCategory == "2D Scan":
             data = d.getData()
-            l = depVarsList[0][1][0] # len of first dim in shape of first dep var
+            l = self.depVarsList[0][1][0] # len of first dim in shape of first dep var
             scanType = d.getParameter("Scan Type", bypassIOError=True)
             for j in range(len(data)):
                 row = data[j]
-                for i in range(len(indepVarsList)):
-                    if indepVarsList[i][1] == [1]:
+                for i in range(len(self.indepVarsList)):
+                    if self.indepVarsList[i][1] == [1]:
                         data[j][i] = [row[i]]*l
-                    elif indepVarsList[i][1] == [2]:
+                    elif self.indepVarsList[i][1] == [2]:
                         start,stop = row[i]
                         if scanType is None:
                             print "Scan Type Not Found.  Assuming Linear."
@@ -204,13 +206,78 @@ class Grapher(QtGui.QWidget):
         data = np.array(data[0])
 
         self.selectedData = data
-    
-    def plotData(self):
-        indepVarsList = self.datasetVariables[0]
-        if len(indepVarsList) == 1:
-            self.plot1D(self.selectedData, self.plotTypeOptionsDict)
-        elif len(indepVarsList) == 2:
+
+        self.applyPlugins()
+
+    def applyPlugins(self):
+        """This is not implemented yet, but will eventually allow plugins to be
+        defined to alter the data."""
+        self.updatePlotTypeSelector()
+
+    def updatePlotTypeSelector(self):
+        """Update plotTypes list based on selected dataset.  Selects currently
+        selected type if available."""
+        self.plotTypesComboBox.clear()
+        listOfTypes = self.getListOfAvailabePlotTypes()
+        for element in listOfTypes:
+            # if ".dir" not in str(element) and ".ini" not in str(element):
+            self.plotTypesComboBox.addItem(str(element))
+        if self.plotType in listOfTypes:
+            index = self.plotTypesComboBox.findText(self.plotType)
+            self.plotTypesComboBox.setCurrentIndex(index)
+        else:
+            self.plotTypesComboBox.setCurrentIndex(0)
+            self.plotTypeSelected(str(self.plotTypesComboBox.currentText()))
+
+    def plotTypeSelected(self, plotType):
+        """Called when a plotType selection is made from drop down."""
+        self.plotType = plotType
+        self.updatePlotTypeOptions(plotType)
+        if len(self.indepVarsList) == 1:
+            self.plot1D()
+        elif len(self.indepVarsList) == 2:
             self.plot2D()
+
+    def updatePlotTypeOptions(self, plotType):
+        """Update area below plotType, selection drop down (add/remove variables)"""
+        # select first dep variable and all others with same units and shape
+        varsWithCommonUnitsDict = self.getVarsWithCommonUnitsDict()
+        firstVarList = varsWithCommonUnitsDict.values()[0]
+        self.selectedDepVars = self.getVarsWithCommonShapeList(firstVarList, firstVarList[0])
+        # populate interface buttons
+        self.clearLayout(self.scrollLayout)
+        optionsSlice = QtGui.QVBoxLayout()
+        optionsGroup = QtGui.QButtonGroup()
+        if plotType == "1D" or plotType == "Histogram":
+            optionsGroup.setExclusive(False)
+        for var in self.depVarsList:
+            if plotType == "1D" or plotType == "Histogram":
+                checkBox = QtGui.QCheckBox(var[0], self)  # widget to log
+                if var[0] in self.selectedDepVars:
+                    checkBox.setCheckState(QtCore.Qt.Checked)
+            elif plotType == '2D Scan':
+                checkBox = QtGui.QRadioButton(var[0], self)
+                if var[0] in self.selectedDepVars:
+                    checkBox.setChecked(True)
+            checkBox.toggled.connect(partial(self.varStateChanged, var[0]))
+            optionsSlice.addWidget(checkBox)
+            optionsGroup.addButton(checkBox)
+        self.selectedDepVars = [str(button.text()) for button in optionsGroup.buttons()
+                                                    if button.isChecked()]
+        optionsSlice.addStretch(1)
+        self.scrollLayout.addLayout(optionsSlice)
+        self.scrollLayout.addStretch(1)
+
+    def varStateChanged(self, var):
+        if var in self.selectedDepVars:
+            self.selectedDepVars.remove(var)
+        else:
+            self.selectedDepVars.append(var)
+        if len(self.selectedDepVars) > 0:
+            if len(self.indepVarsList) == 1:
+                self.plot1D()
+            elif len(self.indepVarsList) == 2:
+                self.plot2D()
 
     def extractIndepData(self, data):
         """
@@ -220,116 +287,75 @@ class Grapher(QtGui.QWidget):
         This is done by first skimming off the indep vars, sorting them, and then
         going through the rows of data and setting the value of each spot in the
         vector.  The data must be in the form where each column is a point in the
-        dataset (Type 2 data).
+        dataset (Type 2 data).  The first row of each dimension is the indep vals.
         """
-        indepVarsList = self.datasetVariables[0]
-        depVarsList = self.datasetVariables[1]
-        indepData = [np.unique(np.array(data[i])) for i in range(len(indepVarsList))]
+        indepData = [np.unique(np.array(data[i])) for i in range(len(self.indepVarsList))]
         indepShape = [len(v) for v in indepData]
-        depData = [np.full(indepShape, np.nan) for _ in range(len(depVarsList))]
+        depData = [np.full(indepShape, np.nan) for _ in range(len(self.depVarsList))]
         for row in data.T:    # go though each row and fill data
             indepVals = row[:len(indepData)]
             indepIndicies = tuple([np.where(indepData[i]==indepVals[i])[0][0] for i in range(len(indepVals))])
             for i in range(len(depData)):
-                depData[i][indepIndicies] = row[i+len(indepVarsList)]
+                depData[i][indepIndicies] = row[i+len(self.indepVarsList)]
         return indepData, depData
 
-    def plot1D(self, data, plotTypeOptionsDict):
-        indepVarsList = self.datasetVariables[0]
-        depVarsList = self.datasetVariables[1]
-        varsWithCommonUnitsDict = self.getVarsWithCommonUnitsDict(depVarsList)
-        plotType = self.supportedPlotTypes("1D")[0] # defaults
+    def plot1D(self):
+        varNames = [var[0] for var in self.depVarsList]
+        varUnits = [var[3] for var in self.depVarsList]
+        indicies = [varNames.index(var)+1 for var in self.selectedDepVars]
+        commonUnit = varUnits[indicies[0]-1]
+        yVals = self.selectedData[indicies,:]
+        pOptions = {
+                "X Scale": "Linear",
+                "X Label": self.indepVarsList[0][0],
+                "X Units": self.indepVarsList[0][3],
+                "Y Scale": "Linear",
+                "Y Label": self.selectedDepVars[0],
+                "Y Units": commonUnit,
+                "Title": self.datasetName,
+                "Color": None,
+                "Marker Style": None,
+                "Enable Grid": False,
+                "Hide Variable": False}
         self.clearGraphicsLayout()
-        print "varsWithCommonUnitsDict=", varsWithCommonUnitsDict
-        print "depVarsList=", depVarsList
-        if plotType =="1D":
-            if self.groupVarsWithCommonUnits == True:
-                for commonUnit in varsWithCommonUnitsDict.keys():
-                    commonUnitsData = []
-                    commonNamesData = []
-                    commonUnitsData.append(data[0])
-                    for varName in varsWithCommonUnitsDict[commonUnit]:
-                        for ii in range(0, len(depVarsList)):
-                            #print "depVarsList[ii][0]=", depVarsList[ii][0]
-                            #if ii == 0:
-                            #    commonUnitsData.append(data[0])
-                            if depVarsList[ii][0] == varName:
-                                print "matched"
-                                print "depVarsList[ii][0]=", depVarsList[ii][0]
-                                print "varName=", varName
-                                commonUnitsData.append(data[ii+1])
-                                commonNamesData.append(varName)
-                                plotTypeOptionsDict[varName] = {
-                                        "X Scale": "Linear",
-                                        "X Label": indepVarsList[0][0],
-                                        "X Units": indepVarsList[0][3],
-                                        "Y Scale": "Linear",
-                                        "Y Label": varName,
-                                        "Y Units": commonUnit,
-                                        "Title": self.datasetName,
-                                        "Color": None,
-                                        "Marker Style": None,
-                                        "Enable Grid": False,
-                                        "Hide Variable": False}
-                    self.basic1DPlot(self.graphicsLayout, commonUnitsData, commonNamesData, plotTypeOptionsDict)
+        p = self.graphicsLayout.addPlot()
+        p.addLegend()
+        p.setTitle(pOptions['Title'], size='22pt')
+        p.setLabel('bottom', pOptions["X Label"], units=pOptions["X Units"],
+                    color=HEX_COLOR_MAP['black'], size='22pt')
+        p.setLabel('left', pOptions["Y Label"], units=pOptions["Y Units"],
+                    color=HEX_COLOR_MAP['black'], size='22pt')
+        for i in range(len(self.selectedDepVars)):
+            p.plot( x=self.selectedData[0], y=yVals[i],
+                     name = self.selectedDepVars[i],
+                     pen=(i,len(self.selectedDepVars)))
 
     def plot2D(self):
         (xVals, yVals), depGrids = self.extractIndepData(self.selectedData)
+        varNames = [var[0] for var in self.depVarsList]
+        index = varNames.index(self.selectedDepVars[0])
         self.graphicsLayout.clear()
         p1 = self.graphicsLayout.addPlot(title="Test Title", size='22pt')
         p1.titleLabel.setText("Test Title", size ='22pt')
-        indepVarsList = self.datasetVariables[0]
-        p1.setLabel('bottom', indepVarsList[0][0], units=indepVarsList[0][3])
-        p1.setLabel('left', indepVarsList[1][0], units=indepVarsList[1][3])
+        p1.setLabel('bottom', self.indepVarsList[0][0], units=self.indepVarsList[0][3])
+        p1.setLabel('left', self.indepVarsList[1][0], units=self.indepVarsList[1][3])
         p1.addLegend()
         img = pg.ImageItem()
-        img.setImage(depGrids[0])
+        img.setImage(depGrids[index])
         p1.addItem(img)
         pixelX = (xVals[-1]-xVals[0])/len(xVals)
         pixelY = (yVals[-1]-yVals[0])/len(yVals)
         img.translate(xVals[0],yVals[0])
         img.scale(pixelX,pixelY)
-        max = depGrids[0].max()
-        min = depGrids[0].min()
-        print min, max
 
         # bipolar colormap
-        pos = np.array([0., 0.125, 0.375, 0.667, 0.933, 1.])*(max-min) + min
+        pos = np.array([0., 0.125, 0.375, 0.667, 0.933, 1.])
         color = np.array([[0,0,143,255], [0,0,255,255], [0,255,255,255], (255, 255, 0, 255), (255, 0, 0, 255), (128, 0, 0, 255)], dtype=np.ubyte)
         cmap = pg.ColorMap(pos, color)
-        lut = cmap.getLookupTable(min, max, 256)
+        lut = cmap.getLookupTable(0., 1., 256)
         img.setLookupTable(lut)
 
         p1.autoRange()
-
-
-    def basic1DPlot(self, graphicsLayout, commonUnitsData, commonNamesData, plotTypeOptionsDict):
-        #graphicsLayout.clear()
-        p = graphicsLayout.addPlot()
-        p.addLegend()
-        pOptions = plotTypeOptionsDict[commonNamesData[0]]
-        p.setTitle(pOptions['Title'], size='22pt')
-        p.setLabel('bottom', pOptions["X Label"], units=pOptions["X Units"], 
-                    color=HEX_COLOR_MAP['black'], size='22pt')
-        p.setLabel('left', pOptions["Y Label"], units=pOptions["Y Units"],  
-                    color=HEX_COLOR_MAP['black'], size='22pt')
-        for ii in range(0, len(commonNamesData)):
-            p.plot( x=commonUnitsData[0], y=commonUnitsData[ii+1], 
-                     name = plotTypeOptionsDict[commonNamesData[ii]]["Y Label"], 
-                     pen=pg.mkPen(HEX_COLOR_MAP['blue']))
-
-    def plotTypeSelected(self, plotType):
-        # Called when a plotType selection is made from drop down.
-        # self.plotTypesComboBox.adjustSize()
-        return "Grape Fruit"
-       # if plotType != self.plotType:
-           # self.clearGraphicsLayout()
-           # #self.currentFig = self.figFromFileInfo(self.filePath, self.fileName, selectedPlotType = plotType)
-           # #self.addFigureToCanvas(self.currentFig)
-           # self.updatePlotTypeOptions(plotType)
-           # self.plotType = plotType
-           # # When is best time to do this?
-           # self.varsToIgnore = []
 
 
     def clearLayout(self, layout):
@@ -358,26 +384,28 @@ class Grapher(QtGui.QWidget):
         # Remove all widgets from GraphicsLayoutWidget
         self.graphicsLayout.clear()
 
-    def getListOfAvailabePlotTypes(self, datasetDimension, datasetCategory, selectedVarsList):
-        if datasetDimension == 1:
+    def getListOfAvailabePlotTypes(self, selectedVarsList=None):
+        if selectedVarsList is None:
+            selectedVarsList = self.depVarsList
+        if len(self.indepVarsList) == 1:
             if len(selectedVarsList) >= 2: # 1D Traj Plot Types require 2 selected dependent vars
                 return ["1D", "1D Parametric"]
             elif len(selectedVarsList) == 1:
                 return ["1D"]
             else:
                 return ["Please select at least on variable for plotting"]
-        elif datasetDimension == 2:
+        elif len(self.indepVarsList) == 2:
             if len(selectedVarsList) >= 2:
                 return ["2D Scan", "3D Surface", "2D Parametric", "Projection"] #3D Parametric for > 3 indeps
             elif len(selectedVarsList) == 1:
                 return ["2D Scan", "3D Contour", "Projection"]
         else:
-            return ["There are no available plot types for "+str(datasetDimension)+ " dimensional data."]
+            return ["There are no available plot types for "+str(len(self.indepVarsList))+ " dimensional data."]
 
 
-    def getVarsWithCommonUnitsDict(self, depVarsList):
+    def getVarsWithCommonUnitsDict(self):
         compatibleVarsDict = {}
-        for depVar in depVarsList:
+        for depVar in self.depVarsList:
             # depVar of form (name, shape, dtype, units)
             name = depVar[0]
             units = depVar[3]
@@ -387,10 +415,10 @@ class Grapher(QtGui.QWidget):
                 compatibleVarsDict[units].append(name)
         return compatibleVarsDict
 
-    def getVarsWithCommonShapeList(self, depVarsList, commonUnitsList, selectedVarName):
+    def getVarsWithCommonShapeList(self, varsWithSameUnits, selectedVarName):
 
         varsWithCommonShapeList = []
-        for depVar in depVarsList:
+        for depVar in self.depVarsList:
             # depVar of form (name, shape, dtype, units)
             name = depVar[0]
             shape = depVar[1]
@@ -398,31 +426,15 @@ class Grapher(QtGui.QWidget):
             if name == selectedVarName:
                 selectedVarShape = shape
 
-        for depVar in depVarsList:
+        for depVar in self.depVarsList:
             # depVar of form (name, shape, dtype, units)
             name = depVar[0]
             shape = depVar[1]
-            if (name in commonUnitsList) and shape == selectedVarShape:
+            if (name in varsWithSameUnits) and shape == selectedVarShape:
                 varsWithCommonShapeList.append(name)
 
         return varsWithCommonShapeList
 
-    def updatePlotTypesList(self, plotTypeOptionsList):
-        # Update plotTypes list based on selected dataset.
-        self.plotTypesComboBox.clear()
-        for element in plotTypeOptionsList:
-            if ".dir" not in str(element) and ".ini" not in str(element):
-                self.plotTypesComboBox.addItem(str(element))
-
-    def supportedPlotTypes(self, dimensionality):
-        # Provide list of plotTypes based on datasetType.
-        if dimensionality == "1D":
-            plotTypes = ["1D"] #"Histogram"
-        elif dimensionality == "2D":
-            plotTypes = ["2D Image"]
-        else:
-            plotTypes = []
-        return plotTypes
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
