@@ -1,3 +1,5 @@
+# TODO: add units to colorbar label!
+
 import os
 import sys
 from PyQt4 import QtCore, QtGui
@@ -24,6 +26,8 @@ STYLE_DEFAULTS = {
     'font-size':'22pt',
     'font-color': 'black'}
 
+cb = None
+
 class TimeAxisItem(pg.AxisItem):
     def __init__(self, *args, **kwargs):
         #  super().__init__(*args, **kwargs)
@@ -41,6 +45,7 @@ class TimeAxisItem(pg.AxisItem):
 class Grapher(QtGui.QWidget):
 
     def __init__(self, parent = None):
+        self.cb = None
         super(Grapher, self).__init__(parent)
         self.setWindowTitle('Data Chest Image Browser')
         self.setWindowIcon(QtGui.QIcon('rabi.jpg'))
@@ -126,11 +131,12 @@ class Grapher(QtGui.QWidget):
         self.graphScrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.graphScrollArea.setWidget(self.graphsWidget)
         self.graphScrollArea.setWidgetResizable(True) # What happens without?
-
+        
         self.splitterHorizontal = QtGui.QSplitter(QtCore.Qt.Horizontal)
         self.splitterHorizontal.addWidget(self.splitterVertical)
         self.splitterHorizontal.addWidget(self.graphScrollArea)
-        self.splitterHorizontal.setSizes([300,700])
+        self.splitterHorizontal.setSizes([300,800])
+
 
         hbox.addWidget(self.splitterHorizontal)
         self.setLayout(hbox)
@@ -176,7 +182,6 @@ class Grapher(QtGui.QWidget):
         if self.filePathStr != '':
             modDate = os.stat(self.filePathStr).st_mtime
             if self.lastModDate != modDate:
-                print('OH JEEZ GOTTA UPDATE')
                 self.lastModDate = modDate
                 self.prepareData()
 
@@ -318,6 +323,10 @@ class Grapher(QtGui.QWidget):
         return indepData, depData
 
     def plot1D(self):
+
+        if cb is not None:
+            cb.hide()
+
         varNames = [var[0] for var in self.depVarsList]
         varUnits = [var[3] for var in self.depVarsList]
         indicies = [varNames.index(var)+1 for var in self.selectedDepVars]
@@ -335,7 +344,8 @@ class Grapher(QtGui.QWidget):
                 "Marker Style": None,
                 "Enable Grid": False,
                 "Hide Variable": False}
-        self.clearGraphicsLayout()
+        self.graphicsLayout.clear()
+        # self.clearGraphicsLayout()
         if self.indepVarsList[0][2] == 'utc_datetime':
             axis = {'bottom': TimeAxisItem(orientation='bottom')}
             pOptions['X Units'] = None
@@ -355,6 +365,7 @@ class Grapher(QtGui.QWidget):
                      name = self.selectedDepVars[i],
                      pen=(i,len(self.selectedDepVars)))
 
+
     def plot2D(self):
         (xVals, yVals), depGrids = self.extractIndepData(self.selectedData)
         varNames = [var[0] for var in self.depVarsList]
@@ -365,13 +376,12 @@ class Grapher(QtGui.QWidget):
             if self.indepVarsList[i][2] == 'utc_datetime':
                 axis = {['bottom','left'][i]: TimeAxisItem(orientation=['bottom','left'][i])}
                 pOptions[['X Units','Y Units'][i]] = None
-        p = self.graphicsLayout.addPlot(axisItems=axis)
+        p = self.graphicsLayout.addPlot(axisItems=axis, row=1, col=1)
         p.setTitle(self.datasetName, size='22pt')
         p.setLabel('bottom', self.indepVarsList[0][0], units=self.indepVarsList[0][3], **STYLE_DEFAULTS)
         p.setLabel('left', self.indepVarsList[1][0], units=self.indepVarsList[1][3], **STYLE_DEFAULTS)
         # p.getAxis('bottom').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
         # p.getAxis('left').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
-        p.addLegend()
         img = pg.ImageItem()
         img.setImage(depGrids[index])
         p.addItem(img)
@@ -386,8 +396,29 @@ class Grapher(QtGui.QWidget):
         cmap = pg.ColorMap(pos, color)
         lut = cmap.getLookupTable(0., 1., 256)
         img.setLookupTable(lut)
+        
+        min = np.min(depGrids[index])
+        max = np.max(depGrids[index])
+
+        tick_labels = []
+        
+        for i in range(0, 5):
+            tick_labels.append(str(round((min + ((max - min) * i ) / 4), 3)))
+
+        global cb
+        if cb is not None:
+            cb.hide()
+
+        cb = ColorBar(cmap, 10, 200, min, max, label=self.selectedDepVars[0], tick_labels = tick_labels)
+        cb.translate(170, 90)
+        cb.setAcceptHoverEvents(True)
+        # self.cb.hide()
+        # print cb.acceptHoverEvents()
+
+        p.scene().addItem(cb)
 
         p.autoRange()
+
 
 
     def clearLayout(self, layout):
@@ -466,6 +497,69 @@ class Grapher(QtGui.QWidget):
                 varsWithCommonShapeList.append(name)
 
         return varsWithCommonShapeList
+        
+        
+class ColorBar(pg.GraphicsObject):
+
+    def __init__(self, cmap, width, height, min, max, ticks=None, tick_labels=None, label=None, clear = False):
+        pg.GraphicsObject.__init__(self)
+
+        # handle args
+        label = label or ''
+        w, h = width, height
+        stops, colors = cmap.getStops('float')
+        smn, spp = stops.min(), stops.ptp()
+        stops = (stops - stops.min())/stops.ptp()
+        if ticks is None:
+            ticks = np.r_[0.0:1.0:5j, 1.0] * spp + smn
+        tick_labels = tick_labels or ["%0.2g" % (t,) for t in ticks]
+
+        # setup picture
+        self.pic = pg.QtGui.QPicture()
+        p = pg.QtGui.QPainter(self.pic)
+
+        mintx = 0.0
+
+        # compute rect bounds for underlying mask
+        self.br = p.boundingRect(0, 0, 0, 0, pg.QtCore.Qt.AlignRight, label)
+        self.zone = mintx - 50, -15.0,  75, h + self.br.height() + 30.0
+
+        p.setPen(pg.QtGui.QColor(255, 255, 255, 0))
+        p.setBrush(pg.QtGui.QColor(255, 255, 255, 180))
+        p.drawRect(*(self.zone))
+
+        # draw bar with gradient following colormap
+        p.setPen(pg.mkPen('k'))
+        grad = pg.QtGui.QLinearGradient(w/2.0, 0.0, w/2.0, h*1.0)
+        for stop, color in zip(stops, colors):
+            grad.setColorAt(1.0 - stop, pg.QtGui.QColor(*[c for c in color]))
+        p.setBrush(pg.QtGui.QBrush(grad))
+        p.drawRect(pg.QtCore.QRectF(0, 0, w, h))
+
+        # draw ticks & tick labels
+
+        for tick, tick_label in zip(ticks, tick_labels):
+            y_ = (1.0 - (tick - smn)/spp) * h
+            p.drawLine(0.0, y_, -5.0, y_)
+            br = p.boundingRect(0, 0, 0, 0, pg.QtCore.Qt.AlignRight, tick_label)
+            if br.x() < mintx:
+                mintx = br.x()
+            p.drawText(br.x() - 10.0, y_ + br.height() / 4.0, tick_label)
+
+        # draw label
+        p.drawText(-self.br.width() / 2.0 - 10, h + self.br.height() + 5.0, label)
+        # done
+        p.end()
+
+    def paint(self, p, *args):
+        # paint underlying mask
+        p.setOpacity(1)
+
+        # paint colorbar
+        p.drawPicture(0, 0, self.pic)
+        
+    def boundingRect(self):
+        return pg.QtCore.QRectF(self.pic.boundingRect())
 
 
 if __name__ == "__main__":
