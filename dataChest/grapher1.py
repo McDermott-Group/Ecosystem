@@ -51,6 +51,8 @@ class Grapher(QtGui.QWidget):
         self.setWindowIcon(QtGui.QIcon('rabi.jpg'))
 
         self.root = os.environ["DATA_ROOT"]
+        self.pluginRoot = os.environ["REPOSITORY_ROOT"]
+        self.pluginRoot = os.path.join(self.pluginRoot, "servers", "dataChest", "Plugins")
 
         self.filters =QtCore.QStringList()
         self.filters.append("*.hdf5")
@@ -89,8 +91,13 @@ class Grapher(QtGui.QWidget):
         self.plotTypesComboBoxLabel = QtGui.QLabel(self)
         self.plotTypesComboBoxLabel.setText("Available Plot Types:")
 
+        self.pluginTypesList = QtGui.QListWidget(self)
+       # self.pluginTypesLabel = QtGui.QLabel(self)
+       #  self.pluginTypesLabel.setText("Plugins")
+
         self.plotTypesComboBox = QtGui.QComboBox(self)
         self.plotTypesComboBox.activated[str].connect(self.plotTypeSelected)
+
 
         # Configure scrolling widget.
         self.scrollWidget = QtGui.QWidget(self)
@@ -102,6 +109,20 @@ class Grapher(QtGui.QWidget):
         self.scrollArea.setWidget(self.scrollWidget)
         self.scrollArea.setWidgetResizable(True) # What happens without?
 
+        # configure plugin selection window
+        self.numChecked = 0
+        for plugin_name in (os.listdir(self.pluginRoot)):
+            plugin = QtGui.QListWidgetItem(plugin_name, self.pluginTypesList)
+            plugin.setFlags(QtCore.Qt.ItemIsUserCheckable)
+            plugin.setCheckState(QtCore.Qt.Unchecked)
+            plugin.setFlags(QtCore.Qt.ItemIsEnabled)
+
+        self.pluginTypesList.itemClicked.connect(self.listItemClicked)
+        self.pluginTypesLayout = QtGui.QVBoxLayout()
+        self.pluginTypesLayout.addWidget(self.pluginTypesList)
+        self.pluginTypesLayout.addWidget(self.scrollArea)
+        print (os.listdir(self.pluginRoot))
+
         self.plotOptionsWidget = QtGui.QWidget(self)
         self.plotOptionsLayout = QtGui.QVBoxLayout()
         self.plotOptionsWidget.setLayout(self.plotOptionsLayout)
@@ -109,9 +130,16 @@ class Grapher(QtGui.QWidget):
         self.plotOptionsLayout.addWidget(self.plotTypesComboBox)
         self.plotOptionsLayout.addWidget(self.scrollArea)
 
+
+        # self.splitterCentral = QtGui.QSplitter(QtCore.Qt.Vertical)
+        # self.splitterCentral.addWidget(self.dirTreeWidget)
+        # self.splitterCentral.addWidget(self.pluginTypesList)
+
         self.splitterVertical = QtGui.QSplitter(QtCore.Qt.Vertical) #, self)
         self.splitterVertical.addWidget(self.dirTreeWidget)
+        self.splitterVertical.addWidget(self.pluginTypesList)
         self.splitterVertical.addWidget(self.plotOptionsWidget)
+        self.splitterVertical.setSizes([800, 300, 500])
 
         pg.setConfigOption('background', 'w')
         pg.setConfigOption('foreground', 'k')
@@ -160,6 +188,24 @@ class Grapher(QtGui.QWidget):
         self.plotType = None
         self.selectedDepVars = []
 
+    def listItemClicked(self, item):
+        if item.checkState() == QtCore.Qt.Checked:
+            self.numChecked -= 1
+            item.setCheckState(QtCore.Qt.Unchecked)
+            pluginRow = self.pluginTypesList.row(item)
+            self.pluginTypesList.takeItem(pluginRow)
+            self.pluginTypesList.insertItem(self.numChecked, item)
+            self.pluginTypesList.setCurrentRow(self.numChecked)
+        else:
+            self.numChecked += 1
+            item.setCheckState(QtCore.Qt.Checked)
+            pluginRow = self.pluginTypesList.row(item)
+            self.pluginTypesList.takeItem(pluginRow)
+            self.pluginTypesList.insertItem(0, item)
+            self.pluginTypesList.setCurrentRow(0)
+        pluginPath = os.path.join(self.pluginRoot, str(item.text()))
+        print pluginPath
+
     @QtCore.pyqtSlot(QtCore.QModelIndex)
     def fileBrowserSelectionMade(self, index):
         # Called when a directory tree selection is made.
@@ -170,7 +216,11 @@ class Grapher(QtGui.QWidget):
             self.filePathStr = filePath
             filePath = filePath[:-(len(fileName)+1)] #strip fileName from path
             filePath = self.convertPathToArray(filePath)
-            filePath = filePath[3:]
+
+            # handle case where filePath starts at dataRoot
+            if filePath[0] == "Z:":
+                filePath = filePath[3:]
+
             currentFileName = self.d.getDatasetName()
             currentFilePath = self.convertPathToArray(self.d.pwd())
             if currentFileName != fileName or currentFilePath != filePath:
