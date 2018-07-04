@@ -91,13 +91,8 @@ class Grapher(QtGui.QWidget):
         self.plotTypesComboBoxLabel = QtGui.QLabel(self)
         self.plotTypesComboBoxLabel.setText("Available Plot Types:")
 
-        self.pluginTypesList = QtGui.QListWidget(self)
-       # self.pluginTypesLabel = QtGui.QLabel(self)
-       #  self.pluginTypesLabel.setText("Plugins")
-
         self.plotTypesComboBox = QtGui.QComboBox(self)
         self.plotTypesComboBox.activated[str].connect(self.plotTypeSelected)
-
 
         # Configure scrolling widget.
         self.scrollWidget = QtGui.QWidget(self)
@@ -109,6 +104,8 @@ class Grapher(QtGui.QWidget):
         self.scrollArea.setWidget(self.scrollWidget)
         self.scrollArea.setWidgetResizable(True) # What happens without?
 
+        self.pluginTypesList = QtGui.QListWidget(self)
+
         # configure plugin selection window
         self.numChecked = 0
         for plugin_name in (os.listdir(self.pluginRoot)):
@@ -118,6 +115,7 @@ class Grapher(QtGui.QWidget):
             plugin.setFlags(QtCore.Qt.ItemIsEnabled)
 
         self.pluginTypesList.itemClicked.connect(self.listItemClicked)
+        self.pluginTypesList.setAlternatingRowColors(True)
         self.pluginTypesLayout = QtGui.QVBoxLayout()
         self.pluginTypesLayout.addWidget(self.pluginTypesList)
         self.pluginTypesLayout.addWidget(self.scrollArea)
@@ -129,11 +127,6 @@ class Grapher(QtGui.QWidget):
         self.plotOptionsLayout.addWidget(self.plotTypesComboBoxLabel)
         self.plotOptionsLayout.addWidget(self.plotTypesComboBox)
         self.plotOptionsLayout.addWidget(self.scrollArea)
-
-
-        # self.splitterCentral = QtGui.QSplitter(QtCore.Qt.Vertical)
-        # self.splitterCentral.addWidget(self.dirTreeWidget)
-        # self.splitterCentral.addWidget(self.pluginTypesList)
 
         self.splitterVertical = QtGui.QSplitter(QtCore.Qt.Vertical) #, self)
         self.splitterVertical.addWidget(self.dirTreeWidget)
@@ -320,29 +313,42 @@ class Grapher(QtGui.QWidget):
         # populate interface buttons
         self.clearLayout(self.scrollLayout)
         optionsSlice = QtGui.QVBoxLayout()
-        optionsGroup = QtGui.QButtonGroup()
+        self.optionsGroup = QtGui.QButtonGroup()
         if plotType == "1D" or plotType == "Histogram":
-            optionsGroup.setExclusive(False)
+            self.optionsGroup.setExclusive(False)
         for var in self.depVarsList:
             if plotType == "1D" or plotType == "Histogram":
                 checkBox = QtGui.QCheckBox(var[0], self)  # widget to log
+                checkBox.toggled.connect(partial(self.varStateChanged, var[0]))
                 if var[0] in self.selectedDepVars:
                     checkBox.setCheckState(QtCore.Qt.Checked)
             elif plotType == '2D Scan':
                 checkBox = QtGui.QRadioButton(var[0], self)
+                checkBox.toggled.connect(partial(self.varStateChanged, var[0]))
                 if var[0] in self.selectedDepVars:
                     checkBox.setChecked(True)
-            checkBox.toggled.connect(partial(self.varStateChanged, var[0]))
             optionsSlice.addWidget(checkBox)
-            optionsGroup.addButton(checkBox)
-        self.selectedDepVars = [str(button.text()) for button in optionsGroup.buttons()
+            self.optionsGroup.addButton(checkBox)
+        self.selectedDepVars = [str(button.text()) for button in self.optionsGroup.buttons()
                                                     if button.isChecked()]
         optionsSlice.addStretch(1)
         self.scrollLayout.addLayout(optionsSlice)
         self.scrollLayout.addStretch(1)
 
     def varStateChanged(self, var):
-        if var in self.selectedDepVars:
+        if len(self.indepVarsList) == 2:
+            self.selectedDepVars = [var]
+
+            # ensures that only one radio button is ever checked
+            numChecked = 0
+            for button in self.optionsGroup.buttons():
+                if button.isChecked():
+                    numChecked += 1
+            if numChecked != 1:
+                for button in self.optionsGroup.buttons():
+                    button.setChecked(False)
+
+        elif var in self.selectedDepVars:
             self.selectedDepVars.remove(var)
         else:
             self.selectedDepVars.append(var)
