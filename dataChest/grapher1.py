@@ -23,10 +23,9 @@ HEX_COLOR_MAP = {'white': '#FFFFFF', 'silver': '#FFFFFF', 'gray': '#808080',
 ACCEPTABLE_DATA_CATEGORIES = ["Arbitrary Type 1", "Arbitrary Type 2", "1D Scan", "2D Scan"]
 
 STYLE_DEFAULTS = {
-    'font-size':'22pt',
+    'font-size': '22pt',
     'font-color': 'black'}
 
-cb = None
 
 class TimeAxisItem(pg.AxisItem):
     def __init__(self, *args, **kwargs):
@@ -36,11 +35,12 @@ class TimeAxisItem(pg.AxisItem):
 
     def tickStrings(self, values, scale, spacing):
         # PySide's QTime() initialiser fails miserably and dismisses args/kwargs
-        #return [QTime().addMSecs(value).toString('mm:ss') for value in values]
+        # return [QTime().addMSecs(value).toString('mm:ss') for value in values]
         return [(datetime.datetime.utcfromtimestamp(value)
                                   .replace(tzinfo=tz.tzutc())
                                   .astimezone(tz.tzlocal())
                                   .strftime("%H:%M:%S")) for value in values]
+
 
 class Grapher(QtGui.QWidget):
 
@@ -49,6 +49,8 @@ class Grapher(QtGui.QWidget):
         super(Grapher, self).__init__(parent)
         self.setWindowTitle('Data Chest Image Browser')
         self.setWindowIcon(QtGui.QIcon('rabi.jpg'))
+
+        self.numChecked = 0
 
         self.root = os.environ["DATA_ROOT"]
         self.pluginRoot = os.environ["REPOSITORY_ROOT"]
@@ -104,22 +106,17 @@ class Grapher(QtGui.QWidget):
         self.scrollArea.setWidget(self.scrollWidget)
         self.scrollArea.setWidgetResizable(True) # What happens without?
 
+        # Configure plugin widget.
         self.pluginTypesList = QtGui.QListWidget(self)
-
-        # configure plugin selection window
-        self.numChecked = 0
-        for plugin_name in (os.listdir(self.pluginRoot)):
-            plugin = QtGui.QListWidgetItem(plugin_name, self.pluginTypesList)
-            plugin.setFlags(QtCore.Qt.ItemIsUserCheckable)
-            plugin.setCheckState(QtCore.Qt.Unchecked)
-            plugin.setFlags(QtCore.Qt.ItemIsEnabled)
+        self.populatePluginList(self)
 
         self.pluginTypesList.itemClicked.connect(self.listItemClicked)
         self.pluginTypesList.setAlternatingRowColors(True)
+        self.pluginTypesWidget = QtGui.QWidget(self)
         self.pluginTypesLayout = QtGui.QVBoxLayout()
+        self.pluginTypesWidget.setLayout(self.pluginTypesLayout)
         self.pluginTypesLayout.addWidget(self.pluginTypesList)
         self.pluginTypesLayout.addWidget(self.scrollArea)
-        print (os.listdir(self.pluginRoot))
 
         self.plotOptionsWidget = QtGui.QWidget(self)
         self.plotOptionsLayout = QtGui.QVBoxLayout()
@@ -158,14 +155,11 @@ class Grapher(QtGui.QWidget):
         self.splitterHorizontal.addWidget(self.graphScrollArea)
         self.splitterHorizontal.setSizes([300,800])
 
-
         hbox.addWidget(self.splitterHorizontal)
         self.setLayout(hbox)
         QtGui.QApplication.setStyle(QtGui.QStyleFactory.create('Cleanlooks'))
 
         self.groupVarsWithCommonUnits = True
-
-        # self.varsToIgnore = []
 
         self.filePathStr = ''
         self.filePathArray = []
@@ -175,6 +169,7 @@ class Grapher(QtGui.QWidget):
         self.timer.start(1000)
 
         self.indepVarsList = []
+        self.datasetName = None
         self.depVarsList = []
         self.selectedData = None
 
@@ -198,6 +193,30 @@ class Grapher(QtGui.QWidget):
             self.pluginTypesList.setCurrentRow(0)
         pluginPath = os.path.join(self.pluginRoot, str(item.text()))
         print pluginPath
+
+    def populatePluginList(self, *args):
+        print 'here'
+        print os.listdir(self.pluginRoot)
+        for pluginFilename in (os.listdir(self.pluginRoot)):
+            print 'hi'
+            plugin = open(os.path.join(self.pluginRoot, pluginFilename), 'r')
+            pluginTitle = plugin.readline()
+            pluginDescription = plugin.readline()
+
+            if (pluginTitle.startswith('*#TITLE:')):
+                pluginTitle = pluginTitle[9:].strip()
+                if pluginDescription.startswith('*#DESCR:'):
+                    pluginDescription = pluginDescription[9:].strip()
+                    listItem = QtGui.QListWidgetItem(pluginTitle + '   |   ' + pluginDescription)
+                else:
+                    listItem = QtGui.QListWidgetItem(pluginTitle)
+            else:
+                listItem = QtGui.QListWidgetItem(pluginFilename)
+
+            listItem.setFlags(QtCore.Qt.ItemIsUserCheckable)
+            listItem.setCheckState(QtCore.Qt.Unchecked)
+            listItem.setFlags(QtCore.Qt.ItemIsEnabled)
+            self.pluginTypesList.addItem(listItem)
 
     @QtCore.pyqtSlot(QtCore.QModelIndex)
     def fileBrowserSelectionMade(self, index):
@@ -259,7 +278,7 @@ class Grapher(QtGui.QWidget):
                     if self.indepVarsList[i][1] == [1]:
                         data[j][i] = [row[i]]*l
                     elif self.indepVarsList[i][1] == [2]:
-                        start,stop = row[i]
+                        start, stop = row[i]
                         if scanType is None:
                             print "Scan Type Not Found.  Assuming Linear."
                             data[j][i] = np.linspace(start, stop, num = l)
@@ -380,8 +399,8 @@ class Grapher(QtGui.QWidget):
 
     def plot1D(self):
 
-        if cb is not None:
-            cb.hide()
+        if self.cb is not None:
+            self.cb.hide()
 
         varNames = [var[0] for var in self.depVarsList]
         varUnits = [var[3] for var in self.depVarsList]
@@ -456,22 +475,21 @@ class Grapher(QtGui.QWidget):
         min = np.min(depGrids[index])
         max = np.max(depGrids[index])
 
+        # calculate equidistant markers between min and max
         tick_labels = []
-        
         for i in range(0, 5):
             tick_labels.append(str(round((min + ((max - min) * i ) / 4), 3)))
 
-        global cb
-        if cb is not None:
-            cb.hide()
+        if self.cb is not None:
+            self.cb.hide()
 
-        cb = ColorBar(cmap, 10, 200, min, max, label=self.selectedDepVars[0], tick_labels = tick_labels)
-        cb.translate(170, 90)
-        cb.setAcceptHoverEvents(True)
+        self.cb = ColorBar(cmap, 10, 200, min, max, label=self.selectedDepVars[0], tick_labels = tick_labels)
+        self.cb.translate(170, 90)
+        self.cb.setAcceptHoverEvents(True)
         # self.cb.hide()
         # print cb.acceptHoverEvents()
 
-        p.scene().addItem(cb)
+        p.scene().addItem(self.cb)
 
         p.autoRange()
 
@@ -553,6 +571,14 @@ class Grapher(QtGui.QWidget):
                 varsWithCommonShapeList.append(name)
 
         return varsWithCommonShapeList
+
+    # recenter with spacebar
+    def keyPressEvent(self, QKeyEvent):
+        if QKeyEvent.key() == QtCore.Qt.Key_Space:
+            if len(self.indepVarsList) == 1:
+                self.plot1D()
+            elif len(self.indepVarsList) == 2:
+                self.plot2D()
         
         
 class ColorBar(pg.GraphicsObject):
@@ -609,7 +635,7 @@ class ColorBar(pg.GraphicsObject):
 
     def paint(self, p, *args):
         # paint underlying mask
-        p.setOpacity(1)
+
 
         # paint colorbar
         p.drawPicture(0, 0, self.pic)
@@ -617,13 +643,19 @@ class ColorBar(pg.GraphicsObject):
     def boundingRect(self):
         return pg.QtCore.QRectF(self.pic.boundingRect())
 
+    def mousePressEvent(self, *args, **kwargs):
+        self.setOpacity(0.0)
+
+    def mouseReleaseEvent(self, *args, **kwargs):
+        self.setOpacity(1.0)
+
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     app.setApplicationName('MyWindow')
 
     main = Grapher()
-    main.resize(1000, 700)
+    main.showMaximized()
     # main.move(app.desktop().screen().rect().center() - main.rect().center())
     main.show()
 
