@@ -262,7 +262,10 @@ class ADRServer(DeviceServer):
                 'Pressure Guage':['Varian Guage Controller','addr'],
                 'Log Path': ["fridgeLogs"],
                 'Start Compressor Datetime': None,
-                'Stop Compressor Datetime': None
+                'Stop Compressor Datetime': None,
+                'Estimated Mag Up Time': 45, # minutes
+                'Estimated Mag Down Time': 45, # minutes
+                'Soak Time': 60 # minutes
         }
         self.instruments = {'Power Supply':'None',
                             'Ruox Temperature Monitor':'None',
@@ -921,6 +924,23 @@ class ADRServer(DeviceServer):
     def cancelMagUp(self,c):
         """Stop mag up process."""
         self._cancelMagUp()
+
+    # @setting(150, 'Schedule Mag Cycle', time=['t'])
+    # def scheduleMagCycle(self,c, time=None):
+        # """Mags up, soaks, and mags down so as to have the fridge cold at the given 
+        # time.  If no time is given, starts cycle immediately."""
+        # self.logMessage('Setting mag cycle to cool by %s'%time)
+        # totalTime = ( self.ADRSettings['Estimated Mag Up Time']
+                    # + self.ADRSettings['Soak Time']
+                    # + self.ADRSettings['Estimated Mag Down Time'] )
+        # # set alarm for time - totalTime
+        # now = datetime.datetime.utcnow()
+        # yield util.wakeupCall( max(1, deltaT(time - now) - totalTime) )
+        # self.closeHeatSwitch(c)
+        # self.magUp(c) # make sure this finishes
+        # yield util.wakeupCall( self.ADRSettings['Soak Time'] )
+        # self.openHeatSwitch(c)
+        # self.regulate(c)
 
     @setting(124, 'Refresh Instruments')
     def refreshInstruments(self,c):
