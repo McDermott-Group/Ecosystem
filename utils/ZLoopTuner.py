@@ -23,15 +23,21 @@ class ZLoopTuner:
 
     def main(self):
         # increment KP until periodic behavior is detected
+
+        self.adr.set_pid_kp(self.kp)
+        self.adr.set_pid_ki(self.ki)
+        self.adr.set_pid_kd(self.kd)
+
         while not self.periodic:
             # collect temperature data for given sample_time period
             last_time = time.time()
             end_time = time.time() + self.sample_time
             self.sampling_period = 0
             self.num_periods = 1
+            print 'Editing Kp, curr value = ' + self.kp
             while time.time() < end_time:
                 #TODO FIX THIS LINE
-                curr_temp = self.adr.temperatures()
+                curr_temp = self.adr.temperatures()[3]
                 curr_time = time.time()
                 time_diff = curr_time - last_time
                 last_time = curr_time
@@ -41,12 +47,17 @@ class ZLoopTuner:
             # CHECK FOR PERIODIC BEHAVIOR
             temp_fft = np.fft.fft(self.temperatures)
             time_fft = np.fft.fftfreq(len(self.temperatures), self.sampling_period)
+            dc_index = time_fft.index(0)
+            temp_fft[dc_index] = 0
             avg_fft = np.average(abs(temp_fft))
             std_fft = np.std(abs(temp_fft))
 
             max_temp_fft = max(temp_fft)
             index_fft = temp_fft.index(max_temp_fft)
             max_freq = time_fft[index_fft]
+
+            pyplot.plot(time_fft, temp_fft)
+            pyplot.show()
 
             if max_temp_fft > (avg_fft + (3 * std_fft)):
                 self.periodic = True
@@ -73,7 +84,7 @@ class ZLoopTuner:
         # x = np.arange(0.0001, 10, .005)
         # noise = np.random.normal(0, 1, 2000)
         # print noise
-        # y = np.exp(2j * np.pi * x)
+        # y = np.exp(2j * np.pi * x + 1.63)
         # for i in range(0, 2000):
         #     y[i] = y[i] + noise[i]
         # # pyplot.plot(x, y)

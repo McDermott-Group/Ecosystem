@@ -1,0 +1,3 @@
+*#TITLE: Fitter
+*#DESCR: Fits plot to blah blah blah
+BLAH BLAH BLAH

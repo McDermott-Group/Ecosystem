@@ -1,0 +1,2 @@
+*#TITLE: Colorer
+*#DESCR: Colors graph like blah blah blah
