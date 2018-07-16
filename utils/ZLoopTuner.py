@@ -34,10 +34,11 @@ class ZLoopTuner:
             end_time = time.time() + self.sample_time
             self.sampling_period = 0
             self.num_periods = 1
-            print 'Editing Kp, curr value = ' + self.kp
+            print 'Editing Kp, curr value = ' +str(self.kp)
             while time.time() < end_time:
+                time.sleep(.1)
                 #TODO FIX THIS LINE
-                curr_temp = self.adr.temperatures()[3]
+                curr_temp = self.adr.temperatures()[3]['K']
                 curr_time = time.time()
                 time_diff = curr_time - last_time
                 last_time = curr_time
@@ -47,13 +48,13 @@ class ZLoopTuner:
             # CHECK FOR PERIODIC BEHAVIOR
             temp_fft = np.fft.fft(self.temperatures)
             time_fft = np.fft.fftfreq(len(self.temperatures), self.sampling_period)
-            dc_index = time_fft.index(0)
+            dc_index = np.where(time_fft == 0)
             temp_fft[dc_index] = 0
             avg_fft = np.average(abs(temp_fft))
             std_fft = np.std(abs(temp_fft))
 
             max_temp_fft = max(temp_fft)
-            index_fft = temp_fft.index(max_temp_fft)
+            index_fft = np.where(temp_fft == max_temp_fft)
             max_freq = time_fft[index_fft]
 
             pyplot.plot(time_fft, temp_fft)
@@ -136,8 +137,8 @@ class ZLoopTuner:
         #     print 'false'
     
     def update_period(self, time_diff):
-        td_weight = (1 / self.num_periods) * time_diff
-        ex_weight = ((self.num_periods - 1) / self.num_periods) * self.sampling_period
+        td_weight = (1.0 / self.num_periods) * time_diff
+        ex_weight = ((self.num_periods - 1.0) / self.num_periods) * self.sampling_period
         self.sampling_period = td_weight + ex_weight
         self.num_periods = self.num_periods + 1
 
