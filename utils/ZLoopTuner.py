@@ -1,12 +1,13 @@
 import numpy as np
-from matplotlib import pyplot
 import labrad
 import time
+from scipy import signal
+from matplotlib import pyplot
 
 
 class ZLoopTuner:
     def __init__(self):
-        self.sample_time = 60 # amount of time to collect temperature data before changing kp
+        self.sample_time = 360 # amount of time to collect temperature data before changing kp
         self.num_periods = 1
         self.cxn = labrad.connect()
         self.reg = self.cxn.registry
@@ -47,6 +48,7 @@ class ZLoopTuner:
 
             # CHECK FOR PERIODIC BEHAVIOR
             temp_fft = np.fft.fft(self.temperatures)
+            temp_fft = signal.detrend(temp_fft)
             time_fft = np.fft.fftfreq(len(self.temperatures), self.sampling_period)
             dc_index = np.where(time_fft == 0)
             temp_fft[dc_index] = 0
@@ -57,21 +59,24 @@ class ZLoopTuner:
             index_fft = np.where(temp_fft == max_temp_fft)
             max_freq = time_fft[index_fft]
 
-            pyplot.plot(time_fft, temp_fft)
-            pyplot.show()
-
             if max_temp_fft > (avg_fft + (3 * std_fft)):
+                print 'Critical Kp determined.'
+                pyplot.plot(time_fft, temp_fft)
+                pyplot.show()
                 self.periodic = True
                 self.tu = (1 / max_freq)
                 self.ku = self.kp
 
             else:
+                print 'Periodicity not detected.'
+                pyplot.plot(time_fft, temp_fft)
+                pyplot.show()
                 self.kp = self.kp + 0.01
                 self.adr.set_pid_kp(self.kp)
 
-
         # DETERMINE FINAL GAINS
         # final gains set according to Ziegler-Nichols method
+        print 'Setting final gains'
         self.kp = self.ku * 0.6
         self.ki = self.ku / self.tu * 1.2
         self.kd = self.ku * self.tu * 3 / 40
@@ -81,60 +86,6 @@ class ZLoopTuner:
         self.adr.set_pid_kd(self.kd)
 
         print('PID is tuned. Have nice day.')
-
-        # x = np.arange(0.0001, 10, .005)
-        # noise = np.random.normal(0, 1, 2000)
-        # print noise
-        # y = np.exp(2j * np.pi * x + 1.63)
-        # for i in range(0, 2000):
-        #     y[i] = y[i] + noise[i]
-        # # pyplot.plot(x, y)
-        # # pyplot.show()
-        #
-        # x_fft = np.fft.fftfreq(x.size, d=0.005)
-        # y_fft = np.fft.fft(y)
-        # #
-        # # pyplot.plot(x_fft, y_fft)
-        # # axes = pyplot.gca()
-        # # axes.set_xlim([-2.5, 2.5])
-        # # pyplot.show()
-        #
-        # y_abs = abs(y_fft)
-        #
-        # average = np.average(y_abs)
-        # print average
-        #
-        # if max(y_abs) > 3 * average:
-        #     print 'true'
-        # else:
-        #     print 'false'
-        #
-        # noise_fft = np.fft.fft(noise)
-        # # pyplot.plot(x_fft, np.fft.fft(noise_fft))
-        # # axes = pyplot.gca()
-        # # pyplot.title('noise')
-        # # pyplot.show()
-        # avg_arr = []
-        # std_arr = []
-        # average = np.average(abs(noise_fft))
-        # for i in range(0, 2000):
-        #     avg_arr.append(average)
-        #
-        # std_dev = np.std(y_abs)
-        # for i in range(0, 2000):
-        #     std_arr.append(average + 5 * std_dev)
-        #
-        # print std_dev
-        #
-        # pyplot.plot(x_fft, y_abs,  x_fft, std_arr)
-        # axes = pyplot.gca()
-        # pyplot.title('abs')
-        # pyplot.show()
-        #
-        # if max(noise_fft) > average + (3 * std_dev):
-        #     print 'true'
-        # else:
-        #     print 'false'
     
     def update_period(self, time_diff):
         td_weight = (1.0 / self.num_periods) * time_diff
