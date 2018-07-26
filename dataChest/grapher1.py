@@ -2,6 +2,7 @@
 
 import os
 import sys
+from importlib import import_module
 from PyQt4 import QtCore, QtGui
 from functools import partial
 import pyqtgraph as pg
@@ -110,7 +111,7 @@ class Grapher(QtGui.QWidget):
         self.pluginTypesList = QtGui.QListWidget(self)
         self.populatePluginList(self)
 
-        self.pluginTypesList.itemClicked.connect(self.listItemClicked)
+        self.pluginTypesList.itemClicked.connect(self.pluginClicked)
         self.pluginTypesList.setAlternatingRowColors(True)
         self.pluginTypesWidget = QtGui.QWidget(self)
         self.pluginTypesLayout = QtGui.QVBoxLayout()
@@ -149,7 +150,7 @@ class Grapher(QtGui.QWidget):
         self.graphScrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.graphScrollArea.setWidget(self.graphsWidget)
         self.graphScrollArea.setWidgetResizable(True) # What happens without?
-        
+
         self.splitterHorizontal = QtGui.QSplitter(QtCore.Qt.Horizontal)
         self.splitterHorizontal.addWidget(self.splitterVertical)
         self.splitterHorizontal.addWidget(self.graphScrollArea)
@@ -176,7 +177,19 @@ class Grapher(QtGui.QWidget):
         self.plotType = None
         self.selectedDepVars = []
 
-    def listItemClicked(self, item):
+    def applyPlugins(self):
+        """This is not implemented yet, but will eventually allow plugins to be
+        defined to alter the data."""
+        # self.unalteredData = self.data
+        pluginList =  [str(self.pluginTypesList.item(i).text())
+                            for i in range(self.pluginTypesList.count())
+                            if self.pluginTypesList.item(i).checkState() == QtCore.Qt.Checked]
+        for plugin in pluginList:
+            plugin = import_module('Plugins.'+plugin[:-3])
+            self.selectedData = plugin.run(self.selectedData)
+        self.updatePlotTypeSelector()
+
+    def pluginClicked(self, item):
         if item.checkState() == QtCore.Qt.Checked:
             self.numChecked -= 1
             item.setCheckState(QtCore.Qt.Unchecked)
@@ -193,6 +206,7 @@ class Grapher(QtGui.QWidget):
             self.pluginTypesList.setCurrentRow(0)
         pluginPath = os.path.join(self.pluginRoot, str(item.text()))
         print pluginPath
+        self.applyPlugins()
 
     def populatePluginList(self, *args):
         print 'here'
@@ -203,11 +217,12 @@ class Grapher(QtGui.QWidget):
             pluginTitle = plugin.readline()
             pluginDescription = plugin.readline()
 
-            if (pluginTitle.startswith('*#TITLE:')):
-                pluginTitle = pluginTitle[9:].strip()
-                if pluginDescription.startswith('*#DESCR:'):
-                    pluginDescription = pluginDescription[9:].strip()
-                    listItem = QtGui.QListWidgetItem(pluginTitle + '   |   ' + pluginDescription)
+            if (pluginTitle.startswith('#TITLE:')):
+                pluginTitle = pluginTitle[8:].strip()
+                if pluginDescription.startswith('#DESCR:'):
+                    pluginDescription = pluginDescription[8:].strip()
+                    # listItem = QtGui.QListWidgetItem(pluginTitle + '   |   ' + pluginDescription)
+                    listItem = QtGui.QListWidgetItem(pluginFilename)
                 else:
                     listItem = QtGui.QListWidgetItem(pluginTitle)
             else:
@@ -294,11 +309,6 @@ class Grapher(QtGui.QWidget):
         self.selectedData = data
 
         self.applyPlugins()
-
-    def applyPlugins(self):
-        """This is not implemented yet, but will eventually allow plugins to be
-        defined to alter the data."""
-        self.updatePlotTypeSelector()
 
     def updatePlotTypeSelector(self):
         """Update plotTypes list based on selected dataset.  Selects currently
@@ -471,7 +481,7 @@ class Grapher(QtGui.QWidget):
         cmap = pg.ColorMap(pos, color)
         lut = cmap.getLookupTable(0., 1., 256)
         img.setLookupTable(lut)
-        
+
         min = np.min(depGrids[index])
         max = np.max(depGrids[index])
 
@@ -579,8 +589,8 @@ class Grapher(QtGui.QWidget):
                 self.plot1D()
             elif len(self.indepVarsList) == 2:
                 self.plot2D()
-        
-        
+
+
 class ColorBar(pg.GraphicsObject):
 
     def __init__(self, cmap, width, height, min, max, ticks=None, tick_labels=None, label=None, clear = False):
@@ -639,7 +649,7 @@ class ColorBar(pg.GraphicsObject):
 
         # paint colorbar
         p.drawPicture(0, 0, self.pic)
-        
+
     def boundingRect(self):
         return pg.QtCore.QRectF(self.pic.boundingRect())
 
