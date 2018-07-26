@@ -5,7 +5,7 @@ import sys
 from PyQt4 import QtCore, QtGui
 from functools import partial
 import pyqtgraph as pg
-from time import sleep
+from time import sleep, time
 import datetime
 from dateutil import tz
 
@@ -45,6 +45,7 @@ class TimeAxisItem(pg.AxisItem):
 class Grapher(QtGui.QWidget):
 
     def __init__(self, parent = None):
+        print '__init__'
         self.cb = None
         super(Grapher, self).__init__(parent)
         self.setWindowTitle('Data Chest Image Browser')
@@ -56,7 +57,7 @@ class Grapher(QtGui.QWidget):
         self.pluginRoot = os.environ["REPOSITORY_ROOT"]
         self.pluginRoot = os.path.join(self.pluginRoot, "servers", "dataChest", "Plugins")
 
-        self.filters =QtCore.QStringList()
+        self.filters = QtCore.QStringList()
         self.filters.append("*.hdf5")
 
         self.d = dataChest(None, True)
@@ -175,8 +176,12 @@ class Grapher(QtGui.QWidget):
 
         self.plotType = None
         self.selectedDepVars = []
+        self.font = QtGui.QFont()
+        self.font.setPixelSize(15)
+        print '__init__ returned'
 
     def listItemClicked(self, item):
+        print 'listItemClicked'
         if item.checkState() == QtCore.Qt.Checked:
             self.numChecked -= 1
             item.setCheckState(QtCore.Qt.Unchecked)
@@ -189,16 +194,15 @@ class Grapher(QtGui.QWidget):
             item.setCheckState(QtCore.Qt.Checked)
             pluginRow = self.pluginTypesList.row(item)
             self.pluginTypesList.takeItem(pluginRow)
-            self.pluginTypesList.insertItem(0, item)
+            self.pluginTypesList.insertItem(self.numChecked-1, item)
             self.pluginTypesList.setCurrentRow(0)
-        pluginPath = os.path.join(self.pluginRoot, str(item.text()))
-        print pluginPath
+        pluginPath = os.path.join(self.pluginRoot, str(item.whatsThis()))
+        self.applyPlugins()
+        print 'listItemClicked returned'
 
     def populatePluginList(self, *args):
-        print 'here'
-        print os.listdir(self.pluginRoot)
+        print 'populatePluginList'
         for pluginFilename in (os.listdir(self.pluginRoot)):
-            print 'hi'
             plugin = open(os.path.join(self.pluginRoot, pluginFilename), 'r')
             pluginTitle = plugin.readline()
             pluginDescription = plugin.readline()
@@ -213,13 +217,16 @@ class Grapher(QtGui.QWidget):
             else:
                 listItem = QtGui.QListWidgetItem(pluginFilename)
 
+            listItem.setWhatsThis(pluginFilename)
             listItem.setFlags(QtCore.Qt.ItemIsUserCheckable)
             listItem.setCheckState(QtCore.Qt.Unchecked)
             listItem.setFlags(QtCore.Qt.ItemIsEnabled)
             self.pluginTypesList.addItem(listItem)
+        print 'populatePluginList returned'
 
     @QtCore.pyqtSlot(QtCore.QModelIndex)
     def fileBrowserSelectionMade(self, index):
+        print 'fileBrowserSelectionMade'
         # Called when a directory tree selection is made.
         indexItem = self.model.index(index.row(), 0, index.parent())
         fileName = str(self.model.fileName(indexItem))
@@ -239,6 +246,7 @@ class Grapher(QtGui.QWidget):
                 self.filePathArray = filePath
                 self.filePathArray.append(fileName)
                 self.prepareData()
+        print 'fileBrowserSelectionMade returned'
 
     def checkFileForUpdates(self):
         if self.filePathStr != '':
@@ -248,10 +256,11 @@ class Grapher(QtGui.QWidget):
                 self.prepareData()
 
     def prepareData(self):
+        print 'prepareData'
+        stime = time()
         d = self.d
         d.cd(self.filePathArray[:-1])
         d.openDataset(self.filePathArray[-1])
-
         datasetVariables = d.getVariables()
         self.datasetName = d.getDatasetName()
         self.indepVarsList = datasetVariables[0]
@@ -294,13 +303,23 @@ class Grapher(QtGui.QWidget):
         self.selectedData = data
 
         self.applyPlugins()
+        print 'prepareData returned'
 
     def applyPlugins(self):
+        print 'applyPlugins'
         """This is not implemented yet, but will eventually allow plugins to be
         defined to alter the data."""
+        plugins = []
+        for i in range(0, int(self.pluginTypesList.__len__())):
+            item = self.pluginTypesList.item(i)
+            if item.checkState() != 0:
+                plugins.append(str(item.whatsThis()))
         self.updatePlotTypeSelector()
+        print 'applyPlugins returned'
+
 
     def updatePlotTypeSelector(self):
+        print 'updatePlotTypeSelector'
         """Update plotTypes list based on selected dataset.  Selects currently
         selected type if available."""
         self.plotTypesComboBox.clear()
@@ -313,8 +332,10 @@ class Grapher(QtGui.QWidget):
         else:
             self.plotTypesComboBox.setCurrentIndex(0)
         self.plotTypeSelected(str(self.plotTypesComboBox.currentText()))
+        print 'updatePlotTypeSelector returned'
 
     def plotTypeSelected(self, plotType):
+        print 'plotTypeSelected'
         """Called when a plotType selection is made from drop down."""
         self.plotType = plotType
         self.updatePlotTypeOptions(plotType)
@@ -322,8 +343,10 @@ class Grapher(QtGui.QWidget):
             self.plot1D()
         elif len(self.indepVarsList) == 2:
             self.plot2D()
+        print 'plotTypeSelected returned'
 
     def updatePlotTypeOptions(self, plotType):
+        print 'updatePlotTypeOptions'
         """Update area below plotType, selection drop down (add/remove variables)"""
         # select first dep variable and all others with same units and shape
         varsWithCommonUnitsDict = self.getVarsWithCommonUnitsDict()
@@ -353,8 +376,10 @@ class Grapher(QtGui.QWidget):
         optionsSlice.addStretch(1)
         self.scrollLayout.addLayout(optionsSlice)
         self.scrollLayout.addStretch(1)
+        print 'updatePlotTypeOptions returned'
 
     def varStateChanged(self, var):
+        print 'varStateChanged'
         if len(self.indepVarsList) == 2:
             self.selectedDepVars = [var]
 
@@ -376,6 +401,7 @@ class Grapher(QtGui.QWidget):
                 self.plot1D()
             elif len(self.indepVarsList) == 2:
                 self.plot2D()
+        print 'varStateChanged returned'
 
     def extractIndepData(self, data):
         """
@@ -387,6 +413,7 @@ class Grapher(QtGui.QWidget):
         vector.  The data must be in the form where each column is a point in the
         dataset (Type 2 data).  The first row of each dimension is the indep vals.
         """
+        print 'extractIndepData'
         indepData = [np.unique(np.array(data[i])) for i in range(len(self.indepVarsList))]
         indepShape = [len(v) for v in indepData]
         depData = [np.full(indepShape, np.nan) for _ in range(len(self.depVarsList))]
@@ -396,9 +423,11 @@ class Grapher(QtGui.QWidget):
             for i in range(len(depData)):
                 depData[i][indepIndicies] = row[i+len(self.indepVarsList)]
         return indepData, depData
+        print 'extractIndepData returned'
 
     def plot1D(self):
-
+        print 'plot1D'
+        stime=time()
         if self.cb is not None:
             self.cb.hide()
 
@@ -440,8 +469,14 @@ class Grapher(QtGui.QWidget):
                      name = self.selectedDepVars[i],
                      pen=(i,len(self.selectedDepVars)))
 
+        p.getAxis('left').tickFont = self.font
+        p.getAxis('bottom').tickFont = self.font
+
+        print 'plot1D returned'
 
     def plot2D(self):
+        print 'plot2D'
+        stime = time()
         (xVals, yVals), depGrids = self.extractIndepData(self.selectedData)
         varNames = [var[0] for var in self.depVarsList]
         index = varNames.index(self.selectedDepVars[0])
@@ -491,11 +526,17 @@ class Grapher(QtGui.QWidget):
 
         p.scene().addItem(self.cb)
 
-        p.autoRange()
+        axis = p.getAxis('left')
+        axis.tickFont = self.font
+        axis.setWidth(100)
+        axis = p.getAxis('bottom').tickFont = self.font
 
+        p.autoRange()
+        print 'plot2D returned'
 
 
     def clearLayout(self, layout):
+        print 'clearLayout'
         # Clear the plotType options layout and all widgets therein.
         for i in reversed(range(layout.count())):
             item = layout.itemAt(i)
@@ -506,22 +547,26 @@ class Grapher(QtGui.QWidget):
                 self.clearLayout(item.layout())
             # remove the item from layout
             layout.removeItem(item)
+        print 'clearLayout returned'
 
     def convertPathToArray(self, path):
-        print "self.root=", self.root
-        print "path=", path
+        print 'convertPathToArray'
         if self.root + "/" in path:
             path = path.replace(self.root+"/", '')
         elif self.root in path:
             path = path.replace(self.root, '')
+        print 'convertPathToArray returned'
         return path.split('/')
 
 
     def clearGraphicsLayout(self):
+        print 'clearGraphicsLayout'
         # Remove all widgets from GraphicsLayoutWidget
         self.graphicsLayout.clear()
+        print 'clearGraphicsLayout returned'
 
     def getListOfAvailabePlotTypes(self, selectedVarsList=None):
+        print 'getListOfAvailablePlotTypes'
         if selectedVarsList is None:
             selectedVarsList = self.depVarsList
         if len(self.indepVarsList) == 1:
@@ -538,9 +583,10 @@ class Grapher(QtGui.QWidget):
                 return ["2D Scan", "3D Contour", "Projection"]
         else:
             return ["There are no available plot types for "+str(len(self.indepVarsList))+ " dimensional data."]
-
+        print 'getListOfAvailablePlotTypes returned'
 
     def getVarsWithCommonUnitsDict(self):
+        print 'getVarsWithCommonUnitsDict'
         compatibleVarsDict = {}
         for depVar in self.depVarsList:
             # depVar of form (name, shape, dtype, units)
@@ -551,9 +597,10 @@ class Grapher(QtGui.QWidget):
             else:
                 compatibleVarsDict[units].append(name)
         return compatibleVarsDict
+        print 'getVarsWithCommonUnitsDict returned'
 
     def getVarsWithCommonShapeList(self, varsWithSameUnits, selectedVarName):
-
+        print 'getVarsWithCommonShapeList'
         varsWithCommonShapeList = []
         for depVar in self.depVarsList:
             # depVar of form (name, shape, dtype, units)
@@ -571,15 +618,18 @@ class Grapher(QtGui.QWidget):
                 varsWithCommonShapeList.append(name)
 
         return varsWithCommonShapeList
+        print 'getVarsWithCommonShapeList returned'
 
     # recenter with spacebar
     def keyPressEvent(self, QKeyEvent):
+        print 'keyPressEvent'
         if QKeyEvent.key() == QtCore.Qt.Key_Space:
             if len(self.indepVarsList) == 1:
                 self.plot1D()
             elif len(self.indepVarsList) == 2:
                 self.plot2D()
-        
+        print 'keyPressEvent returned'
+
         
 class ColorBar(pg.GraphicsObject):
 
