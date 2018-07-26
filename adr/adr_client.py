@@ -311,6 +311,40 @@ class ADRController(object):#Tkinter.Tk):
                                                         state=Tkinter.DISABLED)
         self.currentVField.pack(side=Tkinter.LEFT)
         Tkinter.Label(monitorFrame, text="(V)").pack(side=Tkinter.LEFT)
+        dateFrame = Tkinter.Frame(root)
+        dateFrame.pack(side=Tkinter.TOP)
+        #heat switch buttons
+        now = datetime.datetime.now()
+        Tkinter.Label(dateFrame, text="DAY").pack(side=Tkinter.LEFT)
+        self.dateDay = Tkinter.DoubleVar()
+        self.dateDay.set(int(now.day))
+        # self.dateDay.trace('w',self.changeRegTemp)
+        self.dateDayField = Tkinter.Entry(dateFrame, textvariable=self.dateDay)
+        self.dateDayField.pack(side=Tkinter.LEFT)
+        Tkinter.Label(dateFrame, text="MONTH").pack(side=Tkinter.LEFT)
+        self.dateMonth = Tkinter.DoubleVar()
+        self.dateMonth.set(int(now.month))
+        # self.dateMonth.trace('w',self.changeRegTemp)
+        self.dateMonthField = Tkinter.Entry(dateFrame, textvariable=self.dateMonth)
+        self.dateMonthField.pack(side=Tkinter.LEFT)
+        Tkinter.Label(dateFrame, text="HOUR").pack(side=Tkinter.LEFT)
+        self.dateHour = Tkinter.DoubleVar()
+        self.dateHour.set(int(now.hour))
+        # self.dateHour.trace('w',self.changeRegTemp)
+        self.dateHourField = Tkinter.Entry(dateFrame, textvariable=self.dateHour)
+        self.dateHourField.pack(side=Tkinter.LEFT)
+        Tkinter.Label(dateFrame, text="MINUTE").pack(side=Tkinter.LEFT)
+        self.dateMinute = Tkinter.DoubleVar()
+        self.dateMinute.set(int(now.minute))
+        # self.dateMinute.trace('w',self.changeRegTemp)
+        self.dateMinuteField = Tkinter.Entry(dateFrame, textvariable=self.dateMinute)
+        self.dateMinuteField.pack(side=Tkinter.LEFT)
+        self.dateEnable = Tkinter.Button(master=dateFrame,
+                                            text='Set Autocycle',
+                                            command=lambda: self.autocycle())
+        self.dateEnable.pack(side=Tkinter.LEFT)
+        # self.dateEnable.configure(state=Tkinter.ENABLED)
+
         self.fig.tight_layout()
         self.setFieldLimits()
         root.protocol("WM_DELETE_WINDOW", self._quit) #X BUTTON
@@ -642,6 +676,28 @@ class ADRController(object):#Tkinter.Tk):
         self.regulateButton.configure(text='Regulate', command=self.regulate)
         self.magUpButton.configure(state=Tkinter.NORMAL)
         self.regulating = False
+        
+    def autocycle(self):
+        day = str(self.dateDayField.get())
+        month = str(self.dateMonthField.get())
+        hour = str(self.dateHourField.get())
+        minute = str(self.dateMinuteField.get())
+        year = str(datetime.datetime.now().year)
+       
+        if len(day) == 1:
+            day = '0' + day
+            
+        if len(month) == 1:
+            month = '0' + month
+            
+        if len(hour) == 1:
+            hour = '0' + hour
+            
+        if len(minute) == 1:
+            minute = '0' + minute
+        
+        time = datetime.datetime.strptime(day+month+hour+minute+year, "%d%m%H%M%Y")
+              
 
     def _quit(self):
         """ called when the window is closed."""
