@@ -150,7 +150,7 @@ class Grapher(QtGui.QWidget):
         self.graphScrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.graphScrollArea.setWidget(self.graphsWidget)
         self.graphScrollArea.setWidgetResizable(True) # What happens without?
-        
+
         self.splitterHorizontal = QtGui.QSplitter(QtCore.Qt.Horizontal)
         self.splitterHorizontal.addWidget(self.splitterVertical)
         self.splitterHorizontal.addWidget(self.graphScrollArea)
@@ -177,7 +177,7 @@ class Grapher(QtGui.QWidget):
         self.plotType = None
         self.selectedDepVars = []
         self.font = QtGui.QFont()
-        self.font.setPixelSize(15)
+        self.font.setPixelSize(22)
         print '__init__ returned'
 
     def listItemClicked(self, item):
@@ -462,8 +462,8 @@ class Grapher(QtGui.QWidget):
                     **STYLE_DEFAULTS)
         p.setLabel('left', pOptions["Y Label"], units=pOptions["Y Units"],
                     **STYLE_DEFAULTS)
-        # p.getAxis('bottom').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
-        # p.getAxis('left').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
+        p.getAxis('bottom').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
+        p.getAxis('left').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
         for i in range(len(self.selectedDepVars)):
             p.plot( x=self.selectedData[0], y=yVals[i],
                      name = self.selectedDepVars[i],
@@ -490,8 +490,8 @@ class Grapher(QtGui.QWidget):
         p.setTitle(self.datasetName, size='22pt')
         p.setLabel('bottom', self.indepVarsList[0][0], units=self.indepVarsList[0][3], **STYLE_DEFAULTS)
         p.setLabel('left', self.indepVarsList[1][0], units=self.indepVarsList[1][3], **STYLE_DEFAULTS)
-        # p.getAxis('bottom').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
-        # p.getAxis('left').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
+        p.getAxis('bottom').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
+        p.getAxis('left').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
         img = pg.ImageItem()
         img.setImage(depGrids[index])
         p.addItem(img)
@@ -506,7 +506,7 @@ class Grapher(QtGui.QWidget):
         cmap = pg.ColorMap(pos, color)
         lut = cmap.getLookupTable(0., 1., 256)
         img.setLookupTable(lut)
-        
+
         min = np.min(depGrids[index])
         max = np.max(depGrids[index])
 
@@ -630,7 +630,7 @@ class Grapher(QtGui.QWidget):
                 self.plot2D()
         print 'keyPressEvent returned'
 
-        
+
 class ColorBar(pg.GraphicsObject):
 
     def __init__(self, cmap, width, height, min, max, ticks=None, tick_labels=None, label=None, clear = False):
@@ -689,7 +689,7 @@ class ColorBar(pg.GraphicsObject):
 
         # paint colorbar
         p.drawPicture(0, 0, self.pic)
-        
+
     def boundingRect(self):
         return pg.QtCore.QRectF(self.pic.boundingRect())
 
