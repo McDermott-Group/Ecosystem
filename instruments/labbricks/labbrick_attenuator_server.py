@@ -73,9 +73,11 @@ class LBAttenuatorServer(LabradServer):
         """Initialize the Lab Brick Attenuator Server."""
         area51_root = os.path.join(os.environ['REPOSITORY_ROOT'], 'area51')
         self.DLL_path = os.path.join(area51_root, 'instruments\\labbricks\\VNX_atten.dll')
+        self.DLL_path_old = os.path.join(area51_root, 'instruments\\labbricks\\VNX_atten_old.dll')
         self.autoRefresh = True
         try:
             self.VNXdll = yield ctypes.CDLL(self.DLL_path)
+            self.VNXdll_old = yield ctypes.CDLL(self.DLL_path_old)
         except Exception:
             raise Exception('Could not find Lab Brick Attenuator DLL')
 
@@ -144,11 +146,11 @@ class LBAttenuatorServer(LabradServer):
             DIDs = (ctypes.c_uint * MAX_NUM_ATTEN)()
             DIDs_ptr = ctypes.cast(DIDs, ctypes.POINTER(ctypes.c_uint))
             yield self.VNXdll.fnLDA_GetDevInfo(DIDs_ptr)
-            for idx in range(n):
+            for idx in range(0, n):
                 SN = yield self.VNXdll.fnLDA_GetSerialNumber(DIDs_ptr[idx])
                 self._SN2DID.update({SN: DIDs_ptr[idx]})
                 self.select_device(self._pseudo_ctx, SN)
-                model = yield self.model(self._pseudo_ctx)
+                model = self.model(self._pseudo_ctx)
                 attn = yield self.attenuation(self._pseudo_ctx)
                 min_attn = yield self.min_attenuation(self._pseudo_ctx)
                 max_attn = yield self.max_attenuation(self._pseudo_ctx)
@@ -241,7 +243,7 @@ class LBAttenuatorServer(LabradServer):
         """Return attenuator model name."""
         DID = ctypes.c_uint(self.getDeviceDID(c))
         model = ctypes.create_string_buffer(MAX_MODEL_NAME)
-        name_length = yield self.VNXdll.fnLDA_GetModelName(DID, model)
+        name_length = yield self.VNXdll_old.fnLDA_GetModelName(DID, model)
         returnValue(model.raw[0:name_length])
 
 
