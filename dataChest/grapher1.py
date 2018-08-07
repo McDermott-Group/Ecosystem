@@ -151,10 +151,13 @@ class Grapher(QtGui.QWidget):
         self.graphScrollArea.setWidget(self.graphsWidget)
         self.graphScrollArea.setWidgetResizable(True) # What happens without?
 
+        self.parameterTable = QtGui.QTableWidget(self)
+
         self.splitterHorizontal = QtGui.QSplitter(QtCore.Qt.Horizontal)
         self.splitterHorizontal.addWidget(self.splitterVertical)
         self.splitterHorizontal.addWidget(self.graphScrollArea)
-        self.splitterHorizontal.setSizes([300,800])
+        self.splitterHorizontal.addWidget(self.parameterTable)
+        self.splitterHorizontal.setSizes([300,800, 300])
 
         hbox.addWidget(self.splitterHorizontal)
         self.setLayout(hbox)
@@ -262,6 +265,7 @@ class Grapher(QtGui.QWidget):
         d.cd(self.filePathArray[:-1])
         d.openDataset(self.filePathArray[-1])
         datasetVariables = d.getVariables()
+        self.parameters = d.getParameterList()
         self.datasetName = d.getDatasetName()
         self.indepVarsList = datasetVariables[0]
         self.depVarsList = datasetVariables[1]
@@ -302,8 +306,36 @@ class Grapher(QtGui.QWidget):
 
         self.selectedData = data
 
+        self.populateParameterTable()
         self.applyPlugins()
         print 'prepareData returned'
+
+    def populateParameterTable(self):
+        self.parameterTable.setRowCount(len(self.parameters))
+        self.parameterTable.setColumnCount(3)
+        d = self.d
+        print self.parameters
+
+        i = 0
+        skip = False
+        for parameter in self.parameters:
+            if skip == False:
+                parameterValue = QtGui.QTableWidgetItem(str(d.getParameter(str(parameter))))
+                try:
+                    parameterUnit = d.getParameter(str(parameter) + ' Units')
+                    skip = True
+                except:
+                    parameterUnit = None
+                parameter = QtGui.QTableWidgetItem(str(parameter))
+                self.parameterTable.setItem(i, 0, parameter)
+                self.parameterTable.setItem(i, 1, parameterValue)
+
+                if parameterUnit is not None:
+                    self.parameterTable.setItem(i, 2, QtGui.QTableWidgetItem(parameterUnit))
+                i = i+1
+            else:
+                skip = False
+
 
     def applyPlugins(self):
         print 'applyPlugins'
