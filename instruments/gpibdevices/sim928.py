@@ -21,6 +21,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad.server import setting
 from labrad.gpib import GPIBManagedServer
 from labrad import units
+from exceptions import ValueError
 
 TC = "'end'" # Termination Character
 LF = '\n' # Line Feed
@@ -123,7 +124,14 @@ class SIM928Server(GPIBManagedServer):
             voltage = yield self.query(c,
                                            slot_number, 
                                            "VOLT?")
-            voltage = float(voltage)
+            try:
+                voltage = float(voltage)
+            except(ValueError):
+                old_voltage = voltage
+                voltage = ''.join([i for i in voltage if (i.isdigit() or i == '-' or i == '.')])
+                voltage = float(voltage)
+                print ('The value ' + old_voltage + ' was returned by the SIM928, this value was automatically converted to ' + voltage + '.')
+                        
             value = voltage * units.V
             
             # try:
