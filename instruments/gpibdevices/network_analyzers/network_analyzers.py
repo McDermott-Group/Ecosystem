@@ -317,6 +317,7 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
         measurement_finished = False 
         yield self.write('*OPC') # will trigger bit in ESR when measurement finished
         while measurement_finished == False:
+            yield sleep(0.05) # polling rate = 20Hz 
             opc_bit = yield self.query('*ESR?') # poll ESR for measurement completion
             opc_bit = int(opc_bit) & 0x1
             if (opc_bit == 1):
