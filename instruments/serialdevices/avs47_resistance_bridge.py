@@ -28,6 +28,7 @@ from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting
 import labrad.units as units
 from labrad import util
+import socket
 
 if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
     SCRIPT_PATH = os.path.dirname(os.getcwd())
@@ -87,9 +88,13 @@ class AVS47ResistanceBridgeServer(DeviceServer):
     def initServer(self):
         print('Server initializing...')
         self.reg = self.client.registry()
+        yield self.loadSensorInfo()
+        # default excitation and range: 30uV, 20kOhm
+        self.excitation = "3"
+        self.range = "5"
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
-        print self.serialLinks
+        print self.sensors
         
     @setting(9, 'Start Server', returns='b')
     def startServer(self, c):
@@ -105,6 +110,21 @@ class AVS47ResistanceBridgeServer(DeviceServer):
         reading = yield self.dev.read_line()
         reading = yield str(reading.rstrip("\r\n"))
         returnValue(reading)
+     
+    @setting(11, 'Get Resistances', returns='*v[Ohm]')
+    def getResistances(self, c):
+        self.dev = self.selectedDevice(c)
+        resistances = []
+        for i in range(0, 8):
+            self.dev.write_line("inp1;mux%s;ran%s;exc%s"%(str(i), self.range, self.excitation))
+            yield sleep(.1)
+            self.dev.write_line("res?")
+            yield sleep(.1)
+            reading = yield self.dev.read_line()
+            reading = reading.rstrip("\r\n")
+            reading = float(reading) * units.Ohm
+            resistances.append(reading)
+        returnValue(resistances)
         
     @inlineCallbacks
     def loadConfigInfo(self):
@@ -117,7 +137,28 @@ class AVS47ResistanceBridgeServer(DeviceServer):
             p.get(k, key=k)
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys) 
-
+        
+    @inlineCallbacks
+    def loadSensorInfo(self):
+        reg = yield self.reg
+        dir = yield reg.dir()
+        print dir
+        yield reg.cd(['', 'Servers', 'AVS47 Resistance Bridge'])
+        yield reg.cd(['Sensors'])
+        data = yield reg.get('dip1')
+        print data
+        dirs, keys = yield reg.dir()
+        p = yield reg.packet()
+        key = None
+        for k in keys:
+            if k == socket.gethostname():
+                key = k
+        
+        if key is not None:
+            p.get(key, key=key)
+            ans = yield p.send()
+            self.sensors = ans[key]
+        
     @inlineCallbacks    
     def findDevices(self):
         """Find available devices from a list stored in the registry."""
