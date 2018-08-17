@@ -301,33 +301,49 @@ class Grapher(QtGui.QWidget):
         self.applyPlugins()
 
     def populateParameterTable(self):
-        self.parameterTable.setRowCount(len(self.parameters))
+        d = self.d
+        num_units = 0
+        for parameter in self.parameters:
+            try:
+                d.getParameter(str(parameter) + ' Units')
+                num_units = num_units + 1
+            except:
+                pass
+
+        print num_units
+
+        num_parameters = len(self.parameters)
+        self.parameterTable.setRowCount(num_parameters - num_units)
         self.parameterTable.setColumnCount(3)
         self.parameterTable.setColumnWidth(0, 120)
         self.parameterTable.setColumnWidth(1, 200)
         self.parameterTable.setColumnWidth(2, 50)
-        d = self.d
-
         i = 0
         skip = False
         for parameter in self.parameters:
             if skip == False:
-                parameterValue = QtGui.QTableWidgetItem(str(d.getParameter(str(parameter))))
+                parameterValueText = str(d.getParameter(str(parameter)))
+                parameterValue = QtGui.QTableWidgetItem(parameterValueText)
+                parameterValue.setToolTip(parameterValueText)
                 try:
                     parameterUnit = d.getParameter(str(parameter) + ' Units')
                     skip = True
                 except:
                     parameterUnit = None
-                parameter = QtGui.QTableWidgetItem(str(parameter))
+                parameterText = str(parameter)
+                parameter = QtGui.QTableWidgetItem(parameterText)
+                parameter.setToolTip(parameterText)
                 self.parameterTable.setItem(i, 0, parameter)
                 self.parameterTable.setItem(i, 1, parameterValue)
 
                 if parameterUnit is not None:
-                    self.parameterTable.setItem(i, 2, QtGui.QTableWidgetItem(parameterUnit))
+                    parameterUnitText = str(parameterUnit)
+                    parameterUnit = QtGui.QTableWidgetItem(parameterUnitText)
+                    parameterUnit.setToolTip(parameterUnitText)
+                    self.parameterTable.setItem(i, 2, parameterUnit)
                 i = i+1
             else:
                 skip = False
-
 
     def applyPlugins(self):
         """This is not implemented yet, but will eventually allow plugins to be
