@@ -997,16 +997,19 @@ class ADRServer(DeviceServer):
     @setting(129, 'Stop Compressor')
     def stopCompressor(self,c):
         """Stop Compressor."""
-        try:
-            yield self.client['CP2800 Compressor'].stop()
-            self.logMessage('Compressor stopped.')
-            now = datetime.datetime.utcnow()
-            self.ADRSettings['Stop Compressor Datetime'] = now
-            reg = self.client.registry
-            yield reg.cd(self.ADRSettingsPath)
-            yield reg.set('Stop Compressor Datetime',now)
-        except Exception as e:
-            self.logMessage('Stopping Compressor failed.',alert=True)
+        if self.state['PSCurrent']['A'] < 0.5:
+            try:
+                yield self.client['CP2800 Compressor'].stop()
+                self.logMessage('Compressor stopped.')
+                now = datetime.datetime.utcnow()
+                self.ADRSettings['Stop Compressor Datetime'] = now
+                reg = self.client.registry
+                yield reg.cd(self.ADRSettingsPath)
+                yield reg.set('Stop Compressor Datetime',now)
+            except Exception as e:
+                self.logMessage('Stopping Compressor failed.',alert=True)
+        else:
+            self.logMessage('Compressor should not be stopped with current going through the magnet.',alert=True)
 
     @setting(130, 'Set PID KP',k=['v'])
     def setPIDKP(self,c,k):
