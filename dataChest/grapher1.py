@@ -83,11 +83,16 @@ class Grapher(QtGui.QWidget):
         self.directoryTree.header().setStretchLastSection(False)
         self.directoryTree.clicked.connect(self.fileBrowserSelectionMade)
 
+        self.sort = QtGui.QSortFilterProxyModel(self.directoryTree)
+        self.sort.setSourceModel(self.model)
+        self.directoryTree.setSortingEnabled(True)
+
         self.dirTreeWidget = QtGui.QWidget(self)
         self.dirTreeLayout = QtGui.QVBoxLayout()
         self.dirTreeWidget.setLayout(self.dirTreeLayout)
         self.dirTreeLayout.addWidget(self.directoryBrowserLabel)
         self.dirTreeLayout.addWidget(self.directoryTree)
+        self.dirTreeWidget.installEventFilter(self)
 
         # Plot types drop down list configuration.
         self.plotTypesComboBoxLabel = QtGui.QLabel(self)
@@ -151,6 +156,7 @@ class Grapher(QtGui.QWidget):
         self.graphScrollArea.setWidgetResizable(True) # What happens without?
 
         self.parameterTable = QtGui.QTableWidget(self)
+        self.parameterTable.horizontalHeader().setStretchLastSection(False)
 
         self.splitterHorizontal = QtGui.QSplitter(QtCore.Qt.Horizontal)
         self.splitterHorizontal.addWidget(self.splitterVertical)
@@ -180,6 +186,15 @@ class Grapher(QtGui.QWidget):
         self.selectedDepVars = []
         self.font = QtGui.QFont()
         self.font.setPixelSize(22)
+
+    def eventFilter(self, QObject, QEvent):
+        if (QObject == self.dirTreeWidget and QEvent.type() == QtGui.QKeyEvent.KeyRelease):
+            if (QEvent.key() == QtCore.Qt.Key_Up or QEvent.key() == QtCore.Qt.Key_Down):
+                self.fileBrowserSelectionMade(self.directoryTree.currentIndex())
+                return True
+
+        else:
+            return False
 
     def listItemClicked(self, item):
         if item.checkState() == QtCore.Qt.Checked:
@@ -280,7 +295,7 @@ class Grapher(QtGui.QWidget):
                 row = data[j]
                 for i in range(len(self.indepVarsList)):
                     if self.indepVarsList[i][1] == [1]:
-                        data[j][i] = [row[i]]*l
+                        data[j][i] = [row[i]] * l
                     elif self.indepVarsList[i][1] == [2]:
                         start, stop = row[i]
                         if scanType is None:
@@ -309,8 +324,6 @@ class Grapher(QtGui.QWidget):
                 num_units = num_units + 1
             except:
                 pass
-
-        print num_units
 
         num_parameters = len(self.parameters)
         self.parameterTable.setRowCount(num_parameters - num_units)
@@ -344,6 +357,10 @@ class Grapher(QtGui.QWidget):
                 i = i+1
             else:
                 skip = False
+
+        self.parameterTable.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.Interactive)
+        self.parameterTable.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
+        self.parameterTable.horizontalHeader().setResizeMode(2, QtGui.QHeaderView.Interactive)
 
     def applyPlugins(self):
         """This is not implemented yet, but will eventually allow plugins to be
@@ -499,7 +516,6 @@ class Grapher(QtGui.QWidget):
         p.getAxis('left').tickFont = self.font
         p.getAxis('bottom').tickFont = self.font
 
-
     def plot2D(self):
         stime = time()
         (xVals, yVals), depGrids = self.extractIndepData(self.selectedData)
@@ -639,7 +655,14 @@ class Grapher(QtGui.QWidget):
                 self.plot1D()
             elif len(self.indepVarsList) == 2:
                 self.plot2D()
-
+        elif QKeyEvent.key() == QtCore.Qt.Key_Up:
+            print 'event triggered'
+            print self.directoryTree.indexAbove(self.model)
+        # elif QKeyEvent.key() == QtCore.Qt.Key_E:
+        #     exporter = pg.exporters.ImageExporter(self.plt.plotItem)
+        #     if len(self.indepVarsList) == 1:
+        #         exporter.parameters()['width'] = 100
+        #         exporter.export('testPlot.png')
 
 class ColorBar(pg.GraphicsObject):
 
