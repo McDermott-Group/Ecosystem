@@ -5,6 +5,7 @@ import sys
 from PyQt4 import QtCore, QtGui
 from functools import partial
 import pyqtgraph as pg
+import pyqtgraph.exporters
 from time import sleep, time
 import datetime
 from dateutil import tz
@@ -269,7 +270,7 @@ class Grapher(QtGui.QWidget):
         stime = time()
         d = self.d
         d.cd(self.filePathArray[:-1])
-        d.openDataset(self.filePathArray[-1])
+        d.openDataset(self.filePathArray[-1], grapher1 = True)
         datasetVariables = d.getVariables()
         self.parameters = d.getParameterList()
         self.datasetName = d.getDatasetName()
@@ -288,7 +289,6 @@ class Grapher(QtGui.QWidget):
             data = d.getData()
         # extract scan part of data so it is a complete, normal data set
         elif datasetCategory == "1D Scan" or datasetCategory == "2D Scan":
-            data = d.getData()
             l = self.depVarsList[0][1][0] # len of first dim in shape of first dep var
             scanType = d.getParameter("Scan Type", bypassIOError=True)
             for j in range(len(data)):
@@ -515,6 +515,7 @@ class Grapher(QtGui.QWidget):
 
         p.getAxis('left').tickFont = self.font
         p.getAxis('bottom').tickFont = self.font
+
 
     def plot2D(self):
         stime = time()
