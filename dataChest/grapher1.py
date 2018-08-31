@@ -2,6 +2,7 @@
 
 import os
 import sys
+from importlib import import_module
 from PyQt4 import QtCore, QtGui
 from functools import partial
 import pyqtgraph as pg
@@ -116,7 +117,7 @@ class Grapher(QtGui.QWidget):
         self.pluginTypesList = QtGui.QListWidget(self)
         self.populatePluginList(self)
 
-        self.pluginTypesList.itemClicked.connect(self.listItemClicked)
+        self.pluginTypesList.itemClicked.connect(self.pluginClicked)
         self.pluginTypesList.setAlternatingRowColors(True)
         self.pluginTypesWidget = QtGui.QWidget(self)
         self.pluginTypesLayout = QtGui.QVBoxLayout()
@@ -197,7 +198,19 @@ class Grapher(QtGui.QWidget):
         else:
             return False
 
-    def listItemClicked(self, item):
+    def applyPlugins(self):
+        """This is not implemented yet, but will eventually allow plugins to be
+        defined to alter the data."""
+        # self.unalteredData = self.data
+        pluginList =  [str(self.pluginTypesList.item(i).text())
+                            for i in range(self.pluginTypesList.count())
+                            if self.pluginTypesList.item(i).checkState() == QtCore.Qt.Checked]
+        for plugin in pluginList:
+            plugin = import_module('Plugins.'+plugin[:-3])
+            self.selectedData = plugin.run(self.selectedData)
+        self.updatePlotTypeSelector()
+
+     def pluginClicked(self, item):
         if item.checkState() == QtCore.Qt.Checked:
             self.numChecked -= 1
             item.setCheckState(QtCore.Qt.Unchecked)
@@ -221,11 +234,12 @@ class Grapher(QtGui.QWidget):
             pluginTitle = plugin.readline()
             pluginDescription = plugin.readline()
 
-            if (pluginTitle.startswith('*#TITLE:')):
-                pluginTitle = pluginTitle[9:].strip()
-                if pluginDescription.startswith('*#DESCR:'):
-                    pluginDescription = pluginDescription[9:].strip()
-                    listItem = QtGui.QListWidgetItem(pluginTitle + '   |   ' + pluginDescription)
+            if (pluginTitle.startswith('#TITLE:')):
+                pluginTitle = pluginTitle[8:].strip()
+                if pluginDescription.startswith('#DESCR:'):
+                    pluginDescription = pluginDescription[8:].strip()
+                    # listItem = QtGui.QListWidgetItem(pluginTitle + '   |   ' + pluginDescription)
+                    listItem = QtGui.QListWidgetItem(pluginFilename)
                 else:
                     listItem = QtGui.QListWidgetItem(pluginTitle)
             else:
@@ -361,17 +375,6 @@ class Grapher(QtGui.QWidget):
         self.parameterTable.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.Interactive)
         self.parameterTable.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
         self.parameterTable.horizontalHeader().setResizeMode(2, QtGui.QHeaderView.Interactive)
-
-    def applyPlugins(self):
-        """This is not implemented yet, but will eventually allow plugins to be
-        defined to alter the data."""
-        plugins = []
-        for i in range(0, int(self.pluginTypesList.__len__())):
-            item = self.pluginTypesList.item(i)
-            if item.checkState() != 0:
-                plugins.append(str(item.whatsThis()))
-        self.updatePlotTypeSelector()
-
 
     def updatePlotTypeSelector(self):
         """Update plotTypes list based on selected dataset.  Selects currently
