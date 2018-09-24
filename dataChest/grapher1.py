@@ -207,10 +207,12 @@ class Grapher(QtGui.QWidget):
                             if self.pluginTypesList.item(i).checkState() == QtCore.Qt.Checked]
         for plugin in pluginList:
             plugin = import_module('Plugins.'+plugin[:-3])
+            print self.selectedData, self.selectedData
             self.selectedData = plugin.run(self.selectedData)
+            print self.selectedData, self.selectedData
         self.updatePlotTypeSelector()
 
-     def pluginClicked(self, item):
+    def pluginClicked(self, item):
         if item.checkState() == QtCore.Qt.Checked:
             self.numChecked -= 1
             item.setCheckState(QtCore.Qt.Unchecked)

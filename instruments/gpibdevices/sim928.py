@@ -119,57 +119,28 @@ class SIM928Server(GPIBManagedServer):
     def get_voltage(self, c):
         """Gets the SIM 928 voltage output value from the
            selected source."""
-        if 'slot_number' in c.keys():
-            slot_number = c['slot_number']
-            voltage = yield self.query(c,
-                                           slot_number, 
-                                           "VOLT?")
-            try:
-                voltage = float(voltage)
-            except(ValueError):
-                old_voltage = voltage
-                voltage = ''.join([i for i in voltage if (i.isdigit() or i == '-' or i == '.')])
-                voltage = float(voltage)
-                print ('The value ' + old_voltage + ' was returned by the SIM928, this value was automatically converted to ' + voltage + '.')
-                        
-            value = voltage * units.V
+        voltage_error = True
+        while voltage_error == True:
+            voltage_error = False
+            if 'slot_number' in c.keys():
+                slot_number = c['slot_number']
+                voltage = yield self.query(c,
+                                               slot_number, 
+                                               "VOLT?")
+                try:
+                    voltage = float(voltage)
+                except(ValueError):
+                    voltage_error = True
+                    print 'error getting voltage from sim, got: \'' + str(voltage) + '\''
+                    # print voltage
+                    # old_voltage = voltage
+                    # voltage = ''.join([i for i in voltage if (i.isdigit() or i == '-' or i == '.')])
+                    # voltage = float(voltage)
+                    # print ('The value ' + old_voltage + ' was returned by the SIM928, this value was automatically converted to ' + voltage + '.')
+                
+                if voltage_error == False:
+                    value = voltage * units.V
             
-            # try:
-                # voltage = yield self.query(c,
-                                           # slot_number, 
-                                           # "VOLT?")
-                # try:
-                    # voltage = float(voltage)
-                # except:
-                    # self.initialize_mainframe(c)
-                    # voltage = yield self.query(c,
-                                               # slot_number,
-                                               # "VOLT?")
-                    # voltage = float(voltage)
-            # except:
-                # self.initialize_mainframe(c)
-                # voltage = yield self.query(c,
-                                           # slot_number,
-                                           # "VOLT?")
-                # try:
-                    # voltage = float(voltage)
-                # except:
-                    # self.initialize_mainframe(c)
-                    # voltage = yield self.query(c,
-                                               # slot_number,
-                                               # "VOLT?")
-                    # voltage = float(voltage)
-            # try:
-                # value = voltage * units.V
-            # except:
-                # self.initialize_mainframe(c)
-                # voltage = yield self.query(c,
-                                           # slot_number,
-                                           # "VOLT?")
-                # voltage = float(voltage)
-                # value = voltage * units.V
-        # else:
-            # raise ValueError(self.no_selection_msg())
         returnValue(value)
         
     @setting(12, 'Get Slot', returns = 'i')
