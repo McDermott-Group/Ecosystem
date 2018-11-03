@@ -17,7 +17,7 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = SIM900
+name = SIM900 Serial
 version = 1.5.0
 description = Gives access to GPIB devices in the SIM900 mainframe.
 instancename = SIM900
@@ -75,26 +75,36 @@ class SIM900Wrapper(DeviceWrapper):
         """Disconnect from the serial port when we shut down."""
         return self.packet().close().send()
 
-    def rw_line(self, code):
-        # Don't allow two concurrent read/write calls. Use deferred locking to
-        # enforce this
-        self._lock = DeferredLock()
-        return self._lock.run(partial(self._rw_line, code))
+    # def rw_line(self, code):
+        # # Don't allow two concurrent read/write calls. Use deferred locking to
+        # # enforce this
+        # self._lock = DeferredLock()
+        # return self._lock.run(partial(self._rw_line, code))
 
+    # @inlineCallbacks
+    # def _rw_line(self, code):
+        # """Write data to the device."""
+        # yield self.server.write_line(code, context=self.ctx)
+        # yield sleep(0.1)
+        # ans = yield self.server.read(context=self.ctx)
+        # returnValue(ans)
+     
     @inlineCallbacks
-    def _rw_line(self, code):
-        """Write data to the device."""
+    def write_line(self, code):
         yield self.server.write_line(code, context=self.ctx)
-        yield sleep(0.1)
-        ans = yield self.server.read(context=self.ctx)
+        # yield self.server.write_line(code, context=self.ctx)
+        
+    @inlineCallbacks    
+    def read_line(self):
+        ans = yield self.server.read_line(context=self.ctx)
         returnValue(ans)
         
         
 class SIM900(GPIBManagedServer):
     """Provides direct access to GPIB-enabled devices."""
-    name = 'SIM900'
+    name = 'SIM900 Serial'
     deviceName = 'STANFORD RESEARCH SYSTEMS SIM900'
-    deviceWrapper = VarianControllerWrapper
+    deviceWrapper = SIM900Wrapper
     defaultTimeout = 1.0 * units.s
     
     @inlineCallbacks  
@@ -102,7 +112,7 @@ class SIM900(GPIBManagedServer):
         yield GPIBManagedServer.initServer(self)
         self.mydevices = {}
         yield self.loadConfigInfo()
-        yield DeviceServer.initServer(self)
+        # yield DeviceServer.initServer(self)
         # start refreshing only after we have started serving
         # this ensures that we are added to the list of available
         # servers before we start sending messages
@@ -112,7 +122,7 @@ class SIM900(GPIBManagedServer):
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.client.registry()
-        yield reg.cd(['', 'Servers', 'SIM900', 'Links'], True)
+        yield reg.cd(['', 'Servers', 'SIM900 Serial', 'Links'], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -154,17 +164,19 @@ class SIM900(GPIBManagedServer):
         print('Refreshing devices...')
         addresses = []
         IDs, names = self.deviceLists()
+        print 'names>', names
+        return
         for SIM900addr in names:
             try:
                 p = self.client[self.name].packet()
             except KeyError as e:
                 callLater(0.1, self.refreshDevices)
                 return
-            p.select_device(SIM900addr)
-            p.gpib_write('*RST').gpib_write('*CLS')
-            p.gpib_write('FLSH').gpib_write('SRST')
-            p.gpib_query('CTCR?')
-            statusStr = (yield p.send())['gpib_query']
+            p.open(SIM900addr)
+            p.write_line('*RST').write_line('*CLS')
+            p.write_line('FLSH').write_line('SRST')
+            p.write_line('CTCR?').pause(0.1*units.s).read_line()
+            statusStr = (yield p.send())['read_line']
             # Ask the SIM900 which slots have an active module, and only
             # deal with those.
             statusCodes = [bool(int(x))
