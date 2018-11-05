@@ -669,7 +669,10 @@ class AlazarTechServer(LabradServer):
             np.dot(timeSeries.reshape(numberOfRecords, -1), np.float32(chs),
                    iqBuffer)
         except Exception as e:
-            print 'size of first dotted array %d' % len(timeSeries.reshape(numberOfRecords, -1))
+            print 'numberOfRecords %d' % numberOfRecords
+            print 'timeSeries shape'
+            print timeSeries.shape
+            # print 'size of first dotted array %d' % len(timeSeries.reshape(numberOfRecords, -1))
             print 'size of second dotted array %d' % len(np.float32(chs))
             print e
             

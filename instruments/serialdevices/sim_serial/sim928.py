@@ -28,6 +28,7 @@ from labrad import units
 from exceptions import ValueError
 from time import sleep
 import visa
+from socket import gethostname
 
 TC = "\"xyz\"" # Termination Character
 LF = '\r' # Line Feed
@@ -95,7 +96,13 @@ class SIM928Server(DeviceServer):
         for k in keys:
             p.get(k, key=k)
         ans = yield p.send()
-        self.serialLinks = dict((ans[k][0][0], ans[k][0][1]) for k in keys) 
+        b = 0
+        hostname = gethostname()
+        for ss in ans['Serial Links']:
+            if ss[0] == hostname + ' Serial Server':
+                self.serialLinks = {ss[0]:ss[1]}
+        # self.serialLinks = dict((ans[k][0][0], ans[k][0][1]) for k in keys) 
+        print self.serialLinks
         
     @inlineCallbacks    
     def findDevices(self):
@@ -107,6 +114,7 @@ class SIM928Server(DeviceServer):
                 continue
             server = self.client[name]
             ports = yield server.list_serial_ports()
+            print ports
             if port not in ports:
                 continue
             devName = '%s - %s' % (name, port)
@@ -313,6 +321,9 @@ class SIM928Server(DeviceServer):
              voltage = 'v[V]', returns = '')
     def set_voltage(self, c, voltage):
         """Sets SIM 928 voltage for the selected source."""
+        if abs(voltage['V']) < (.00001):
+            voltage = 0 * units.V
+            
         dev = self.selectedDevice(c)
         if 'slot_number' in c.keys():
             slot_number = c['slot_number']
