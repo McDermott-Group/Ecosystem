@@ -20,7 +20,6 @@
 name = SIM900 Serial
 version = 1.5.0
 description = Gives access to GPIB devices in the SIM900 mainframe.
-instancename = SIM900
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -41,7 +40,7 @@ from labrad import util
 from labrad.server import LabradServer, setting
 from labrad.errors import DeviceNotSelectedError
 import labrad.units as units
-from labrad.gpib import GPIBManagedServer
+from labrad.gpib import ManagedDeviceServer
 from labrad.devices import DeviceServer, DeviceWrapper
 
 
@@ -100,7 +99,7 @@ class SIM900Wrapper(DeviceWrapper):
         returnValue(ans)
         
         
-class SIM900(GPIBManagedServer):
+class SIM900(DeviceServer):
     """Provides direct access to GPIB-enabled devices."""
     name = 'SIM900 Serial'
     deviceName = 'STANFORD RESEARCH SYSTEMS SIM900'
@@ -109,10 +108,9 @@ class SIM900(GPIBManagedServer):
     
     @inlineCallbacks  
     def initServer(self):
-        yield GPIBManagedServer.initServer(self)
         self.mydevices = {}
         yield self.loadConfigInfo()
-        # yield DeviceServer.initServer(self)
+        yield DeviceServer.initServer(self)
         # start refreshing only after we have started serving
         # this ensures that we are added to the list of available
         # servers before we start sending messages
@@ -129,6 +127,7 @@ class SIM900(GPIBManagedServer):
             p.get(k, key=k)
         ans = yield p.send()
         self.serialLinks = {k: ans[k] for k in keys}
+        print self.serialLinks
 
     @inlineCallbacks    
     def findDevices(self):
@@ -145,15 +144,15 @@ class SIM900(GPIBManagedServer):
             devs += [(name, (server, port))]
         returnValue(devs)
         
-    @inlineCallbacks
-    def handleDeviceMessage(self, *args):
-        """We override this function so that whenever a new SIM900 is
-        added, and a message is sent out, we refresh the devices. This
-        has the benefit of being able to start this server, the
-        GPIB Device Manager, and the GPIB Bus Server, in any order."""
-        yield GPIBManagedServer.handleDeviceMessage(self, *args)
-        if args[0] == self.deviceName:
-            self.refreshDevices()
+    # @inlineCallbacks
+    # def handleDeviceMessage(self, *args):
+        # """We override this function so that whenever a new SIM900 is
+        # added, and a message is sent out, we refresh the devices. This
+        # has the benefit of being able to start this server, the
+        # GPIB Device Manager, and the GPIB Bus Server, in any order."""
+        # yield GPIBManagedServer.handleDeviceMessage(self, *args)
+        # if args[0] == self.deviceName:
+            # self.refreshDevices()
 
     @inlineCallbacks
     def refreshDevices(self):
@@ -164,15 +163,17 @@ class SIM900(GPIBManagedServer):
         print('Refreshing devices...')
         addresses = []
         IDs, names = self.deviceLists()
-        print 'names>', names
+        print 'names>', names, [self.devices[key] for key in names]
         return
         for SIM900addr in names:
             try:
-                p = self.client[self.name].packet()
+                dev = self.devices[SIM900addr]
+                p = dev.packet()
+                # p = self.client[self.name].packet()
             except KeyError as e:
                 callLater(0.1, self.refreshDevices)
                 return
-            p.open(SIM900addr)
+            p.open(dev.port)
             p.write_line('*RST').write_line('*CLS')
             p.write_line('FLSH').write_line('SRST')
             p.write_line('CTCR?').pause(0.1*units.s).read_line()
@@ -227,10 +228,10 @@ class SIM900(GPIBManagedServer):
         """Get a list of GPIB addresses on this bus."""
         return sorted(self.mydevices.keys())
 
-    @setting(21)
+    @setting(21, returns='*?')
     def refresh_devices(self, c):
         '''Manually refresh devices.'''
-        self.refreshDevices()
+        yield self.refreshDevices()
 
     @setting(20, addr='s', returns='s')
     def address(self, c, addr=None):
