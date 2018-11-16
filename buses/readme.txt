@@ -13,4 +13,6 @@ _doRefresh (DeviceServer) and handleDeviceMessage(ManagedDeviceServer) do the sa
 
 named messages above go to DeviceManager, but then DeviceManager sends appropriate devs back to each server
 
+gpib.py and devices.py within the labrad core code have a lot of duplicate code and inherit from old device code.  I have updated and simplified the classes in these files, and they are now stored here as gpib.py and devices.py.  These should replace the files in the core labrad code to use them.
+
 what does x = defer.DeferredLock() do and x.run(fn)?
