@@ -161,9 +161,11 @@ class SIM900(DeviceServer):
                 callLater(0.1, self.refreshDevices)
                 return
             p.open(dev.address)
-            p.write_line('*RST').write_line('*CLS')
+            # p.write_line('*RST')
+            p.write_line('*CLS')
             p.write_line('FLSH')#.write_line('SRST')
             p.write_line('CTCR?').pause(0.1*units.s).read_line()
+            p.close()
             statusStr = (yield p.send())['read_line']
             # Ask the SIM900 which slots have an active module, and only
             # deal with those.
