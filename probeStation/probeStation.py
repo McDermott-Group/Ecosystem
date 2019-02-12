@@ -25,7 +25,7 @@ from labrad.server import inlineCallbacks
 from dataChest import dataChest
 
 class ProbeStation(QtGui.QWidget):
-    
+
     def __init__(self, cxn):
         super(ProbeStation, self).__init__()
         self.cxn = cxn
@@ -35,13 +35,14 @@ class ProbeStation(QtGui.QWidget):
         p.set_auto_range_status(False)
         p.return_to_local()
         p.send()
-        
+
         self.areaString = '1,1,1'
         self.innerDiameter = 65
         self.odd = True
-        self.pitchX = 6.2
-        self.pitchY = 6.2
+        self.pitchX = 6.25
+        self.pitchY = 6.25
         self.fileDir = []
+        self.measurements = {} # {die: {index:[resistances]}}
         self.initUI()
 
     def initUI(self):
@@ -146,6 +147,17 @@ class ProbeStation(QtGui.QWidget):
             self.resDataChest = dataChest( self.fileDir )
             try:
                 self.resDataChest.openDataset(fileName, modify=True)
+                self.setOdd(self.resDataChest.getParameter("Odd"))
+                self.setPitchX(self.resDataChest.getParameter("Pitch X"))
+                self.setPitchY(self.resDataChest.getParameter("Pitch Y"))
+                self.setInnerDiameter(self.resDataChest.getParameter("Inner Diameter"))
+                oldData = self.resDataChest.getData()
+                for die,index,_,__,resistance in oldData:
+                    if die not in self.measurements:
+                        self.measurements[die] = {}
+                    if index not in self.measurements[die]:
+                        self.measurements[die][index] = []
+                    self.measurements[die][index].append(resistance)
                 print( 'opened old dataset' )
             except Exception:
                 self.resDataChest.createDataset(fileName,
@@ -153,20 +165,17 @@ class ProbeStation(QtGui.QWidget):
                          ('area',[1],'float64','um**2'),
                             ('DMM range',[1],'float64','Ohm')],
                         [('resistance',[1],'float64','Ohms')])
-            try:
+                self.resDataChest.addParameter("Odd", self.odd)
+                self.resDataChest.addParameter("Pitch X", self.pitchX)
+                self.resDataChest.addParameter("Pitch Y", self.pitchY)
+                self.resDataChest.addParameter("Inner Diameter", self.innerDiameter)
                 self.resDataChest.addParameter("Date Measured", str(datetime.datetime.utcnow()))
-            except RuntimeError:
-                pass # this will be trown when we try to open an old dataset and don't overwrite this
-            self.resDataChest.addParameter("Odd", self.odd, overwrite=True)
-            self.resDataChest.addParameter("Pitch X", self.pitchX, overwrite=True)
-            self.resDataChest.addParameter("Pitch Y", self.pitchY, overwrite=True)
-            self.resDataChest.addParameter("Inner Diameter", self.innerDiameter, overwrite=True)
             self.waferMap.initGrid()
             self.areaView.setAreasIndex(0)
         self.fileButton.setText('End Measurement')
         self.fileButton.clicked.disconnect(self.selectFile)
         self.fileButton.clicked.connect(self.endMeasurement)
-        
+
     def endMeasurement(self):
         self.fileDir = []
         self.resDataChest = None
@@ -212,7 +221,7 @@ class ProbeStation(QtGui.QWidget):
 
     def mousePressEvent(self, event):
         QtGui.QApplication.focusWidget().clearFocus()
-    
+
     @inlineCallbacks
     def keyPressEvent(self, event):
         key = event.key()
@@ -240,8 +249,13 @@ class ProbeStation(QtGui.QWidget):
             dmmRange = yield self.dmm.get_fw_range()
             yield self.dmm.return_to_local()
             self.resDataChest.addData( [[die, index, area, dmmRange['Ohm'], res['Ohm']]] )
+            if die not in self.measurements:
+                self.measurements[die] = {}
+            if index not in self.measurements[die]:
+                self.measurements[die][index] = []
+            self.measurements[die][index].append(resistance)
+            self.waferMap.setDieProgress(len(self.measurements[die]))
             print [die, area, dmmRange['Ohm'], res['Ohm']]
-            self.waferMap.addMeasurement()
             self.areaView.increaseAreasIndex()
         elif (key == QtCore.Qt.Key_Delete
            or key == QtCore.Qt.Key_Backspace):
@@ -255,7 +269,9 @@ class ProbeStation(QtGui.QWidget):
                 self.areaView.setAreasString(self.areaString)
             except ValueError:
                 pass
-        print self.waferMap.getSelectedDie()
+        die =  self.waferMap.getSelectedDie()
+        self.areaView.setResistances(self.measurements[die])
+        print die
 
 class AreaDisplay(QtGui.QWidget):
 
@@ -264,12 +280,19 @@ class AreaDisplay(QtGui.QWidget):
 
         self.areaString = ''
         self.areaLabels = []
+        self.resistances = {} # {index,[resistances]}
         self.index = 0
 
         self.setFixedHeight(55)
 
+        self.container = QtGui.QVBoxLayout()
+        self.setLayout(self.container)
+
         self.areaView = QtGui.QHBoxLayout()
-        self.setLayout(self.areaView)
+        container.addWidget(self.areaView)
+
+        self.resView = QtGui.QHBoxLayout()
+        container.addWidget(self.resView)
 
         self.initUI()
 
@@ -278,25 +301,38 @@ class AreaDisplay(QtGui.QWidget):
 
     def refreshUI(self):
         # delete all the old labels
-        for l in self.areaLabels:
+        for l in self.labels:
             self.areaView.removeWidget(l)
             l.deleteLater()
             l.setParent(None)
 
         #create all the new labels
-        self.areaLabels = []
+        self.labels = []
         index = 0
         areaList = self.areaString.strip(',').split(',')
+        self.index = self.index%len(areaList)
         for a in areaList:
-            l = QtGui.QLabel(a)
+            l = QtGui.QLabel(a) # area line
             l.setAlignment(QtCore.Qt.AlignCenter)
             l.setFont(QtGui.QFont("Arial",36))
-            if index == self.index%len(areaList):
+
+            if index in self.resistances:
+                l.setStyleSheet('color: green')
+                r = QtGui.QLabel('\n'.join(['{%.0f}'.format(r) for r in self.resistances[index])) # resistances below
+            else:
+                r = QtGui.QLabel('')
+            r.setAlignment(QtCore.Qt.AlignCenter)
+            r.setFont(QtGui.QFont("Arial",12))
+
+            if index == self.index:
                 l.setStyleSheet('color: red')
+
             index += 1
             l.setFixedHeight(50)
-            self.areaLabels.append(l)
+            self.labels.append(l)
+            self.labels.append(r)
             self.areaView.addWidget(l)
+            self.resView.addWidget(r)
             if index < len(areaList) or self.areaString[-1] is ',':
                 commaLabel = QtGui.QLabel(',')
                 commaLabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -304,17 +340,24 @@ class AreaDisplay(QtGui.QWidget):
                 commaLabel.setStyleSheet('color: grey')
                 commaLabel.setFixedWidth(10)
                 commaLabel.setFixedHeight(50)
-                self.areaLabels.append(commaLabel)
+                self.labels.append(commaLabel)
                 self.areaView.addWidget(commaLabel)
+
+            # resistances below
+            if index in
+            r = QtGui.QLabel(a)
 
     def setAreasString(self, string):
         self.areaString = string
         self.refreshUI()
 
+    def setResistances(self, resistances):
+        self.resistances = resistances # {index: [res]}
+
     def setAreasIndex(self, index):
         self.index = index
         self.refreshUI()
-    
+
     def getIndex(self):
         return self.index
 
@@ -335,11 +378,11 @@ class WaferMap(QtGui.QWidget):
     def __init__(self):
         super(WaferMap, self).__init__()
 
-        self.odd = True
+        self.odd = False
         self.wafer_diameter = 72.6
         self.inner_diameter = 65
-        self.pitchX = 6.2
-        self.pitchY = 6.2
+        self.pitchX = 6.25
+        self.pitchY = 6.25
         self.selectedDie = [6,6]
         self.initGrid()
         self.initUI()
@@ -400,8 +443,8 @@ class WaferMap(QtGui.QWidget):
     def getSelectedDie(self):
         return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[self.selectedDie[0]] + str(int(self.selectedDie[1])+1)
 
-    def addMeasurement(self):
-        self.dieMapData[self.selectedDie[0]][self.selectedDie[1]] = True
+    def setDieProgress(self, x, y, numberCompleted):
+        self.dieMapData[self.selectedDie[0]][self.selectedDie[1]] = numberCompleted
 
     def paintEvent(self, e):
 
@@ -433,7 +476,8 @@ class WaferMap(QtGui.QWidget):
                 if [x,y] == self.selectedDie: # red for selected die
                     qp.setBrush(QtGui.QColor(200, 0, 0))
                 elif self.dieMapData[x][y]: # green for measured die
-                    qp.setBrush(QtGui.QColor(25, 90, 0, 200))
+                    progress = 1.0*self.dieMapData[x][y]/self.dieMapData.max()
+                    qp.setBrush(QtGui.QColor(25, progress*90, 0, 200))
                 else: # blue otherwise
                     qp.setBrush(QtGui.QColor(25, 0, 90, 200))
                 if self.dieMapMask[x][y]:
