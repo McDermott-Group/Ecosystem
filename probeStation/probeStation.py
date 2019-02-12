@@ -149,7 +149,8 @@ class ProbeStation(QtGui.QWidget):
                 print( 'opened old dataset' )
             except Exception:
                 self.resDataChest.createDataset(fileName,
-                        [('die',[1],'string',''),('area',[1],'float64','um**2'),
+                        [('die',[1],'string',''),('index',[1],'uint8',''),
+                         ('area',[1],'float64','um**2'),
                             ('DMM range',[1],'float64','Ohm')],
                         [('resistance',[1],'float64','Ohms')])
             try:
@@ -227,13 +228,18 @@ class ProbeStation(QtGui.QWidget):
         elif key == QtCore.Qt.Key_Right:
             self.waferMap.changeSelectedDie(1,0)
             self.areaView.setAreasIndex(0)
+        elif key == QtCore.Qt.Key_A:
+            self.areaView.decreaseAreasIndex(0)
+        elif key == QtCore.Qt.Key_D:
+            self.areaView.increaseAreasIndex(0)
         elif key == QtCore.Qt.Key_Space:
             die = self.waferMap.getSelectedDie()
             area = float(self.areaView.getCurrentArea())
+            index = self.areaView.getIndex()
             res = yield self.dmm.get_fw_resistance()
             dmmRange = yield self.dmm.get_fw_range()
             yield self.dmm.return_to_local()
-            self.resDataChest.addData( [[die, area, dmmRange['Ohm'], res['Ohm']]] )
+            self.resDataChest.addData( [[die, index, area, dmmRange['Ohm'], res['Ohm']]] )
             print [die, area, dmmRange['Ohm'], res['Ohm']]
             self.waferMap.addMeasurement()
             self.areaView.increaseAreasIndex()
@@ -308,6 +314,9 @@ class AreaDisplay(QtGui.QWidget):
     def setAreasIndex(self, index):
         self.index = index
         self.refreshUI()
+    
+    def getIndex(self):
+        return self.index
 
     def getCurrentArea(self):
         areaList = self.areaString.strip(',').split(',')
@@ -315,6 +324,10 @@ class AreaDisplay(QtGui.QWidget):
 
     def increaseAreasIndex(self):
         self.index += 1
+        self.refreshUI()
+
+    def decreaseAreasIndex(self):
+        self.index -= 1
         self.refreshUI()
 
 class WaferMap(QtGui.QWidget):
