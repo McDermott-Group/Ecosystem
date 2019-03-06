@@ -684,7 +684,7 @@ class Grapher(QtGui.QWidget):
         
     def mouseMoved(self, evt):
         mousePoint = self.p.vb.mapSceneToView(evt[0])
-        self.coBox.setText(str(mousePoint.x())[0:5] + ', ' + str(mousePoint.y())[0:5])
+        self.coBox.setText(str(mousePoint.x()) + ', ' + str(mousePoint.y()))
         #self.co_label.setText("<span style='font-size: 14pt; color: white'> x = %0.2f, <span style='color: white'> y = %0.2f</span>" % (mousePoint.x(), mousePoint.y()))
 
 class ColorBar(pg.GraphicsObject):
