@@ -10,6 +10,7 @@ import pyqtgraph.exporters
 from time import sleep, time
 import datetime
 from dateutil import tz
+from math import floor
 
 from dataChest import *
 
@@ -71,6 +72,9 @@ class Grapher(QtGui.QWidget):
         self.model.setNameFilterDisables(False)
         self.model.nameFilterDisables()
         self.model.setNameFilters(self.filters)
+        
+        self.xMouseVal = 0.0
+        self.yMouseVal = 0.0
 
         self.indexRoot = self.model.index(self.model.rootPath())
 
@@ -530,6 +534,9 @@ class Grapher(QtGui.QWidget):
 
         self.p.getAxis('left').tickFont = self.font
         self.p.getAxis('bottom').tickFont = self.font
+        
+        self.proxy = pg.SignalProxy(self.p.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
+
 
 
     def plot2D(self):
@@ -556,6 +563,12 @@ class Grapher(QtGui.QWidget):
         pixelY = (yVals[-1]-yVals[0])/len(yVals)
         img.translate(xVals[0],yVals[0])
         img.scale(pixelX,pixelY)
+        print depGrids[index]
+        print xVals
+        print yVals
+        self.xValPass = xVals
+        self.yValPass = yVals
+        self.zValPass = depGrids[index]
        
         self.proxy = pg.SignalProxy(self.p.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
 
@@ -683,8 +696,28 @@ class Grapher(QtGui.QWidget):
         #         exporter.export('testPlot.png')
         
     def mouseMoved(self, evt):
+        print 'mouse moved!'
         mousePoint = self.p.vb.mapSceneToView(evt[0])
-        self.coBox.setText(str(round(mousePoint.x(), 3)) + ', ' + str(round(mousePoint.y(), 3)))
+        self.xMouseVal = mousePoint.x()
+        self.yMouseVal = mousePoint.y()
+       
+            
+        if len(self.indepVarsList) == 1:
+            self.coBox.setText(str(round(self.xMouseVal, 3)) + ', ' + str(round(self.yMouseVal, 3)))
+        elif len(self.indepVarsList) == 2:
+        
+            xMin = np.min(self.xValPass)
+            xMax = np.max(self.xValPass)
+            xLen = len(self.xValPass)
+            xMouseIndex = int(floor((self.xMouseVal - xMin) / ((xMax - xMin) / xLen)))
+          
+            yMin = np.min(self.yValPass)
+            yMax = np.max(self.yValPass)
+            yLen = len(self.yValPass)
+            
+            yMouseIndex = int(floor((self.yMouseVal - yMin) / ((yMax - yMin) / yLen)))
+            self.zMouseVal = self.zValPass[xMouseIndex, yMouseIndex]
+            self.coBox.setText(str(round(self.zMouseVal, 3)) + ', ' + str(round(self.yMouseVal, 3)) + ', ' + str(round(self.zMouseVal, 3)))
         #self.co_label.setText("<span style='font-size: 14pt; color: white'> x = %0.2f, <span style='color: white'> y = %0.2f</span>" % (mousePoint.x(), mousePoint.y()))
 
 class ColorBar(pg.GraphicsObject):
