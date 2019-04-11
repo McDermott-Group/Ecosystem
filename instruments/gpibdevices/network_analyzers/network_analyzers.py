@@ -230,7 +230,7 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
 
     @inlineCallbacks
     def measurement_setup(self, s_params=['S11'], formats=['MP'],
-            trigger='IMM'):
+            trigger='IMM', electrical_delay_ns=None):
         """
         Setup the measurement.
         
@@ -280,7 +280,9 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
                 yield self.write('CALC:PAR:SEL "M_%s"' %Sp)
                 yield self.write('CALC:FORM MLOG')
                 yield self.write('CALC:PAR:SEL "P_%s"' %Sp)
-                yield self.write('CALC:FORM PHAS')
+                yield self.write('CALC:FORM UPH')
+                if electrical_delay_ns is not None:
+                    yield self.write('CALC:CORR:EDEL:TIME '+str(int(electrical_delay_ns))+ 'NS')
             yield self.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 1))
             yield self.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 2))
         
