@@ -26,6 +26,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting
+from numpy import log10
 import labrad.units as units
 from labrad import util
 import socket
@@ -91,11 +92,60 @@ class AVS47ResistanceBridgeServer(DeviceServer):
         yield self.loadSensorInfo()
         # default excitation and range: 30uV, 20kOhm
         self.excitation = "3"
+        self.excitation_values = ['0V', '3uV', '10uV', '30uV', '100uV', '300uV', '1mV', '3mV']
         self.range = "5"
+        self.range_values = ['2 Ohm', '20 Ohm', '200 Ohm', '2 kOhm', '20 kOhm', '200 kOhm', '2 MOhm']
         yield self.loadConfigInfo()
+        yield self.loadCalibrationInfo()
         yield DeviceServer.initServer(self)
         print self.sensors
+   
+    @setting(901, 'Get Temperatures', returns='b')
+    def getTemperatures(self, c):
+    
+        self.dev = self.selectedDevice(c)
+        temperatures = []
+        for i in range(0, 8):
         
+            # GET RESISTANCE FROM BRIDGE
+            self.dev.write_line("inp1;mux%s;ran%s;exc%s"%(str(i), self.range, self.excitation))
+            yield sleep(.1)
+            self.dev.write_line("res?")
+            yield sleep(.1)
+            reading = yield self.dev.read_line()
+            reading = reading.rstrip("\r\n")
+            print reading
+            reading = float(reading)
+            
+            # GET CALIBRATION FROM FILE
+            cal_array = []
+            filename = self.calibrations[i]
+            if filename != 'NONE':
+                file = open(('avs47_calibrations/' + filename), "r")
+                index = 1
+                exponent = 0.0
+                result = 0.0
+                
+                for line in file:
+                    cal_array.insert(0, float(line.strip('\n')))
+                
+                # CONVERT RESISTANCE TO TEMPERATURE WITH CALIBRATION
+                exponent += cal_array.pop()
+                while (len(cal_array) != 0):
+                    exponent += cal_array.pop() * (log10(reading) ** index)
+                    index += 1
+               
+                result = 10 ** exponent
+                temperatures.append(result)
+               
+            else:
+                temperatures.append(0.0)
+        
+        print temperatures
+        returnValue(True)
+            
+           
+    
     @setting(9, 'Start Server', returns='b')
     def startServer(self, c):
         self.dev = self.selectedDevice(c)
@@ -126,6 +176,31 @@ class AVS47ResistanceBridgeServer(DeviceServer):
             resistances.append(reading)
         returnValue(resistances)
         
+    @setting(12, 'Set Range', returns='s')
+    def setRange(self, c, range):
+        """Set range for output values. 
+        1..7 = ranges from 2 ohm to 2 Mohm
+        """
+        if (range > 7 or range < 1):
+            return 'Invalid Range\n1..7 = ranges from 2 ohms to 2 Mohms'
+        else:
+            self.range = range
+            return 'Range set to ' + str(self.range_values[range])
+            
+    @setting(13, 'Set Excitation', returns='s')
+    def setExcitation(self, c, excitation):
+        """Excitation = the RMS voltage
+        across a sensor whose value is half of the selected
+        range. Excitation is symmetrical square
+        wave -shaped current at about 13.7Hz.
+        0 = no excitation
+        1..7 = 3uV, 10u, 30uV...3mV"""
+        if (excitation > 7 or excitation < 0):
+            return 'Invalid excitation\n0 = no excitation\n1..7 = 3uV, 10uV, 30uV...3mV'
+        else:
+            self.excitation = excitation
+            return 'Excitation set to ' + str(self.excitation_values[excitation])  
+        
     @inlineCallbacks
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
@@ -137,6 +212,19 @@ class AVS47ResistanceBridgeServer(DeviceServer):
             p.get(k, key=k)
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys) 
+        
+    @inlineCallbacks
+    def loadCalibrationInfo(self):
+        """Load calibration information from the registry."""
+        reg = self.reg
+        yield reg.cd(['', 'Servers', 'AVS47 Resistance Bridge', 'Calibrations'], True)
+        dirs, keys = yield reg.dir()
+        p = reg.packet()
+        for k in keys:
+            p.get(k, key=k)
+        ans = yield p.send()
+        self.calibrations = ans[keys[0]]
+        print self.calibrations        
         
     @inlineCallbacks
     def loadSensorInfo(self):

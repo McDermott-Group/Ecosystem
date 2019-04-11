@@ -99,13 +99,14 @@ class ProbeStation(QtGui.QWidget):
         # odd/even radio buttons
         self.oddRadio = QtGui.QRadioButton("Odd")
         self.oddRadio.setChecked(self.odd)
-        self.oddRadio.toggled.connect(lambda:self.setOdd(True))
         dieSetupLayout.addWidget(self.oddRadio)
 
         self.evenRadio = QtGui.QRadioButton("Even")
-        self.oddRadio.setChecked(not self.odd)
-        self.evenRadio.toggled.connect(lambda:self.setOdd(False))
+        self.evenRadio.setChecked(not self.odd)
         dieSetupLayout.addWidget(self.evenRadio)
+		
+        self.oddRadio.toggled.connect(lambda:self.setOdd(True))
+        self.evenRadio.toggled.connect(lambda:self.setOdd(False))
 
         # layouts
         dieSetupLayout.addStretch(1)
@@ -132,7 +133,7 @@ class ProbeStation(QtGui.QWidget):
         fileDialog = QtGui.QFileDialog()
         fileDialog.setNameFilters( [self.tr('HDF5 Files (*.hdf5)'), self.tr('All Files (*)')] )
         fileDialog.setDefaultSuffix( '.hdf5' )
-        baseDirList = ['Z:','mcdermott-group','Data']
+        baseDirList = ['Z:','mcdermott-group','data']
         baseDir = os.path.join( *(baseDirList+self.fileDir) )
         fileDialog.setDirectory( baseDir )
         filePath = str(fileDialog.getSaveFileName(self, 'Save File', options=QtGui.QFileDialog.DontConfirmOverwrite))
@@ -143,7 +144,8 @@ class ProbeStation(QtGui.QWidget):
                 filePath = filePath[:-5]
             fileArray = filePath.split('/')
             for elem in baseDirList:
-                fileArray.remove(elem)
+				if fileArray[0] == elem:
+					fileArray.remove(elem)
             self.fileDir = fileArray[:-1]
             fileName = fileArray[-1]
             self.resDataChest = dataChest( self.fileDir )
@@ -250,7 +252,10 @@ class ProbeStation(QtGui.QWidget):
             res = yield self.dmm.get_fw_resistance()
             dmmRange = yield self.dmm.get_fw_range()
             yield self.dmm.return_to_local()
-            self.resDataChest.addData( [[die, index, area, dmmRange['Ohm'], res['Ohm']]] )
+            try:
+                self.resDataChest.addData( [[die, np.uint8(index), area, dmmRange['Ohm'], res['Ohm']]] )
+            except Exception as e:
+                print str(e)
             if die not in self.measurements:
                 self.measurements[die] = {}
             if index not in self.measurements[die]:
@@ -323,7 +328,7 @@ class AreaDisplay(QtGui.QWidget):
         for a in areaList:
             l = QtGui.QLabel(a) # area line
             l.setAlignment(QtCore.Qt.AlignCenter)
-            l.setFont(QtGui.QFont("Arial",36))
+            l.setFont(QtGui.QFont("Arial",30))
 
             if index in self.resistances:
                 l.setStyleSheet('color: green')

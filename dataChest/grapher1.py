@@ -10,6 +10,7 @@ import pyqtgraph.exporters
 from time import sleep, time
 import datetime
 from dateutil import tz
+from math import floor
 
 from dataChest import *
 
@@ -51,7 +52,7 @@ class Grapher(QtGui.QWidget):
         super(Grapher, self).__init__(parent)
         self.setWindowTitle('Data Chest Image Browser')
         self.setWindowIcon(QtGui.QIcon('rabi.jpg'))
-
+   
         self.numChecked = 0
 
         self.root = os.environ["DATA_ROOT"]
@@ -71,6 +72,9 @@ class Grapher(QtGui.QWidget):
         self.model.setNameFilterDisables(False)
         self.model.nameFilterDisables()
         self.model.setNameFilters(self.filters)
+        
+        self.xMouseVal = 0.0
+        self.yMouseVal = 0.0
 
         self.indexRoot = self.model.index(self.model.rootPath())
 
@@ -159,11 +163,21 @@ class Grapher(QtGui.QWidget):
 
         self.parameterTable = QtGui.QTableWidget(self)
         self.parameterTable.horizontalHeader().setStretchLastSection(False)
+        
+        self.coBox = QtGui.QLabel(self)
+        coFont = QtGui.QFont()
+        coFont.setPointSize(12)
+        coFont.setBold(True)
+        self.coBox.setFont(coFont)
+        self.coBox.setAlignment(QtCore.Qt.AlignCenter)
+        self.coSplitter = QtGui.QSplitter(QtCore.Qt.Vertical)
+        self.coSplitter.addWidget(self.parameterTable)
+        self.coSplitter.addWidget(self.coBox)
 
         self.splitterHorizontal = QtGui.QSplitter(QtCore.Qt.Horizontal)
         self.splitterHorizontal.addWidget(self.splitterVertical)
         self.splitterHorizontal.addWidget(self.graphScrollArea)
-        self.splitterHorizontal.addWidget(self.parameterTable)
+        self.splitterHorizontal.addWidget(self.coSplitter)
         self.splitterHorizontal.setSizes([300,800, 300])
 
         hbox.addWidget(self.splitterHorizontal)
@@ -504,22 +518,25 @@ class Grapher(QtGui.QWidget):
             pOptions['X Units'] = None
         else:
             axis = None
-        p = self.graphicsLayout.addPlot(axisItems=axis)
-        p.addLegend()
-        p.setTitle(pOptions['Title'], size='22pt')
-        p.setLabel('bottom', pOptions["X Label"], units=pOptions["X Units"],
+        self.p = self.graphicsLayout.addPlot(axisItems=axis)
+        self.p.addLegend()
+        self.p.setTitle(pOptions['Title'], size='22pt')
+        self.p.setLabel('bottom', pOptions["X Label"], units=pOptions["X Units"],
                     **STYLE_DEFAULTS)
-        p.setLabel('left', pOptions["Y Label"], units=pOptions["Y Units"],
+        self.p.setLabel('left', pOptions["Y Label"], units=pOptions["Y Units"],
                     **STYLE_DEFAULTS)
-        p.getAxis('bottom').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
-        p.getAxis('left').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
+        self.p.getAxis('bottom').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
+        self.p.getAxis('left').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
         for i in range(len(self.selectedDepVars)):
-            p.plot( x=self.selectedData[0], y=yVals[i],
+            self.p.plot( x=self.selectedData[0], y=yVals[i],
                      name = self.selectedDepVars[i],
                      pen=(i,len(self.selectedDepVars)))
 
-        p.getAxis('left').tickFont = self.font
-        p.getAxis('bottom').tickFont = self.font
+        self.p.getAxis('left').tickFont = self.font
+        self.p.getAxis('bottom').tickFont = self.font
+        
+        self.proxy = pg.SignalProxy(self.p.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
+
 
 
     def plot2D(self):
@@ -533,19 +550,27 @@ class Grapher(QtGui.QWidget):
             if self.indepVarsList[i][2] == 'utc_datetime':
                 axis = {['bottom','left'][i]: TimeAxisItem(orientation=['bottom','left'][i])}
                 pOptions[['X Units','Y Units'][i]] = None
-        p = self.graphicsLayout.addPlot(axisItems=axis, row=1, col=1)
-        p.setTitle(self.datasetName, size='22pt')
-        p.setLabel('bottom', self.indepVarsList[0][0], units=self.indepVarsList[0][3], **STYLE_DEFAULTS)
-        p.setLabel('left', self.indepVarsList[1][0], units=self.indepVarsList[1][3], **STYLE_DEFAULTS)
-        p.getAxis('bottom').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
-        p.getAxis('left').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
+        self.p = self.graphicsLayout.addPlot(axisItems=axis, row=1, col=1)
+        self.p.setTitle(self.datasetName, size='22pt')
+        self.p.setLabel('bottom', self.indepVarsList[0][0], units=self.indepVarsList[0][3], **STYLE_DEFAULTS)
+        self.p.setLabel('left', self.indepVarsList[1][0], units=self.indepVarsList[1][3], **STYLE_DEFAULTS)
+        self.p.getAxis('bottom').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
+        self.p.getAxis('left').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
         img = pg.ImageItem()
         img.setImage(depGrids[index])
-        p.addItem(img)
+        self.p.addItem(img)
         pixelX = (xVals[-1]-xVals[0])/len(xVals)
         pixelY = (yVals[-1]-yVals[0])/len(yVals)
         img.translate(xVals[0],yVals[0])
         img.scale(pixelX,pixelY)
+        print depGrids[index]
+        print xVals
+        print yVals
+        self.xValPass = xVals
+        self.yValPass = yVals
+        self.zValPass = depGrids[index]
+       
+        self.proxy = pg.SignalProxy(self.p.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
 
         # bipolar colormap
         pos = np.array([0., 0.125, 0.375, 0.667, 0.933, 1.])
@@ -571,14 +596,14 @@ class Grapher(QtGui.QWidget):
         # self.cb.hide()
         # print cb.acceptHoverEvents()
 
-        p.scene().addItem(self.cb)
+        self.p.scene().addItem(self.cb)
 
-        axis = p.getAxis('left')
+        axis = self.p.getAxis('left')
         axis.tickFont = self.font
         axis.setWidth(100)
-        axis = p.getAxis('bottom').tickFont = self.font
+        axis = self.p.getAxis('bottom').tickFont = self.font
 
-        p.autoRange()
+        self.p.autoRange()
 
 
     def clearLayout(self, layout):
@@ -669,6 +694,31 @@ class Grapher(QtGui.QWidget):
         #     if len(self.indepVarsList) == 1:
         #         exporter.parameters()['width'] = 100
         #         exporter.export('testPlot.png')
+        
+    def mouseMoved(self, evt):
+        print 'mouse moved!'
+        mousePoint = self.p.vb.mapSceneToView(evt[0])
+        self.xMouseVal = mousePoint.x()
+        self.yMouseVal = mousePoint.y()
+       
+            
+        if len(self.indepVarsList) == 1:
+            self.coBox.setText(str(round(self.xMouseVal, 3)) + ', ' + str(round(self.yMouseVal, 3)))
+        elif len(self.indepVarsList) == 2:
+        
+            xMin = np.min(self.xValPass)
+            xMax = np.max(self.xValPass)
+            xLen = len(self.xValPass)
+            xMouseIndex = int(floor((self.xMouseVal - xMin) / ((xMax - xMin) / xLen)))
+          
+            yMin = np.min(self.yValPass)
+            yMax = np.max(self.yValPass)
+            yLen = len(self.yValPass)
+            
+            yMouseIndex = int(floor((self.yMouseVal - yMin) / ((yMax - yMin) / yLen)))
+            self.zMouseVal = self.zValPass[xMouseIndex, yMouseIndex]
+            self.coBox.setText(str(round(self.zMouseVal, 3)) + ', ' + str(round(self.yMouseVal, 3)) + ', ' + str(round(self.zMouseVal, 3)))
+        #self.co_label.setText("<span style='font-size: 14pt; color: white'> x = %0.2f, <span style='color: white'> y = %0.2f</span>" % (mousePoint.x(), mousePoint.y()))
 
 class ColorBar(pg.GraphicsObject):
 
@@ -737,6 +787,11 @@ class ColorBar(pg.GraphicsObject):
 
     def mouseReleaseEvent(self, *args, **kwargs):
         self.setOpacity(1.0)
+      
+        
+        
+
+    
 
 
 if __name__ == "__main__":
