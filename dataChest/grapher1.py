@@ -417,10 +417,13 @@ class Grapher(QtGui.QWidget):
 
     def updatePlotTypeOptions(self, plotType):
         """Update area below plotType, selection drop down (add/remove variables)"""
-        # select first dep variable and all others with same units and shape
-        varsWithCommonUnitsDict = self.getVarsWithCommonUnitsDict()
-        firstVarList = varsWithCommonUnitsDict.values()[0]
-        self.selectedDepVars = self.getVarsWithCommonShapeList(firstVarList, firstVarList[0])
+        # check if the selected variables are in new data.  If not, find new ones.
+        alreadySelected = set([var[0] for var in self.depVarsList]).intersection(self.selectedDepVars)
+        if len(alreadySelected) < 1:
+            # select first dep variable and all others with same units and shape
+            varsWithCommonUnitsDict = self.getVarsWithCommonUnitsDict()
+            firstVarList = varsWithCommonUnitsDict.values()[0]
+            self.selectedDepVars = self.getVarsWithCommonShapeList(firstVarList, firstVarList[0])
         # populate interface buttons
         self.clearLayout(self.scrollLayout)
         optionsSlice = QtGui.QVBoxLayout()
@@ -696,7 +699,6 @@ class Grapher(QtGui.QWidget):
         #         exporter.export('testPlot.png')
         
     def mouseMoved(self, evt):
-        print 'mouse moved!'
         mousePoint = self.p.vb.mapSceneToView(evt[0])
         self.xMouseVal = mousePoint.x()
         self.yMouseVal = mousePoint.y()
