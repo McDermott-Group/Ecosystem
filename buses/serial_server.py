@@ -74,6 +74,10 @@ class SerialServer(LabradServer):
         else:
             self.enumerate_serial_pyserial()
 
+    def stopServer(self):
+        """We want to make sure each port is closed, which initServer does."""
+        self.initServer()
+
     def enumerate_serial_windows(self):
         """Manually Enumerate the first 20 COM ports.
 
