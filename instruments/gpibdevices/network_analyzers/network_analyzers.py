@@ -445,10 +445,12 @@ class KeysightE5063ADeviceWrapper(AgilentN5230ADeviceWrapper):
 
         # Wait for the measurement to finish.
         sweep_time = yield self.get_sweep_time()
-        yield sleep(sweep_time)
+        number_of_averages = yield self.average_points()
+        yield sleep(sweep_time * number_of_averages)
 
         # Wait for the measurement to finish.
         yield self.query('*OPC?', timeout=24*units.h)
+        print(self.query('*OPC?', timeout=24*units.h))
 
         # Pull the data.
         yield self.write('FORM:DATA ASC')
@@ -517,7 +519,7 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
             cfreq = float(resp) * units.Hz
         else:
             yield self.write('CENT%i' %freq['Hz'])
-        returnVlaue(cfreq)
+        returnValue(cfreq)
 
     @inlineCallbacks
     def frequency_span(self, span=None):
@@ -527,7 +529,7 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
             span = float(resp) * units.Hz
         else:
             yield self.write('SPAN%i' %freq['Hz'])
-        returnVlaue(span)
+        returnValue(span)
 
     @inlineCallbacks
     def start_frequency(self, start=None):
@@ -537,7 +539,7 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
             start = float(resp) * units.Hz
         else:
             yield self.write('STAR%i' %freq['Hz'])
-        returnVlaue(start)
+        returnValue(start)
 
     @inlineCallbacks
     def stop_frequency(self, stop=None):
@@ -561,7 +563,7 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
             bw = float(resp) * units.Hz
         else:
             yield self.write('IFBW%i' %freq['Hz'])
-        returnVlaue(bw)
+        returnValue(bw)
 
     @inlineCallbacks
     def average_mode(self, avg=None):
