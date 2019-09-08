@@ -32,6 +32,7 @@ timeout = 20
 """
 
 import string
+import time
 
 from twisted.internet.defer import DeferredList, DeferredLock
 from twisted.internet.reactor import callLater
@@ -69,6 +70,9 @@ def parseIDNResponse(s, idn_cmd='*IDN?'):
                 return 'HEWLETT-PACKARD 8673E'
             else:
                 return s.strip(string.whitespace).split('REV')[0]
+        elif idn_cmd == 'ID;':
+            return 'HP8593A'
+                
     else:
         return UNKNOWN
 
@@ -164,7 +168,9 @@ class GPIBDeviceManager(LabradServer):
         or the query fails, the name will be listed as '<unknown>'.
         """
         for cls_cmd, idn_cmd in [('*CLS', '*IDN?'), ('', 'ID?'),
-                                 ('CS', 'OI')]:
+                                 ('CS', 'OI'), ('', 'ID;')]:
+            if idn_cmd == 'ID;':
+                time.sleep(5)
             resp = None
             name = UNKNOWN
             p = self.client.servers[server].packet()
@@ -174,13 +180,14 @@ class GPIBDeviceManager(LabradServer):
             print("Sending '%s' to %s" %(idn_cmd, srv_ch))
             try:
                 resp = (yield p.send()).query
+                print ("received '%s' from %s" %(resp, idn_cmd))
             except LRError as e:
                 if 'VisaIOError' in e.msg:
                     resp = ''
                     print("No response to '%s' from %s" %(idn_cmd, srv_ch))
                     continue
             except Exception:
-                print("No response to '%s' from %s" %(idn_cmd, srv_ch))
+                print("No response to '%s' with command '%s'" %(idn_cmd, srv_ch))
                 continue
             # Workaround for old-style devices.
             if idn_cmd in ('*IDN?', 'ID?') and resp.find(',') == -1:
