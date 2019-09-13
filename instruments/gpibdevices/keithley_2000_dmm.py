@@ -43,6 +43,46 @@ class KeithleyServer(GPIBManagedServer):
     name = 'Keithley 2000 DMM' # Server name
     deviceName = ['KEITHLEY INSTRUMENTS INC. MODEL 2000', 'KEITHLEY INSTRUMENTS INC. MODEL 2100']
     #deviceWrapper = KeithleyWrapper
+    
+    @setting(83, 'set_frequency_input_range_and_resolution', input_range='v[V]')
+    def set_frequency_input_range_and_resolution(self, c, input_range=100e-3 * units.V):
+        """Sets the voltage input range and digits of precision
+           for a frequency measurement."""
+        dev = self.selectedDevice(c)
+        yield dev.write('CONF:FREQ '+ str(input_range['V']) + ",MAX")
+        
+    @setting(84, 'get_frequency', returns = 'v[Hz]')
+    def get_frequency(self, c):
+        """Aquires new value for frequency and returns it."""
+        dev = self.selectedDevice(c)
+        frequency = yield dev.query('MEAS:FREQ?')
+        frequency = float(frequency.split(',')[0].strip('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
+        returnValue(frequency * units.Hz)
+    
+    @setting(85, 'set_ac_range', input_range = 'v[V]')
+    def set_ac_range(self, c, input_range = 100e-3 * units.V):
+        """Sets the voltage input range for an AC voltage measurement."""
+        dev = self.selectedDevice(c)
+        yield dev.write('CONF:VOLT:AC '+ str(input_range['V']) + ",MAX") 
+        
+    @setting(86, 'Set Digital Filter Paramters', avg_type = 's', state ='s', count='i')
+    def set_digital_filter_paramters(self, c, avg_type = "REPEAT", state = "ON", count=10):
+        """Sets the digital filtering parameters for an AC voltage measurement."""
+        dev = self.selectedDevice(c)
+        if avg_type in ['REPEAT', 'MOVING']:
+            yield dev.write('SENS:AVER:TCON '+ avg_type) 
+        if state in ["ON", "OFF"]:
+            yield dev.write('SENS:AVER:STATE '+ state)
+        count = '%.1E' % count
+        yield dev.write('SENS:AVER:COUNT ' + count)
+
+    @setting(87, 'Get AC Volts', returns = 'v[V]')
+    def get_ac_volts(self, c):
+        """Aquires new value for AC Voltage and returns it."""
+        dev = self.selectedDevice(c)
+        voltage = yield dev.query('MEAS:VOLT:AC?')
+        voltage = float(voltage.split(',')[0].strip('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
+        returnValue(voltage * units.V)
   
     @setting(11, 'Get DC Volts', returns = 'v[V]')
     def get_dc_volts(self, c):
