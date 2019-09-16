@@ -29,6 +29,11 @@ class FilePicker(QtGui.QWidget):
         self.getDatasetName()
         if self.selectedFileName is not None:
             os.environ['BROWSER_ROOT'] = self.fullFilePath.replace("/", "\\").replace("\\"+self.selectedFileName, "")
+    
+    def getDataChestObject(self):
+        datachest_object = dataChest(self.relativePath)
+        datachest_object.openDataset(self.selectedFileName)
+        return datachest_object
         
     def getDatasetName(self):
         if self.fullFilePath == '':
