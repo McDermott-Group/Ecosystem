@@ -16,7 +16,7 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Keithley 2000 DMM
+name = Keithley DMM
 version = 1.0.0
 description = 
   
@@ -40,9 +40,14 @@ from labrad import units
 
 
 class KeithleyServer(GPIBManagedServer):
-    name = 'Keithley 2000 DMM' # Server name
+    name = 'Keithley DMM' # Server name
     deviceName = ['KEITHLEY INSTRUMENTS INC. MODEL 2000', 'KEITHLEY INSTRUMENTS INC. MODEL 2100']
     #deviceWrapper = KeithleyWrapper
+    @setting(99, 'set_fw_range', input_range='v[Ohm]')
+    def set_fw_range(self, c, input_range):
+        """Aquires the DMM's four wire resistance range and returns it."""
+        dev = self.selectedDevice(c)
+        resistance_range = yield dev.write('CONF:FRES '+str(input_range['Ohm']))
     
     @setting(83, 'set_frequency_input_range_and_resolution', input_range='v[V]')
     def set_frequency_input_range_and_resolution(self, c, input_range=100e-3 * units.V):
