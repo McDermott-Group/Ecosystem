@@ -43,8 +43,8 @@ class FilePicker(QtGui.QWidget):
                 print "The dataChest shall not venture outside of the DATA_ROOT path."
                 return
             else:
-                self.relativePath = self.fullFilePath.strip(self.data_root).split("/")[3:-1]
-                self.selectedFileName = self.fullFilePath.strip(self.data_root).split("/")[-1]
+                self.relativePath = self.fullFilePath.strip(os.environ["DATA_ROOT"]).split("/")[3:-1]
+                self.selectedFileName = self.fullFilePath.strip(os.environ["DATA_ROOT"]).split("/")[-1]
         return
 
 
