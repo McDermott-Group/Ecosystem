@@ -389,7 +389,7 @@ class dataChest(dateStamp):
         + "createDataset()."
         )
 
-  def openDataset(self, filename, modify = False, grapher1 = False):
+  def openDataset(self, filename, modify = False):
     """Opens a dataset in the current working directory if it exists."""
     if '.hdf5' not in filename: #adds file extension if omitted
       filename = filename+".hdf5"
@@ -398,11 +398,11 @@ class dataChest(dateStamp):
       if hasattr(self, 'file'):
         self.file.close() #close current file if existent
       
-      if grapher1 is False:
+      if modify is True:
           self.file = h5py.File(self.pwd()+"/"+filename,'r+') #read+write
           self.currentHDF5Filename = self.pwd() + "/" + filename
       else:
-          self.file = h5py.File(self.pwd()+"/"+filename,'r') #read+write
+          self.file = h5py.File(self.pwd()+"/"+filename,'r') #read only
           self.currentHDF5Filename = self.pwd() + "/" + filename
    
       if modify is True:

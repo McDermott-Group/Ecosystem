@@ -300,7 +300,7 @@ class Grapher(QtGui.QWidget):
         stime = time()
         d = self.d
         d.cd(self.filePathArray[:-1])
-        d.openDataset(self.filePathArray[-1], grapher1 = True)
+        d.openDataset(self.filePathArray[-1])
         datasetVariables = d.getVariables()
         self.parameters = d.getParameterList()
         self.datasetName = d.getDatasetName()
