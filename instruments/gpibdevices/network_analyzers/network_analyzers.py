@@ -230,7 +230,7 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
 
     @inlineCallbacks
     def measurement_setup(self, s_params=['S11'], formats=['MP'],
-            trigger='IMM'):
+            trigger='IMM', electrical_delay_ns=None):
         """
         Setup the measurement.
         
@@ -280,7 +280,9 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
                 yield self.write('CALC:PAR:SEL "M_%s"' %Sp)
                 yield self.write('CALC:FORM MLOG')
                 yield self.write('CALC:PAR:SEL "P_%s"' %Sp)
-                yield self.write('CALC:FORM PHAS')
+                yield self.write('CALC:FORM UPH')
+                if electrical_delay_ns is not None:
+                    yield self.write('CALC:CORR:EDEL:TIME '+str(int(electrical_delay_ns))+ 'NS')
             yield self.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 1))
             yield self.write('DISP:WIND1:TRAC%d:Y:AUTO'%(2 * k + 2))
         
@@ -313,8 +315,16 @@ class AgilentN5230ADeviceWrapper(ReadRawGPIBDeviceWrapper):
             yield self.write('ABORT;SENS:SWE:MODE SING')
 
         # Wait for the measurement to finish.
-        yield self.query('*OPC?', timeout=24*units.h)
-
+        # yield self.query('*OPC?', timeout=24*units.h) <-- old way, blocked GPIB chain entirely
+        measurement_finished = False 
+        yield self.write('*OPC') # will trigger bit in ESR when measurement finished
+        while measurement_finished == False:
+            yield sleep(0.05) # polling rate = 20Hz 
+            opc_bit = yield self.query('*ESR?') # poll ESR for measurement completion
+            opc_bit = int(opc_bit) & 0x1
+            if (opc_bit == 1):
+                measurement_finished = True
+        
         # Pull the data.
         data = ()
         pair = ()
@@ -435,10 +445,12 @@ class KeysightE5063ADeviceWrapper(AgilentN5230ADeviceWrapper):
 
         # Wait for the measurement to finish.
         sweep_time = yield self.get_sweep_time()
-        yield sleep(sweep_time)
+        number_of_averages = yield self.average_points()
+        yield sleep(sweep_time * number_of_averages)
 
         # Wait for the measurement to finish.
         yield self.query('*OPC?', timeout=24*units.h)
+        print(self.query('*OPC?', timeout=24*units.h))
 
         # Pull the data.
         yield self.write('FORM:DATA ASC')
@@ -507,7 +519,7 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
             cfreq = float(resp) * units.Hz
         else:
             yield self.write('CENT%i' %freq['Hz'])
-        returnVlaue(cfreq)
+        returnValue(cfreq)
 
     @inlineCallbacks
     def frequency_span(self, span=None):
@@ -517,7 +529,7 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
             span = float(resp) * units.Hz
         else:
             yield self.write('SPAN%i' %freq['Hz'])
-        returnVlaue(span)
+        returnValue(span)
 
     @inlineCallbacks
     def start_frequency(self, start=None):
@@ -527,7 +539,7 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
             start = float(resp) * units.Hz
         else:
             yield self.write('STAR%i' %freq['Hz'])
-        returnVlaue(start)
+        returnValue(start)
 
     @inlineCallbacks
     def stop_frequency(self, stop=None):
@@ -551,7 +563,7 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
             bw = float(resp) * units.Hz
         else:
             yield self.write('IFBW%i' %freq['Hz'])
-        returnVlaue(bw)
+        returnValue(bw)
 
     @inlineCallbacks
     def average_mode(self, avg=None):

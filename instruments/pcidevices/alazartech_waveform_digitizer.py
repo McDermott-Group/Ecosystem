@@ -664,8 +664,18 @@ class AlazarTechServer(LabradServer):
 
         chs = np.stack([np.hstack([chA, chB]).T,
                         np.hstack([-chB, chA]).T], axis=1)
-        np.dot(timeSeries.reshape(numberOfRecords, -1), np.float32(chs),
-               iqBuffer)
+        
+        try:
+            np.dot(timeSeries.reshape(numberOfRecords, -1), np.float32(chs),
+                   iqBuffer)
+        except Exception as e:
+            print 'numberOfRecords %d' % numberOfRecords
+            print 'timeSeries shape'
+            print timeSeries.shape
+            # print 'size of first dotted array %d' % len(timeSeries.reshape(numberOfRecords, -1))
+            print 'size of second dotted array %d' % len(np.float32(chs))
+            print e
+            
         iqBuffer /= samplesPerRecord
 
         return iqBuffer * units.V
