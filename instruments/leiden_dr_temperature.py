@@ -130,10 +130,10 @@ class LeidenDRPseudoserver(LabradServer):
                 self._offset *= 2
             # Extract temperatures.
             fields = line.split('\t')
-            raw_still = float(fields[10])         # mK
-            raw_exch = float(fields[11])          # mK
-            raw_mix = float(fields[12])           # mK
-            raw_mix_pt1000 = float(fields[13])    # K
+            raw_still = float(fields[13])         # mK
+            raw_exch = float(fields[14])          # mK
+            raw_mix = float(fields[15])           # mK
+            raw_mix_pt1000 = float(fields[16])    # K
 
             if self._arr_still[-1] != raw_still or \
                     self._arr_exch[-1] != raw_exch or \
@@ -201,7 +201,7 @@ class LeidenDRPseudoserver(LabradServer):
     @setting(12, 'Raw Exchange Temperature', returns='v[mK]')
     def raw_exchange_temperature(self, c):
         """Return the raw exchange chamber temperature."""
-        return self._arr_ech[-1] * mK
+        return self._arr_exch[-1] * mK
 
     @setting(13, 'Raw Mix Temperature', returns='v[mK]')
     def raw_mix_temperature(self, c):
