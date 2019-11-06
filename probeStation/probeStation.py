@@ -22,6 +22,7 @@ import datetime
 
 import labrad
 from labrad.server import inlineCallbacks
+from labrad import units
 from dataChest import dataChest
 
 class ProbeStation(QtGui.QWidget):
@@ -38,7 +39,7 @@ class ProbeStation(QtGui.QWidget):
 
         self.areaString = '1,1,1'
         self.innerDiameter = 65
-        self.odd = True
+        self.odd = False
         self.pitchX = 6.25
         self.pitchY = 6.25
         self.fileDir = []
@@ -97,13 +98,15 @@ class ProbeStation(QtGui.QWidget):
 
         # odd/even radio buttons
         self.oddRadio = QtGui.QRadioButton("Odd")
-        self.oddRadio.setChecked(True)
-        self.oddRadio.toggled.connect(lambda:self.setOdd(True))
+        self.oddRadio.setChecked(self.odd)
         dieSetupLayout.addWidget(self.oddRadio)
 
         self.evenRadio = QtGui.QRadioButton("Even")
-        self.evenRadio.toggled.connect(lambda:self.setOdd(False))
+        self.evenRadio.setChecked(not self.odd)
         dieSetupLayout.addWidget(self.evenRadio)
+		
+        self.oddRadio.toggled.connect(lambda:self.setOdd(True))
+        self.evenRadio.toggled.connect(lambda:self.setOdd(False))
 
         # layouts
         dieSetupLayout.addStretch(1)
@@ -130,7 +133,7 @@ class ProbeStation(QtGui.QWidget):
         fileDialog = QtGui.QFileDialog()
         fileDialog.setNameFilters( [self.tr('HDF5 Files (*.hdf5)'), self.tr('All Files (*)')] )
         fileDialog.setDefaultSuffix( '.hdf5' )
-        baseDirList = ['Z:','mcdermott-group','Data']
+        baseDirList = ['Z:','mcdermott-group','data']
         baseDir = os.path.join( *(baseDirList+self.fileDir) )
         fileDialog.setDirectory( baseDir )
         filePath = str(fileDialog.getSaveFileName(self, 'Save File', options=QtGui.QFileDialog.DontConfirmOverwrite))
@@ -141,7 +144,8 @@ class ProbeStation(QtGui.QWidget):
                 filePath = filePath[:-5]
             fileArray = filePath.split('/')
             for elem in baseDirList:
-                fileArray.remove(elem)
+				if fileArray[0] == elem:
+					fileArray.remove(elem)
             self.fileDir = fileArray[:-1]
             fileName = fileArray[-1]
             self.resDataChest = dataChest( self.fileDir )
@@ -238,9 +242,9 @@ class ProbeStation(QtGui.QWidget):
             self.waferMap.changeSelectedDie(1,0)
             self.areaView.setAreasIndex(0)
         elif key == QtCore.Qt.Key_A:
-            self.areaView.decreaseAreasIndex(0)
+            self.areaView.decreaseAreasIndex()
         elif key == QtCore.Qt.Key_D:
-            self.areaView.increaseAreasIndex(0)
+            self.areaView.increaseAreasIndex()
         elif key == QtCore.Qt.Key_Space:
             die = self.waferMap.getSelectedDie()
             area = float(self.areaView.getCurrentArea())
@@ -248,12 +252,15 @@ class ProbeStation(QtGui.QWidget):
             res = yield self.dmm.get_fw_resistance()
             dmmRange = yield self.dmm.get_fw_range()
             yield self.dmm.return_to_local()
-            self.resDataChest.addData( [[die, index, area, dmmRange['Ohm'], res['Ohm']]] )
+            try:
+                self.resDataChest.addData( [[die, np.uint8(index), area, dmmRange['Ohm'], res['Ohm']]] )
+            except Exception as e:
+                print str(e)
             if die not in self.measurements:
                 self.measurements[die] = {}
             if index not in self.measurements[die]:
                 self.measurements[die][index] = []
-            self.measurements[die][index].append(resistance)
+            self.measurements[die][index].append(res['Ohm'])
             self.waferMap.setDieProgress(len(self.measurements[die]))
             print [die, area, dmmRange['Ohm'], res['Ohm']]
             self.areaView.increaseAreasIndex()
@@ -270,7 +277,11 @@ class ProbeStation(QtGui.QWidget):
             except ValueError:
                 pass
         die =  self.waferMap.getSelectedDie()
-        self.areaView.setResistances(self.measurements[die])
+        if die in self.measurements:
+            self.areaView.setResistances(self.measurements[die])
+        else:
+            self.areaView.setResistances({})
+        self.areaView.refreshUI()
         print die
 
 class AreaDisplay(QtGui.QWidget):
@@ -283,17 +294,20 @@ class AreaDisplay(QtGui.QWidget):
         self.resistances = {} # {index,[resistances]}
         self.index = 0
 
-        self.setFixedHeight(55)
-
-        self.container = QtGui.QVBoxLayout()
-        self.setLayout(self.container)
-
+        # self.setFixedHeight(55)
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum,
+                     QtGui.QSizePolicy.Maximum)
+        
+        container = QtGui.QVBoxLayout()
+        
         self.areaView = QtGui.QHBoxLayout()
-        container.addWidget(self.areaView)
-
+        
         self.resView = QtGui.QHBoxLayout()
-        container.addWidget(self.resView)
 
+        container.addLayout(self.areaView)
+        container.addLayout(self.resView)
+
+        self.setLayout(container)
         self.initUI()
 
     def initUI(self):
@@ -301,27 +315,29 @@ class AreaDisplay(QtGui.QWidget):
 
     def refreshUI(self):
         # delete all the old labels
-        for l in self.labels:
+        for l in self.areaLabels:
             self.areaView.removeWidget(l)
             l.deleteLater()
             l.setParent(None)
 
         #create all the new labels
-        self.labels = []
+        self.areaLabels = []
         index = 0
         areaList = self.areaString.strip(',').split(',')
         self.index = self.index%len(areaList)
         for a in areaList:
             l = QtGui.QLabel(a) # area line
             l.setAlignment(QtCore.Qt.AlignCenter)
-            l.setFont(QtGui.QFont("Arial",36))
+            l.setFont(QtGui.QFont("Arial",30))
 
             if index in self.resistances:
                 l.setStyleSheet('color: green')
-                r = QtGui.QLabel('\n'.join(['{%.0f}'.format(r) for r in self.resistances[index])) # resistances below
+                resList = ['{:.0f}'.format(r) for r in self.resistances[index]]
+                r = QtGui.QLabel('\n'.join(resList)) # resistances below
             else:
                 r = QtGui.QLabel('')
             r.setAlignment(QtCore.Qt.AlignCenter)
+            # r.setAlignment(QtCore.Qt.AlignTop)
             r.setFont(QtGui.QFont("Arial",12))
 
             if index == self.index:
@@ -329,8 +345,8 @@ class AreaDisplay(QtGui.QWidget):
 
             index += 1
             l.setFixedHeight(50)
-            self.labels.append(l)
-            self.labels.append(r)
+            self.areaLabels.append(l)
+            self.areaLabels.append(r)
             self.areaView.addWidget(l)
             self.resView.addWidget(r)
             if index < len(areaList) or self.areaString[-1] is ',':
@@ -340,12 +356,8 @@ class AreaDisplay(QtGui.QWidget):
                 commaLabel.setStyleSheet('color: grey')
                 commaLabel.setFixedWidth(10)
                 commaLabel.setFixedHeight(50)
-                self.labels.append(commaLabel)
+                self.areaLabels.append(commaLabel)
                 self.areaView.addWidget(commaLabel)
-
-            # resistances below
-            if index in
-            r = QtGui.QLabel(a)
 
     def setAreasString(self, string):
         self.areaString = string
@@ -443,7 +455,7 @@ class WaferMap(QtGui.QWidget):
     def getSelectedDie(self):
         return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[self.selectedDie[0]] + str(int(self.selectedDie[1])+1)
 
-    def setDieProgress(self, x, y, numberCompleted):
+    def setDieProgress(self, numberCompleted):
         self.dieMapData[self.selectedDie[0]][self.selectedDie[1]] = numberCompleted
 
     def paintEvent(self, e):

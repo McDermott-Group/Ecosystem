@@ -208,7 +208,7 @@ class PfeifferVacuumControlServer(DeviceServer):
     def getPressures(self, dev):
         """Read sensor data."""
         # Iterate through sensors 1 to 6.
-        for i in range(1, 7):
+        for i in range(4, 7):
             # The serial command 'PRx' tells the device that we are
             # talking about sensor x.
             yield self.dev.write("PR{0}\r\n".format(i))
@@ -216,6 +216,7 @@ class PfeifferVacuumControlServer(DeviceServer):
             yield sleep(0.1)
             # The device responds with an acknowledge, discard it.
             yield self.dev.read()
+            # Deferred at 0x52d0170, which i guess is a time    #Liu
             yield sleep(0.1)
             # Write the 'enquire' code to the serial bus. This tells the
             # device that we want a reading.
@@ -226,9 +227,10 @@ class PfeifferVacuumControlServer(DeviceServer):
             # 'status,measurement.'
             # Separate the status code from the measurement.
             response = response.rsplit(',')
-            pressure = response[1]
+            print("response is", response)
+            pressure = response[1].strip().split('\r\n\x15')[0]
             status = response[0]
-            self.measurements[i-1] = float(response[1]) * mbar
+            self.measurements[i - 1] = float(pressure) * mbar
             self.statusCodes[i-1] = response[0]
         
     @inlineCallbacks

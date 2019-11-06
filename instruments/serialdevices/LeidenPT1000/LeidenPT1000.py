@@ -182,6 +182,7 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
             p.get(k, key = k)
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys)
+        print self.serialLinks
     
     @inlineCallbacks
     def findDevices(self):
