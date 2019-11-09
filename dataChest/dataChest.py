@@ -345,13 +345,13 @@ class dataChest(dateStamp):
           desiredVarList = self.file[varTypes].keys()
         for variables in desiredVarList:
           varGrp = self.file[varTypes]
-          dataset = varGrp[variables].value
+          dataset = varGrp[variables]
           originalShape = varGrp[variables].attrs["shapes"]
           chunkSize = self._flatShape(originalShape)[0]
           totalLen = varGrp[variables].shape[0]
           numChunks = totalLen/chunkSize
           dataDict[variables]=[]
-          if len(originalShape)>1 or originalShape!=[1]:           
+          if len(originalShape)>1 or originalShape!=[1]:
             for ii in range(0, numRows):
               chunk = np.asarray(dataset[ii*chunkSize:(ii+1)*chunkSize])
               chunk = np.reshape(chunk, tuple(originalShape))
