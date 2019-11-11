@@ -82,9 +82,13 @@ class SR560Wrapper(DeviceWrapper):
         """Read data value from the SR560 unit."""
         ans = yield self.server.read(context=self.ctx)
         returnValue(ans)
+        
+    # you may need read_line and write_line
+    
 
 
 class SR560Server(DeviceServer):
+    """Provides direct access to serial devices."""
     deviceName = 'SR560'
     name = 'SR560'
     deviceWrapper =  SR560Wrapper
@@ -125,7 +129,28 @@ class SR560Server(DeviceServer):
             devName = '{} - {}'.format(server, port)
             devs += [(name, (server, port))]
         returnValue(devs)
-    
+        
+
+
+    @setting(8, 'set_input_coupling', coupling='s', returns='s')
+    def set_input_coupling(self, c, coupling=None):
+        """Get or sets the input coupling.
+        Args:
+            coupling:  0: GND, 1: DC, or 2:AC
+        Returns:
+            (int):  The input coupling after setting (if requested).
+        """
+        coupling_dict = {
+            'GND': 0,
+            'DC' : 1,
+            'AC' : 2
+        }
+        coupling_number = coupling_dict[coupling]
+        dev = self.selectedDevice(c)
+        yield dev.write("LISN 3\r\n")
+        yield dev.write("CPLG {}\r\n".format(coupling_number))
+        returnValue('Input coupling has been set to {}'.format(coupling))
+
 __server__ = SR560Server()
 
 
