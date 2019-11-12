@@ -13,6 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+
+# To do
+# 1. Need to make  "yield dev.write("LISN 3\r\n")" more general. This means I am now talking to
+#   the sr560 whose address of unit is 3.
+
 """
 ### BEGIN NODE INFO
 [info]
