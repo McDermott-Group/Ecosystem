@@ -131,15 +131,20 @@ class SR560Server(DeviceServer):
         returnValue(devs)
         
 
-
-    @setting(8, 'set_input_coupling', coupling='s', returns='s')
+    @setting(8, 'operate_amplifier_blanking', blanking='s', returns='s')
+    def operate_amplifier_blanking(self, c, blanking=None):
+        blanking_dict = {
+            'Not Blanked': 0,
+            'Blanked' : 1
+        }
+        blanking_number = blanking_dict[blanking]
+        dev = self.selectedDevice(c)
+        yield dev.write("LISN 3\r\n")
+        yield dev.write("BLINK {}\r\n".format(blanking_number))
+        returnValue('Blanking has been set to {}'.format(blanking))
+        
+    @setting(9, 'set_input_coupling', coupling='s', returns='s')
     def set_input_coupling(self, c, coupling=None):
-        """Get or sets the input coupling.
-        Args:
-            coupling:  0: GND, 1: DC, or 2:AC
-        Returns:
-            (int):  The input coupling after setting (if requested).
-        """
         coupling_dict = {
             'GND': 0,
             'DC' : 1,
@@ -149,7 +154,174 @@ class SR560Server(DeviceServer):
         dev = self.selectedDevice(c)
         yield dev.write("LISN 3\r\n")
         yield dev.write("CPLG {}\r\n".format(coupling_number))
-        returnValue('Input coupling has been set to {}'.format(coupling))
+        returnValue('Input coupling has been set to {}'.format(coupling))    
+        
+    @setting(10, 'set_dynamic_reserve', dynamic_reserve='s', returns='s')
+    def set_dynamic_reserve(self, c, dynamic_reserve=None):
+        dynamic_reserve_dict = {
+            'low noise': 0,
+            'high DR' : 1,
+            'calibration gains' : 2
+        }
+        dynamic_reserve_number = dynamic_reserve_dict[dynamic_reserve]
+        dev = self.selectedDevice(c)
+        yield dev.write("LISN 3\r\n")
+        yield dev.write("DYNR {}\r\n".format(dynamic_reserve_number))
+        returnValue('Dynamic reserve has been set to {}'.format(dynamic_reserve))
+
+    @setting(11, 'set_filter', filter='s', returns='s')
+    def set_filter(self, c, filter=None):
+        filter_dict = {
+            'bypass': 0,    # This corresponds to DC
+            '6dB low pass' : 1,
+            '12dB low pass' : 2,
+            '6 dB high pass' :3,
+            '12dB high pass' : 4,
+            'bandpass' : 5  # This enables both of the 6dB low/high pass
+        }
+        filter_number = filter_dict[filter]
+        dev = self.selectedDevice(c)
+        yield dev.write("LISN 3\r\n")
+        yield dev.write("FLTM {}\r\n".format(filter_number))
+        returnValue('Filter mode has been set to {}'.format(filter))
+        
+    @setting(12, 'set_gain', gain='s', returns='s')
+    def set_gain(self, c, gain=None):
+        gain_dict = {
+            '1' : 0,
+            '2' : 1,
+            '5' : 2,
+            '10' : 3,
+            '20' : 4,
+            '50' : 5,
+            '100' : 6,
+            '200' : 7,
+            '500' : 8,
+            '1000': 9,
+            '2000': 10,
+            '5000' : 11,
+            '10000' : 12,
+            '20000' : 13,
+            '50000' : 14
+        }
+        gain_number = gain_dict[gain]
+        dev = self.selectedDevice(c)
+        yield dev.write("LISN 3\r\n")
+        yield dev.write("GAIN {}\r\n".format(gain_number))
+        returnValue('Gain has been set to {}'.format(gain))
+
+    @setting(13, 'set_highpass_filter', highpass_filter='s', returns='s')
+    def set_highpass_filter(self, c, highpass_filter=None):
+        # If the filter has been set to bandpass mode, lowpass should always be higher than highpass
+        highpass_filter_dict = {
+            '0.03' : 0,
+            '0.1' : 1,
+            '0.3' : 2,
+            '1' : 3,
+            '3' : 4,
+            '10' : 5,
+            '30' : 6,
+            '100' : 7,
+            '300' : 8,
+            '1k' : 9,
+            '3k' : 10,
+            '10k' : 11
+        }
+        highpass_filter_number = highpass_filter_dict[highpass_filter]
+        dev = self.selectedDevice(c)
+        yield dev.write("LISN 3\r\n")
+        yield dev.write("HFRQ {}\r\n".format(highpass_filter_number))
+        returnValue('Highpass filter has been set to {} Hz'.format(highpass_filter))
+        
+        
+    @setting(14, 'set_signal_invert_sense', signal_invert_sense='s', returns='s')
+    def set_signal_invert_sense(self, c, signal_invert_sense=None):
+        signal_invert_sense_dict = {
+            'non-inverted' : 0,
+            'inverted' : 1
+        }
+        signal_invert_sense_number = signal_invert_sense_dict[signal_invert_sense]
+        dev = self.selectedDevice(c)
+        yield dev.write("LISN 3\r\n")
+        yield dev.write("INVT {}\r\n".format(signal_invert_sense_number))
+        returnValue('Signal invert sense has been set to {}'.format(signal_invert_sense))
+
+    @setting(15, 'set_lowpass_filter', lowpass_filter='s', returns='s')
+    def set_lowpass_filter(self, c, lowpass_filter=None):
+        # If the filter has been set to bandpass mode, lowpass should always be higher than highpass
+        lowpass_filter_dict = {
+            '0.03' : 0,
+            '0.1' : 1,
+            '0.3' : 2,
+            '1' : 3,
+            '3' : 4,
+            '10' : 5,
+            '30' : 6,
+            '100' : 7,
+            '300' : 8,
+            '1k' : 9,
+            '3k' : 10,
+            '10k' : 11,
+            '30k' : 12,
+            '100k' : 13,
+            '300k' : 14,
+            '1M' :15
+        }
+        lowpass_filter_number = lowpass_filter_dict[lowpass_filter]
+        dev = self.selectedDevice(c)
+        yield dev.write("LISN 3\r\n")
+        yield dev.write("LFRQ {}\r\n".format(lowpass_filter_number))
+        returnValue('Lowpass filter has been set to {} Hz'.format(lowpass_filter))
+      
+    @setting(16, 'set_overload', returns='s')
+    def reset_overload(self, c):
+        dev = self.selectedDevice(c)
+        yield dev.write("LISN 3\r\n")
+        yield dev.write("ROLD\r\n")
+        returnValue('Overload has been reset for 1/2 second')
+        
+    @setting(17, 'set_input_source', input_source='s', returns='s')
+    def reset_input_source(self, c, input_source=None):
+        input_source_dict = {
+            'A' : 0,
+            'A-B' : 1,
+            'B' : 2
+        }
+        input_source_number = input_source_dict[input_source]
+        dev = self.selectedDevice(c)
+        yield dev.write("LISN 3\r\n")
+        yield dev.write("SRCE {}\r\n".format(input_source_number))
+        returnValue('Input source has been set to {}'.format(input_source))
+        
+        
+    @setting(18, 'set_vernier_gain_status', vernier_gain_status='s', returns='s')
+    def set_vernier_gain_status(self, c, vernier_gain_status=None):
+        vernier_gain_status_dict = {
+            'cal\'d gain' : 0,
+            'vernier gain' : 1
+        }
+        vernier_gain_status_number = vernier_gain_status_dict[vernier_gain_status]
+        dev = self.selectedDevice(c)
+        yield dev.write("LISN 3\r\n")
+        yield dev.write("UCAL {}\r\n".format(vernier_gain_status_number))
+        returnValue('Vernier gain status has been set to {}'.format(vernier_gain_status))
+
+    @setting(19, 'set_vernier_gain', vernier_gain='s', returns='s')
+    def set_vernier_gain(self, c, vernier_gain=None):
+        """ Sets the vernier gian to i%. i = 0 to 100."""
+        dev = self.selectedDevice(c)
+        yield dev.write("LISN 3\r\n")
+        yield dev.write("UCGN {}\r\n".format(vernier_gain))
+        returnValue('Vernier gain has been set to {}%'.format(vernier_gain))       
+        
+       
+    @setting(100, 'reset', returns='s')
+    def reset(self, c):
+        """Recalls default settings."""
+        dev = self.selectedDevice(c)
+        yield dev.write("LISN 3\r\n")
+        yield dev.write("*RST")
+        returnValue('Recalls default settings')
 
 __server__ = SR560Server()
 
