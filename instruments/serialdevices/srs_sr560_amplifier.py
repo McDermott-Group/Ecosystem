@@ -180,7 +180,7 @@ class SR560Server(DeviceServer):
             'bypass': 0,    # This corresponds to DC
             '6dB low pass' : 1,
             '12dB low pass' : 2,
-            '6 dB high pass' :3,
+            '6dB high pass' :3,
             '12dB high pass' : 4,
             'bandpass' : 5  # This enables both of the 6dB low/high pass
         }
