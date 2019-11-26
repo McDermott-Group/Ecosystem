@@ -38,7 +38,9 @@ from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from struct import unpack
 from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad import util
-from labrad.units import MHz, GHz
+from labrad.units import kHz, MHz, GHz
+from datetime import datetime
+import time
 
 __QUERY__ = """\
 :FORM INT,32
@@ -47,26 +49,26 @@ __QUERY__ = """\
 
 class SpectrumAnalyzer(GPIBManagedServer):
     name = 'Spectrum Analyzer Server'
-    deviceName = ['HP8593A',
-                  'Agilent Technologies N9010A',
-                  'Keysight Technologies N9010A',
-                  'Agilent Technologies N9020A',
-                  'Keysight Technologies N9020A']
+    deviceName = ['HP8593A']
     deviceWrapper = GPIBDeviceWrapper
-
+    
     @setting(10, 'Get Trace',
                  data=['{Query TRACE1}',
                           'w {Specify trace to query: 1, 2, or 3}'],
                  returns=['v[MHz] {start} v[MHz] {step} *v {y-values}'])
     def get_trace(self, c, data=1):
+                
         """Returns the y-values of the current trace from the spectrum analyzer"""
         dev = self.selectedDevice(c)
         if data < 1 or data > 3:
             raise Exception('data out of range')
         trace = data
-        start = float((yield dev.query('FA?;')))
-        span = float((yield dev.query('SP?;')))
+        # start = float((yield dev.query('FA?;')))
+        # span = float((yield dev.query('SP?;')))
+        start = 0.0
+        span = 0.0
         maxRetries = 10
+
         for i in range(maxRetries):
             try:
                 yield dev.write('TRA?;')
@@ -79,30 +81,34 @@ class SpectrumAnalyzer(GPIBManagedServer):
                 print "Failed to get trace, trying again."
             else:
                 raise Exception("Failed to get trace")
+
+        
         n = len(vals)
+        
+        # print('get_read takes:', t2-t1)
         returnValue((start/1.0e6*MHz, span/1.0e6/(n-1)*GHz, vals))
         
-    @setting(12, 'Get Averaged Trace',
-                 data=['{Query TRACE1}',
-                          'w {Specify trace to query: 1, 2, or 3}'],
-                 returns=['v[MHz] {start} v[MHz] {step} *v {y-values}'])
-    def get_averaged_trace(self, c, data=1):
-        dev = self.selectedDevice(c)
-        self.switch_average(c, setting = 'OFF')
-        averaging = True
-        self.switch_average(c, setting = 'ON')
-        yield dev.write('*CLS')
-        yield dev.write('*ESE 1')
-        yield dev.write(':INIT:IMM')
-        yield dev.write('*OPC')
-        while averaging:
-            result = yield dev.query('*STB?')
-            if int(result)&(1<<5):
-                averaging = False
-            yield util.wakeupCall(1)
-        trace =  yield self.get_trace(c, data = data)
-        self.switch_average(c, setting = 'OFF')
-        returnValue(trace)
+    # @setting(12, 'Get Averaged Trace',
+                 # data=['{Query TRACE1}',
+                          # 'w {Specify trace to query: 1, 2, or 3}'],
+                 # returns=['v[MHz] {start} v[MHz] {step} *v {y-values}'])
+    # def get_averaged_trace(self, c, data=1):
+        # dev = self.selectedDevice(c)
+        # self.switch_average(c, setting = 'OFF')
+        # averaging = True
+        # self.switch_average(c, setting = 'ON')
+        # yield dev.write('*CLS')
+        # yield dev.write('*ESE 1')
+        # yield dev.write(':INIT:IMM')
+        # yield dev.write('*OPC')
+        # while averaging:
+            # result = yield dev.query('*STB?')
+            # if int(result)&(1<<5):
+                # averaging = False
+            # yield util.wakeupCall(1)
+        # trace =  yield self.get_trace(c, data = data)
+        # self.switch_average(c, setting = 'OFF')
+        # returnValue(trace)
 
 
     @setting(20, 'Peak Frequency',
@@ -216,7 +222,7 @@ class SpectrumAnalyzer(GPIBManagedServer):
         dev.write(':ST %gms' % f['ms'])
         
     @setting(604, 'set_sweep_mode', setting='s', returns='')
-    def set_sweep_mode(self, c, setting='CONTS'):
+    def set_sweep_mode(self, c, setting='s'):
         """This sets the sweep mode """
         allowed = ['CONTS', 'SNGLS']
         if setting not in allowed:
@@ -240,7 +246,7 @@ class SpectrumAnalyzer(GPIBManagedServer):
         if setting not in allowed:
             raise Exception('allowed settings are: %s' % allowed)
         dev = self.selectedDevice(c)
-        dev.write(':TM %s;' % setting)
+        dev.write('TM %s;' % setting)
         # dev.write('TM EXT;' % setting)
         
     @setting(701, 'Average ON/OFF', setting='s', returns='')
