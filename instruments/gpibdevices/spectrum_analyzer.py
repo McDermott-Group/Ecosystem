@@ -71,9 +71,14 @@ class SpectrumAnalyzer(GPIBManagedServer):
 
         for i in range(maxRetries):
             try:
+
                 yield dev.write('TRA?;')
+                # yield dev.write('TRA')
+                # t1 = time.time()
                 resp = yield dev.read_raw()
+                # t2 = time.time()
                 vals = _parseBinaryData(resp)
+
                 break
             except Exception:
                 pass
