@@ -134,6 +134,7 @@ class RuOxWrapper(GPIBDeviceWrapper):
         self.onlyChannel = 0
         print "Initializing %s" % self.name
         yield self.loadDeviceInformation()
+        return
         # also we should set the box settings here
         yield self.write('RDGRNG 0,0,04,15,1,0')
         self.alive = True

@@ -75,7 +75,7 @@ class nViewer:
         Return.begin()
         self.gui.addDevice(Return)
         
-        Still = Device("Still")
+        Still = Device("Keg")
         Still.setServerName("mks_pdr2000_server")
         Still.addParameter("Pressure 1", "get_pressure", None, index = 0)
         Still.addParameter("Pressure 2", "get_pressure", None, index = 1)
@@ -88,7 +88,7 @@ class nViewer:
         Still.begin()
         self.gui.addDevice(Still)
 
-        Keg = Device("Keg")
+        Keg = Device("Still")
         Keg.setServerName("mks_pdr2000_server")
         Keg.addParameter("Pressure 1", "get_pressure", None, index = 0)
         Keg.addParameter("Pressure 2", "get_pressure", None, index = 1)
@@ -136,9 +136,9 @@ class nViewer:
         lake218.begin()
         self.gui.addDevice(lake218)
         
-        grapher = Mhdf5Device("Grapher")
-        grapher.begin()
-        self.gui.addDevice(grapher)
+        # grapher = Mhdf5Device("Grapher")
+        # grapher.begin()
+        # self.gui.addDevice(grapher)
         
         bigButton = ssc.MStartStopCooldownWidget( os.environ['DATA_ROOT']+'\\cooldown',
                                                         os.environ['DATA_ROOT']+'\\standbyData')

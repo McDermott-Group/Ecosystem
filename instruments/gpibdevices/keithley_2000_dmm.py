@@ -41,7 +41,7 @@ from labrad import units
 
 class KeithleyServer(GPIBManagedServer):
     name = 'Keithley 2000 DMM' # Server name
-    deviceName = ['KEITHLEY INSTRUMENTS INC. MODEL 2000', 'KEITHLEY INSTRUMENTS INC. MODEL 2100']
+    deviceName = ['KEITHLEY INSTRUMENTS INC. MODEL 2000', 'KEITHLEY INSTRUMENTS INC. MODEL 2100', 'KEITHLEY INSTRUMENTS INC. MODEL 2400']
     #deviceWrapper = KeithleyWrapper
   
     @setting(11, 'Get DC Volts', returns = 'v[V]')
@@ -70,7 +70,7 @@ class KeithleyServer(GPIBManagedServer):
         else:
             range = ''
         yield dev.write('TRIGger:SOURce IMMediate')
-        resistance = yield dev.query('MEAS:FRES? '+str(range))
+        resistance = yield dev.query(('MEAS:FRES? '+str(range)).strip())
         resistance = float(resistance.split(',')[0].strip('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
         returnValue(resistance * units.Ohm)
         
