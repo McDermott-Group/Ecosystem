@@ -117,8 +117,9 @@ def email(toAddrs, subject, msg, domain, server, username='LabRAD', password=Non
             #Messaging was a success, but some recipients may have failed
             return (True, toAddrs)
             
-        except Exception:
+        except Exception, e:
             print 'Attempt %d failed. Message not sent' %(attempt+1)
+            print str(e)
             if attempt<attempts-1:
                 print 'Trying again. This is attempt %d' %(attempt+2)
                 continue

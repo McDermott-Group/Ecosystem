@@ -21,7 +21,7 @@ import pylab, numpy
 import datetime, struct
 from dateutil import tz
 import Tkinter
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import labrad
 from labrad import units
 from labrad.server import (inlineCallbacks, returnValue)
@@ -198,10 +198,10 @@ class ADRController(object):#Tkinter.Tk):
         self.stageGGG, = self.ax.plot_date([],[],'-')
         self.stageFAA, = self.ax.plot_date([],[],'-')
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
-        self.canvas.show()
+        self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=Tkinter.TOP, fill=Tkinter.BOTH, expand=1)
         #temp plot toolbar at bottom
-        self.toolbar = NavigationToolbar2TkAgg( self.canvas, root )
+        self.toolbar = NavigationToolbar2Tk( self.canvas, root )
         self.toolbar.update()
         self.canvas._tkcanvas.pack(side=Tkinter.TOP, fill=Tkinter.BOTH, expand=1)
         #row of controls beneath temp plot
@@ -697,6 +697,8 @@ class ADRController(object):#Tkinter.Tk):
             minute = '0' + minute
         
         time = datetime.datetime.strptime(day+month+hour+minute+year, "%d%m%H%M%Y")
+        
+        self.cxn[self.selectedADR].schedule_mag_cycle(time)
               
 
     def _quit(self):
