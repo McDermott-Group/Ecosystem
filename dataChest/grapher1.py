@@ -61,6 +61,7 @@ class Grapher(QtGui.QWidget):
 
         self.filters = QtCore.QStringList()
         self.filters.append("*.hdf5")
+        self.dir_filters = QtCore.QRegExp('^((?!MATLABData|TextData|TEST).)*$')
 
         self.d = dataChest(None, True)
 
@@ -73,6 +74,10 @@ class Grapher(QtGui.QWidget):
         self.model.nameFilterDisables()
         self.model.setNameFilters(self.filters)
         
+        self.proxyModel = QtGui.QSortFilterProxyModel()
+        self.proxyModel.setSourceModel(self.model)
+        self.proxyModel.setFilterRegExp(self.dir_filters)
+        
         self.xMouseVal = 0.0
         self.yMouseVal = 0.0
 
@@ -82,15 +87,16 @@ class Grapher(QtGui.QWidget):
         self.directoryBrowserLabel.setText("Directory Browser:")
 
         self.directoryTree = QtGui.QTreeView(self)
-        self.directoryTree.setModel(self.model)
-        self.directoryTree.setRootIndex(self.indexRoot)
+        self.directoryTree.setModel(self.proxyModel)
+        self.directoryTree.setRootIndex(self.proxyModel.mapFromSource(self.indexRoot))
+        self.directoryTree.setIndentation(10)
         self.directoryTree.hideColumn(2)
         self.directoryTree.header().setResizeMode(QtGui.QHeaderView.ResizeToContents)
         self.directoryTree.header().setStretchLastSection(False)
         self.directoryTree.clicked.connect(self.fileBrowserSelectionMade)
 
-        self.sort = QtGui.QSortFilterProxyModel(self.directoryTree)
-        self.sort.setSourceModel(self.model)
+        # self.sort = QtGui.QSortFilterProxyModel(self.directoryTree)
+        # self.sort.setSourceModel(self.model)
         self.directoryTree.setSortingEnabled(True)
 
         self.dirTreeWidget = QtGui.QWidget(self)
@@ -270,6 +276,7 @@ class Grapher(QtGui.QWidget):
     @QtCore.pyqtSlot(QtCore.QModelIndex)
     def fileBrowserSelectionMade(self, index):
         # Called when a directory tree selection is made.
+        index = self.proxyModel.mapToSource(index)
         indexItem = self.model.index(index.row(), 0, index.parent())
         fileName = str(self.model.fileName(indexItem))
         filePath = str(self.model.filePath(indexItem))
