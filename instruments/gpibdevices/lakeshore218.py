@@ -33,7 +33,7 @@ timeout = 5
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 from labrad.server import setting
-from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
+from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper, GPIBDeviceServer
 from labrad import units
 
 

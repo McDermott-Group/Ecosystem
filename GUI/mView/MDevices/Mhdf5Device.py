@@ -20,7 +20,7 @@ class Mhdf5Device(MDevice.MDevice):
         self.setupMenus()
 
     def setupMenus(self):
-        root = os.environ['DATA_CHEST_ROOT']
+        root = os.environ['DATA_ROOT']
         container = self.getFrame().getContainer()
         self.HBox = container.getTopHBox()
         self.BHBox = container.getBottomHBox()
@@ -32,7 +32,7 @@ class Mhdf5Device(MDevice.MDevice):
 
     def prompt(self, dir):
         '''Called when button is pushed'''
-        root = os.environ['DATA_CHEST_ROOT']
+        root = os.environ['DATA_ROOT']
 #        dir = QtGui.QFileDialog.getOpenFileName(None, "Open Data Set...",
 #                root, "Data Chest Files (*.hdf5)")
         dir = str(dir)

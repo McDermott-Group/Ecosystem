@@ -17,16 +17,14 @@
 ### BEGIN NODE INFO
 [info]
 name = MKS PDR2000
-version = 1.1.0
-description = Monitors vacuum system
-
+version = 1.2.0
+description = Monitors DR vacuum system
 [startup]
 cmdline = %PYTHON% %FILE%
 timeout = 20
-
 [shutdown]
 message = 987654321
-timeout = 20
+timeout = 5
 ### END NODE INFO
 """
 
@@ -58,6 +56,7 @@ class MKSPDR2000Wrapper(DeviceWrapper):
         p.bytesize(8L)
         p.parity('N')
         p.timeout(0.1 * u.s)
+        p.read()
         # Clear out the Rx buffer. This is necessary for some devices.
         yield p.send()
     
@@ -156,7 +155,8 @@ class MKSPDR2000Server(DeviceServer):
             p.get(k, key=k)
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys)
-
+        print self.serialLinks
+        
     @inlineCallbacks       
     def findDevices(self):
         """Find available devices from list stored in the registry."""
