@@ -547,7 +547,8 @@ def configure_awg(awg, channel_numbers=[1, 2, 3, 4]):
         start_awg(awg, channel_number)
 
 
-def load_awgs(keysight_waveforms_list, original_waveforms_dict, n_reps):
+def load_awgs(keysight_waveforms_list, original_waveforms_dict, n_reps,
+              awgs=[]):
     """Prepares the AWGs for triggering, including initialization,
     waveform loading, synchronization settings.
 
@@ -570,7 +571,6 @@ def load_awgs(keysight_waveforms_list, original_waveforms_dict, n_reps):
     for keysight_waveform in keysight_waveforms_list:
         unique_slot_numbers.append(keysight_waveform.slot_number)
     unique_slot_numbers = list(set(unique_slot_numbers))
-    awgs = []
     for slot_number in unique_slot_numbers:
         awg = initialize_awg(slot_number)
         load_waveforms_onto_awg(awg, keysight_waveforms_list,
