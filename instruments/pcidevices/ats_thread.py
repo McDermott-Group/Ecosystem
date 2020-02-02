@@ -407,7 +407,7 @@ class ADC(object):
         self.adc_board_handle.setRecordSize(NUMBER_OF_PRE_TRIGGER_SAMPLES,
                                             self.number_of_samples_per_trigger)
                                             
-        iq_buffers = np.empty((self.number_of_triggers, 2), dtype=np.float64)
+        iq_buffers = np.empty((self.number_of_triggers, 2), dtype=np.float32)
         print(type(dma_buffers[0]))
         return records_buffer, dma_buffers, iq_buffers
 
@@ -467,17 +467,17 @@ class ADC(object):
                     self.number_of_samples_per_trigger)
 
         self.reshaped_records_buffer = \
-            records_buffer_view.astype(np.float64, copy=False)
+            records_buffer_view.astype(np.float32, copy=False)
         code_zero = float(1 << (BITS_PER_SAMPLE - 1)) - 0.5
         code_range = float(1 << (BITS_PER_SAMPLE - 1)) - 0.5
         self.reshaped_records_buffer -= code_zero
         self.reshaped_records_buffer *= (self.input_voltage_range['V'] / code_range)
         
-    def get_records(self):
-        return self.reshaped_records_buffer * V
+    def get_records(self, trigger_number=0, number_of_triggers=1):
+        return self.reshaped_records_buffer[trigger_number::number_of_triggers] * V
         
-    def get_average(self):
-        return np.mean(self.reshaped_records_buffer, axis=0) * V
+    def get_average(self, trigger_number=0, number_of_triggers=1):
+        return np.mean(self.reshaped_records_buffer[trigger_number::number_of_triggers], axis=0) * V
         
     def get_times(self):
         n = self.number_of_samples_per_trigger
@@ -508,7 +508,7 @@ class ADC(object):
                         np.hstack([-ch_b, ch_a]).T], axis=1)
         
         try:
-            np.dot(self.reshaped_records_buffer.reshape(n_triggers, -1), np.float64(chs),
+            np.dot(self.reshaped_records_buffer.reshape(n_triggers, -1), np.float32(chs),
                    self.iq_buffers)
         except Exception as e:
             # print(type(self.reshaped_records_buffer))
