@@ -97,16 +97,16 @@ def configure_awg_channel(awg, channel_number,
     if channel_number in [1, 2, 3, 4]:
         waveshape_error_code = awg.channelWaveShape(channel_number,
                                                     output_mode)
+        if waveshape_error_code < 0:
+            slot_number = awg.getSlot()
+            raise Exception("While configuring the wave shape for the AWG in"
+                            " slot number %i" % slot_number + ' with channel'
+                            ' number %i, ' % channel_number + "error code %i"
+                            " was encountered." % waveshape_error_code +
+                            " See the SD_Error() class in location: " +
+                            KEYSIGHT_LIBRARY_PATH + " for more details.")
     else:
         raise Exception("channel_number must be an integer from 1 to 4.")
-    if waveshape_error_code < 0:
-        slot_number = awg.getSlot()
-        raise Exception("While configuring the wave shape for the AWG in"
-                        " slot number %i" % slot_number + ' with channel'
-                        ' number %i, ' % channel_number + "error code %i"
-                        " was encountered." % waveshape_error_code +
-                        " See the SD_Error() class in location: " +
-                        KEYSIGHT_LIBRARY_PATH + " for more details.")
 
 
 def initialize_awg(slot_number,
@@ -328,9 +328,9 @@ def start_awg(awg, channel_number):
             that you would like to start.
 
     """
-    start_awg_error_code = awg.AWGstart(channel_number)
     if channel_number not in [1, 2, 3, 4]:
         raise Exception("channel_number must be an integer from 1 to 4.")
+    start_awg_error_code = awg.AWGstart(channel_number)
     if start_awg_error_code < 0:
         slot_number = awg.getSlot()
         raise Exception("While starting the AWG in slot number %i"
