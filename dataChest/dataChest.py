@@ -370,7 +370,7 @@ class dataChest(dateStamp):
                  + self.varDict["dependents"]["names"])
       if self.getDataCategory() == "Arbitrary Type 1":
         for ii in range(0, len(allVars)):
-          data.append(dataDict[allVars[ii]].value)
+          data.append(dataDict[allVars[ii]][()])
         data = np.array(data)
         data = data.T
         return data[startIndex:stopIndex]
