@@ -352,7 +352,7 @@ class dataChest(dateStamp):
           numChunks = totalLen/chunkSize
           dataDict[variables]=[]
           if len(originalShape)>1 or originalShape!=[1]:
-            for ii in range(0, numRows):
+            for ii in range(0, numRows): # need to add similar .value here too...
               chunk = np.asarray(dataset[ii*chunkSize:(ii+1)*chunkSize])
               chunk = np.reshape(chunk, tuple(originalShape))
               dataDict[variables].append(chunk.tolist())
@@ -368,11 +368,10 @@ class dataChest(dateStamp):
       else:
         allVars = (self.varDict["independents"]["names"]
                  + self.varDict["dependents"]["names"])
-      
       if self.getDataCategory() == "Arbitrary Type 1":
         for ii in range(0, len(allVars)):
-          data.append(dataDict[allVars[ii]])
-        data = np.asarray(data)
+          data.append(dataDict[allVars[ii]][()])
+        data = np.array(data)
         data = data.T
         return data[startIndex:stopIndex]
       else:
