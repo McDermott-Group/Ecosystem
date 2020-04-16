@@ -96,9 +96,7 @@ class dateStamp(object):
       ymd = self._intToYYYYMMDD(ymd)
       secs = self._base26ToInt(secs)
       secs = self._intToSeconds(secs)
-      secs = str(secs)
-      if len(secs.split(".")[0])==1:
-          secs = '0'+secs
+      secs = '{:09.6f}'.format(secs)
       return ymd +'T'+dateStamp[3:5]+':'+dateStamp[5:7]+':'+secs
 
   def floatToUtcDateStr(self, utcFloat):
