@@ -202,7 +202,9 @@ def load_waveform_onto_awg(awg, keysight_waveform_object,
                         "class in location: " + KEYSIGHT_LIBRARY_PATH +
                         " for more details.")
 
-
+### the prescalar is changed from 0 to 1 for longer time measurement.
+### the topological project will change it back after the measurement.
+### Please double check if this is not changed back.
 def queue_waveform(awg, channel_number, waveform_id,
                    trigger_mode=keySD.SD_TriggerModes.EXTTRIG,
                    start_delay=0, cycles=1, prescalar=0):
@@ -452,7 +454,7 @@ def close_awg(awg):
 
 def load_waveforms_onto_awg(awg, keysight_waveforms_list,
                             original_waveforms_dict, n_reps, waveform_id=0):
-    """Loads waveforms onto an properly initialized AWG.
+    """Loads waveforms onto a properly initialized AWG.
 
     Args:
         awg (SD_AOU object): A Keysight module identifier object
