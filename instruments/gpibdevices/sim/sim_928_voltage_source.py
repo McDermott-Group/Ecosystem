@@ -73,7 +73,7 @@ class SIM928Wrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def setVoltage(self, v):
         if self.voltage != v:
-            yield self.write('VOLT %s' % str(v['V']))
+            yield self.write('VOLT {:.5f}'.format(v['V']))
             # Ensure that the voltage is actually set to the right level.
             self.voltage = yield self.getVoltage()
 

@@ -141,6 +141,7 @@ class Grapher(QtGui.QWidget):
         self.plotOptionsLayout.addWidget(self.plotTypesComboBoxLabel)
         self.plotOptionsLayout.addWidget(self.plotTypesComboBox)
         self.plotOptionsLayout.addWidget(self.scrollArea)
+        self.plotOptionButtonList = []
 
         self.splitterVertical = QtGui.QSplitter(QtCore.Qt.Vertical) #, self)
         self.splitterVertical.addWidget(self.dirTreeWidget)
@@ -433,7 +434,10 @@ class Grapher(QtGui.QWidget):
             self.selectedDepVars = self.getVarsWithCommonShapeList(firstVarList, firstVarList[0])
         # populate interface buttons
         self.clearLayout(self.scrollLayout)
+        for elem in self.plotOptionButtonList:
+            del elem
         optionsSlice = QtGui.QVBoxLayout()
+        self.plotOptionButtonList = [optionsSlice]
         self.optionsGroup = QtGui.QButtonGroup()
         if plotType == "1D" or plotType == "Histogram":
             self.optionsGroup.setExclusive(False)
@@ -450,6 +454,7 @@ class Grapher(QtGui.QWidget):
                     checkBox.setChecked(True)
             optionsSlice.addWidget(checkBox)
             self.optionsGroup.addButton(checkBox)
+            self.plotOptionButtonList.append(checkBox)
         self.selectedDepVars = [str(button.text()) for button in self.optionsGroup.buttons()
                                                     if button.isChecked()]
         optionsSlice.addStretch(1)
