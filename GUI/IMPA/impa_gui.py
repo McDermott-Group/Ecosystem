@@ -8,11 +8,11 @@ from labrad.units import V, GHz, dBm
 VOLTAGE_INCREMENT_STRING_TO_FLOAT = {'1 mV': 1e-3, '10 mV': 1e-2,
                                      '100 mV': 1e-1, '1 V': 1e0}
 
-POWER_INCREMENT_STRING_TO_FLOAT = {'0.1 dBm': 1e-1, '0.2 dBm': 2e-1,
+POWER_INCREMENT_STRING_TO_FLOAT = {'0.01 dBm': 1e-2, '0.1 dBm': 1e-1, '0.2 dBm': 2e-1,
                                    '0.5 dBm': 5e-1, '1.0 dBm': 1e0,
                                    '10.0 dBm': 1e1}
 
-FREQUENCY_INCREMENT_STRING_TO_FLOAT = {'1 MHz': 1e-3, '10 MHz': 1e-2,
+FREQUENCY_INCREMENT_STRING_TO_FLOAT = {'0.1 MHz': 1e-4, '1 MHz': 1e-3, '10 MHz': 1e-2,
                                    '100 MHz': 1e-1, '1 GHz': 1e0}
 
 
@@ -104,6 +104,7 @@ class IMPA_GUI(QtGui.QWidget):
         self.rf_generator_power_increment_title = QtGui.QLabel('Power Increment:')
         self.rf_generator_power_increment_title.setEnabled(False)
         self.rf_generator_power_increment = QtGui.QComboBox()
+        self.rf_generator_power_increment.addItem("0.01 dBm")
         self.rf_generator_power_increment.addItem("0.1 dBm")
         self.rf_generator_power_increment.addItem("0.2 dBm")
         self.rf_generator_power_increment.addItem("0.5 dBm")
@@ -115,6 +116,7 @@ class IMPA_GUI(QtGui.QWidget):
         self.rf_generator_frequency_increment_title = QtGui.QLabel('Frequency Increment:')
         self.rf_generator_frequency_increment_title.setEnabled(False)
         self.rf_generator_frequency_increment = QtGui.QComboBox()
+        self.rf_generator_frequency_increment.addItem("0.1 MHz")
         self.rf_generator_frequency_increment.addItem("1 MHz")
         self.rf_generator_frequency_increment.addItem("10 MHz")
         self.rf_generator_frequency_increment.addItem("100 MHz")
@@ -127,8 +129,8 @@ class IMPA_GUI(QtGui.QWidget):
         self.frequency_spinbox_title.setEnabled(False)
         self.frequency_spinbox.setRange(2., 14.)
         self.frequency_spinbox.setValue(4.0)
-        self.frequency_spinbox.setDecimals(3)
-        self.frequency_spinbox.setSingleStep(0.001)
+        self.frequency_spinbox.setDecimals(4)
+        self.frequency_spinbox.setSingleStep(0.0001)
         self.frequency_spinbox.valueChanged.connect(partial(call_labrad_setting,
                                                             self.rf_generator.frequency, GHz))
         self.frequency_spinbox.setEnabled(False)
@@ -138,8 +140,8 @@ class IMPA_GUI(QtGui.QWidget):
         self.power_spinbox_title.setEnabled(False)
         self.power_spinbox.setRange(-80, 0.)
         self.power_spinbox.setValue(-20.0)
-        self.power_spinbox.setDecimals(2)
-        self.power_spinbox.setSingleStep(0.1)
+        self.power_spinbox.setDecimals(3)
+        self.power_spinbox.setSingleStep(1e-2)
         self.power_spinbox.valueChanged.connect(partial(call_labrad_setting,
                                                         self.rf_generator.power, dBm))
         self.power_spinbox.setEnabled(False)
@@ -167,6 +169,7 @@ class IMPA_GUI(QtGui.QWidget):
                 self.rf_generator_selection.removeItem(0)
             self.selected_rf_generator = selection
             self.rf_generator.select_device(selection)
+            self.rf_generator.output(True)
             current_frequency = self.rf_generator.frequency()['GHz']
             current_power = self.rf_generator.power()['dBm']
             self.frequency_spinbox.setValue(current_frequency)

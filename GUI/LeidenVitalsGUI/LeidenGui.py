@@ -19,12 +19,13 @@ from tendo import singleton
 
 import labrad
 
-from dataChestWrapper import *
+#from dataChestWrapper import *
 import MGui # Handles all GUI operations. Independent of LabRAD.
 from MDevices.Device import Device
-from MDevices.Mhdf5Device import Mhdf5Device
+#from MDevices.Mhdf5Device import Mhdf5Device
 import CustomMViewTiles.start_stop_cooldown as ssc
 from CustomMViewTiles.tetris import tetris
+from MPlugins import MDataViewer
 class nViewer:
     gui = None
     devices =[]
@@ -55,7 +56,7 @@ class nViewer:
             time.sleep(2)
             sys.exit(1)
         self.gui = MGui.MGui()
-        PT1000s = Device("50K and 3K Pt1000 Temperatures", data_type="float16")
+        PT1000s = Device("50K and 3K Pt1000 Temperatures")
         PT1000s.connection(cxn)
         PT1000s.setServerName("goldstein_s_pt1000_temperature_monitor")
         PT1000s.addParameter("50K Stage Temperature",
@@ -72,7 +73,7 @@ class nViewer:
         PT1000s.begin()
         self.gui.addDevice(PT1000s)
 
-        LeidenDRTemperature = Device("Dilution Unit Temperatures", data_type = 'float16')
+        LeidenDRTemperature = Device("Dilution Unit Temperatures")
         LeidenDRTemperature.connection(cxn)
         LeidenDRTemperature.setServerName("leiden_dr_temperature")
         
@@ -91,7 +92,7 @@ class nViewer:
         LeidenDRTemperature.setYLabel("Temperature")
         self.gui.addDevice(LeidenDRTemperature)
         
-        LeidenDRTemperature = Device("Mix Pt1000 Temperature", data_type = 'float16')
+        LeidenDRTemperature = Device("Mix Pt1000 Temperature")
         LeidenDRTemperature.connection(cxn)
         LeidenDRTemperature.setServerName("leiden_dr_temperature")
         LeidenDRTemperature.addParameter("Mix Temperature",
@@ -101,7 +102,7 @@ class nViewer:
         LeidenDRTemperature.setYLabel("Temperature")
         self.gui.addDevice(LeidenDRTemperature)
 
-        Vacuum = Device("Vacuum", data_type = 'float16')
+        Vacuum = Device("Vacuum")
         Vacuum.connection(cxn)
         Vacuum.setServerName("pfeiffer_vacuum_maxigauge")
         Vacuum.addParameter("OVC Pressure", "get_pressures", None, index = 3, precision = 4)
@@ -113,7 +114,7 @@ class nViewer:
         Vacuum.begin()
         self.gui.addDevice(Vacuum)
 
-        Temperature = Device("Water Temperature", data_type = 'float16')
+        Temperature = Device("Water Temperature")
         Temperature.connection(cxn)
         Temperature.setServerName("omega_temperature_monitor")
         Temperature.addParameter("Exteranal Water Temperature",
@@ -124,7 +125,7 @@ class nViewer:
         Temperature.begin()
         self.gui.addDevice(Temperature)
 
-        Compressor = Device("Compressor", data_type = 'float16')
+        Compressor = Device("Compressor")
         Compressor.connection(cxn)
         Compressor.setServerName("cp2800_compressor")
         Compressor.addButton("Turn Off",
@@ -150,7 +151,7 @@ class nViewer:
         Compressor.begin()
         self.gui.addDevice(Compressor)
 
-        Flow = Device("Water Flow", data_type = 'float16')
+        Flow = Device("Water Flow")
         Flow.connection(cxn)
         Flow.setServerName("omega_ratemeter")
         Flow.addParameter("External Water Flow Rate", "get_rate")
@@ -159,13 +160,16 @@ class nViewer:
         Flow.addPlot()
         Flow.begin()
         self.gui.addDevice(Flow)
-        self.gui.addWidget(ssc.MStartStopCooldownWidget( 'C:\\data\\fridgeLogs\\dr2\\cooldown',
-                                                         'C:\\data\\fridgeLogs\\dr2\\standbyData'))
-
-        grapher = Mhdf5Device("Grapher")
-        grapher.begin()
         
-        self.gui.addDevice(grapher)
+        self.gui.addWidget(MDataViewer.MDataViewer(max_height = 1000))
+                
+        #self.gui.addWidget(ssc.MStartStopCooldownWidget( 'C:\\data\\fridgeLogs\\dr2\\cooldown',
+            #                                             'C:\\data\\fridgeLogs\\dr2\\standbyData'))
+
+        #grapher = Mhdf5Device("Grapher")
+        #grapher.begin()
+        
+        #self.gui.addDevice(grapher)
         self.gui.addWidget(tetris())
         # Create the gui.
         

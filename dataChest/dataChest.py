@@ -345,14 +345,14 @@ class dataChest(dateStamp):
           desiredVarList = self.file[varTypes].keys()
         for variables in desiredVarList:
           varGrp = self.file[varTypes]
-          dataset = varGrp[variables].value
+          dataset = varGrp[variables]
           originalShape = varGrp[variables].attrs["shapes"]
           chunkSize = self._flatShape(originalShape)[0]
           totalLen = varGrp[variables].shape[0]
           numChunks = totalLen/chunkSize
           dataDict[variables]=[]
-          if len(originalShape)>1 or originalShape!=[1]:           
-            for ii in range(0, numRows):
+          if len(originalShape)>1 or originalShape!=[1]:
+            for ii in range(0, numRows): # need to add similar .value here too...
               chunk = np.asarray(dataset[ii*chunkSize:(ii+1)*chunkSize])
               chunk = np.reshape(chunk, tuple(originalShape))
               dataDict[variables].append(chunk.tolist())
@@ -368,11 +368,10 @@ class dataChest(dateStamp):
       else:
         allVars = (self.varDict["independents"]["names"]
                  + self.varDict["dependents"]["names"])
-      
       if self.getDataCategory() == "Arbitrary Type 1":
         for ii in range(0, len(allVars)):
-          data.append(dataDict[allVars[ii]])
-        data = np.asarray(data)
+          data.append(dataDict[allVars[ii]][()])
+        data = np.array(data)
         data = data.T
         return data[startIndex:stopIndex]
       else:
@@ -389,7 +388,7 @@ class dataChest(dateStamp):
         + "createDataset()."
         )
 
-  def openDataset(self, filename, modify = False, grapher1 = False):
+  def openDataset(self, filename, modify = False):
     """Opens a dataset in the current working directory if it exists."""
     if '.hdf5' not in filename: #adds file extension if omitted
       filename = filename+".hdf5"
@@ -398,11 +397,11 @@ class dataChest(dateStamp):
       if hasattr(self, 'file'):
         self.file.close() #close current file if existent
       
-      if grapher1 is False:
+      if modify is True:
           self.file = h5py.File(self.pwd()+"/"+filename,'r+') #read+write
           self.currentHDF5Filename = self.pwd() + "/" + filename
       else:
-          self.file = h5py.File(self.pwd()+"/"+filename,'r') #read+write
+          self.file = h5py.File(self.pwd()+"/"+filename,'r') #read only
           self.currentHDF5Filename = self.pwd() + "/" + filename
    
       if modify is True:

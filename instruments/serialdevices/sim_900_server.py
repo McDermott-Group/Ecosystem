@@ -243,6 +243,7 @@ class SIM900(DeviceServer):
     @setting(23, data='s', returns='')
     def write(self, c, data):
         """Write a string to the GPIB bus."""
+        # print c['addr'], data
         if 'addr' not in c:
             raise DeviceNotSelectedError("No GPIB address selected")
         if c['addr'] not in self.mydevices:

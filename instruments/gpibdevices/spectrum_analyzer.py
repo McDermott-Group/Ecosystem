@@ -15,6 +15,7 @@
 #
 # UPDATED
 # 4 Aug, 2010 - Nathan Earnest - 2.1
+# 2019 Nov, 21 - Chuanhong Liu -2.2
 
 """
 ### BEGIN NODE INFO
@@ -37,7 +38,9 @@ from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from struct import unpack
 from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad import util
-from labrad.units import MHz, GHz
+from labrad.units import kHz, MHz, GHz
+from datetime import datetime
+import time
 
 __QUERY__ = """\
 :FORM INT,32
@@ -46,31 +49,36 @@ __QUERY__ = """\
 
 class SpectrumAnalyzer(GPIBManagedServer):
     name = 'Spectrum Analyzer Server'
-    deviceName = ['HP8593A',
-                  'Agilent Technologies N9010A',
-                  'Keysight Technologies N9010A',
-                  'Agilent Technologies N9020A',
-                  'Keysight Technologies N9020A']
+    deviceName = ['HP8593A']
     deviceWrapper = GPIBDeviceWrapper
-
+    
     @setting(10, 'Get Trace',
                  data=['{Query TRACE1}',
                           'w {Specify trace to query: 1, 2, or 3}'],
                  returns=['v[MHz] {start} v[MHz] {step} *v {y-values}'])
     def get_trace(self, c, data=1):
+                
         """Returns the y-values of the current trace from the spectrum analyzer"""
         dev = self.selectedDevice(c)
         if data < 1 or data > 3:
             raise Exception('data out of range')
         trace = data
-        start = float((yield dev.query('FA?;')))
-        span = float((yield dev.query('SP?;')))
+        # start = float((yield dev.query('FA?;')))
+        # span = float((yield dev.query('SP?;')))
+        start = 0.0
+        span = 0.0
         maxRetries = 10
+
         for i in range(maxRetries):
             try:
+
                 yield dev.write('TRA?;')
+                # yield dev.write('TRA')
+                # t1 = time.time()
                 resp = yield dev.read_raw()
+                # t2 = time.time()
                 vals = _parseBinaryData(resp)
+
                 break
             except Exception:
                 pass
@@ -78,30 +86,34 @@ class SpectrumAnalyzer(GPIBManagedServer):
                 print "Failed to get trace, trying again."
             else:
                 raise Exception("Failed to get trace")
+
+        
         n = len(vals)
+        
+        # print('get_read takes:', t2-t1)
         returnValue((start/1.0e6*MHz, span/1.0e6/(n-1)*GHz, vals))
         
-    @setting(12, 'Get Averaged Trace',
-                 data=['{Query TRACE1}',
-                          'w {Specify trace to query: 1, 2, or 3}'],
-                 returns=['v[MHz] {start} v[MHz] {step} *v {y-values}'])
-    def get_averaged_trace(self, c, data=1):
-        dev = self.selectedDevice(c)
-        self.switch_average(c, setting = 'OFF')
-        averaging = True
-        self.switch_average(c, setting = 'ON')
-        yield dev.write('*CLS')
-        yield dev.write('*ESE 1')
-        yield dev.write(':INIT:IMM')
-        yield dev.write('*OPC')
-        while averaging:
-            result = yield dev.query('*STB?')
-            if int(result)&(1<<5):
-                averaging = False
-            yield util.wakeupCall(1)
-        trace =  yield self.get_trace(c, data = data)
-        self.switch_average(c, setting = 'OFF')
-        returnValue(trace)
+    # @setting(12, 'Get Averaged Trace',
+                 # data=['{Query TRACE1}',
+                          # 'w {Specify trace to query: 1, 2, or 3}'],
+                 # returns=['v[MHz] {start} v[MHz] {step} *v {y-values}'])
+    # def get_averaged_trace(self, c, data=1):
+        # dev = self.selectedDevice(c)
+        # self.switch_average(c, setting = 'OFF')
+        # averaging = True
+        # self.switch_average(c, setting = 'ON')
+        # yield dev.write('*CLS')
+        # yield dev.write('*ESE 1')
+        # yield dev.write(':INIT:IMM')
+        # yield dev.write('*OPC')
+        # while averaging:
+            # result = yield dev.query('*STB?')
+            # if int(result)&(1<<5):
+                # averaging = False
+            # yield util.wakeupCall(1)
+        # trace =  yield self.get_trace(c, data = data)
+        # self.switch_average(c, setting = 'OFF')
+        # returnValue(trace)
 
 
     @setting(20, 'Peak Frequency',
@@ -146,7 +158,7 @@ class SpectrumAnalyzer(GPIBManagedServer):
     @setting(51, 'Number Of Points', n=[':Default, get number of points',
                                         'w: Set number of points'],
              returns=['w'])
-    def num_points(self, c, n=None):
+    def number_of_points(self, c, n=None):
         """Set of get the current number of points in the sweep"""
         dev = self.selectedDevice(c)
         if n is not None:
@@ -162,59 +174,68 @@ class SpectrumAnalyzer(GPIBManagedServer):
         idn = yield dev.query('*IDN?')
         returnValue(idn)
 
-    @setting(500, 'Set center Frequency', f='v[MHz]', returns='')
-    def set_centerfreq(self, c, f):
+    @setting(500, 'set_center_frequency', f='v[GHz]', returns='')
+    def set_center_frequency(self, c, f):
         """Sets the center frequency"""
         dev = self.selectedDevice(c)
-        dev.write('CF %gGZ;' % f['GHz'])
+        dev.write('CF %gGHZ;' % f['GHz'])
 
-    @setting(522, 'Set Span', f='v[MHz]', returns='')
-    def set_span(self, c, f):
+    @setting(522, 'set_span_frequency', f='v[MHz]', returns='')
+    def set_span_frequency(self, c, f):
         """Sets the Frequency Span"""
         dev = self.selectedDevice(c)
-        dev.write('SP %gMZ' % f['MHz'])
+        dev.write('SP %gMHZ' % f['MHz'])
         
-    @setting(523, 'Set Resolution Bandwidth', f = 'v[MHz]', returns='')
-    def set_resolutionbandwidth(self,c,f):
+    @setting(523, 'set_resolution_bandwidth', f = 'v[kHz]', returns='')
+    def set_resolution_bandwidth(self,c,f):
         """Set the Resolution Bandwidth"""
         dev = self.selectedDevice(c)
-        dev.write(':BAND %gMHz' % f['MHz'])
+        dev.write(':RB %gkHz' % f['kHz'])
 
     @setting(524, 'Set Video Bandwidth', f = 'v[kHz]', returns='')
-    def set_videobandwidth(self,c,f):
+    def set_video_bandwidth(self,c,f):
         """Set the video Bandwidth"""
         dev = self.selectedDevice(c)
         dev.write(':BAND:VID %gkHz' % f['kHz'])
 
     @setting(26, 'Set Marker to center Frequency', returns='')
-    def set_mkrtocfreq(self, c):
+    def set_marker_to_center_frequency(self, c):
         """Sets the marker to center frequency"""
         dev = self.selectedDevice(c)
         yield dev.write('MKCF;')
         print ('Laaadiiida')
         
-    @setting(600, 'Y Scale',setting='s', returns='')
-    def set_yscale(self,c,setting):
+    @setting(600, 'set_y_scale',setting='s', returns='')
+    def set_y_scale(self,c,setting):
         """This sets the Y scale to either LINear or LOGarithmic"""
-        allowed = ['LIN','LOG']
+        allowed = ['LN','LG']
         if setting not in allowed:
             raise Exception('allowed settings are: %s' % allowed)
         dev = self.selectedDevice(c)
-        dev.write('DISP:WIND:TRAC:Y:SPAC %s' % setting)
+        dev.write('%s' % setting)
 
-    @setting(602, 'Reference Level',f='v[dBm]', returns=[''])
-    def set_referencelevel(self, c, f):
+    @setting(602, 'SetReference Level',f='v[dBm]', returns=[''])
+    def set_reference_level(self, c, f):
         """Set the reference level"""
         dev = self.selectedDevice(c)
         dev.write('DISP:WIND:TRAC:Y:RLEV %gdBm' % f['dBm'])
-
-    @setting(603, 'Sweep time', f='v[ms]', returns='')
-    def set_sweeprate(self, c, f):
-        """Set the sweep rate"""
+        
+    @setting(603, 'set_sweep_time', f='v[ms]', returns='')
+    def set_sweep_time(self, c, f):
+        """Set the sweep time"""
         dev = self.selectedDevice(c)
-        dev.write(':SWE:TIME %gms' % f['ms'])
+        dev.write(':ST %gms' % f['ms'])
+        
+    @setting(604, 'set_sweep_mode', setting='s', returns='')
+    def set_sweep_mode(self, c, setting='s'):
+        """This sets the sweep mode """
+        allowed = ['CONTS', 'SNGLS']
+        if setting not in allowed:
+            raise Exception('allowed settings are: %s' % allowed)
+        dev = self.selectedDevice(c)
+        dev.write(':%s' % setting)
 
-    @setting(604, 'Detector type', setting='s', returns='')
+    @setting(605, 'Detector type', setting='s', returns='')
     def set_detector(self, c, setting='POS'):
         """This sets the detector type to either Peak,Negative Peak or Sample"""
         allowed = ['SAMP', 'POS','NEG']
@@ -223,14 +244,15 @@ class SpectrumAnalyzer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         dev.write(':DET %s' % setting)
 
-    @setting(15, 'Trigger Source', setting='s')
-    def set_trigsource(self, c, setting='EXT'):
+    @setting(15, 'set_trigger_source', setting='s')
+    def set_trigger_source(self, c, setting='EXT'):
         """This sets the triger source to Free Run, Video, Power Line, or External"""
         allowed = ['IMM', 'VID', 'LINE', 'EXT']
         if setting not in allowed:
             raise Exception('allowed settings are: %s' % allowed)
         dev = self.selectedDevice(c)
-        dev.write('TM EXT;' % setting)
+        dev.write('TM %s;' % setting)
+        # dev.write('TM EXT;' % setting)
         
     @setting(701, 'Average ON/OFF', setting='s', returns='')
     def switch_average(self, c, setting='OFF'):

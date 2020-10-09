@@ -197,6 +197,7 @@ class GPIBBusServer(LabradServer):
         """Write a string to the GPIB bus."""
         try:
             # Note the explicit conversion from ASCII to Unicode.
+            # print c['addr'], unicode(data)
             self.getDevice(c).write(unicode(data))
         except VisaIOError:
             print("Could not write '%s' to %s" %(str(data), c['addr']))
