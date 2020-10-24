@@ -488,10 +488,10 @@ class ADC(object):
     def get_iqs(self, ch_a_weight, ch_b_weight):
         n_samples_per_trigger = self.number_of_samples_per_trigger
         n_triggers = self.number_of_triggers
-        
+
         ch_a = ch_a_weight['']
         ch_b = ch_b_weight['']
-        
+
         ch_a_len = len(ch_a)
         if ch_a_len > n_samples_per_trigger:
             ch_a = ch_a[:n_samples_per_trigger]
@@ -503,10 +503,10 @@ class ADC(object):
             ch_b = ch_b[:n_samples_per_trigger]
         elif ch_b_len < n_samples_per_trigger:
             ch_b = np.hstack([ch_b, np.zeros(n_samples_per_trigger - ch_b_len)])
-            
+
         chs = np.stack([np.hstack([ch_a, ch_b]).T,
                         np.hstack([-ch_b, ch_a]).T], axis=1)
-        
+
         try:
             np.dot(self.reshaped_records_buffer.reshape(n_triggers, -1), np.float32(chs),
                    self.iq_buffers)
@@ -517,7 +517,7 @@ class ADC(object):
             # print self.reshaped_records_buffer.shape
             # print 'size of second dotted array %d' % len(np.float32(chs))
             print e
-            
+
         self.iq_buffers /= n_samples_per_trigger
 
         return self.iq_buffers * V

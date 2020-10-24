@@ -635,11 +635,15 @@ class AlazarTechServer(LabradServer):
         samplesPerRecord = self.samples_per_record(c)
         numberOfRecords = self.number_of_records(c)
 
+        # print('samplesPerRecord=', samplesPerRecord)  # LIU
+        # print('numberOfRecords=', numberOfRecords)  # LIU
+
         # labrad.units.DimensionlessArray to numpy.ndarray conversion.
         chA = chA_weight['']
         chB = chB_weight['']
 
         chA_len = len(chA)
+        # print('chA_len', chA_len)  # LIU
         if chA_len > samplesPerRecord:
             chA = chA[:samplesPerRecord]
         elif chA_len < samplesPerRecord:
@@ -664,7 +668,9 @@ class AlazarTechServer(LabradServer):
 
         chs = np.stack([np.hstack([chA, chB]).T,
                         np.hstack([-chB, chA]).T], axis=1)
-        
+
+        # print ('numerofRecords=', numberOfRecords)  #LIU
+
         try:
             np.dot(timeSeries.reshape(numberOfRecords, -1), np.float32(chs),
                    iqBuffer)
@@ -675,9 +681,8 @@ class AlazarTechServer(LabradServer):
             # print 'size of first dotted array %d' % len(timeSeries.reshape(numberOfRecords, -1))
             print 'size of second dotted array %d' % len(np.float32(chs))
             print e
-            
-        iqBuffer /= samplesPerRecord
 
+        iqBuffer /= samplesPerRecord
         return iqBuffer * units.V
 
     @setting(730, 'Get Average', returns='*2v[V]')
