@@ -51,6 +51,7 @@ def parseIDNResponse(s, idn_cmd='*IDN?'):
     if s is not None and s != '':
         if idn_cmd == '*IDN?':
             mfr, model, ver, rev = s.upper().split(',')
+            print("mfr.replace('_', ' ') + ' ' + model=", mfr.replace('_', ' ') + ' ' + model)
             return mfr.replace('_', ' ') + ' ' + model
         elif idn_cmd == 'ID?':
             return s.upper().split(',')[0]

@@ -38,6 +38,8 @@ import ctypes
 import numpy as np
 import atsapi as ats
 from twisted.internet.defer import inlineCallbacks, returnValue
+import gc
+import sys
 
 from labrad.server import LabradServer, setting
 import labrad.units as units
@@ -474,6 +476,7 @@ class AlazarTechServer(LabradServer):
                 np.shape(c['reshapedRecordsBuffer']) == \
                 (numberOfRecords, numberOfChannels, samplesPerRecord):
             return
+        print( 'reallocating buffers' )
 
         preTriggerSamples = c['preTriggerSamples']
         bytesPerSample = c['bytesPerSample']
@@ -498,18 +501,50 @@ class AlazarTechServer(LabradServer):
         # Must allocate these first, otherwise takes up too much time
         # during the acquisition.
         samples = numberOfChannels * numberOfRecords * samplesPerRecord
+        # if 'recordsBuffer' in c:
+            # del c['recordsBuffer']
+        # if 'reshapedRecordsBuffer' in c:
+            # del c['reshapedRecordsBuffer']
+        gc.collect()
         if bytesPerSample == 1:
             c['recordsBuffer'] = np.empty(samples, dtype=np.uint8)
         elif bytesPerSample == 2:
             c['recordsBuffer'] = np.empty(samples, dtype=np.uint16)
         else:
             c['recordsBuffer'] = np.empty(samples, dtype=np.uint32)
+        if 'reshapedRecordsBuffer' in c:
+            del c['reshapedRecordsBuffer']
+        gc.collect()
         c['reshapedRecordsBuffer'] = np.empty((numberOfRecords,
                                                numberOfChannels,
                                                samplesPerRecord),
                                               dtype=np.float32)
 
         c['iqBuffers'] = np.empty((numberOfRecords, 2), dtype=np.float32)
+
+    @setting(697, 'Get Buffer States', returns='*s')
+    def get_buffer_states(self, c):
+        if not hasattr(self, 'saved_buffers'):
+            self.saved_buffers = {}
+        return self.saved_buffers.keys()
+
+    @setting(698, 'Save Buffer State', label='s', returns='')
+    def save_buffer_state(self, c, label=''):
+        if not hasattr(self, 'saved_buffers'):
+            self.saved_buffers = {}
+        self.saved_buffers[label] = {
+                'reshapedRecordsBuffer': c['reshapedRecordsBuffer'],
+                'iqBuffers': c['iqBuffers'],
+                'recordsBuffer': c['recordsBuffer'],
+                'buffers': c['buffers']
+                }
+
+    @setting(699, 'Load Buffer State', label='s', returns='')
+    def load_buffer_state(self, c, label=''):
+        c['reshapedRecordsBuffer'] = self.saved_buffers[label]['reshapedRecordsBuffer']
+        c['iqBuffers'] = self.saved_buffers[label]['iqBuffers']
+        c['recordsBuffer'] = self.saved_buffers[label]['recordsBuffer']
+        c['buffers'] = self.saved_buffers[label]['buffers']
 
     # Data acquisition settings start from setting 700.
     @setting(700, 'Acquire Data', timeout='v[s]', returns='')
@@ -538,7 +573,7 @@ class AlazarTechServer(LabradServer):
         recordsPerBuffer = c['recordsPerBuffer']
         buffers = c['buffers']
         recordsBuffer = c['recordsBuffer']
-        reshapedRecordsBuffer = c['reshapedRecordsBuffer']
+        # reshapedRecordsBuffer = c['reshapedRecordsBuffer']
 
         # Configure the board for an NPT AutoDMA acquisition.
         boardHandle.beforeAsyncRead(
@@ -593,14 +628,18 @@ class AlazarTechServer(LabradServer):
         recordsView = np.rollaxis(recordsView, 2, 1).reshape(numberOfRecords,
                                                              numberOfChannels,
                                                              samplesPerRecord)
-
-        reshapedRecordsBuffer = recordsView.astype(np.float32, copy=False)
+        # if 'reshapedRecordsBuffer' in c:
+            # del c['reshapedRecordsBuffer']
+        # gc.collect()
+        for i in range(8):
+            c['reshapedRecordsBuffer'][i*numberOfRecords/8:(i+1)*numberOfRecords/8,:,:] = \
+                recordsView[i*numberOfRecords/8:(i+1)*numberOfRecords/8,:,:].astype(np.float32)
 
         codeZero = float(1 << (bitsPerSample - 1)) - 0.5
         codeRange = float(1 << (bitsPerSample - 1)) - 0.5
-        reshapedRecordsBuffer -= codeZero
-        reshapedRecordsBuffer *= (inputRangeV / codeRange)
-        c['reshapedRecordsBuffer'] = reshapedRecordsBuffer
+        c['reshapedRecordsBuffer'] -= codeZero
+        c['reshapedRecordsBuffer'] *= (inputRangeV / codeRange)
+        # c['reshapedRecordsBuffer'] = reshapedRecordsBuffer
 
     @setting(710, 'Get Records', returns='*3v[V]')
     def get_records(self, c):
@@ -617,8 +656,8 @@ class AlazarTechServer(LabradServer):
         return c['reshapedRecordsBuffer'] * units.V
 
     @setting(720, 'Get IQs', chA_weight='*v', chB_weight='*v',
-             returns='*2v[V]')
-    def get_iqs(self, c, chA_weight, chB_weight):
+             trigger_number='i', number_of_triggers='i', returns='*2v[V]')
+    def get_iqs(self, c, chA_weight, chB_weight, trigger_number=0, number_of_triggers=1):
         """
         Get the demodulated values (Is and Qs).
 
@@ -633,7 +672,7 @@ class AlazarTechServer(LabradServer):
                     (either I or Q).
         """
         samplesPerRecord = self.samples_per_record(c)
-        numberOfRecords = self.number_of_records(c)
+        numberOfRecords = self.number_of_records(c)/number_of_triggers
 
         # print('samplesPerRecord=', samplesPerRecord)  # LIU
         # print('numberOfRecords=', numberOfRecords)  # LIU
@@ -656,8 +695,8 @@ class AlazarTechServer(LabradServer):
             chB = np.hstack([chB, np.zeros(samplesPerRecord - chB_len)])
 
         iqBuffer = c['iqBuffers']
-        timeSeries = c['reshapedRecordsBuffer']
-
+        timeSeries = c['reshapedRecordsBuffer'][trigger_number::number_of_triggers]
+        
         # This is the original data processing. Keep it for the future
         # reference.
         # for i in range(numberOfRecords):
@@ -672,8 +711,8 @@ class AlazarTechServer(LabradServer):
         # print ('numerofRecords=', numberOfRecords)  #LIU
 
         try:
-            np.dot(timeSeries.reshape(numberOfRecords, -1), np.float32(chs),
-                   iqBuffer)
+            # np.dot(timeSeries.reshape(numberOfRecords, -1), np.float32(chs), iqBuffer)
+            iqBuffer = np.dot(timeSeries.reshape(numberOfRecords, -1), np.float32(chs))
         except Exception as e:
             print 'numberOfRecords %d' % numberOfRecords
             print 'timeSeries shape'
