@@ -130,7 +130,7 @@ class MAlert:
                 self.message.append((""))
             if(HOURS_BETWEEN_EMAILS < elapsedHrs):
                 if not len([str(person).strip() for person in people.split(',')][0]) == 0:
-                    print "sending mail"
+                    print("sending mail")
                     # print self.message
                     for key in self.mailSent:
                         self.mailSent[key] = False
@@ -139,10 +139,10 @@ class MAlert:
                         str(self.message),
                         [str(person).strip() for person in people.split(',')],
                         "labrad_physics")
-                    print [str(person).strip() for person in people.split(',')]
+                    print([str(person).strip() for person in people.split(',')])
                     if (not success):
-                        print("Couldn't send email to group: " +
-                              str([str(person).strip() for person in people.split(',')]) + " | " + str(success) + " " + str(address))
+                        print(("Couldn't send email to group: " +
+                              str([str(person).strip() for person in people.split(',')]) + " | " + str(success) + " " + str(address)))
                     self.message = []
                     for key in self.mailSent:
                         self.mailSent[key] = False

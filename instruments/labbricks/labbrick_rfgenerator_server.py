@@ -111,7 +111,7 @@ class LBRFGenServer(LabradServer):
 
     @inlineCallbacks
     def killRFGenConnections(self):
-        for DID in self._SN2DID.values():
+        for DID in list(self._SN2DID.values()):
             try:
                 yield self.VNXdll.fnLMS_CloseDevice(ctypes.c_uint(DID))
             except Exception:
@@ -157,17 +157,17 @@ class LBRFGenServer(LabradServer):
                 ref = yield self.external_reference(self._pseudo_ctx)
                 self._last_freq.update({SN: freq})
                 self._last_pow.update({SN: power})
-                print('Found a %s Lab Brick RF generator, serial '
+                print(('Found a %s Lab Brick RF generator, serial '
                       'number: %d, current power: %s, current '
                       'frequency: %s, output state: %s, '
                       'external reference: %s'
-                      % (model, SN, power, freq, state, ref))
+                      % (model, SN, power, freq, state, ref)))
 
     def getDeviceDID(self, c):
         if 'SN' not in c:
             raise DeviceNotSelectedError('No Lab Brick RF Generator '
                                          'serial number selected')
-        if c['SN'] not in self._SN2DID.keys():
+        if c['SN'] not in list(self._SN2DID.keys()):
             raise Exception('Could not find Lab Brick RF Generator '
                             'with serial number %d' % c['SN'])
         return self._SN2DID[c['SN']]

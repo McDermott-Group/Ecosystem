@@ -48,15 +48,15 @@ class AVS47ResistanceBridgeWrapper(DeviceWrapper):
 
     @inlineCallbacks
     def connect(self, server, port):
-        print('Connecting to "%s" on port "%s"...' %(server.name, port))
+        print(('Connecting to "%s" on port "%s"...' %(server.name, port)))
         self.server = server
         self.ctx = server.context()
         self.port = port
         p = self.packet()
         p.open(port)
-        p.baudrate(9600L)
-        p.stopbits(1L)
-        p.bytesize(8L)
+        p.baudrate(9600)
+        p.stopbits(1)
+        p.bytesize(8)
         p.parity('N')
         p.rts(False)
         p.dtr(False)
@@ -98,7 +98,7 @@ class AVS47ResistanceBridgeServer(DeviceServer):
         yield self.loadConfigInfo()
         yield self.loadCalibrationInfo()
         yield DeviceServer.initServer(self)
-        print self.sensors
+        print(self.sensors)
    
     @setting(901, 'Get Temperatures', returns='b')
     def getTemperatures(self, c):
@@ -114,7 +114,7 @@ class AVS47ResistanceBridgeServer(DeviceServer):
             yield sleep(.1)
             reading = yield self.dev.read_line()
             reading = reading.rstrip("\r\n")
-            print reading
+            print(reading)
             reading = float(reading)
             
             # GET CALIBRATION FROM FILE
@@ -141,7 +141,7 @@ class AVS47ResistanceBridgeServer(DeviceServer):
             else:
                 temperatures.append(0.0)
         
-        print temperatures
+        print(temperatures)
         returnValue(True)
             
            
@@ -224,17 +224,17 @@ class AVS47ResistanceBridgeServer(DeviceServer):
             p.get(k, key=k)
         ans = yield p.send()
         self.calibrations = ans[keys[0]]
-        print self.calibrations        
+        print(self.calibrations)        
         
     @inlineCallbacks
     def loadSensorInfo(self):
         reg = yield self.reg
         dir = yield reg.dir()
-        print dir
+        print(dir)
         yield reg.cd(['', 'Servers', 'AVS47 Resistance Bridge'])
         yield reg.cd(['Sensors'])
         data = yield reg.get('dip1')
-        print data
+        print(data)
         dirs, keys = yield reg.dir()
         p = yield reg.packet()
         key = None
@@ -251,7 +251,7 @@ class AVS47ResistanceBridgeServer(DeviceServer):
     def findDevices(self):
         """Find available devices from a list stored in the registry."""
         devs = []
-        for name, (server, port) in self.serialLinks.items():
+        for name, (server, port) in list(self.serialLinks.items()):
             if server not in self.client.servers:
                 continue
             server = self.client[server]

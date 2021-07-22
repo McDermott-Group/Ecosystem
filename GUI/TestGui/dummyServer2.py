@@ -4,7 +4,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 import random
 import numpy as np
 import time as t
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import json
 import random
 

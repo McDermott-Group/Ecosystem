@@ -20,7 +20,7 @@ __version__ = "1.0.1"
 __maintainer__ = "Noah Meltzer"
 __status__ = "Beta"
 
-import cPickle as pickle
+import pickle as pickle
 import traceback
 import os
 import sys
@@ -39,16 +39,16 @@ class MPersistentData:
         try:
             self.restoreState()
         except:
-            print "No config file found, will make a new one."
+            print("No config file found, will make a new one.")
 
     def saveState(self):
        # traceback.print_stack()
         # print self.persistentDataDict
-        print "Pickling and saving data to file..."
+        print("Pickling and saving data to file...")
         # print self.persistentDataDict
         pickle.dump(self.persistentDataDict, open(
             os.path.join(self.location, self.name), 'wb'))
-        print "data pickled and saved."
+        print("data pickled and saved.")
 
     def restoreState(self):
 
@@ -71,7 +71,7 @@ class MPersistentData:
 
             else:
                 previousLevel[previouskey] = {}
-            if key in currentLevel.keys():
+            if key in list(currentLevel.keys()):
                 currentLevel = currentLevel[key]
             else:
                 currentLevel[key] = {}

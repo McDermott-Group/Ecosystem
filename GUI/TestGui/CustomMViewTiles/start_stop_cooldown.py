@@ -83,11 +83,11 @@ class MStartStopCooldownWidget(MWidget):
                       dateFolderName = time.strftime('%x').replace(' ', '_')
                       dateFolderName = dateFolderName.replace('/','_')
                       loc = loc+'\\'+dateFolderName
-                      print "\tNew location:", loc
+                      print("\tNew location:", loc)
                  else:
-                     print "\tFound location:", loc
+                     print("\tFound location:", loc)
                  if chest != None:
-                     print str(str(device) + ":\t"), "Switching path to:\t", loc
+                     print(str(str(device) + ":\t"), "Switching path to:\t", loc)
                      chest.changeLocation(loc, True)
                    
             

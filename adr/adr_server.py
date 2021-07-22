@@ -181,7 +181,7 @@ class MyFactory(WebSocketServerFactory):
     def sendMessageToAll(self, message):
         text = json.dumps(message, cls=NumpyEncoder)
         text = text.replace('NaN','null') # apparently JSON does not support nan
-        for c in self.clients.keys():
+        for c in list(self.clients.keys()):
             self.clients[c].sendMessage(text)
 
 
@@ -210,11 +210,11 @@ class ADRServer(DeviceServer):
             if selection in AVAILABLE_ADRS:
                 selectedADR = selection
             else:
-                print('%s is not a valid ADR selection.' %selection)
+                print(('%s is not a valid ADR selection.' %selection))
         self.ADRSettingsPath.append(selectedADR)
         self.name = selectedADR
         self.deviceName = selectedADR
-        print('%s selected.' %selectedADR)
+        print(('%s selected.' %selectedADR))
         self.alive = True # to turn off the update state look when server is closed
         self.state = {
                 'T_FAA': numpy.NaN * units.K,
@@ -311,10 +311,10 @@ class ADRServer(DeviceServer):
         adrN = int(self.deviceName[-1])
         port = 9879 - adrN
 
-        self.factory = MyFactory(u"wss://127.0.0.1:%i/"%port,adrServer=self)
+        self.factory = MyFactory("wss://127.0.0.1:%i/"%port,adrServer=self)
         self.factory.protocol = MyServerProtocol
         resource = WebSocketResource(self.factory)
-        root.putChild(u"ws", resource)
+        root.putChild("ws", resource)
 
         site = Site(root)
         contextFactory = ssl.DefaultOpenSSLContextFactory('Z:/mcdermott-group/LabRAD/ssl_certificates/adr%i/ssl.key'%adrN,
@@ -343,7 +343,7 @@ class ADRServer(DeviceServer):
                                          source = None,
                                          ID = self.ID)
         except Exception as e:
-            print str(e)
+            print(str(e))
 
         self.updateState()
 
@@ -478,10 +478,10 @@ class ADRServer(DeviceServer):
 
     @inlineCallbacks
     def device_connection_changed(self, device, server, channel, isConnected):
-        print '%s connected: %s'%(device, isConnected)
+        print('%s connected: %s'%(device, isConnected))
         # if instrument added, initialize instrument.  if it is removed,
         # mark it as disconnected.
-        for instName in self.instruments.keys():
+        for instName in list(self.instruments.keys()):
             instAddress = self.ADRSettings[instName][1]
             if server in instAddress and channel in instAddress:
                 if isConnected == False:
@@ -508,8 +508,8 @@ class ADRServer(DeviceServer):
             with open(fname, 'a') as f:
                 f.write( messageWithTimeStamp + '\n' )
         except Exception as e:
-            print("Could not write to log file: " + str(e) + '.')
-        print '[log] '+ message
+            print(("Could not write to log file: " + str(e) + '.'))
+        print('[log] '+ message)
         self.factory.sendMessageToAll({
             'log': [{
                 'datetime':(dt-datetime.datetime(1970,1,1)).total_seconds(),
@@ -538,7 +538,7 @@ class ADRServer(DeviceServer):
                 try:
                     self.state['CompressorStatus'] = yield instruments['Compressor'].status()
                 except Exception as e:
-                    print 'could not read compressor status', str(e)
+                    print('could not read compressor status', str(e))
             # diode temps
             try:
                 temps = yield instruments['Diode Temperature Monitor'].get_diode_temperatures()
@@ -742,7 +742,7 @@ class ADRServer(DeviceServer):
         The basics of it is that a new voltage V+dV is proposed.  dV is
         then limited as necessary, and the new voltage is set. As with
         magging up, regulate runs a cycle at approximately once per second. """
-        print 'REG TEMP',temp
+        print('REG TEMP',temp)
         self.state['regulationTemp'] = temp
         self.logMessage('Setting regulation temperature to %f K.'%temp)
         if self.state['maggingUp'] == True:
@@ -767,8 +767,8 @@ class ADRServer(DeviceServer):
         self.logMessage( 'Starting regulation to '+str(self.state['regulationTemp'])
                         +' K from '+str(self.state['PSCurrent'])+'.' )
         self.state['regulating'] = True
-        print 'beginning regulation'
-        print 'V\tbackEMF\tdV/dT\tdV'
+        print('beginning regulation')
+        print('V\tbackEMF\tdV/dT\tdV')
         while self.state['regulating']:
             startTime = datetime.datetime.utcnow()
             dI = self.state['PSCurrent'] - self.lastState['PSCurrent']
@@ -865,7 +865,7 @@ class ADRServer(DeviceServer):
         (server connected?, device selected?))].  If no instruments are
         passed in, returns an array of all iinstrument statuses"""
         if instrNames==None:
-            instrNames = self.instruments.keys()
+            instrNames = list(self.instruments.keys())
         states = []
         for name in instrNames:
             if bool(self.instruments[name]):

@@ -20,7 +20,7 @@ mpl.use('TkAgg')
 import pylab, numpy
 import datetime, struct
 from dateutil import tz
-import Tkinter
+import tkinter
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import labrad
 from labrad import units
@@ -32,7 +32,7 @@ import os, time
 
 ADR_SETTINGS_BASE_PATH = ['','ADR Settings'] # path in registry
 
-class EntryWithAlert(Tkinter.Entry):
+class EntryWithAlert(tkinter.Entry):
     """Inherited from the Tkinter Entry widget, this just turns red when a limit
      is reached"""
     def __init__(self, *args, **kwargs):
@@ -40,7 +40,7 @@ class EntryWithAlert(Tkinter.Entry):
         self.lower_limit = kwargs.pop('lower_limit',False)
         self.variable = kwargs['textvariable']
         self.variable.trace('w',self.callback)
-        Tkinter.Entry.__init__(self,*args,**kwargs)
+        tkinter.Entry.__init__(self,*args,**kwargs)
         self.naturalBGColor = self.cget('disabledbackground')
     def setUpperLimit(self,limit):
         self.upper_limit = limit
@@ -57,27 +57,27 @@ class EntryWithAlert(Tkinter.Entry):
                 self.configure(disabledbackground=self.naturalBGColor)
 
 
-class LogBox(Tkinter.Text):
+class LogBox(tkinter.Text):
     """This class inherits a Tkinter Text widget to make a simple log
     box.  It will log an entry, and set the color to red if alert is set
     to True.  A time stamp is automatically added."""
     def __init__(self, *args, **kwargs):
-        Tkinter.Text.__init__(self,*args,**kwargs)
+        tkinter.Text.__init__(self,*args,**kwargs)
         self.tag_config("redAlert", background="red")
-        self.configure(state=Tkinter.DISABLED)
+        self.configure(state=tkinter.DISABLED)
     def log(self, dt, message, alert=False):
         utc = dt.replace(tzinfo=tz.tzutc())
         local = utc.astimezone(tz.tzlocal())
         messageWithTimeStamp = local.strftime("[%m/%d/%y %H:%M:%S] ") + message
-        self.configure(state=Tkinter.NORMAL)
+        self.configure(state=tkinter.NORMAL)
         self.insert(1.0,messageWithTimeStamp+'\n')
         if alert:
             self.tag_add("redAlert", '1.0', '1.end')
-        self.configure(state=Tkinter.DISABLED)
+        self.configure(state=tkinter.DISABLED)
     def clear(self):
-        self.configure(state=Tkinter.NORMAL)
-        self.delete(1.0,Tkinter.END)
-        self.configure(state=Tkinter.DISABLED)
+        self.configure(state=tkinter.NORMAL)
+        self.delete(1.0,tkinter.END)
+        self.configure(state=tkinter.DISABLED)
 
 
 class ADRController(object):#Tkinter.Tk):
@@ -177,16 +177,16 @@ class ADRController(object):#Tkinter.Tk):
         root.geometry("%dx%d+0+0" % (w/2, 0.9*h))
         #error/message box log
         self.log = LogBox(master=root, height=5)
-        self.log.pack(side=Tkinter.TOP, fill=Tkinter.X)
-        addToLogFrame = Tkinter.Frame(root)
-        addToLogFrame.pack(side=Tkinter.TOP, fill=Tkinter.X)
-        addToLogButton = Tkinter.Button(addToLogFrame, text='Add', command=self.addToLog)
-        addToLogButton.pack(side=Tkinter.RIGHT)
-        self.addToLogField = Tkinter.Text(addToLogFrame,height=1)
-        self.addToLogField.pack(side=Tkinter.RIGHT, fill=Tkinter.X)
+        self.log.pack(side=tkinter.TOP, fill=tkinter.X)
+        addToLogFrame = tkinter.Frame(root)
+        addToLogFrame.pack(side=tkinter.TOP, fill=tkinter.X)
+        addToLogButton = tkinter.Button(addToLogFrame, text='Add', command=self.addToLog)
+        addToLogButton.pack(side=tkinter.RIGHT)
+        self.addToLogField = tkinter.Text(addToLogFrame,height=1)
+        self.addToLogField.pack(side=tkinter.RIGHT, fill=tkinter.X)
         # instrument statuses
-        self.instrumentStatusFrame = Tkinter.Frame(root)
-        self.instrumentStatusFrame.pack(side=Tkinter.TOP, fill=Tkinter.X)
+        self.instrumentStatusFrame = tkinter.Frame(root)
+        self.instrumentStatusFrame.pack(side=tkinter.TOP, fill=tkinter.X)
         # temp plot
         self.fig = pylab.figure()
         self.ax = self.fig.add_subplot(111)
@@ -199,150 +199,150 @@ class ADRController(object):#Tkinter.Tk):
         self.stageFAA, = self.ax.plot_date([],[],'-')
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
         self.canvas.draw()
-        self.canvas.get_tk_widget().pack(side=Tkinter.TOP, fill=Tkinter.BOTH, expand=1)
+        self.canvas.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
         #temp plot toolbar at bottom
         self.toolbar = NavigationToolbar2Tk( self.canvas, root )
         self.toolbar.update()
-        self.canvas._tkcanvas.pack(side=Tkinter.TOP, fill=Tkinter.BOTH, expand=1)
+        self.canvas._tkcanvas.pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
         #row of controls beneath temp plot
-        tempAndADRControlFrame = Tkinter.Frame(root)
-        tempAndADRControlFrame.pack(side=Tkinter.TOP, fill=Tkinter.X)
+        tempAndADRControlFrame = tkinter.Frame(root)
+        tempAndADRControlFrame.pack(side=tkinter.TOP, fill=tkinter.X)
         # menu to select ADR
-        self.adrSelect = Tkinter.StringVar(root)
+        self.adrSelect = tkinter.StringVar(root)
         self.adrSelect.set('')
         self.adrSelect.trace('w',self.changeFridge)
-        self.adrSelectWidget = Tkinter.OptionMenu(tempAndADRControlFrame, self.adrSelect,'')
-        self.adrSelectWidget.grid(row=0, column=1, sticky=Tkinter.W)
+        self.adrSelectWidget = tkinter.OptionMenu(tempAndADRControlFrame, self.adrSelect,'')
+        self.adrSelectWidget.grid(row=0, column=1, sticky=tkinter.W)
         self.populateADRSelectMenu()
         # which temp plots should I show? (checkboxes)
-        tempSelectFrameHolder = Tkinter.Frame(tempAndADRControlFrame)
-        tempSelectFrameHolder.grid(row=0, column=2, sticky=Tkinter.W+Tkinter.E)
-        tempSelectFrame = Tkinter.Frame(tempSelectFrameHolder)
+        tempSelectFrameHolder = tkinter.Frame(tempAndADRControlFrame)
+        tempSelectFrameHolder.grid(row=0, column=2, sticky=tkinter.W+tkinter.E)
+        tempSelectFrame = tkinter.Frame(tempSelectFrameHolder)
         tempSelectFrame.pack()
         tempAndADRControlFrame.columnconfigure(2, weight=1)
-        self.t60K = Tkinter.IntVar()
-        self.t3K = Tkinter.IntVar()
-        self.tGGG = Tkinter.IntVar()
-        self.tFAA = Tkinter.IntVar()
+        self.t60K = tkinter.IntVar()
+        self.t3K = tkinter.IntVar()
+        self.tGGG = tkinter.IntVar()
+        self.tFAA = tkinter.IntVar()
         self.t60K.set(0)
         self.t3K.set(1)
         self.tGGG.set(0)
         self.tFAA.set(1)
-        t1checkbox = Tkinter.Checkbutton(tempSelectFrame, text = '60K Stage',
+        t1checkbox = tkinter.Checkbutton(tempSelectFrame, text = '60K Stage',
                                                         variable=self.t60K,
                                                         fg='blue')
-        t1checkbox.pack(side=Tkinter.LEFT)
-        t2checkbox = Tkinter.Checkbutton(tempSelectFrame, text = '3K Stage',
+        t1checkbox.pack(side=tkinter.LEFT)
+        t2checkbox = tkinter.Checkbutton(tempSelectFrame, text = '3K Stage',
                                                         variable=self.t3K,
                                                         fg='forest green')
-        t2checkbox.pack(side=Tkinter.LEFT)
-        t3checkbox = Tkinter.Checkbutton(tempSelectFrame, text = '1K Stage (GGG)',
+        t2checkbox.pack(side=tkinter.LEFT)
+        t3checkbox = tkinter.Checkbutton(tempSelectFrame, text = '1K Stage (GGG)',
                                                         variable=self.tGGG,
                                                         fg='red')
-        t3checkbox.pack(side=Tkinter.LEFT)
-        t4checkbox = Tkinter.Checkbutton(tempSelectFrame, text = '50mK Stage (FAA)',
+        t3checkbox.pack(side=tkinter.LEFT)
+        t4checkbox = tkinter.Checkbutton(tempSelectFrame, text = '50mK Stage (FAA)',
                                                         variable=self.tFAA,
                                                         fg='dark turquoise')
-        t4checkbox.pack(side=Tkinter.LEFT)
+        t4checkbox.pack(side=tkinter.LEFT)
         # scale to adjust time shown in temp plot
         wScaleOptions = ('10 minutes','1 hour','6 hours','24 hours','All')
-        self.wScale = Tkinter.StringVar(root)
+        self.wScale = tkinter.StringVar(root)
         self.wScale.set(wScaleOptions[1])
-        apply(Tkinter.OptionMenu,(tempAndADRControlFrame,self.wScale)+wScaleOptions).grid(row=0, column=3, sticky=Tkinter.E)
+        apply(tkinter.OptionMenu,(tempAndADRControlFrame,self.wScale)+wScaleOptions).grid(row=0, column=3, sticky=tkinter.E)
         self.wScale.trace('w',self.updatePlot)
         # refresh instruments button
-        refreshInstrButton = Tkinter.Button(root, text='Refresh Instruments',
+        refreshInstrButton = tkinter.Button(root, text='Refresh Instruments',
                             command=self.refreshInstruments)
-        refreshInstrButton.pack(side=Tkinter.TOP)
+        refreshInstrButton.pack(side=tkinter.TOP)
         # start/stop compressor button
-        self.compressorButton = Tkinter.Button(root, text='Start Compressor',
+        self.compressorButton = tkinter.Button(root, text='Start Compressor',
                             command=self.startCompressor)
-        self.compressorButton.pack(side=Tkinter.TOP)
-        self.compressorButton.configure(state=Tkinter.DISABLED)
+        self.compressorButton.pack(side=tkinter.TOP)
+        self.compressorButton.configure(state=tkinter.DISABLED)
         #frame for mag up and regulate controls
-        magControlsFrame = Tkinter.Frame(root)
-        magControlsFrame.pack(side=Tkinter.TOP)
+        magControlsFrame = tkinter.Frame(root)
+        magControlsFrame.pack(side=tkinter.TOP)
         #heat switch buttons
-        self.HSCloseButton = Tkinter.Button(master=magControlsFrame,
+        self.HSCloseButton = tkinter.Button(master=magControlsFrame,
                                             text='Close HS',
                                             command=self.closeHeatSwitch)
-        self.HSCloseButton.pack(side=Tkinter.LEFT)
-        self.HSOpenButton = Tkinter.Button(master=magControlsFrame,
+        self.HSCloseButton.pack(side=tkinter.LEFT)
+        self.HSOpenButton = tkinter.Button(master=magControlsFrame,
                                             text='Open HS',
                                             command=self.openHeatSwitch)
-        self.HSOpenButton.pack(side=Tkinter.LEFT)
-        self.HSCloseButton.configure(state=Tkinter.DISABLED)
-        self.HSOpenButton.configure(state=Tkinter.DISABLED)
+        self.HSOpenButton.pack(side=tkinter.LEFT)
+        self.HSCloseButton.configure(state=tkinter.DISABLED)
+        self.HSOpenButton.configure(state=tkinter.DISABLED)
         #mag up button
-        self.magUpButton = Tkinter.Button(master=magControlsFrame,
+        self.magUpButton = tkinter.Button(master=magControlsFrame,
                                             text='Mag Up',
                                             command=self.magUp)
-        self.magUpButton.pack(side=Tkinter.LEFT)
-        self.magUpButton.configure(state=Tkinter.DISABLED)
+        self.magUpButton.pack(side=tkinter.LEFT)
+        self.magUpButton.configure(state=tkinter.DISABLED)
         #regulate button and temp field
-        self.regulateButton = Tkinter.Button(master=magControlsFrame,
+        self.regulateButton = tkinter.Button(master=magControlsFrame,
                                             text='Regulate',
                                             command=self.regulate)
-        self.regulateButton.pack(side=Tkinter.LEFT)
-        self.regulateButton.configure(state=Tkinter.DISABLED)
-        Tkinter.Label(magControlsFrame, text=" at ").pack(side=Tkinter.LEFT)
-        self.regulationTemp = Tkinter.DoubleVar()
+        self.regulateButton.pack(side=tkinter.LEFT)
+        self.regulateButton.configure(state=tkinter.DISABLED)
+        tkinter.Label(magControlsFrame, text=" at ").pack(side=tkinter.LEFT)
+        self.regulationTemp = tkinter.DoubleVar()
         self.regulationTemp.set(0.1)
         self.regulationTemp.trace('w',self.changeRegTemp)
-        self.regulateTempField = Tkinter.Entry(magControlsFrame, textvariable=self.regulationTemp)
-        self.regulateTempField.pack(side=Tkinter.LEFT)
-        Tkinter.Label(magControlsFrame, text="K").pack(side=Tkinter.LEFT)
+        self.regulateTempField = tkinter.Entry(magControlsFrame, textvariable=self.regulationTemp)
+        self.regulateTempField.pack(side=tkinter.LEFT)
+        tkinter.Label(magControlsFrame, text="K").pack(side=tkinter.LEFT)
         #shows current values for backEMF, current, voltage
-        monitorFrame = Tkinter.Frame(root)
-        monitorFrame.pack(side=Tkinter.TOP)
-        self.currentBackEMF = Tkinter.StringVar() #current as in now, not as in amps
-        self.currentI = Tkinter.StringVar()
-        self.currentV = Tkinter.StringVar()
-        Tkinter.Label(monitorFrame, text="Back EMF = ").pack(side=Tkinter.LEFT)
+        monitorFrame = tkinter.Frame(root)
+        monitorFrame.pack(side=tkinter.TOP)
+        self.currentBackEMF = tkinter.StringVar() #current as in now, not as in amps
+        self.currentI = tkinter.StringVar()
+        self.currentV = tkinter.StringVar()
+        tkinter.Label(monitorFrame, text="Back EMF = ").pack(side=tkinter.LEFT)
         self.backEMFField = EntryWithAlert(monitorFrame, textvariable=self.currentBackEMF,
-                                                        state=Tkinter.DISABLED)
-        self.backEMFField.pack(side=Tkinter.LEFT)
-        Tkinter.Label(monitorFrame, text="(V)   I = ").pack(side=Tkinter.LEFT)
+                                                        state=tkinter.DISABLED)
+        self.backEMFField.pack(side=tkinter.LEFT)
+        tkinter.Label(monitorFrame, text="(V)   I = ").pack(side=tkinter.LEFT)
         self.currentIField = EntryWithAlert(monitorFrame, textvariable=self.currentI,
-                                                        state=Tkinter.DISABLED)
-        self.currentIField.pack(side=Tkinter.LEFT)
-        Tkinter.Label(monitorFrame, text="(A)   V = ").pack(side=Tkinter.LEFT)
+                                                        state=tkinter.DISABLED)
+        self.currentIField.pack(side=tkinter.LEFT)
+        tkinter.Label(monitorFrame, text="(A)   V = ").pack(side=tkinter.LEFT)
         self.currentVField = EntryWithAlert(monitorFrame, textvariable=self.currentV,
-                                                        state=Tkinter.DISABLED)
-        self.currentVField.pack(side=Tkinter.LEFT)
-        Tkinter.Label(monitorFrame, text="(V)").pack(side=Tkinter.LEFT)
-        dateFrame = Tkinter.Frame(root)
-        dateFrame.pack(side=Tkinter.TOP)
+                                                        state=tkinter.DISABLED)
+        self.currentVField.pack(side=tkinter.LEFT)
+        tkinter.Label(monitorFrame, text="(V)").pack(side=tkinter.LEFT)
+        dateFrame = tkinter.Frame(root)
+        dateFrame.pack(side=tkinter.TOP)
         #heat switch buttons
         now = datetime.datetime.now()
-        Tkinter.Label(dateFrame, text="DAY").pack(side=Tkinter.LEFT)
-        self.dateDay = Tkinter.DoubleVar()
+        tkinter.Label(dateFrame, text="DAY").pack(side=tkinter.LEFT)
+        self.dateDay = tkinter.DoubleVar()
         self.dateDay.set(int(now.day))
         # self.dateDay.trace('w',self.changeRegTemp)
-        self.dateDayField = Tkinter.Entry(dateFrame, textvariable=self.dateDay)
-        self.dateDayField.pack(side=Tkinter.LEFT)
-        Tkinter.Label(dateFrame, text="MONTH").pack(side=Tkinter.LEFT)
-        self.dateMonth = Tkinter.DoubleVar()
+        self.dateDayField = tkinter.Entry(dateFrame, textvariable=self.dateDay)
+        self.dateDayField.pack(side=tkinter.LEFT)
+        tkinter.Label(dateFrame, text="MONTH").pack(side=tkinter.LEFT)
+        self.dateMonth = tkinter.DoubleVar()
         self.dateMonth.set(int(now.month))
         # self.dateMonth.trace('w',self.changeRegTemp)
-        self.dateMonthField = Tkinter.Entry(dateFrame, textvariable=self.dateMonth)
-        self.dateMonthField.pack(side=Tkinter.LEFT)
-        Tkinter.Label(dateFrame, text="HOUR").pack(side=Tkinter.LEFT)
-        self.dateHour = Tkinter.DoubleVar()
+        self.dateMonthField = tkinter.Entry(dateFrame, textvariable=self.dateMonth)
+        self.dateMonthField.pack(side=tkinter.LEFT)
+        tkinter.Label(dateFrame, text="HOUR").pack(side=tkinter.LEFT)
+        self.dateHour = tkinter.DoubleVar()
         self.dateHour.set(int(now.hour))
         # self.dateHour.trace('w',self.changeRegTemp)
-        self.dateHourField = Tkinter.Entry(dateFrame, textvariable=self.dateHour)
-        self.dateHourField.pack(side=Tkinter.LEFT)
-        Tkinter.Label(dateFrame, text="MINUTE").pack(side=Tkinter.LEFT)
-        self.dateMinute = Tkinter.DoubleVar()
+        self.dateHourField = tkinter.Entry(dateFrame, textvariable=self.dateHour)
+        self.dateHourField.pack(side=tkinter.LEFT)
+        tkinter.Label(dateFrame, text="MINUTE").pack(side=tkinter.LEFT)
+        self.dateMinute = tkinter.DoubleVar()
         self.dateMinute.set(int(now.minute))
         # self.dateMinute.trace('w',self.changeRegTemp)
-        self.dateMinuteField = Tkinter.Entry(dateFrame, textvariable=self.dateMinute)
-        self.dateMinuteField.pack(side=Tkinter.LEFT)
-        self.dateEnable = Tkinter.Button(master=dateFrame,
+        self.dateMinuteField = tkinter.Entry(dateFrame, textvariable=self.dateMinute)
+        self.dateMinuteField.pack(side=tkinter.LEFT)
+        self.dateEnable = tkinter.Button(master=dateFrame,
                                             text='Set Autocycle',
                                             command=lambda: self.autocycle())
-        self.dateEnable.pack(side=Tkinter.LEFT)
+        self.dateEnable.pack(side=tkinter.LEFT)
         # self.dateEnable.configure(state=Tkinter.ENABLED)
 
         self.fig.tight_layout()
@@ -376,7 +376,7 @@ class ADRController(object):#Tkinter.Tk):
         self.cxn[self.selectedADR].open_heat_switch()
 
     def serverChanged(self,serverName):
-        print 'server changed',serverName
+        print('server changed',serverName)
         if 'ADR' in serverName and len(serverName)==4:
             self.populateADRSelectMenu()
 
@@ -390,7 +390,7 @@ class ADRController(object):#Tkinter.Tk):
         self.adrSelectWidget['menu'].delete(0,'end')
         for adrServerName in runningADRs:
             self.adrSelectWidget['menu'].add_command(label=adrServerName,
-                    command=Tkinter._setit(self.adrSelect,adrServerName))
+                    command=tkinter._setit(self.adrSelect,adrServerName))
         if self.selectedADR in runningADRs:
             self.adrSelect.set(self.selectedADR)
         else:
@@ -400,14 +400,14 @@ class ADRController(object):#Tkinter.Tk):
                 self.resetButtons()
                 self.selectedADR = ''
             except Exception as e:
-                print e
+                print(e)
 
     def resetButtons(self):
-        self.HSCloseButton.configure(state=Tkinter.DISABLED)
-        self.HSOpenButton.configure(state=Tkinter.DISABLED)
-        self.magUpButton.configure(state=Tkinter.DISABLED)
-        self.regulateButton.configure(state=Tkinter.DISABLED)
-        self.compressorButton.configure(state=Tkinter.DISABLED)
+        self.HSCloseButton.configure(state=tkinter.DISABLED)
+        self.HSOpenButton.configure(state=tkinter.DISABLED)
+        self.magUpButton.configure(state=tkinter.DISABLED)
+        self.regulateButton.configure(state=tkinter.DISABLED)
+        self.compressorButton.configure(state=tkinter.DISABLED)
 
     @inlineCallbacks
     def changeFridge(self,*args):
@@ -472,36 +472,36 @@ class ADRController(object):#Tkinter.Tk):
         returnStatus = yield self.cxn[self.selectedADR].get_instrument_state()
         self.instrumentStatuses = {}
         for name,status in returnStatus:
-            self.instrumentStatuses[name] = Tkinter.Label(self.instrumentStatusFrame,
+            self.instrumentStatuses[name] = tkinter.Label(self.instrumentStatusFrame,
                                                         text=name,
-                                                        relief=Tkinter.RIDGE,
+                                                        relief=tkinter.RIDGE,
                                                         bg='gray70')
-            self.instrumentStatuses[name].pack(side=Tkinter.LEFT,
+            self.instrumentStatuses[name].pack(side=tkinter.LEFT,
                                                 expand=True,
-                                                fill=Tkinter.X)
+                                                fill=tkinter.X)
         # update field limits and button statuses
         self.setFieldLimits()
-        self.magUpButton.configure(state=Tkinter.NORMAL)
-        self.regulateButton.configure(state=Tkinter.NORMAL)
-        self.compressorButton.configure(state=Tkinter.DISABLED)
+        self.magUpButton.configure(state=tkinter.NORMAL)
+        self.regulateButton.configure(state=tkinter.NORMAL)
+        self.compressorButton.configure(state=tkinter.DISABLED)
         mUp = yield self.cxn[self.selectedADR].get_state_var('maggingUp')
         reg = yield self.cxn[self.selectedADR].get_state_var('regulating')
         if mUp:
             self.magUpButton.configure(text='Stop Magging Up',
                                        command=self.cancelMagUp)
-            self.regulateButton.configure(state=Tkinter.DISABLED)
+            self.regulateButton.configure(state=tkinter.DISABLED)
         if reg:
             self.regulateButton.configure(text='Stop Regulating',
                                           command=self.cancelRegulate)
-            self.magUpButton.configure(state=Tkinter.DISABLED)
+            self.magUpButton.configure(state=tkinter.DISABLED)
         # update heat switch buttons
         HSAvailable = yield self.cxn[self.selectedADR].get_instrument_state(['Heat Switch'])
         if HSAvailable[0][1][0]:
-            self.HSCloseButton.configure(state=Tkinter.NORMAL)
-            self.HSOpenButton.configure(state=Tkinter.NORMAL)
+            self.HSCloseButton.configure(state=tkinter.NORMAL)
+            self.HSOpenButton.configure(state=tkinter.NORMAL)
         else:
-            self.HSCloseButton.configure(state=Tkinter.DISABLED)
-            self.HSOpenButton.configure(state=Tkinter.DISABLED)
+            self.HSCloseButton.configure(state=tkinter.DISABLED)
+            self.HSOpenButton.configure(state=tkinter.DISABLED)
         # refresh interface
         self.updateInterface()
 
@@ -529,12 +529,12 @@ class ADRController(object):#Tkinter.Tk):
         if state['get_state_var'] == True:
             self.compressorButton.configure(text='Stop Compressor',
                                             command=self.stopCompressor,
-                                            state=Tkinter.NORMAL)
+                                            state=tkinter.NORMAL)
         elif state['get_state_var'] == False:
             self.compressorButton.configure(text='Start Compressor',
                                             command=self.startCompressor,
-                                            state=Tkinter.NORMAL)
-        else: self.compressorButton.configure(state=Tkinter.DISABLED)
+                                            state=tkinter.NORMAL)
+        else: self.compressorButton.configure(state=tkinter.DISABLED)
         # update current, voltage fields
         temps = {}
         stages = ('T_60K','T_3K','T_GGG','T_FAA')
@@ -602,7 +602,7 @@ class ADRController(object):#Tkinter.Tk):
                             self.stageGGG: self.tGGG,
                             self.stageFAA: self.tFAA  }
             if len(self.stage60K.get_xdata()) > 1:
-                for line in lineAndVar.keys():
+                for line in list(lineAndVar.keys()):
                     if lineAndVar[line].get() == 0:
                         line.set_visible(False)
                     else:
@@ -627,10 +627,10 @@ class ADRController(object):#Tkinter.Tk):
             self.log.log(time,message,alert)
 
     def addToLog(self):
-        text = str( self.addToLogField.get(1.0, Tkinter.END) )
+        text = str( self.addToLogField.get(1.0, tkinter.END) )
         try:
             self.cxn[self.selectedADR].add_to_log(text)
-            self.addToLogField.delete(1.0, Tkinter.END)
+            self.addToLogField.delete(1.0, tkinter.END)
         except Exception as e:
             pass
 
@@ -645,14 +645,14 @@ class ADRController(object):#Tkinter.Tk):
 
     def magUpStarted(self):
         self.magUpButton.configure(text='Stop Magging Up', command=self.cancelMagUp)
-        self.regulateButton.configure(state=Tkinter.DISABLED)
+        self.regulateButton.configure(state=tkinter.DISABLED)
 
     def cancelMagUp(self):
         self.cxn[self.selectedADR].cancel_mag_up()
 
     def magUpStopped(self):
         self.magUpButton.configure(text='Mag Up', command=self.magUp)
-        self.regulateButton.configure(state=Tkinter.NORMAL)
+        self.regulateButton.configure(state=tkinter.NORMAL)
 
     def regulate(self):
         T_target = float(self.regulationTemp.get())
@@ -661,12 +661,12 @@ class ADRController(object):#Tkinter.Tk):
     def changeRegTemp(self, *args):
         if self.regulating == True:
             T_target = float(self.regulationTemp.get())
-            print self.regulationTemp.get(),T_target
+            print(self.regulationTemp.get(),T_target)
             self.cxn[self.selectedADR].regulate(T_target)
 
     def regulationStarted(self):
         self.regulateButton.configure(text='Stop Regulating', command=self.cancelRegulate)
-        self.magUpButton.configure(state=Tkinter.DISABLED)
+        self.magUpButton.configure(state=tkinter.DISABLED)
         self.regulating = True
 
     def cancelRegulate(self):
@@ -674,7 +674,7 @@ class ADRController(object):#Tkinter.Tk):
         
     def regulationStopped(self):
         self.regulateButton.configure(text='Regulate', command=self.regulate)
-        self.magUpButton.configure(state=Tkinter.NORMAL)
+        self.magUpButton.configure(state=tkinter.NORMAL)
         self.regulating = False
         
     def autocycle(self):
@@ -709,7 +709,7 @@ class ADRController(object):#Tkinter.Tk):
         reactor.stop()
 
 if __name__ == "__main__":
-    mstr = Tkinter.Tk()
+    mstr = tkinter.Tk()
     tksupport.install(mstr)
     app = ADRController(mstr)
     reactor.run()

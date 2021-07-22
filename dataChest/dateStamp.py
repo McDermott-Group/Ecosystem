@@ -30,7 +30,7 @@ class dateStamp(object):
       elif num == 0:
           converted_digits = [0]
       elif num <0:
-          print "no negative numbers!!!"
+          print("no negative numbers!!!")
       letters = list("abcdefghijklmnopqrstuvwxyz")
       for ii in range(0, len(converted_digits)):
           converted_digits[ii] = letters[converted_digits[ii]]
@@ -120,7 +120,7 @@ class dateStamp(object):
       local = tz.tzlocal()
       declareTzoneToLocal = localDatetime.replace(tzinfo = local)
       convertToUTC = declareTzoneToLocal.astimezone(utc).isoformat()
-      print "convertToUTC=", convertToUTC[:-5]
+      print("convertToUTC=", convertToUTC[:-5])
       return self.utcDateStrToFloat(convertToUTC[:-6])
     else:
       raise IOError("Input strings should be Date ISO formatted.")

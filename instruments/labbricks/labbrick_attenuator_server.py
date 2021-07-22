@@ -122,7 +122,7 @@ class LBAttenuatorServer(LabradServer):
         self.killAttenuatorConnections()
 
     def killAttenuatorConnections(self):
-        for DID in self._SN2DID.values():
+        for DID in list(self._SN2DID.values()):
             try:
                 yield self.VNXdll.fnLDA_CloseDevice(ctypes.c_uint(DID))
             except Exception:
@@ -157,15 +157,15 @@ class LBAttenuatorServer(LabradServer):
                 self._last_attn.update({SN: attn})
                 self._min_attn.update({SN: min_attn})
                 self._max_attn.update({SN: max_attn})
-                print('Found a %s Lab Brick Attenuator, serial '
+                print(('Found a %s Lab Brick Attenuator, serial '
                       'number: %d, current attenuation: %s'
-                      % (model, SN, self._last_attn[SN]))
+                      % (model, SN, self._last_attn[SN])))
 
     def getDeviceDID(self, c):
         if 'SN' not in c:
             raise DeviceNotSelectedError('No Lab Brick Attenuator '
                                          'serial number is selected')
-        if c['SN'] not in self._SN2DID.keys():
+        if c['SN'] not in list(self._SN2DID.keys()):
             raise Exception('Cannot find Lab Brick Attenuator with '
                             'serial number %s' % c['SN'])
         return self._SN2DID[c['SN']]

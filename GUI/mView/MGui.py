@@ -47,7 +47,7 @@ class MGui(QtGui.QMainWindow):
     print("#############################################")
     loader = str(__main__.__file__).replace("\\","/").split('/')[-1]
     loader = loader[:loader.index('.py')]
-    print "Loader:", loader
+    print("Loader:", loader)
     web.persistentData = MPersistentData(loader)
     # Holds the Qlabels that label the parameters.
     parameters = [[]]
@@ -183,7 +183,7 @@ class MGui(QtGui.QMainWindow):
 
     def stop(self):
         '''Stop MView.'''
-        print "Shutting down MView."
+        print("Shutting down MView.")
 
         # print "all devices:", web.devices
         for device in web.devices:
@@ -252,7 +252,7 @@ class MGui(QtGui.QMainWindow):
 
     def openVirtualDevicesConfig(self):
         # self.neh.showEditor()
-        print "no, I wont"
+        print("no, I wont")
 
     def openConfig(self):
         self.Config = ConfigGui(self)

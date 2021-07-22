@@ -63,7 +63,7 @@ class PfeifferVacuumControlWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to an Pfeiffer Vacuum MaxiGauge."""
-        print('Connecting to "%s" on port "%s"...' %(server.name, port))
+        print(('Connecting to "%s" on port "%s"...' %(server.name, port)))
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -71,9 +71,9 @@ class PfeifferVacuumControlWrapper(DeviceWrapper):
         p.open(port)
         # The following parameters match the default configuration of 
         # the MaxiGauge unit.
-        p.baudrate(9600L)
-        p.stopbits(1L)
-        p.bytesize(8L)
+        p.baudrate(9600)
+        p.stopbits(1)
+        p.bytesize(8)
         p.parity('N')
         p.rts(False)
         p.timeout(2 * units.s)
@@ -227,7 +227,7 @@ class PfeifferVacuumControlServer(DeviceServer):
             # 'status,measurement.'
             # Separate the status code from the measurement.
             response = response.rsplit(',')
-            print("response is", response)
+            print(("response is", response))
             pressure = response[1].strip().split('\r\n\x15')[0]
             status = response[0]
             self.measurements[i - 1] = float(pressure) * mbar
@@ -263,9 +263,9 @@ class PfeifferVacuumControlServer(DeviceServer):
             # seconds since the epoch (1/1/1970).
             # NOTE: the sensor variable is 0 indexed.
             self.t2[sensor] = self.t1[sensor]
-            print("{0}\n\t{1}\n\t{2}".format(message,
+            print(("{0}\n\t{1}\n\t{2}".format(message,
                                              time.ctime(self.t1[sensor]),
-                                             str(measurement)))
+                                             str(measurement))))
         return
     
     @inlineCallbacks
@@ -284,7 +284,7 @@ class PfeifferVacuumControlServer(DeviceServer):
     def findDevices(self):
         """Find available devices from a list stored in the registry."""
         devs = []
-        for name, (server, port) in self.serialLinks.items():
+        for name, (server, port) in list(self.serialLinks.items()):
             if server not in self.client.servers:
                 continue
             server = self.client[server]

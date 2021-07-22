@@ -372,11 +372,11 @@ def configure_pxi_backplane_trigger(
     """
     if channel_number not in [1, 2, 3, 4]:
         raise Exception("channel_number must be an integer from 1 to 4.")
-    if trigger_source not in TRIGGER_SOURCES.values():
+    if trigger_source not in list(TRIGGER_SOURCES.values()):
         raise Exception("Invalid trigger_number. See the "
                         "TRIGGER_SOURCES dictionary"
                         " for a complete set of options.")
-    if trigger_behavior not in TRIGGER_BEHAVIORS.values():
+    if trigger_behavior not in list(TRIGGER_BEHAVIORS.values()):
         raise Exception("Invalid trigger_behavior. See the "
                         "TRIGGER_BEHAVIORS dictionary"
                         " for a complete set of options.")
@@ -413,10 +413,10 @@ def send_backplane_trigger_awg(awg, trigger_value,
             set to the logic level defined by trigger_value.
 
     """
-    if trigger_value not in TRIGGER_VALUES.values():
+    if trigger_value not in list(TRIGGER_VALUES.values()):
         raise Exception("Invalid trigger_value. See the TRIGGER_VALUES"
                         " dictionary for a complete set of options.")
-    if trigger_source not in TRIGGER_SOURCES.values():
+    if trigger_source not in list(TRIGGER_SOURCES.values()):
         raise Exception("Invalid trigger_number. See the "
                         "TRIGGER_SOURCES dictionary"
                         " for a complete set of options.")

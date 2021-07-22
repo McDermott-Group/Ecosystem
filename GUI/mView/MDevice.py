@@ -187,10 +187,10 @@ class MDevice(QThread):
                 # If the current directory is a subdirectory of the default,
                 # then that is ok and the current directory should not be
                 # changed.
-                print "current location:", self.frame.DataLoggingInfo()['location']
-                print "default:", self.defaultLogLocation
+                print("current location:", self.frame.DataLoggingInfo()['location'])
+                print("default:", self.defaultLogLocation)
                 if not(self.defaultLogLocation in self.frame.DataLoggingInfo()['location']):
-                    print "Paths not ok"
+                    print("Paths not ok")
 
                     self.frame.DataLoggingInfo()[
                         'location'] = self.defaultLogLocation
@@ -205,7 +205,7 @@ class MDevice(QThread):
 
     def loaded(self):
 
-        print self, "loaded."
+        print(self, "loaded.")
         self.onLoad()
         self.doneLoading = True
 

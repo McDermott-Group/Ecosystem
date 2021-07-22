@@ -226,7 +226,7 @@ class Device(MDevice):
                                        actual_button[1])(actual_button[3], context=self.ctx)
                     # If just the setting needs to be run.
                     else:
-                        print "actual button:", actual_button
+                        print("actual button:", actual_button)
                         resp = getattr(self.deviceServer, actual_button[1])(
                             context=self.ctx)
             # Otherwise if there is no warning message, do not make
@@ -240,7 +240,7 @@ class Device(MDevice):
                 else:
                     resp = getattr(self.deviceServer, actual_button[1])(
                         context=self.ctx)
-            print "Response:", resp
+            print("Response:", resp)
 
             if resp != None:
                 p = QtGui.QMessageBox()
@@ -340,9 +340,9 @@ class Device(MDevice):
                             self.setUnit(name, "")
                             # precisions.append(self.precisions[i])
                         except:
-                            print("Problem with readings, type '%s' "
+                            print(("Problem with readings, type '%s' "
                                   "cannot be displayed."
-                                  % str(type(reading)))
+                                  % str(type(reading))))
 
                 # Pass the readings and units to the frame.
                 #self.setReadings(readings, False)
@@ -354,10 +354,10 @@ class Device(MDevice):
                 self.frame.retractError()
             except IndexError as e:
                 traceback.print_exc()
-                print e
-                print("[%s] Something appears to be wrong with what "
+                print(e)
+                print(("[%s] Something appears to be wrong with what "
                       "the labrad server is returning."
-                      % str(self.frame.getTitle()))
+                      % str(self.frame.getTitle())))
 
             except:
                 traceback.print_exc()

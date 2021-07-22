@@ -35,7 +35,7 @@ class ZLoopTuner:
             end_time = time.time() + self.sample_time
             self.sampling_period = 0
             self.num_periods = 1
-            print 'Editing Kp, curr value = ' +str(self.kp)
+            print('Editing Kp, curr value = ' +str(self.kp))
             while time.time() < end_time:
                 time.sleep(.1)
                 #TODO FIX THIS LINE
@@ -60,7 +60,7 @@ class ZLoopTuner:
             max_freq = time_fft[index_fft]
 
             if max_temp_fft > (avg_fft + (3 * std_fft)):
-                print 'Critical Kp determined.'
+                print('Critical Kp determined.')
                 pyplot.plot(time_fft, temp_fft)
                 pyplot.show()
                 self.periodic = True
@@ -68,7 +68,7 @@ class ZLoopTuner:
                 self.ku = self.kp
 
             else:
-                print 'Periodicity not detected.'
+                print('Periodicity not detected.')
                 pyplot.plot(time_fft, temp_fft)
                 pyplot.show()
                 self.kp = self.kp + 0.01
@@ -76,7 +76,7 @@ class ZLoopTuner:
 
         # DETERMINE FINAL GAINS
         # final gains set according to Ziegler-Nichols method
-        print 'Setting final gains'
+        print('Setting final gains')
         self.kp = self.ku * 0.6
         self.ki = self.ku / self.tu * 1.2
         self.kd = self.ku * self.tu * 3 / 40

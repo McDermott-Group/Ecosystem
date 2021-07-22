@@ -61,7 +61,7 @@ class OmegaRatemeterWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to an Omega rate monitor."""
-        print('Connecting to "%s" on port "%s"...' %(server.name, port))
+        print(('Connecting to "%s" on port "%s"...' %(server.name, port)))
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -69,9 +69,9 @@ class OmegaRatemeterWrapper(DeviceWrapper):
         p.open(port)
         # The following parameters match the default configuration of the
         # serial device.
-        p.baudrate(9600L)
-        p.stopbits(1L)
-        p.bytesize(7L)
+        p.baudrate(9600)
+        p.stopbits(1)
+        p.bytesize(7)
         p.parity('E')
         p.rts(False)
         p.timeout(5 * units.s)
@@ -232,15 +232,15 @@ class OmegaRatemeterServer(DeviceServer):
             # Store the last time an alert was sent in the form of
             # seconds since the epoch (1/1/1970).
             self.t2 = self.t1
-            print("{0}\n\t{1}\n\t{2}".format(message,
+            print(("{0}\n\t{1}\n\t{2}".format(message,
                                              time.ctime(self.t1),
-                                             str(measurement)))
+                                             str(measurement))))
 
     @inlineCallbacks    
     def findDevices(self):
         """Find available devices from a list stored in the registry."""
         devs = []
-        for name, (server, port) in self.serialLinks.items():
+        for name, (server, port) in list(self.serialLinks.items()):
             if server not in self.client.servers:
                 continue
             server = self.client[server]

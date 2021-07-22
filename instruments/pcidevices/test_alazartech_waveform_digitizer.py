@@ -45,21 +45,21 @@ def test_ats_configuration(input_range=4 * V,
     # during any actual measurements.
     print('\nAcquring the channel information...')
     [samples_per_channel, bits_per_sample] = ats.get_channel_info()
-    print('There are %d samples per channel, %d bits per sample.'
-          % (samples_per_channel, bits_per_sample))
-    print('Records to be acquired: %d.' % ats.number_of_records())
+    print(('There are %d samples per channel, %d bits per sample.'
+          % (samples_per_channel, bits_per_sample)))
+    print(('Records to be acquired: %d.' % ats.number_of_records()))
     bytes_per_sample = (bits_per_sample - 1) // 8 + 1
     sampling_rate = ats.sampling_rate()['S/s']
     if isinstance(samples_per_record, units.Value):
         samples_per_record = samples_per_record['s']
     samples_per_record = sampling_rate * samples_per_record
     memory = 2 * bytes_per_sample * samples_per_record * number_of_records
-    print('Minimum memory required: %d bytes, which is about %.2f MB.'
-          % (memory, float(memory) / (1024 * 1024)))
+    print(('Minimum memory required: %d bytes, which is about %.2f MB.'
+          % (memory, float(memory) / (1024 * 1024))))
 
     # Check the board state.
     print('\nIs board busy?')
-    print('%s.' % ats.busy())
+    print(('%s.' % ats.busy()))
 
 
 def test_ats():
@@ -95,7 +95,7 @@ def test_ats():
     avg = ats.get_average()
     times = ats.get_times()
     stop = time.time()
-    print('Execution time: %f seconds.' % (stop - start))
+    print(('Execution time: %f seconds.' % (stop - start)))
 
     # Plot the data.
     I = avg[0]

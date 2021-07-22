@@ -119,8 +119,8 @@ class DAC(fpga.FPGA):
     @inlineCallbacks
     def connect(self, name, group, de, port, board, build):
         """Establish a connection to the board."""
-        print 'connecting to DAC board: {} (build #{})'.format(
-            self.macFor(board), build)
+        print('connecting to DAC board: {} (build #{})'.format(
+            self.macFor(board), build))
 
         self.boardGroup = group
         self.server = de
@@ -286,8 +286,8 @@ class DAC(fpga.FPGA):
     @staticmethod
     def bistChecksum(data):
         bist = [0, 0]
-        for i in xrange(0, len(data), 2):
-            for j in xrange(2):
+        for i in range(0, len(data), 2):
+            for j in range(2):
                 if data[i + j] & 0x3FFF != 0:
                     bist[j] = (((bist[j] << 1) & 0xFFFFFFFE) | \
                                ((bist[j] >> 31) & 1)) ^ \
@@ -703,7 +703,7 @@ class DAC_Build7(DAC):
         success = False
         for PHOF in PHOFS:
             pkt = [0x0700 + PHOF, 0x8700]
-            reading = long(((yield self._runSerial(op, pkt))[1] >> 4) & 0xF)
+            reading = int(((yield self._runSerial(op, pkt))[1] >> 4) & 0xF)
             if reading == counterValue:
                 success = True
                 break
@@ -865,7 +865,7 @@ class DAC_Build7(DAC):
                 success = False
             checkResp = yield self._runSerial(cmd, [0x8500])
             checkHex = checkResp[0] & 0x7
-            returnValue((success, MSD, MHD, t, (range(16), MSDbits, MHDbits),
+            returnValue((success, MSD, MHD, t, (list(range(16)), MSDbits, MHDbits),
                          checkHex))
 
         return self.testMode(func)

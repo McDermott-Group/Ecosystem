@@ -106,8 +106,8 @@ class GPIBBusServer(LabradServer):
                     instr.clear()
                     self.mydevices[addr] = instr
                     self.sendDeviceMessage('GPIB Device Connect', addr)
-                except Exception, e:
-                    print('Failed to add %s: %s' %(addr, str(e)))
+                except Exception as e:
+                    print(('Failed to add %s: %s' %(addr, str(e))))
             # Because pyvisa's list_resources() command doesn't list
             # TCPIP addresses, we need to make sure we don't delete them
             # everytime we refresh the address list.
@@ -115,8 +115,8 @@ class GPIBBusServer(LabradServer):
                 if not(addr.startswith('TCPIP')):  
                     del self.mydevices[addr]
                 self.sendDeviceMessage('GPIB Device Disconnect', addr)
-        except Exception, e:
-            print('Problem while refreshing devices: %s' %str(e))
+        except Exception as e:
+            print(('Problem while refreshing devices: %s' %str(e)))
     
     @setting(27,tcpAddr='s')    
     def addTCPIPDevice(self,c,tcpAddr=None):
@@ -130,14 +130,14 @@ class GPIBBusServer(LabradServer):
                 instr = self.rm.open_resource(tcpAddr,
                         open_timeout=10.0)
                 # instr.write_termination = u'\r\n'
-                print(instr.query('*IDN?'))
+                print((instr.query('*IDN?')))
                 instr.clear()
                 self.mydevices[tcpAddr] = instr
                 self.sendDeviceMessage('GPIB Device Connect', tcpAddr)
-            except Exception, e:
-                print('Failed to add %s: %s' %(tcpAddr, str(e)))
-        except Exception, e:
-            print('Problem while adding TCPIP address: %s' %str(e))
+            except Exception as e:
+                print(('Failed to add %s: %s' %(tcpAddr, str(e))))
+        except Exception as e:
+            print(('Problem while adding TCPIP address: %s' %str(e)))
 
     def getSocketsList(self):
         """Get a list of all connected devices.
@@ -149,7 +149,7 @@ class GPIBBusServer(LabradServer):
         return self.rm.list_resources()
 
     def sendDeviceMessage(self, msg, addr):
-        print('%s: %s' %(msg, addr))
+        print(('%s: %s' %(msg, addr)))
         self.client.manager.send_named_message(msg, (self.name, addr))
 
     def initContext(self, c):
@@ -198,9 +198,9 @@ class GPIBBusServer(LabradServer):
         try:
             # Note the explicit conversion from ASCII to Unicode.
             # print c['addr'], unicode(data)
-            self.getDevice(c).write(unicode(data))
+            self.getDevice(c).write(str(data))
         except VisaIOError:
-            print("Could not write '%s' to %s" %(str(data), c['addr']))
+            print(("Could not write '%s' to %s" %(str(data), c['addr'])))
 
     @setting(24, bytes='w', returns='s')
     def read_raw(self, c, bytes=None):
@@ -216,7 +216,7 @@ class GPIBBusServer(LabradServer):
             else:
                 return instr.read_raw(bytes)
         except VisaIOError:
-            print("No response from %s" %c['addr'])
+            print(("No response from %s" %c['addr']))
             return ''
 
     @setting(25, returns='s')
@@ -228,7 +228,7 @@ class GPIBBusServer(LabradServer):
             resp = resp.strip(string.whitespace + '\x00')
             return resp.encode('ascii', 'ignore')
         except VisaIOError:
-            print("No response from %s" %c['addr'])
+            print(("No response from %s" %c['addr']))
             return ''
 
     @setting(26, data='s', returns='s')
@@ -244,7 +244,7 @@ class GPIBBusServer(LabradServer):
             resp = resp.strip(string.whitespace + '\x00')
             return resp.encode('ascii', 'ignore')
         except VisaIOError:
-            print("No response from %s to '%s'" %(c['addr'], str(data)))
+            print(("No response from %s to '%s'" %(c['addr'], str(data))))
             return ''
 
 __server__ = GPIBBusServer()

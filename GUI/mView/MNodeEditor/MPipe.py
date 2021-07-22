@@ -40,7 +40,7 @@ class MPipe:
     def connect(self, endAnchor):
         '''Connect the other end of the pipe.'''
         if endAnchor.getType() == self.startAnchor.getType():
-            print "Cannot connect two", endAnchor.getType(), "anchors together."
+            print("Cannot connect two", endAnchor.getType(), "anchors together.")
             raise ValueError("Invalid pipe connection.")
         self.inputAnchor = endAnchor
         self.outputAnchor = self.startAnchor

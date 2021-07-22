@@ -60,7 +60,7 @@ for idx in range(12):
     cxn.ghz_fpgas.adc_mixer_table(idx, mixTable)
 #cxn.ghz_fpgas.adc_mixer_table(0, mixTable)
 data = cxn.ghz_fpgas.adc_run_demod()
-print np.array(data[0])
+print(np.array(data[0]))
 
 def flatMix(mon0='start',mon1='don',triggerTable = [(1,1250,100,1)]):#trigger=1,chan=1):
     cxn.manager.expire_context()
@@ -81,8 +81,8 @@ def flatMix(mon0='start',mon1='don',triggerTable = [(1,1250,100,1)]):#trigger=1,
 
     IQdata = np.array(data[0][0])
     Z = IQdata[:,0] + 1j*IQdata[:,1]
-    print "absolute value: ", np.abs(Z)
-    print "angle: ", np.angle(Z)*180/np.pi, " degrees"
+    print("absolute value: ", np.abs(Z))
+    print("angle: ", np.angle(Z)*180/np.pi, " degrees")
     return Z
     
 data = []

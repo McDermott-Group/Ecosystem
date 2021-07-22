@@ -58,7 +58,7 @@ class CompressorDevice(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to a compressor device."""
-        print('Connecting to "%s" on port "%s"...' %(server.name, port))
+        print(('Connecting to "%s" on port "%s"...' %(server.name, port)))
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -430,11 +430,11 @@ def getValue(resp):
     
 def toBytes(n, count=4):
     """Turn an int into a list of bytes."""
-    return [(n >> (8*i)) & 0xFF for i in reversed(range(count))]
+    return [(n >> (8*i)) & 0xFF for i in reversed(list(range(count)))]
 
 def fromBytes(b, count=4):
     """Turn a list of bytes into an int."""
-    return sum(d << (8*i) for d, i in zip(b, reversed(range(count))))
+    return sum(d << (8*i) for d, i in zip(b, reversed(list(range(count)))))
 
 def toTemp(v, units=K):
     """Convert temp reading to a LabRAD temperature."""

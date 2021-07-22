@@ -43,7 +43,7 @@ class MKSPDR2000Wrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         '''Connect to the MKS PDR2000'''
-        print('Connecting to "%s" on port "%s"...' %(server.name, port))
+        print(('Connecting to "%s" on port "%s"...' %(server.name, port)))
 
         self.server = server
         self.ctx = server.context()
@@ -51,9 +51,9 @@ class MKSPDR2000Wrapper(DeviceWrapper):
         p = self.packet()
         p.open(port)
         # The following parameters were obtained from the MKS PDR2000 manual.
-        p.baudrate(9600L)
-        p.stopbits(1L)
-        p.bytesize(8L)
+        p.baudrate(9600)
+        p.stopbits(1)
+        p.bytesize(8)
         p.parity('N')
         p.timeout(0.1 * u.s)
         p.read()
@@ -105,7 +105,7 @@ class MKSPDR2000Server(DeviceServer):
     @inlineCallbacks
     def initServer(self):
         '''Initialize the MKSPDR2000 server.'''
-        print "Server Initializing"
+        print("Server Initializing")
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
@@ -155,13 +155,13 @@ class MKSPDR2000Server(DeviceServer):
             p.get(k, key=k)
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys)
-        print self.serialLinks
+        print(self.serialLinks)
         
     @inlineCallbacks       
     def findDevices(self):
         """Find available devices from list stored in the registry."""
         devs = []
-        for name, (server, port) in self.serialLinks.items():
+        for name, (server, port) in list(self.serialLinks.items()):
             if server not in self.client.servers:
                 continue
             server = self.client[server]

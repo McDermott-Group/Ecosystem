@@ -56,13 +56,13 @@ from utilities.sleep import sleep
 class goldsteinsPT1000TemperatureMonitorWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
-        print('Connecting to {0} on port {1}...'.format(server.name, port))
+        print(('Connecting to {0} on port {1}...'.format(server.name, port)))
         self.server = server
         self.ctx = server.context()
         self.port = port
         p = self.packet()
         p.open(port)
-        p.baudrate(9600L)
+        p.baudrate(9600)
         p.timeout(1*units.s)
         p.read_line()
         yield p.send()
@@ -182,12 +182,12 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
             p.get(k, key = k)
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys)
-        print self.serialLinks
+        print(self.serialLinks)
     
     @inlineCallbacks
     def findDevices(self):
         devs = []
-        for name, (server, port) in self.serialLinks.items():
+        for name, (server, port) in list(self.serialLinks.items()):
             if server not in self.client.servers:
                 continue
             server = self.client[server]

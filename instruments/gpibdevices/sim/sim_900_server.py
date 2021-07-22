@@ -124,7 +124,7 @@ class SIM900(GPIBManagedServer):
         return self.rm.list_resources()
 
     def sendDeviceMessage(self, msg, addr):
-        print('%s: %s' % (msg, addr))
+        print(('%s: %s' % (msg, addr)))
         self.client.manager.send_named_message(msg, (self.name, addr))
 
     def initContext(self, c):

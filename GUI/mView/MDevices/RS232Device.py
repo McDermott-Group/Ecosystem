@@ -133,7 +133,7 @@ class RS232Device(MDevice):
         except:
             traceback.print_exc()
             self.connected = False
-            print "ERROR: port:", self.port, "will try again."
+            print("ERROR: port:", self.port, "will try again.")
             return None
 
     def query(self):
@@ -151,7 +151,7 @@ class RS232Device(MDevice):
             if self.port is not None:
                 # For each parameter, get readings
                 for param in self.getParameters():
-                    print "param:", param
+                    print("param:", param)
                     # Flush anything that might on the port.
                     self.port.flush()
                     # Write the command to the port.
@@ -182,4 +182,4 @@ class RS232Device(MDevice):
         try:
             self.port.close()
         except:
-            print "Could not close port."
+            print("Could not close port.")

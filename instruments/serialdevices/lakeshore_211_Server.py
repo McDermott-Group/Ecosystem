@@ -14,18 +14,18 @@ class LK211Wrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to an lk211 """
-        print('Connecting to "%s" on port "%s"...' %(server.name, port))
+        print(('Connecting to "%s" on port "%s"...' %(server.name, port)))
         self.server = server
         self.ctx = server.context()
-        print(self.ctx)
+        print((self.ctx))
         self.port = port
         p = self.packet()
         p.open(port)
         # The following parameters match the default configuration of the
         # lakeshore 211
-        p.baudrate(9600L)
-        p.stopbits(1L)
-        p.bytesize(7L)
+        p.baudrate(9600)
+        p.stopbits(1)
+        p.bytesize(7)
         p.parity('O')
         p.rts(False)
         p.timeout(1 * units.s)
@@ -67,7 +67,7 @@ class LK211Server(DeviceServer):
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
         time.sleep(1)
-        print(self.devices)
+        print((self.devices))
         self.alertInterval = 10 # seconds
         self.t1 = 0
         self.t2 = 0
@@ -151,7 +151,7 @@ class LK211Server(DeviceServer):
         """Find available devices from a list stored in the registry."""
         devs = []
         print(" Find devices")
-        for name, (server, port) in self.serialLinks.items():
+        for name, (server, port) in list(self.serialLinks.items()):
             if server not in self.client.servers:
                 continue
             server = self.client[server]

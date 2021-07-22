@@ -68,8 +68,8 @@ class AlazarTechServer(LabradServer):
                 devType = ats.boardNames[handle.type]
                 self.boardTypes[boardName] = devType
                 self.boardNames += [boardName]
-                print('Found %s Waveform Digitizer at %s'
-                      % (devType, boardName))
+                print(('Found %s Waveform Digitizer at %s'
+                      % (devType, boardName)))
 
     # Settings from 0 to 49 are basic server settings.
     @setting(10, 'List Devices', returns='*s')
@@ -526,7 +526,7 @@ class AlazarTechServer(LabradServer):
     def get_buffer_states(self, c):
         if not hasattr(self, 'saved_buffers'):
             self.saved_buffers = {}
-        return self.saved_buffers.keys()
+        return list(self.saved_buffers.keys())
 
     @setting(698, 'Save Buffer State', label='s', returns='')
     def save_buffer_state(self, c, label=''):
@@ -714,12 +714,12 @@ class AlazarTechServer(LabradServer):
             # np.dot(timeSeries.reshape(numberOfRecords, -1), np.float32(chs), iqBuffer)
             iqBuffer = np.dot(timeSeries.reshape(numberOfRecords, -1), np.float32(chs))
         except Exception as e:
-            print 'numberOfRecords %d' % numberOfRecords
-            print 'timeSeries shape'
-            print timeSeries.shape
+            print('numberOfRecords %d' % numberOfRecords)
+            print('timeSeries shape')
+            print(timeSeries.shape)
             # print 'size of first dotted array %d' % len(timeSeries.reshape(numberOfRecords, -1))
-            print 'size of second dotted array %d' % len(np.float32(chs))
-            print e
+            print('size of second dotted array %d' % len(np.float32(chs)))
+            print(e)
 
         iqBuffer /= samplesPerRecord
         return iqBuffer * units.V

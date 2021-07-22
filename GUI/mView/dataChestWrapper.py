@@ -75,9 +75,9 @@ class dataChestWrapper:
         # print "device:", self.device
         # print "restoring location of", self.device, location
         for nickname in self.device.getFrame().getNicknames():
-            if channels == None or nickname not in channels.keys():
+            if channels == None or nickname not in list(channels.keys()):
                 channels = self.device.getFrame().DataLoggingInfo()['channels']
-                print "Error when retreiving logged channels in config file, restoring to", channels
+                print("Error when retreiving logged channels in config file, restoring to", channels)
         if dataname is None:
             dataname = self.device.getFrame().getTitle()
 
@@ -135,7 +135,7 @@ class dataChestWrapper:
         if location != None:
             root = os.environ['DATA_ROOT']
             root = root.replace("/","\\")
-            print "\n\n\n\n\n\n\n\n\nlocation: " + location
+            print("\n\n\n\n\n\n\n\n\nlocation: " + location)
             relativePath = os.path.relpath(location, root)
             #print "relativePath:", relativePath
             #if relativePath == '.':
@@ -145,7 +145,7 @@ class dataChestWrapper:
             if force_new:
 
                 try:
-                    print "Could not store in:",path[-1]
+                    print("Could not store in:",path[-1])
 
                     folder_version = int(path[-1][path[-1].index('__') + 2::])
                     path[-1] = path[-1][:path[-1].index('__')]
@@ -155,7 +155,7 @@ class dataChestWrapper:
                     traceback.print_exc()
                     path[-1] += '__0'
                 #print str(self.device)+":", "New data location forced:", path
-            print "Path:", path
+            print("Path:", path)
             self.dataSet = dataChest(str(path[0]))
             self.dataSet.cd('')
             # relativepath = os.path.relpath(
@@ -178,7 +178,7 @@ class dataChestWrapper:
                         self.dataSet.cd(folder)
 
                     except:
-                        print "ERROR: Could not create dataset at:", path
+                        print("ERROR: Could not create dataset at:", path)
                         #folder_version += 1
                         #path[-1] = folder[0:folder.index('__')]+str("__"+str(folder_version))
 
@@ -302,7 +302,7 @@ class dataChestWrapper:
                 newdepvars = [getattr(np, self.dataType)(var)
                               for var in depvars]
                 vars.extend(newdepvars)
-                print "appending:", vars
+                print("appending:", vars)
                 self.dataSet.addData([vars])
             except:
                 traceback.print_exc()
@@ -394,12 +394,12 @@ class dataChestWrapper:
                     except:
 
                         traceback.print_exc()
-                        print("%s: Problem storing data. Will try to reconfigure data sets."
-                              % self.device.getFrame().getTitle())
+                        print(("%s: Problem storing data. Will try to reconfigure data sets."
+                              % self.device.getFrame().getTitle()))
                         self.configureDataSets(force_new=True)
 
                 if self.keepLoggingNan and not currentlyLogging:
-                    print self.device, "not logging"
+                    print(self.device, "not logging")
                     self.done()
 
                     self.keepLoggingNan = False

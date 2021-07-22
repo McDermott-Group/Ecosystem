@@ -41,15 +41,15 @@ def initialize_awg(slot_number, channel_numbers=[1, 2, 3, 4], chassis_number=0):
     awg = keySD.SD_AOU()
     open_error_code = awg.openWithSlot(AWG_TYPE, CHASSIS_NUMBER, slot_number)
     if open_error_code < 0:
-        print("open_error_code=", open_error_code)
+        print(("open_error_code=", open_error_code))
     flushing_error_code = awg.waveformFlush()
     if flushing_error_code < 0:
-        print("flushing_error_code=", flushing_error_code)
+        print(("flushing_error_code=", flushing_error_code))
     for channel_number in channel_numbers:
         waveshape_error_code = awg.channelWaveShape(channel_number,
                                                     keySD.SD_Waveshapes.AOU_AWG)
         if waveshape_error_code < 0:
-            print("waveshape_error_code=", waveshape_error_code)
+            print(("waveshape_error_code=", waveshape_error_code))
     return awg
     
     
@@ -64,25 +64,25 @@ def create_keysight_waveform_objects():
                 keySD.SD_WaveformTypes.WAVE_ANALOG,
                 waveform1.tolist())
     if create_waveform_error_code < 0:
-        print("create_waveform_error_code1=", create_waveform_error_code)
+        print(("create_waveform_error_code1=", create_waveform_error_code))
     create_waveform_error_code = \
         keysight_waveform_object2.newFromArrayDouble(
                 keySD.SD_WaveformTypes.WAVE_ANALOG,
                 waveform2.tolist())
     if create_waveform_error_code < 0:
-        print("create_waveform_error_code2=", create_waveform_error_code)
+        print(("create_waveform_error_code2=", create_waveform_error_code))
     create_waveform_error_code = \
         keysight_waveform_object3.newFromArrayDouble(
                 keySD.SD_WaveformTypes.WAVE_ANALOG,
                 waveform3.tolist())
     if create_waveform_error_code < 0:
-        print("create_waveform_error_code3=", create_waveform_error_code)
+        print(("create_waveform_error_code3=", create_waveform_error_code))
     create_waveform_error_code = \
         keysight_waveform_object4.newFromArrayDouble(
                 keySD.SD_WaveformTypes.WAVE_ANALOG,
                 waveform4.tolist())
     if create_waveform_error_code < 0:
-        print("create_waveform_error_code4=", create_waveform_error_code)
+        print(("create_waveform_error_code4=", create_waveform_error_code))
     return keysight_waveform_object1, keysight_waveform_object2, \
            keysight_waveform_object3, keysight_waveform_object4
            
@@ -91,7 +91,7 @@ def load_waveforms_onto_awg(awg, waveforms):
         keysight_waveform_object = waveforms[ii]
         load_waveform_error_code = awg.waveformLoad(keysight_waveform_object, ii+1)
         if load_waveform_error_code < 0:
-            print("load_waveform_error_code=", load_waveform_error_code)
+            print(("load_waveform_error_code=", load_waveform_error_code))
             
 def queue_waveforms(awg, channel_numbers=[1, 2, 3, 4],
                    trigger_mode=keySD.SD_TriggerModes.EXTTRIG,
@@ -103,7 +103,7 @@ def queue_waveforms(awg, channel_numbers=[1, 2, 3, 4],
                                                          start_delay, cycles,
                                                          prescalar)
         if queue_waveform_error_code < 0:
-            print("queue_waveform_error_code=", queue_waveform_error_code)
+            print(("queue_waveform_error_code=", queue_waveform_error_code))
             
 def configure_awg(awg, channel_numbers=[1, 2, 3, 4]):
     """Configures an AWG with waveforms loaded onto it to look for
@@ -120,7 +120,7 @@ def configure_awg(awg, channel_numbers=[1, 2, 3, 4]):
     for channel_number in channel_numbers:
         sync_mode_error_code = awg.AWGqueueSyncMode(channel_number, sync_mode)
         if sync_mode_error_code < 0:
-            print("sync_mode_error_code=", sync_mode_error_code)
+            print(("sync_mode_error_code=", sync_mode_error_code))
     for channel_number in channel_numbers:
         configure_trigger_error_code = awg.AWGtriggerExternalConfig(
         channel_number,
@@ -128,15 +128,15 @@ def configure_awg(awg, channel_numbers=[1, 2, 3, 4]):
         TRIGGER_BEHAVIORS['Rising Edge'],
         TRIGGER_SYNC_MODE['Nearest CLK Edge'])
         if configure_trigger_error_code < 0:
-            print("configure_trigger_error_code=", configure_trigger_error_code)
+            print(("configure_trigger_error_code=", configure_trigger_error_code))
     for channel_number in channel_numbers:
         set_amplitude_error_code = awg.channelAmplitude(channel_number, 1.5)
         if set_amplitude_error_code < 0:
-            print("set_amplitude_error_code=", set_amplitude_error_code)
+            print(("set_amplitude_error_code=", set_amplitude_error_code))
     for channel_number in channel_numbers:
         start_awg_error_code = awg.AWGstart(channel_number)
         if start_awg_error_code < 0:
-            print("start_awg_error_code=", start_awg_error_code)
+            print(("start_awg_error_code=", start_awg_error_code))
             
 def send_backplane_trigger_awg(awg, trigger_value,
                                trigger_source=TRIGGER_SOURCES['Trigger 0']):
@@ -157,10 +157,10 @@ def send_backplane_trigger_awg(awg, trigger_value,
             set to the logic level defined by trigger_value.
 
     """
-    if trigger_value not in TRIGGER_VALUES.values():
+    if trigger_value not in list(TRIGGER_VALUES.values()):
         raise Exception("Invalid trigger_value. See the TRIGGER_VALUES"
                         " dictionary for a complete set of options.")
-    if trigger_source not in TRIGGER_SOURCES.values():
+    if trigger_source not in list(TRIGGER_SOURCES.values()):
         raise Exception("Invalid trigger_number. See the "
                         "TRIGGER_SOURCES dictionary"
                         " for a complete set of options.")
@@ -199,7 +199,7 @@ def close_awgs(awgs):
     for awg in awgs:
         close_error_code = awg.close()
         if close_error_code < 0:
-            print("close_error_code=", close_error_code)
+            print(("close_error_code=", close_error_code))
             
 
 for ii in range(0, 10000):     
@@ -228,7 +228,7 @@ for ii in range(0, 10000):
     time.sleep(2.0*5000*len(t)*1e-9)
     close_awgs(awgs)
     tf = time.time()
-    print("tf-t0=", tf-t0)
-    print("ii=", ii)
+    print(("tf-t0=", tf-t0))
+    print(("ii=", ii))
     
     

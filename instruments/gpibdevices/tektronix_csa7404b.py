@@ -175,9 +175,9 @@ class TektronixTDS2014CWrapper(GPIBDeviceWrapper):
                     queryAllChannelsString = 'SELECT:CH'+str(chan)+'?'
                 else:
                     queryAllChannelsString =queryAllChannelsString+";:"+'SELECT:CH'+str(chan)+'?'
-            print "queryAllChannelsString=", queryAllChannelsString
+            print("queryAllChannelsString=", queryAllChannelsString)
             result = yield self.query(queryAllChannelsString)
-            print "result=", result
+            print("result=", result)
             returnValue(result)
             
     @inlineCallbacks
@@ -331,10 +331,10 @@ class TektronixTDSServer(GPIBManagedServer):
         #trigState = yield dev.getTriggerStateStr()
         numActiveWaveforms = len((yield dev.getDataSourceStr()).split(','))
         splitWaveformData = (yield dev.getWaveFormDataStr()).split(';') # elements 0 - 17 make up first wave form, elements 18-35 make up the second waveform, ...
-        print "len(splitWaveformData)=", len(splitWaveformData)
-        print "numActiveWaveforms=", numActiveWaveforms
+        print("len(splitWaveformData)=", len(splitWaveformData))
+        print("numActiveWaveforms=", numActiveWaveforms)
         if len(splitWaveformData) < numActiveWaveforms*18:
-            print splitWaveformData
+            print(splitWaveformData)
         data = ()
         for ii in range (0, numActiveWaveforms):
             wfID = splitWaveformData[5+ii*18]

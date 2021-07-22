@@ -83,7 +83,7 @@ class SpectrumAnalyzer(GPIBManagedServer):
             except Exception:
                 pass
             if i+1 < maxRetries:
-                print "Failed to get trace, trying again."
+                print("Failed to get trace, trying again.")
             else:
                 raise Exception("Failed to get trace")
 

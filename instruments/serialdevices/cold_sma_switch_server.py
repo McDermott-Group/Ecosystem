@@ -44,7 +44,7 @@ class ColdSwitchWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port, oldState):
         """Connect to a cold switch board."""
-        print 'connecting to "%s" on port "%s"...' % (server.name, port),
+        print('connecting to "%s" on port "%s"...' % (server.name, port), end=' ')
         self.state = oldState
         self.setTrace = []
         self.resetTrace = []
@@ -53,15 +53,15 @@ class ColdSwitchWrapper(DeviceWrapper):
         self.port = port
         p = self.packet()
         p.open(port)
-        p.baudrate(1200L)
-        p.stopbits(1L)
-        p.bytesize(8L)
+        p.baudrate(1200)
+        p.stopbits(1)
+        p.bytesize(8)
         p.parity('N')
         p.read() # clear out the read buffer
         p.timeout(TIMEOUT)
         yield p.send()
         self.changeAppliedVoltage(oldState[3])
-        print 'done.'
+        print('done.')
         
     def packet(self):
         """Create a packet in our private context."""
@@ -240,10 +240,10 @@ class ColdSwitchServer(DeviceServer):
     
     @inlineCallbacks
     def initServer(self):
-        print 'loading config info...',
+        print('loading config info...', end=' ')
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
-        print 'done.'
+        print('done.')
         yield DeviceServer.initServer(self)
     
     @inlineCallbacks
@@ -262,7 +262,7 @@ class ColdSwitchServer(DeviceServer):
     def findDevices(self):
         """Find available devices from list stored in the registry."""
         devs = []
-        for name, (serServer, port, oldState) in self.serialLinks.items():
+        for name, (serServer, port, oldState) in list(self.serialLinks.items()):
             if serServer not in self.client.servers:
                 continue
             server = self.client[serServer]
@@ -288,23 +288,23 @@ class ColdSwitchServer(DeviceServer):
         commandList =[{'1':'a','2':'b','3':'c','4':'d','5':'e','6':'f'},
               {'1':'g','2':'h','3':'i','4':'j','5':'k','6':'l'},
               {'1':'m','2':'n','3':'o','4':'p','5':'q','6':'r'}]
-        print 'cs1'
+        print('cs1')
         dev = self.selectedDevice(c)
-        print 'cs2'
+        print('cs2')
         reg = self.client.registry
-        print 'cs3'
+        print('cs3')
         if dev.state[0]== 'null':
-            print 'cs4'
+            print('cs4')
             returnValue('null')
-            print 'cs5'
+            print('cs5')
         else:
-            print 'cs6'
+            print('cs6')
             channel =  yield dev.setFirstSwitchChannel(data, commandList[0])
-            print 'cs7'
+            print('cs7')
             yield dev.updateRegistry(reg)
-            print 'cs8'
+            print('cs8')
             returnValue(channel)
-            print 'cs9'
+            print('cs9')
     
     @setting(458, 'set switch2', data='w', returns='s')
     def set_switch2(self, c, data):

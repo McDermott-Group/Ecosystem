@@ -91,7 +91,7 @@ class DataSetConfigGUI(QtGui.QDialog):
     def cancel(self):
         # Revert all changes
         for i, device in enumerate(web.devices):
-            for key in device.getFrame().DataLoggingInfo().keys():
+            for key in list(device.getFrame().DataLoggingInfo().keys()):
                 device.getFrame().DataLoggingInfo()[
                     key] = self.initialStates[i][key]
 
@@ -192,18 +192,18 @@ class DataSetSettings(QtGui.QWidget):
                 newFolder = time.strftime('%x').replace(' ', '_')
                 newFolder = newFolder.replace('/', '_')
                 currentLoc = device.getFrame().DataLoggingInfo()['location']
-                print "currentLoc:", currentLoc
+                print("currentLoc:", currentLoc)
                 newLoc = currentLoc.split('\\')
-                print "newLocation3:", newLoc
+                print("newLocation3:", newLoc)
                 # If the folder we are in is in the format 'MM_DD_YY', then
                 # Assume MView created it and we should back out and create a
                 # new folder.
                 r = re.compile('.{2}_.{2}_.{2}')
                 if r.match(newLoc[-1]):
                     newLoc = newLoc[:-1:]
-                print "newLocation2:", newLoc
+                print("newLocation2:", newLoc)
                 newLoc.append(newFolder)
-                print "newLocation:", newLoc
+                print("newLocation:", newLoc)
                 newLoc = "\\".join([str(dir) for dir in newLoc])
                 device.getFrame().DataLoggingInfo()['location'] = newLoc
 
@@ -216,7 +216,7 @@ class DataSetSettings(QtGui.QWidget):
                     self.configGui.advancedSettingsWidget.locationLabels[i].setText(
                         location)
             except:
-                print "ERROR:", device
+                print("ERROR:", device)
                 traceback.print_exc()
 
         grid.itemAtPosition(0, 1).widget().setText(location)
@@ -246,7 +246,7 @@ class DataSetSettings(QtGui.QWidget):
             ))
             errorMsg.exec_()
         elif root == location:
-            print "ERROR"
+            print("ERROR")
             errorMsg = PopUp(str(
                 "ERROR: Data must be stored inside of a "
                 "DIRECTORY which is itself under DATA_CHEST_ROOT."

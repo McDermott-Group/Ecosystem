@@ -113,10 +113,10 @@ class MFrame:
 
     def _setNicknames(self, nicknames):
         # print "Trying to set nicknames:", nicknames
-        if len(nicknames) != len(self.parameters.keys()):
+        if len(nicknames) != len(list(self.parameters.keys())):
             raise ValueError("The length of nicknames did not match the number of parameters."
                              + "\nnames: " + str(nicknames) + "\n"
-                             + "Available Parameters: " + str(self.parameters.keys()))
+                             + "Available Parameters: " + str(list(self.parameters.keys())))
 
         for i, key in enumerate(self.parameters.keys()):
             self.setNickname(key, nicknames[i])
@@ -130,10 +130,10 @@ class MFrame:
     def _setReadings(self, readings):
         # print "-----Set Readings called:", readings
         # pprint(self.parameters)
-        if len(readings) != len(self.parameters.keys()):
+        if len(readings) != len(list(self.parameters.keys())):
             raise ValueError("The length of readings did not match the number of parameters."
                              + "\nreadings: " + str(readings) + "\n"
-                             + "Available Parameters: " + str(self.parameters.keys()))
+                             + "Available Parameters: " + str(list(self.parameters.keys())))
         for i, key in enumerate(self.parameters.keys()):
             self.setReading(key, readings[i])
 
@@ -157,10 +157,10 @@ class MFrame:
             warnings.warn("Could not get reading of " + str(parameter))
 
     def _setPrecisions(self, precisions):
-        if len(precisions) != len(self.parameters.keys()):
+        if len(precisions) != len(list(self.parameters.keys())):
             raise ValueError("The length of precisions did not match the number of parameters."
                              + "\nprecisions: " + str(precisions) + "\n"
-                             + "Available Parameters: " + str(self.parameters.keys()))
+                             + "Available Parameters: " + str(list(self.parameters.keys())))
         for i, key in enumerate(self.parameters.keys()):
             self.setPrecision(key, precisions[i])
 
@@ -219,10 +219,10 @@ class MFrame:
         return self.errmsg
 
     def _setUnits(self, units):
-        if len(units) != len(self.parameters.keys()):
+        if len(units) != len(list(self.parameters.keys())):
             raise ValueError("The length of units did not match the number of parameters."
                              + "\nunits: " + str(units) + "\n"
-                             + "Available Parameters: " + str(self.parameters.keys()))
+                             + "Available Parameters: " + str(list(self.parameters.keys())))
         for i, key in enumerate(self.parameters.keys()):
             self.setUnit(key, units[i])
 
@@ -239,9 +239,9 @@ class MFrame:
 
     def getListOfParameterItems(self, itemkey):
         items = []
-        for key in self.parameters.keys():
+        for key in list(self.parameters.keys()):
             param = self.parameters[key]
-            if param != None and itemkey in param.keys():
+            if param != None and itemkey in list(param.keys()):
                 items.append(param[itemkey])
             else:
                 items.append(None)
@@ -384,7 +384,7 @@ class MFrame:
         try:
             return self.parameters[name]
         except:
-            print "Problem getting parameters for", name, ", could not find parameters."
+            print("Problem getting parameters for", name, ", could not find parameters.")
 
     def getParameters(self):
         return self.parameters
@@ -393,7 +393,7 @@ class MFrame:
         default = kwargs.get('default', None)
         curr = self.parameters[args[0]]
         for arg in args[1::]:
-            if arg in curr.keys():
+            if arg in list(curr.keys()):
                 curr = curr[arg]
             else:
                 curr[arg] = default
@@ -414,7 +414,7 @@ class MFrame:
 
     def setParamVisibility(self, param, visible):
         '''Set whether or not a parameter shows up on the GUI.'''
-        if param in self.parameters.keys():
+        if param in list(self.parameters.keys()):
             self.parameters[param]['visible'] = visible
         else:
             self.parameters[param] = {}

@@ -29,7 +29,7 @@ import sys
 from PyQt4 import QtCore, QtGui
 from MWeb import web
 import inspect
-import cPickle as pickle
+import pickle as pickle
 import os
 import inspect
 import traceback
@@ -126,8 +126,8 @@ class NotifierGUI(QtGui.QDialog):
             print("Enter only numbers into 'Minimum' and 'Maximum' fields.")
             print("Data Not Saved")
         except IOError as e:
-            print "Unable to save notifier config data:"
-            print e
+            print("Unable to save notifier config data:")
+            print(e)
         except:
             print("Minimum values cannot be greater than maximum values.")
             print("Data Not Saved")
@@ -239,11 +239,11 @@ class AlertConfig(QtGui.QWidget):
     def openData(self):
         '''Retreive a user's previous settings.'''
         try:
-            print "Starting notifier, looking for config file: ",str(self.loader)+'_NotifierSettings.config'
+            print("Starting notifier, looking for config file: ",str(self.loader)+'_NotifierSettings.config')
             self.allDataDict = pickle.load(open(os.path.join(
                 self.location, str(self.loader)+'_NotifierSettings.config'), 'rb'))
             NotifierGUI.allDataDict = self.allDataDict
-            print "Config Data Opened"
+            print("Config Data Opened")
 
         except:
             traceback.print_exc()

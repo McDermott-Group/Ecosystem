@@ -110,7 +110,7 @@ Ohm, K, s = [U.Unit(s) for s in ['Ohm', 'K', 's']]
 READ_ORDER = [1, 2, 1, 3, 1, 4, 1, 5]
 #N_CHANNELS = 5
 DEFAULT_SETTLE_TIME = 8*s
-DEFAULT, FUNCTION, INTERPOLATION, VRHOPPING = range(4)
+DEFAULT, FUNCTION, INTERPOLATION, VRHOPPING = list(range(4))
 
 # These functions suck.
 def res2temp(r):
@@ -132,7 +132,7 @@ class RuOxWrapper(GPIBDeviceWrapper):
         """Set up initial state for this wrapper"""
         self.alive = False
         self.onlyChannel = 0
-        print "Initializing %s" % self.name
+        print("Initializing %s" % self.name)
         yield self.loadDeviceInformation()
         return
         # also we should set the box settings here
@@ -176,7 +176,7 @@ class RuOxWrapper(GPIBDeviceWrapper):
             ans = yield p.send()
             self.settleTime = ans['settleTime']
         except Exception as e:
-            print e
+            print(e)
             self.settleTime = DEFAULT_SETTLE_TIME
         
     @inlineCallbacks
@@ -227,7 +227,7 @@ class RuOxWrapper(GPIBDeviceWrapper):
             else:
                 returnValue([DEFAULT])
         except Exception as e:
-            print e
+            print(e)
             returnValue([DEFAULT])
     
     def printCalibration(self, channel):
@@ -285,13 +285,13 @@ class RuOxWrapper(GPIBDeviceWrapper):
         calib = yield self.loadSingleCalibration(reg, dir)
         self.calibrations.append(calib)
         if self.calibrations[0][0] == DEFAULT:
-            print "WARNING: %s -- no calibration found for device default. Using server default calibration." % (self.addr)
+            print("WARNING: %s -- no calibration found for device default. Using server default calibration." % (self.addr))
         elif self.calibrations[0][0] == INTERPOLATION:
-            print "%s -- found INTERPOLATION calibration for device default." % (self.addr)
+            print("%s -- found INTERPOLATION calibration for device default." % (self.addr))
         elif self.calibrations[0][0] == VRHOPPING:
-            print "%s -- found VRHOPPING calibration for device default." % (self.addr,)
+            print("%s -- found VRHOPPING calibration for device default." % (self.addr,))
         elif self.calibrations[0][0] == FUNCTION:
-            print "%s -- found FUNCTION calibration for device default." % (self.addr)
+            print("%s -- found FUNCTION calibration for device default." % (self.addr))
         else:
             raise Exception("Calibration loader messed up. This shouldn't have happened.")
         # now do all channels
@@ -299,13 +299,13 @@ class RuOxWrapper(GPIBDeviceWrapper):
             calib = yield self.loadSingleCalibration(reg, dir + ['Channel %d' % (i+1)])
             self.calibrations.append(calib)
             if self.calibrations[i+1][0] == DEFAULT:
-                print "WARNING: %s -- no calibration found for channel %d. Using device default calibration." % (self.addr, i+1)
+                print("WARNING: %s -- no calibration found for channel %d. Using device default calibration." % (self.addr, i+1))
             elif self.calibrations[i+1][0] == INTERPOLATION:
-                print "%s -- found INTERPOLATION calibration for channel %d." % (self.addr, i+1)
+                print("%s -- found INTERPOLATION calibration for channel %d." % (self.addr, i+1))
             elif self.calibrations[i+1][0] == VRHOPPING:
-                print "%s -- found VRHOPPING calibration for channel %d." % (self.addr, i+1)
+                print("%s -- found VRHOPPING calibration for channel %d." % (self.addr, i+1))
             elif self.calibrations[i+1][0] == FUNCTION:
-                print "%s -- found FUNCTION calibration for channel %d." % (self.addr, i+1)
+                print("%s -- found FUNCTION calibration for channel %d." % (self.addr, i+1))
             else:
                 raise Exception("Calibration loader messed up. This shouldn't have happened.")
     
@@ -414,7 +414,7 @@ class RuOxWrapper(GPIBDeviceWrapper):
                     #If there is no calibration at all use res2temp
                     return res2temp(self.readings[channel][0])
         except Exception as e:
-            print "Exception getting temperature: ", e
+            print("Exception getting temperature: ", e)
             return 0.0*K
     
     def getTemperatures(self):
@@ -471,7 +471,7 @@ class RuOxWrapper(GPIBDeviceWrapper):
                 else:
                     return temp2res(temp) # if no calibration for the device either, use old-fashioned temp2res
         except Exception as e:
-            print "Exception converting temp to res: %s" % e.__str__()
+            print("Exception converting temp to res: %s" % e.__str__())
             return 0.0
             
 class LakeshoreRuOxServer(GPIBManagedServer):
@@ -580,7 +580,7 @@ class LakeshoreRuOxServer(GPIBManagedServer):
         NOTE:
         Use "Heater Range" to turn on heater and start regulation."""
         dev = self.selectedDevice(c)
-        if channel not in range(1,17):
+        if channel not in list(range(1,17)):
             raise Exception('Channel needs to be between 1 and 16')
         #res = temp2res(float(temperature))
         # we now do it intelligently

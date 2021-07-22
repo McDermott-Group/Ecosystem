@@ -2,5 +2,5 @@
 #DESCR: Fits plot to blah blah blah
 
 def run(data):
-    print 'SIZE ',data.shape
+    print('SIZE ',data.shape)
     return data/data.max(0)

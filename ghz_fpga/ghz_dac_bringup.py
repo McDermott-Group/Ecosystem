@@ -17,7 +17,7 @@ server version: 3.3.0
 # Incorporating usage of new bringup functions. Revised print outputs. Added
 # ability to bring up all devices on a board group.
 
-from __future__ import with_statement
+
 
 import random
 import time
@@ -82,8 +82,8 @@ def bringupBoard(fpga, board, printOutput=True, optimizeSD=False, sdVal=None,ful
         fpga.adc_bringup()
         if printOutput:
             print('')
-            print('ADC bringup on %s complete.' %board)
-            print('No feedback information available %s' %board)
+            print(('ADC bringup on %s complete.' %board))
+            print(('No feedback information available %s' %board))
         return ('ADC', None, {})
     
     elif board in fpga.list_dacs():
@@ -106,15 +106,15 @@ def bringupBoard(fpga, board, printOutput=True, optimizeSD=False, sdVal=None,ful
             lvdsOkay.append(dacDict['lvdsSuccess'])
             
             if fullOutput:
-                print(bringupReportMessage(dac, dacDict))
+                print((bringupReportMessage(dac, dacDict)))
             
         if printOutput:
             if all(fifoOkay) and all(bistOkay):
-                print('%s ok' %board)
+                print(('%s ok' %board))
                 if not all(lvdsOkay):
                     print('but LVDS warning')
             else:
-                print('%s ---Bringup Failure---' %board)
+                print(('%s ---Bringup Failure---' %board))
         
         return ('DAC', results, {'bist':all(bistOkay), 'fifo':all(fifoOkay),
                 'lvds':all(lvdsOkay)})
@@ -133,7 +133,7 @@ def bringupBoards(fpga, boards, noisy=False):
     triesDict = {}
     for board in boards:
         if noisy:
-            print 'bringing up %s' %board
+            print('bringing up %s' %board)
         #Temporarily set a value to False so while loop will run at least once
         allOk = False
         tries = 0
@@ -151,16 +151,16 @@ def bringupBoards(fpga, boards, noisy=False):
     for board in boards:
         #Warn the user if a board took more than one try to bring up.
         if triesDict[board]>1:
-            print 'WARNING: Board %s took %d tries to succeed' %(board,triesDict[board])
+            print('WARNING: Board %s took %d tries to succeed' %(board,triesDict[board]))
         #If this board failed, add it to the list of failures
         if not all(successes[board].values()):
             failures.append(board)
     if not failures:
-        print 'All boards successful!'
+        print('All boards successful!')
     else:
-        print 'The following boards failed:'
+        print('The following boards failed:')
         for board in failures:
-            print board
+            print(board)
     
 def interactiveBringup(fpga, board):
     """
@@ -170,28 +170,28 @@ def interactiveBringup(fpga, board):
     if boardType == 'DAC':
         ccset = 0
         while True:
-            print
-            print
-            print 'Choose:'
-            print
-            print '  [1] : Output 0x0000s'
-            print '  [2] : Output 0x1FFFs'
-            print '  [3] : Output 0x2000s'
-            print '  [4] : Output 0x3FFFs'
-            print
-            print '  [5] : Output 100MHz sine wave'
-            print '  [6] : Output 200MHz sine wave'
-            print '  [7] : Output 100MHz and 175MHz sine wave'
-            print
-            print '        Current Cross Controller Setting: %d' % ccset
-            print '  [+] : Increase Cross Controller Adjustment by 1'
-            print '  [-] : Decrease Cross Controller Adjustment by 1'
-            print '  [*] : Increase Cross Controller Adjustment by 10'
-            print '  [/] : Decrease Cross Controller Adjustment by 10'
-            print
-            print '  [I] : Reinitialize'
-            print
-            print '  [Q] : Quit'
+            print()
+            print()
+            print('Choose:')
+            print()
+            print('  [1] : Output 0x0000s')
+            print('  [2] : Output 0x1FFFs')
+            print('  [3] : Output 0x2000s')
+            print('  [4] : Output 0x3FFFs')
+            print()
+            print('  [5] : Output 100MHz sine wave')
+            print('  [6] : Output 200MHz sine wave')
+            print('  [7] : Output 100MHz and 175MHz sine wave')
+            print()
+            print('        Current Cross Controller Setting: %d' % ccset)
+            print('  [+] : Increase Cross Controller Adjustment by 1')
+            print('  [-] : Decrease Cross Controller Adjustment by 1')
+            print('  [*] : Increase Cross Controller Adjustment by 10')
+            print('  [/] : Decrease Cross Controller Adjustment by 10')
+            print()
+            print('  [I] : Reinitialize')
+            print()
+            print('  [Q] : Quit')
     
             k = getChoice('1234567+-*/IQ')
     
@@ -205,7 +205,7 @@ def interactiveBringup(fpga, board):
                 def makeSines(freqs, T):
                     """Build sram sequence consisting of superposed sine waves."""
                     wave = [sum(sin(2*pi*t*f) for f in freqs) for t in range(T)]
-                    sram = [(long(round(0x1FFF*y/len(freqs))) & 0x3FFF)*0x4001 for y in wave]
+                    sram = [(int(round(0x1FFF*y/len(freqs))) & 0x3FFF)*0x4001 for y in wave]
                     sram[0] = 0xF0000000 # add triggers at the beginning
                     return sram
                     
@@ -213,7 +213,7 @@ def interactiveBringup(fpga, board):
                 if k == '6': fpga.dac_run_sram(makeSines([0.200], 40), True)    
                 if k == '7': fpga.dac_run_sram(makeSines([0.100, 0.175], 40), True)
                 
-                print 'running...'
+                print('running...')
                 
             if k in '+-*/':
                 if k == '+': ccset += 1
@@ -235,7 +235,7 @@ def getChoice(keys):
     """Get a keypress from the user from the specified keys."""
     r = ''
     while not r or r not in keys:
-        r = raw_input().upper()
+        r = input().upper()
     return r
 
 def selectFromList(options, title):
@@ -243,19 +243,19 @@ def selectFromList(options, title):
     
     Returns an element from options.
     """
-    print
-    print
-    print 'Select %s:' % title
-    print
+    print()
+    print()
+    print('Select %s:' % title)
+    print()
     keys = {}
     for i, opt in enumerate(options):
         key = '%d' % (i+1)
         keys[key] = opt
-        print '  [%s] : %s' % (key, opt)
+        print('  [%s] : %s' % (key, opt))
     keys['A'] = 'All'
-    print '  [A] : All'
+    print('  [A] : All')
     keys['Q'] = None
-    print '  [Q] : Quit'
+    print('  [Q] : Quit')
     
     k = getChoice(keys)
     

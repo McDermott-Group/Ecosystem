@@ -117,13 +117,13 @@ def main(ignoreLVDS=False):
         no_success = True
         while no_success:
             successes, failures, tries = auto_bringup(fpga, ignoreLVDS)
-            successes = [board for board in successes.keys()
+            successes = [board for board in list(successes.keys())
                       if board not in failures]
             if successes:
-                print('The following boards have been succesfully ' +
-                        'brought up:')
+                print(('The following boards have been succesfully ' +
+                        'brought up:'))
                 for key in successes:
-                    print(key + ' (attempts: ' + str(tries[key]) + ')')
+                    print((key + ' (attempts: ' + str(tries[key]) + ')'))
             if failures:
                 print('The following boards failed:')
                 for key in failures:

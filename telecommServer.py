@@ -99,8 +99,8 @@ def email(toAddrs, subject, msg, domain, server, username='LabRAD', password=Non
     if not isinstance(toAddrs,list):
         toAddrs = [toAddrs]
     if noisy:
-        print 'Sending message:\r\n-------------------------\r\n'+message+'\r\n-------------------------\r\n'
-        print '\n'
+        print('Sending message:\r\n-------------------------\r\n'+message+'\r\n-------------------------\r\n')
+        print('\n')
     for attempt in range(attempts):
         try:
             #Construct message string
@@ -113,18 +113,18 @@ def email(toAddrs, subject, msg, domain, server, username='LabRAD', password=Non
                 server.login(fromAddr, password)
             result = server.sendmail(fromAddr, toAddrs, message)
             #Update the toAddrs list to include only recipients for which mail sending failed
-            toAddrs = result.keys()
+            toAddrs = list(result.keys())
             #Messaging was a success, but some recipients may have failed
             return (True, toAddrs)
             
-        except Exception, e:
-            print 'Attempt %d failed. Message not sent' %(attempt+1)
-            print str(e)
+        except Exception as e:
+            print('Attempt %d failed. Message not sent' %(attempt+1))
+            print(str(e))
             if attempt<attempts-1:
-                print 'Trying again. This is attempt %d' %(attempt+2)
+                print('Trying again. This is attempt %d' %(attempt+2))
                 continue
             else:
-                print 'Maximum retries reached'
+                print('Maximum retries reached')
                 return (False, toAddrs)
 
 class TelecommServer(LabradServer):
@@ -133,12 +133,12 @@ class TelecommServer(LabradServer):
     
     @inlineCallbacks
     def initServer(self):
-        print 'initializing server...'
+        print('initializing server...')
         self.smsUsers = None
         self.smtpServer = None
         self.domain = None
         yield self._refreshConnectionData()
-        print 'initialization complete.'
+        print('initialization complete.')
     
     #@inlineCallbacks # Don't use inlinecallbacks without yield -- ERJ
     def stopServer(self):
@@ -146,7 +146,7 @@ class TelecommServer(LabradServer):
         
     @inlineCallbacks
     def _refreshConnectionData(self):
-        print 'Refreshing connection data...'
+        print('Refreshing connection data...')
         cxn = self.client
         reg = cxn.registry
         p = reg.packet()
@@ -166,7 +166,7 @@ class TelecommServer(LabradServer):
             self.password = resp['password']
         else:
             self.password = None
-        print 'Refresh complete.'
+        print('Refresh complete.')
         
     @setting(10, toAddrs=['s{email address of recipient}','*s{array of recipient email addresses}'],
                  subject='s', msg='s', username='s', returns='b{success}*s{failures}')
@@ -192,7 +192,7 @@ class TelecommServer(LabradServer):
         yield self._refreshConnectionData()
     @setting(25, returns='*s')
     def userlist(self, c):
-        return self.smsUsers.keys()
+        return list(self.smsUsers.keys())
 
 __server__ = TelecommServer()
 

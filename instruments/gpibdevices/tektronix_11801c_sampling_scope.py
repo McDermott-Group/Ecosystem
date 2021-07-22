@@ -78,8 +78,8 @@ class Tektronix11801CServer(GPIBManagedServer):
         if avgState.upper() in (pos.upper() for pos in possibilities):
             yield dev.write('AVG %s' %avgState.upper())
         else:
-            print("Acceptable inputs for this function are " + 
-                  "'ON' or 'OFF'")
+            print(("Acceptable inputs for this function are " + 
+                  "'ON' or 'OFF'"))
 
     @setting(14, 'Get Chan Volt Offset', chanNum='w', returns='v[V]')
     def getChanVoltOffset(self, c, chanNum):

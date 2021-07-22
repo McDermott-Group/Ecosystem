@@ -100,7 +100,7 @@ class NodeTree:
                 anchor.parentNode().pipeConnected(anchor, pipe)
 
             anchor.connect(pipe)
-        except ValueError, e:
+        except ValueError as e:
             # print "ERROR:",e
             self.deletePipe(self.pipes[-1])
 

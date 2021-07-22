@@ -52,7 +52,7 @@ class MFileTree(QtGui.QTreeView):
     def fileSelected(self):
         index = self.selectedIndexes()[0]
         crawler = index.model().itemFromIndex(index)
-        print "Selected item:", crawler
+        print("Selected item:", crawler)
         self.callback(crawler)
 
     def setCallback(self, callback):
@@ -61,7 +61,7 @@ class MFileTree(QtGui.QTreeView):
     def selectionChanged(self, selected, deselected):
         #col = self.itemFromIndex(modelIndex)
         self.path = self.model().filePath(selected.indexes()[0])
-        print "clicked", self.path
+        print("clicked", self.path)
         self.callback(self.path)
         self.resizeColumns()
 

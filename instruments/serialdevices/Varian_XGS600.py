@@ -61,7 +61,7 @@ class VarianControllerWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect the the guage controller."""
-        print('Connecting to "%s" on port "%s"...' %(server.name, port))
+        print(('Connecting to "%s" on port "%s"...' %(server.name, port)))
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -69,9 +69,9 @@ class VarianControllerWrapper(DeviceWrapper):
         # the Varian unit.
         p = self.packet()
         p.open(port)
-        p.baudrate(9600L)
-        p.stopbits(1L)
-        p.bytesize(8L)
+        p.baudrate(9600)
+        p.stopbits(1)
+        p.bytesize(8)
         p.parity('N')
         p.rts(False)
         p.timeout(2 * units.s)
@@ -110,7 +110,7 @@ class VarianControllerServer(DeviceServer):
     @inlineCallbacks
     def initServer(self):
         """Initialize the server."""
-        print "Server Initializing"
+        print("Server Initializing")
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
@@ -151,7 +151,7 @@ class VarianControllerServer(DeviceServer):
         '''Turns emmissionOn for given sensor
         args:
         sensor  The name of the sensor to be turned on.'''
-        print sensor
+        print(sensor)
         dev = self.selectedDevice(c)
         yield dev.rw_line('#0030U'+sensor+'\r')
         
@@ -190,7 +190,7 @@ class VarianControllerServer(DeviceServer):
     def findDevices(self):
         """Find available devices from a list stored in the registry."""
         devs = []
-        for name, (server, port) in self.serialLinks.items():
+        for name, (server, port) in list(self.serialLinks.items()):
             if server not in self.client.servers:
                 continue
             server = self.client[server]

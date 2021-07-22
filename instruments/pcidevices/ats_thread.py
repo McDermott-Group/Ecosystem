@@ -142,7 +142,7 @@ class ADC(object):
                             'ADC per computer. Use with multiple ADCs'
                             '(with or without SyncBoards) will require '
                             'significant changes to this library.')
-        adc_board_handle = ats.Board(systemId=1L, boardId=1L)
+        adc_board_handle = ats.Board(systemId=1, boardId=1)
         board_type = ats.boardNames[adc_board_handle.type]
         if board_type != 'ATS9870':
             raise Exception("Only ATS9870 board types are supported"
@@ -172,7 +172,7 @@ class ADC(object):
                 not ((MAX_SAMPLING_RATE['GS/s']/sampling_rate['GS/s']) % 10):
             decimation_factor = \
                 int(np.ceil(MAX_SAMPLING_RATE['MS/s']/sampling_rate['MS/s']))
-            print("decimation_factor=", decimation_factor)   
+            print(("decimation_factor=", decimation_factor))   
             decimation_factor = 1
         else:
             raise Exception("Please use a sampling rate that is 1 GS/s, "
@@ -408,7 +408,7 @@ class ADC(object):
                                             self.number_of_samples_per_trigger)
                                             
         iq_buffers = np.empty((self.number_of_triggers, 2), dtype=np.float32)
-        print(type(dma_buffers[0]))
+        print((type(dma_buffers[0])))
         return records_buffer, dma_buffers, iq_buffers
 
     def acquire_data(self):
@@ -516,7 +516,7 @@ class ADC(object):
             # print 'reshaped_records_buffer.shape'
             # print self.reshaped_records_buffer.shape
             # print 'size of second dotted array %d' % len(np.float32(chs))
-            print e
+            print(e)
 
         self.iq_buffers /= n_samples_per_trigger
 

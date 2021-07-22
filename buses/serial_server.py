@@ -86,7 +86,7 @@ class SerialServer(LabradServer):
         http://stackoverflow.com/questions/12090503/listing-available-com-ports-with-python
         """
         self.SerialPorts = []
-        print 'Searching for COM ports:'
+        print('Searching for COM ports:')
         for a in range(1, 25):
             COMexists = True
             dev_name = 'COM{}'.format(a)
@@ -99,9 +99,9 @@ class SerialServer(LabradServer):
                     COMexists = False
             if COMexists:
                 self.SerialPorts.append(SerialDevice(dev_name, dev_path))
-                print "  ", dev_name
+                print("  ", dev_name)
         if not len(self.SerialPorts):
-            print '  none'
+            print('  none')
 
     def enumerate_serial_pyserial(self):
         """This uses the pyserial built-in device enumeration.
@@ -145,7 +145,7 @@ class SerialServer(LabradServer):
         NOTES:
         This list contains all ports installed on the computer,
         including ones that are already in use by other programs."""
-        print self.SerialPorts
+        print(self.SerialPorts)
         port_list = [x.name for x in self.SerialPorts]
 
         return port_list
@@ -186,7 +186,7 @@ class SerialServer(LabradServer):
                     try:
                         c['PortObject'] = Serial(x.devicepath, timeout=0)
                         return x.name
-                    except SerialException, e:
+                    except SerialException as e:
                         if e.message.find('cannot find') >= 0:
                             raise Error(code=1, msg=e.message)
                         else:
@@ -213,7 +213,7 @@ class SerialServer(LabradServer):
         else:
             if data in baudrates:
                 ser.baudrate = data
-            return long(ser.baudrate)
+            return int(ser.baudrate)
 
     @setting(21, 'Bytesize',
              data=[': List bytesizes',
@@ -229,7 +229,7 @@ class SerialServer(LabradServer):
         else:
             if data in bytesizes:
                 ser.bytesize = data
-            return long(ser.bytesize)
+            return int(ser.bytesize)
 
     @setting(22, 'Parity',
              data=[': List parities',
@@ -262,7 +262,7 @@ class SerialServer(LabradServer):
         else:
             if data in stopbits:
                 ser.stopbits = data
-            return long(ser.stopbits)
+            return int(ser.stopbits)
 
     @setting(25, 'Timeout',
              data=[': Return immediately',
@@ -297,7 +297,7 @@ class SerialServer(LabradServer):
         if not isinstance(data, str):
             data = ''.join(chr(x & 255) for x in data)
         ser.write(data)
-        return long(len(data))
+        return int(len(data))
 
     @setting(41, 'Write Line', data=['s: Data to send'],
              returns=['w: Bytes sent'])
@@ -305,7 +305,7 @@ class SerialServer(LabradServer):
         """Sends data over the port appending CR LF."""
         ser = self.getPort(c)
         ser.write(data + '\r\n')
-        return long(len(data) + 2)
+        return int(len(data) + 2)
 
     @setting(42, 'Pause', duration='v[s]: Time to pause', returns=[])
     def pause(self, c, duration):
@@ -349,7 +349,7 @@ class SerialServer(LabradServer):
 
         if r == timeout_object:
             elapsed = time.time() - start_time
-            print "deferredRead timed out after {} seconds".format(elapsed)
+            print("deferredRead timed out after {} seconds".format(elapsed))
             r = ''
         if r == '':
             r = ser.read(count)
@@ -400,7 +400,7 @@ class SerialServer(LabradServer):
     def read_as_words(self, c, data=0):
         """Read data from the port."""
         ans = yield self.readSome(c, data)
-        returnValue([long(ord(x)) for x in ans])
+        returnValue([int(ord(x)) for x in ans])
 
     @setting(52, 'Read Line',
              data=[': Read until LF, ignoring CRs',

@@ -50,7 +50,7 @@ class Editor(QtGui.QWidget):
             modData = dict(enumerate(data))
             isList = True
         if type(modData) is dict:
-            for key, val in sorted(modData.iteritems()):
+            for key, val in sorted(modData.items()):
                 newRoot = QtGui.QStandardItem(str(key))
                 if isList:
                     newRoot.setEditable(False)
@@ -85,7 +85,7 @@ class Editor(QtGui.QWidget):
             try:
                 item.data[item.key] = dataType(item.text())
             except TypeError as e:
-                print str(e)
+                print(str(e))
         self.constructTreeHelper(self.data)
         self.rawDictDisp.setText( str(self.data) )
 

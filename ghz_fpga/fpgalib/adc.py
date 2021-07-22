@@ -54,8 +54,8 @@ class ADC(fpga.FPGA):
     @inlineCallbacks
     def connect(self, name, group, de, port, board, build):
         """Establish a connection to the board."""
-        print('connecting to ADC board: %s (build #%d)'\
-            % (self.macFor(board), build))
+        print(('connecting to ADC board: %s (build #%d)'\
+            % (self.macFor(board), build)))
 
         self.boardGroup = group
         self.server = de
@@ -406,7 +406,7 @@ class ADC_Build1(ADC_Branch1):
         self.makeFilter(filterFunc, p)
         self.makeTrigLookups(demods, p)
         amps = ''
-        for ch in xrange(self.DEMOD_CHANNELS):
+        for ch in range(self.DEMOD_CHANNELS):
             if ch in demods:
                 cosineAmp = demods[ch]['cosineAmp']
                 sineAmp = demods[ch]['sineAmp'] 
@@ -845,7 +845,7 @@ class ADC_Build7(ADC_Branch2):
     
     def buildRunner(self, reps, info):
         """Get a runner for this board"""
-        logging.info("building runner with setting keys: {}".format(info.keys()))
+        logging.info("building runner with setting keys: {}".format(list(info.keys())))
         runMode = info['runMode']
         startDelay = info['startDelay']
         channels = dict((i, info[i]) for i in range(self.DEMOD_CHANNELS) \

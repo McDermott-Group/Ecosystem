@@ -8,7 +8,7 @@ sa = rm.open_resource('GPIB0::16::INSTR')
 sa.encoding = "latin-1"
 # sa.encoding = "ASCii"
 for i in range(10):
-    print('i=', i)
+    print(('i=', i))
     t1 = time.time()
     sa.write('TDF B; TRA?;')
     d = sa.read_raw()
@@ -18,7 +18,7 @@ for i in range(10):
         d_m_dBm[i]=d_m[i]/100.0-80.0
     print(d_m_dBm)
     t2 = time.time()
-    print(t2-t1)
+    print((t2-t1))
 
 
 # """Below is a working example for binary data"""

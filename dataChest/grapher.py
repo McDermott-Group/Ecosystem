@@ -152,7 +152,7 @@ class Main(QtGui.QWidget):
                         optionsSlice.addWidget(label)
                     elif widgetTypeList[ii] =="QCheckBox":
                         checkBox = QtGui.QCheckBox('', self)  # widget to log
-                        print "depVarName=", depVarName
+                        print("depVarName=", depVarName)
                         if depVar == depVarName:
                             checkBox.setCheckState(QtCore.Qt.Checked)
                         checkBox.stateChanged.connect(partial(self.varStateChanged, depVar))
@@ -163,7 +163,7 @@ class Main(QtGui.QWidget):
 
     def clearLayout(self, layout):
         # Clear the plotType options layout and all widgets therein.
-        for i in reversed(range(layout.count())):
+        for i in reversed(list(range(layout.count()))):
             item = layout.itemAt(i)
             
             if isinstance(item, QtGui.QWidgetItem):
@@ -289,7 +289,7 @@ class Main(QtGui.QWidget):
         if plotType == None:
             plotType = self.supportedPlotTypes("1D")[0] # defaults
         elif plotType not in self.supportedPlotTypes("1D"):
-            print "Unrecognized plot type was provided"
+            print("Unrecognized plot type was provided")
             # Return bum fig with something cool, maybe a gif.
         if plotType =="1D":
             fig = self.basic1DPlot(dataset, variables, varsToIgnore)
@@ -306,7 +306,7 @@ class Main(QtGui.QWidget):
         if plotType == None:
             plotType = self.supportedPlotTypes("2D")[0] #defaults
         elif plotType not in self.supportedPlotTypes("2D"):
-            print "Unrecognized plot type was provided"
+            print("Unrecognized plot type was provided")
             # Return bum fig with something cool, maybe a gif.
         if plotType =="2D Image":
             fig = self.basic2DImage(dataset, variables, varsToIgnore)
@@ -339,13 +339,13 @@ class Main(QtGui.QWidget):
         imageType = self.dataChest.getParameter("Image Type", True)
         if imageType is None and self.dataChest.getDataCategory() == '2D Scan':
             imageType = '2D Scan'
-        print "imageType=", imageType
+        print("imageType=", imageType)
             
         if imageType is None:
             dataset = np.asarray(dataset)
             # Add or "scatter"
             imageType = "Scatter"
-            print "Scatter"
+            print("Scatter")
             for ii in range(0, len(depVars)):
                 x = dataset[::,0]
                 y = dataset[::,1]
@@ -367,7 +367,7 @@ class Main(QtGui.QWidget):
                     sweepType = "Y"
                 else:
                     sweepType = "X"
-                print "sweepType=", sweepType
+                print("sweepType=", sweepType)
                 new = self.makeGrid(x, xGridRes, xIncrement, y, yGridRes, yIncrement, sweepType, z) #makeGrid(self, x, xGridRes, dX, y, yGridRes, dY, sweepType, z)
                 X = new[0]
                 Y = new[1]
@@ -389,7 +389,7 @@ class Main(QtGui.QWidget):
             im = ax.imshow(z, extent=(x.min(), x.max(), y.min(), y.max()), aspect='auto', interpolation='nearest', cmap=cm.gist_rainbow, origin='lower')
             fig.colorbar(im, fraction = 0.15)
         elif imageType == "Buffered":
-            print "Buffered"
+            print("Buffered")
         return fig
 
     def _utc_to_local(self, utcDatetime):
@@ -434,7 +434,7 @@ class Main(QtGui.QWidget):
                         for jj in range(0, len(y)):
                             dates.append(self._utc_to_local(datetime.strptime(dStamp.floatToUtcDateStr(x[jj]), '%Y-%m-%dT%H:%M:%S.%f')))
                         dates = np.asarray(dates)
-                        print dates
+                        print(dates)
                         dates = date2num(dates)
                         dateFmt = DateFormatter("%m/%d/%Y %H:%M:%S")
                         auto = AutoDateLocator()
@@ -508,9 +508,9 @@ class Main(QtGui.QWidget):
         elif dataCategory =="2D": #was "2D Sweep"
             fig = self.plot2D(dataset, variables, selectedPlotType, None, varsToIgnore = varsToIgnore)
         else:
-            print("1D data is the only type currently \r\n"+
-                   "supported by this grapher.")
-            print("Attempted to plot "+dataCategory+" data.")
+            print(("1D data is the only type currently \r\n"+
+                   "supported by this grapher."))
+            print(("Attempted to plot "+dataCategory+" data."))
             fig = Figure(dpi=100)
         self.dataChest.cd("")
         # yield self.cxn.data_vault.dump_existing_sessions()

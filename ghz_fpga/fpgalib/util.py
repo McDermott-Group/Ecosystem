@@ -34,7 +34,7 @@ TEMP = {
 }
 
 DIRECT_ETHERNET_SETTINGS = {}
-for key,val in TEMP.items():
+for key,val in list(TEMP.items()):
     DIRECT_ETHERNET_SETTINGS[val] = key
 
 def littleEndian(data, bytes=4):
@@ -144,9 +144,9 @@ class LoggingPacket(object):
 
 def dumpPacketWithHash(file, p, name):
     if name:
-        print "Dumping Packet: ", name
+        print("Dumping Packet: ", name)
     #toWrite = ''.join([str(x[1]) for x in p._packet])
-    print str(p)
+    print(str(p))
     toWrite = repr(p)
     file.write(toWrite)
     import hashlib

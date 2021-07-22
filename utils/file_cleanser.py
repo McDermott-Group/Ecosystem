@@ -14,8 +14,8 @@ for root, dirnames, filenames in os.walk(server_root):
                 for line in f.readlines():
                     if filename != 'file_cleanser.py' and filename != 'serverutils.py':
                         if 'os.environ[' in line:
-                            print ('\n' + path)
-                            print line.strip()
+                            print(('\n' + path))
+                            print(line.strip())
                             
                             
 ### lets move this and server utils out of the main servers directory -> where should they live?

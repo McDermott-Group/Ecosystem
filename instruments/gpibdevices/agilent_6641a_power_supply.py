@@ -48,7 +48,7 @@ class AgilentPSServer(GPIBManagedServer):
             resp = yield dev.query('OUTP?')
             os = bool(int(resp))
         else:
-            print 'OUTP %i' % int(os)
+            print('OUTP %i' % int(os))
             yield dev.write('OUTP %i' % int(os))
         returnValue(os)
 

@@ -146,8 +146,8 @@ class devRefRateConfig(QtGui.QWidget):
             self.device.getFrame().setPlotRefreshRate(float(refreshRate))
         except:
             traceback.print_exc()
-            print("[%s]: %s is not a number."
-                  % (self.device.getFrame().getTitle(), refreshRate))
+            print(("[%s]: %s is not a number."
+                  % (self.device.getFrame().getTitle(), refreshRate)))
 
     def updateDevRefRate(self):
         refreshRate = self.devRefRateEdit.text()
@@ -155,5 +155,5 @@ class devRefRateConfig(QtGui.QWidget):
             self.device.getFrame().setRefreshRate(float(refreshRate))
         except:
             traceback.print_exc()
-            print("[%s]: %s is not a number."
-                  % (self.device.getFrame().getTitle(), refreshRate))
+            print(("[%s]: %s is not a number."
+                  % (self.device.getFrame().getTitle(), refreshRate)))

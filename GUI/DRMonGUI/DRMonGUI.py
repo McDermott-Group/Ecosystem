@@ -44,7 +44,7 @@ class nViewer:
             cxn = labrad.connect()
         except:
             traceback.print_exc()
-            print "--------------------------------------"
+            print("--------------------------------------")
 
             print("Please start the labrad manager")
             time.sleep(2)
@@ -54,7 +54,7 @@ class nViewer:
             tele = cxn.telecomm_server
         except:
             traceback.print_exc()
-            print "--------------------------------------"
+            print("--------------------------------------")
             print("Please start the telecomm server")
             
             time.sleep(2)

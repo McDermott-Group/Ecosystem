@@ -54,7 +54,7 @@ class NRuoxServer(LabradServer):
         # if no chans, refresh once a second
         # if one chan, measure once a second
         # if more than one chan, switch, wait, measure, ...
-        chanList = self.allDeviceChans[addrs].keys()
+        chanList = list(self.allDeviceChans[addrs].keys())
         chanList.remove('context')
         chanList.remove('currentChanIndex')
         chanList.remove('deviceAddresses')
@@ -93,7 +93,7 @@ class NRuoxServer(LabradServer):
         """
         #only add if loop with same device is not already running
         address = str(addrs)
-        if address not in self.allDeviceChans.keys():
+        if address not in list(self.allDeviceChans.keys()):
             ctx = self.client.context()
             MP = self.client[addrs[1][0]]
             yield MP.select_device(addrs[1][1], context=ctx)
@@ -113,7 +113,7 @@ class NRuoxServer(LabradServer):
         if chan not in c['chans']:
             c['chans'].append(chan)
         devChans = self.allDeviceChans[c['address']]
-        if chan not in devChans.keys():
+        if chan not in list(devChans.keys()):
             devChans[chan] = np.nan*units.K
 
     @setting(103, 'Remove Channel', chan='i')
@@ -140,7 +140,7 @@ class NRuoxServer(LabradServer):
         channel is specified, returns a list of [chan,temp] pairs."""
         tempDict = self.allDeviceChans[c['address']]
         if chan == None: # return [[chan, temp]]
-            return [(key,tempDict[key]) for key in tempDict.keys() \
+            return [(key,tempDict[key]) for key in list(tempDict.keys()) \
                                       if type(key) is not str \
                                       and key in c['chans']]
         else:

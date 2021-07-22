@@ -137,7 +137,7 @@ class ProbeStation(QtGui.QWidget):
         baseDir = os.path.join( *(baseDirList+self.fileDir) )
         fileDialog.setDirectory( baseDir )
         filePath = str(fileDialog.getSaveFileName(self, 'Save File', options=QtGui.QFileDialog.DontConfirmOverwrite))
-        print( 'save file: ' + filePath )
+        print(( 'save file: ' + filePath ))
         if filePath is not '':
             filePath = filePath.replace(baseDir, '') # remove base path
             if filePath[-5:] == '.hdf5':
@@ -255,14 +255,14 @@ class ProbeStation(QtGui.QWidget):
             try:
                 self.resDataChest.addData( [[die, np.uint8(index), area, dmmRange['Ohm'], res['Ohm']]] )
             except Exception as e:
-                print str(e)
+                print(str(e))
             if die not in self.measurements:
                 self.measurements[die] = {}
             if index not in self.measurements[die]:
                 self.measurements[die][index] = []
             self.measurements[die][index].append(res['Ohm'])
             self.waferMap.setDieProgress(len(self.measurements[die]))
-            print [die, area, dmmRange['Ohm'], res['Ohm']]
+            print([die, area, dmmRange['Ohm'], res['Ohm']])
             self.areaView.increaseAreasIndex()
         elif (key == QtCore.Qt.Key_Delete
            or key == QtCore.Qt.Key_Backspace):
@@ -282,7 +282,7 @@ class ProbeStation(QtGui.QWidget):
         else:
             self.areaView.setResistances({})
         self.areaView.refreshUI()
-        print die
+        print(die)
 
 class AreaDisplay(QtGui.QWidget):
 

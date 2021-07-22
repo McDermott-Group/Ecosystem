@@ -6,10 +6,10 @@ import labrad
 import labrad.units as units
 
 def single_value_setting_test(vna, setting, value):
-    print("\nAttempting to set '%s' setting to %s." %(setting, value))
+    print(("\nAttempting to set '%s' setting to %s." %(setting, value)))
     vna[setting](value)
     value = vna[setting](value)
-    print("'%s' setting is set to %s." %(setting, value))
+    print(("'%s' setting is set to %s." %(setting, value)))
 
 def vna_test(device_id=0, s_params=['S21'], formats=['RI'], trigger='IMM',
         single_value_settings={'Source Power':    -10*units.dBm,
@@ -31,16 +31,16 @@ def vna_test(device_id=0, s_params=['S21'], formats=['RI'], trigger='IMM',
     if not vnas:
         print('No network analyzer is found.')
         return
-    print('\nFound devices: %s.' %vnas)
-    print('Selecting device: %s.' %vnas[device_id][1])
+    print(('\nFound devices: %s.' %vnas))
+    print(('Selecting device: %s.' %vnas[device_id][1]))
     vna.select_device(vnas[device_id][1])
     
     # Print the network analyzer model.
     model = vna.get_model()
-    print('Device model: %s.' %model)
+    print(('Device model: %s.' %model))
     
     # Test single value settings.
-    for setting, value in single_value_settings.items():
+    for setting, value in list(single_value_settings.items()):
         single_value_setting_test(vna, setting, value)
 
     # Setup the measurement.
@@ -51,10 +51,10 @@ def vna_test(device_id=0, s_params=['S21'], formats=['RI'], trigger='IMM',
     data = vna.get_data()
     freqs = vna.get_frequencies()
     stop = time.time()
-    print('\nShape of the returned dataset: %s.' %str(np.shape(data)))
-    print('Number of S-paremeters: %d.' %len(data))
-    print('Number of frequency points: %d.' %np.size(freqs))
-    print('Execution time: %f seconds.' %(stop-start))
+    print(('\nShape of the returned dataset: %s.' %str(np.shape(data))))
+    print(('Number of S-paremeters: %d.' %len(data)))
+    print(('Number of frequency points: %d.' %np.size(freqs)))
+    print(('Execution time: %f seconds.' %(stop-start)))
 
     # Plot the data.
     if plot_magnitude or plot_phase:

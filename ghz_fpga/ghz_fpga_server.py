@@ -163,7 +163,7 @@
 # which are specific to individual boards. This is used for the default FIFO
 # counter, LVDS SD, etc. See examples in dac.py
 
-from __future__ import with_statement
+
 
 """
 TODO
@@ -276,7 +276,7 @@ class BoardGroup(object):
         self.port = port
         self.ctx = None
         self.pipeSemaphore = defer.DeferredSemaphore(NUM_PAGES)
-        self.pageNums = itertools.cycle(range(NUM_PAGES))
+        self.pageNums = itertools.cycle(list(range(NUM_PAGES)))
         self.pageLocks = [TimedLock() for _ in range(NUM_PAGES)]
         self.runLock = TimedLock()
         self.readLock = TimedLock()
@@ -320,7 +320,7 @@ class BoardGroup(object):
         try:
             # Acquire all locks so we can ping boards without interfering with
             # board group operations.
-            for i in xrange(NUM_PAGES):
+            for i in range(NUM_PAGES):
                 yield self.pipeSemaphore.acquire()
             for pageLock in self.pageLocks:
                 yield pageLock.acquire()
@@ -335,7 +335,7 @@ class BoardGroup(object):
                 if success:
                     found.extend(result)
                 else:
-                    print 'autodetect error:'
+                    print('autodetect error:')
                     result.printTraceback()
 
             # Clear detection packets which may be buffered in device contexts.
@@ -348,7 +348,7 @@ class BoardGroup(object):
             returnValue(found)
         finally:
             # Release all locks once we're done with autodetection.
-            for i in xrange(NUM_PAGES):
+            for i in range(NUM_PAGES):
                 self.pipeSemaphore.release()
             for pageLock in self.pageLocks:
                 pageLock.release()
@@ -428,7 +428,7 @@ class BoardGroup(object):
         """
         Return a list of known device objects belonging to this board group.
         """
-        return [dev for dev in self.fpgaServer.devices.values()
+        return [dev for dev in list(self.fpgaServer.devices.values())
                     if dev.boardGroup == self]
 
     @inlineCallbacks
@@ -441,13 +441,13 @@ class BoardGroup(object):
         then runs the function, and finally releases the semaphore
         to allow the pipeline to continue.
         """
-        for i in xrange(NUM_PAGES):
+        for i in range(NUM_PAGES):
             yield self.pipeSemaphore.acquire()
         try:
             ans = yield func(*a, **kw)
             returnValue(ans)
         finally:
-            for i in xrange(NUM_PAGES):
+            for i in range(NUM_PAGES):
                 self.pipeSemaphore.release()
 
 
@@ -598,7 +598,7 @@ class BoardGroup(object):
         # Check whether this sequence will fit in just one page.
         if all(runner.pageable() for runner in runners):
             # Lock just one page.
-            page = self.pageNums.next()
+            page = next(self.pageNums)
             pageLocks = [self.pageLocks[page]]
             if not hasattr(self, '_previousPagingStatus') or \
                     not self._previousPagingStatus:
@@ -874,7 +874,7 @@ class BoardGroup(object):
         run context since the trigger would not have been sent yet if packet
         collection failed.
         """
-        print 'RECOVERING FROM TIMEOUT'
+        print('RECOVERING FROM TIMEOUT')
 
         # Get execution counts.
         for runner, (success, result) in zip(runners, results):
@@ -924,31 +924,31 @@ class FPGAServer(DeviceServer):
 
     @inlineCallbacks
     def loadBoardGroupConfig(self):
-        print 'Loading board group definitions from registry...'
+        print('Loading board group definitions from registry...')
         p = self.client.registry.packet()
         p.cd(['', 'Servers', 'GHz FPGAs'], True)
         p.get('boardGroups', True, [], key='boardGroups')
         ans = yield p.send()
-        print 'Board group definitions loaded.'
+        print('Board group definitions loaded.')
         # validate board group definitions
         valid = True
         names = set()
         adapters = set()
         for name, server, port, boards in ans['boardGroups']:
             if name in names:
-                print 'Multiple board groups with name "{}"'.format(name)
+                print('Multiple board groups with name "{}"'.format(name))
                 valid = False
             names.add(name)
             if (server, port) in adapters:
-                print 'Multiple board groups for adapter ({}, {})'.format(
-                        server, port)
+                print('Multiple board groups for adapter ({}, {})'.format(
+                        server, port))
                 valid = False
             adapters.add((server, port))
         if valid:
             self.boardGroupDefs = ans['boardGroups']
-            print 'Board group definitions ok.'
+            print('Board group definitions ok.')
         else:
-            print 'Please fix the board group configuration.'
+            print('Please fix the board group configuration.')
 
     @inlineCallbacks
     def adapterExists(self, server, port):
@@ -960,14 +960,14 @@ class FPGAServer(DeviceServer):
             de = cxn.servers[server]
             adapters = yield de.adapters()
             if len(adapters):
-                ports, names = zip(*adapters)
+                ports, names = list(zip(*adapters))
             else:
                 ports, names = [], []
             returnValue(port in ports)
 
     @inlineCallbacks
     def findDevices(self):
-        print 'Refreshing client connection...'
+        print('Refreshing client connection...')
         cxn = self.client
         yield cxn.refresh()
 
@@ -990,8 +990,8 @@ class FPGAServer(DeviceServer):
             server, port = key
             exists = yield self.adapterExists(server, port)
             if not exists:
-                print ('Adapter "{}" (port {}) does not exist. Group will not '
-                       'be added.'.format(server, port))
+                print(('Adapter "{}" (port {}) does not exist. Group will not '
+                       'be added.'.format(server, port)))
                 additions.remove(key)
 
         # Check each keeper to see whether the server/port still exists.
@@ -999,13 +999,13 @@ class FPGAServer(DeviceServer):
             server, port = key
             exists = yield self.adapterExists(server, port)
             if not exists:
-                print ('Adapter "{}" (port {}) does not exist. Group will be '
-                       'removed.'.format(server, port))
+                print(('Adapter "{}" (port {}) does not exist. Group will be '
+                       'removed.'.format(server, port)))
                 keepers.remove(key)
                 removals.add(key)
 
-        print 'Board groups to be added:', additions
-        print 'Board groups to be removed:', removals
+        print('Board groups to be added:', additions)
+        print('Board groups to be removed:', removals)
 
         # Remove board groups which are no longer configured.
         for key in removals:
@@ -1013,15 +1013,15 @@ class FPGAServer(DeviceServer):
             del self.boardGroups[key]
             try:
                 yield bg.shutdown()
-            except Exception, e:
+            except Exception as e:
                 logging.error('Error removing board group: {}'.format(key),
                               exc_info=True)
 
         # Add new board groups.
         for server, port in additions:
             name, boards = config[server, port]
-            print ('Creating board group "{}": server="{}", port={}'
-                   .format(name, server, port))
+            print(('Creating board group "{}": server="{}", port={}'
+                   .format(name, server, port)))
             de = cxn.servers[server]
             boardGroup = BoardGroup(self, de, port)  # Sets attributes.
             self.boardGroups[server, port] = boardGroup
@@ -1029,7 +1029,7 @@ class FPGAServer(DeviceServer):
         # Update configuration of all board groups and detect devices.
         detections = []
         groupNames = []
-        for (server, port), boardGroup in self.boardGroups.items():
+        for (server, port), boardGroup in list(self.boardGroups.items()):
             yield boardGroup.init()  # Gets context with direct ethernet.
             name, boards = config[server, port]
             boardGroup.configure(name, boards)
@@ -1040,15 +1040,15 @@ class FPGAServer(DeviceServer):
         for name, (success, result) in zip(groupNames, answer):
             if success:
                 if len(result):
-                    print 'Devices detected on board group "{}":'.format(name)
+                    print('Devices detected on board group "{}":'.format(name))
                     for devName, args in result:
-                        print ' ', devName
+                        print(' ', devName)
                 else:
-                    print ('No devices detected on board group "{}".'
-                           .format(name))
+                    print(('No devices detected on board group "{}".'
+                           .format(name)))
                 found.extend(result)
             else:
-                print 'Autodetection failed on board group "{}":'.format(name)
+                print('Autodetection failed on board group "{}":'.format(name))
                 result.printBriefTraceback(elideFrameworkCode=1)
         returnValue(found)
 
@@ -1089,7 +1089,7 @@ class FPGAServer(DeviceServer):
 
     def getBoardGroup(self, name):
         """Find a board group by name."""
-        for boardGroup in self.boardGroups.values():
+        for boardGroup in list(self.boardGroups.values()):
             if boardGroup.name == name:
                 return boardGroup
         raise Exception('Board group "{}" not found.'.format(name))
@@ -1110,7 +1110,7 @@ class FPGAServer(DeviceServer):
         devices belonging to that board group will be included.
         """
         IDs, names = self.deviceLists()
-        devices = zip(IDs, names)
+        devices = list(zip(IDs, names))
         if boardGroup is not None:
             # Make sure this board group exists
             bg = self.getBoardGroup(boardGroup)
@@ -1121,7 +1121,7 @@ class FPGAServer(DeviceServer):
     @setting(10, 'List Board Groups', returns='*s')
     def list_board_groups(self, c):
         """Get a list of existing board groups."""
-        return sorted(bg.name for bg in self.boardGroups.values())
+        return sorted(bg.name for bg in list(self.boardGroups.values()))
 
     @setting(11, 'List DACs', boardGroup='s', returns='*s')
     def list_dacs(self, c, boardGroup=None):
@@ -1132,7 +1132,7 @@ class FPGAServer(DeviceServer):
         """
         IDs, names = self.deviceLists()
 
-        devices = zip(IDs, names)
+        devices = list(zip(IDs, names))
         devices = [name for (id, name) in devices if 'DAC' in name]
         if boardGroup is not None:
             # Make sure this board group exists
@@ -1149,7 +1149,7 @@ class FPGAServer(DeviceServer):
         """
         IDs, names = self.deviceLists()
 
-        devices = zip(IDs, names)
+        devices = list(zip(IDs, names))
         devices = [name for (id, name) in devices if 'ADC' in name]
         if boardGroup is not None:
             # Make sure this board group exists
@@ -1223,7 +1223,7 @@ class FPGAServer(DeviceServer):
         call it!
         """
         dev = self.selectedDAC(c)
-        print 'Deprecation warning: SRAM Address called unnecessarily'
+        print('Deprecation warning: SRAM Address called unnecessarily')
 
     @setting(30, 'Memory', data='*w: Memory Words to be written', returns='')
     def dac_memory(self, c, data):
@@ -1850,7 +1850,7 @@ class FPGAServer(DeviceServer):
 
         if isinstance(data, tuple):
             # convert to a list of digits, and interpret as binary int
-            data = long(''.join(str(int(b)) for b in data), 2)
+            data = int(''.join(str(int(b)) for b in data), 2)
 
         pkts = [[200, 68, data & 0xFF]]  # 192 for build 1
         yield dev.runI2C(pkts)
@@ -2052,7 +2052,7 @@ class FPGAServer(DeviceServer):
         # See pylabrad github issue #43.
 
         def coerce(xs):
-            return tuple(long(x) for x in xs)
+            return tuple(int(x) for x in xs)
         returnValue((ans[0], coerce(ans[1]), coerce(ans[2]), coerce(ans[3])))
 
     @setting(1300, 'DAC Bringup',
@@ -2112,11 +2112,11 @@ class FPGAServer(DeviceServer):
     @setting(1100000, 'Debug Print Context')
     def debug_print_context(self, c):
         """Prints the context to the server's stdout."""
-        print c
+        print(c)
 
     @setting(1100001, 'Debug Clear Ethernet')
     def debug_clear_ethernet(self, c):
-        for dev in self.devices.values():
+        for dev in list(self.devices.values()):
             dev.clear().send()
 
     @setting(2500, 'ADC Recalibrate', returns='')
@@ -2137,7 +2137,7 @@ class FPGAServer(DeviceServer):
         """Specify monitor outputs. (ADC only)"""
         dev = self.selectedADC(c)
         info = c.setdefault(dev, {})
-        print 'monitor outputs: ', mon0, mon1
+        print('monitor outputs: ', mon0, mon1)
         info['mon0'] = mon0
         info['mon1'] = mon1
 

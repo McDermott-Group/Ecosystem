@@ -228,9 +228,9 @@ class Grapher(QtGui.QWidget):
                             if self.pluginTypesList.item(i).checkState() == QtCore.Qt.Checked]
         for plugin in pluginList:
             plugin = import_module('Plugins.'+plugin[:-3])
-            print self.selectedData, self.selectedData
+            print(self.selectedData, self.selectedData)
             self.selectedData = plugin.run(self.selectedData)
-            print self.selectedData, self.selectedData
+            print(self.selectedData, self.selectedData)
         self.updatePlotTypeSelector()
 
     def pluginClicked(self, item):
@@ -318,7 +318,7 @@ class Grapher(QtGui.QWidget):
         d.cd("")
 
         if datasetCategory not in ACCEPTABLE_DATA_CATEGORIES:
-            print "Unknown category."
+            print("Unknown category.")
             return
 
         if datasetCategory == "Arbitrary Type 1":
@@ -337,7 +337,7 @@ class Grapher(QtGui.QWidget):
                     elif self.indepVarsList[i][1] == [2]:
                         start, stop = row[i]
                         if scanType is None:
-                            print "Scan Type Not Found.  Assuming Linear."
+                            print("Scan Type Not Found.  Assuming Linear.")
                             data[j][i] = np.linspace(start, stop, num = l)
                         elif scanType == "Linear":
                             data[j][i] = np.linspace(start, stop, num = l)
@@ -430,7 +430,7 @@ class Grapher(QtGui.QWidget):
         if len(alreadySelected) < 1:
             # select first dep variable and all others with same units and shape
             varsWithCommonUnitsDict = self.getVarsWithCommonUnitsDict()
-            firstVarList = varsWithCommonUnitsDict.values()[0]
+            firstVarList = list(varsWithCommonUnitsDict.values())[0]
             self.selectedDepVars = self.getVarsWithCommonShapeList(firstVarList, firstVarList[0])
         # populate interface buttons
         self.clearLayout(self.scrollLayout)
@@ -578,9 +578,9 @@ class Grapher(QtGui.QWidget):
         pixelY = (yVals[-1]-yVals[0])/len(yVals)
         img.translate(xVals[0],yVals[0])
         img.scale(pixelX,pixelY)
-        print depGrids[index]
-        print xVals
-        print yVals
+        print(depGrids[index])
+        print(xVals)
+        print(yVals)
         self.xValPass = xVals
         self.yValPass = yVals
         self.zValPass = depGrids[index]
@@ -623,7 +623,7 @@ class Grapher(QtGui.QWidget):
 
     def clearLayout(self, layout):
         # Clear the plotType options layout and all widgets therein.
-        for i in reversed(range(layout.count())):
+        for i in reversed(list(range(layout.count()))):
             item = layout.itemAt(i)
 
             if isinstance(item, QtGui.QWidgetItem):
@@ -669,7 +669,7 @@ class Grapher(QtGui.QWidget):
             # depVar of form (name, shape, dtype, units)
             name = depVar[0]
             units = depVar[3]
-            if units not in compatibleVarsDict.keys():
+            if units not in list(compatibleVarsDict.keys()):
                 compatibleVarsDict[units] = [name]
             else:
                 compatibleVarsDict[units].append(name)
@@ -702,8 +702,8 @@ class Grapher(QtGui.QWidget):
             elif len(self.indepVarsList) == 2:
                 self.plot2D()
         elif QKeyEvent.key() == QtCore.Qt.Key_Up:
-            print 'event triggered'
-            print self.directoryTree.indexAbove(self.model)
+            print('event triggered')
+            print(self.directoryTree.indexAbove(self.model))
         # elif QKeyEvent.key() == QtCore.Qt.Key_E:
         #     exporter = pg.exporters.ImageExporter(self.plt.plotItem)
         #     if len(self.indepVarsList) == 1:

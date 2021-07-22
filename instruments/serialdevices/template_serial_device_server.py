@@ -49,7 +49,7 @@ class SR560Wrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to an SR560 Amplifier."""
-        print('Connecting to "%s" on port "%s"...' %(server.name, port))
+        print(('Connecting to "%s" on port "%s"...' %(server.name, port)))
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -58,9 +58,9 @@ class SR560Wrapper(DeviceWrapper):
         # The following parameters match the default configuration of 
         # the SR560 unit. You should go to the instrument menu and change
         # the settings below.
-        p.baudrate(9600L)
-        p.stopbits(2L)
-        p.bytesize(8L)
+        p.baudrate(9600)
+        p.stopbits(2)
+        p.bytesize(8)
         p.parity('N')
         p.rts(False)
         p.timeout(2 * units.s)
@@ -115,13 +115,13 @@ class SR560Server(DeviceServer):
             p.get(k, key=k)
         ans = yield p.send()
         self.serialLinks = {k: ans[k] for k in keys}
-        print self.serialLinks
+        print(self.serialLinks)
 
     @inlineCallbacks    
     def findDevices(self):
         """Find available devices from a list stored in the registry."""
         devs = []
-        for name, (server, port) in self.serialLinks.items():
+        for name, (server, port) in list(self.serialLinks.items()):
             if server not in self.client.servers:
                 continue
             server = self.client[server]

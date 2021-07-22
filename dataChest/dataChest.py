@@ -52,8 +52,8 @@ VALID_PARAMETER_TYPES = ["int", "long", "float", "complex", "bool",
                          "float16", "float32", "float64",
                          "complex64", "complex128", "ndarray"]
 
-TYPE_CASTING_OBJECTS = [int, long, float, complex, bool, list,
-                            str, unicode, tuple, dict, np.bool_, np.int8, np.int16,
+TYPE_CASTING_OBJECTS = [int, int, float, complex, bool, list,
+                            str, str, tuple, dict, np.bool_, np.int8, np.int16,
                             np.int32, np.int64, np.uint8, np.uint16,
                             np.uint32, np.uint64, np.float16, np.float32,
                             np.float64, np.complex64, np.complex128, np.array]
@@ -335,14 +335,14 @@ class dataChest(dateStamp):
       if not isinstance(sliceIndices, list):
         raise self.exception
       startIndex, stopIndex = sliceIndices[0], sliceIndices[1]
-      for varTypes in self.varDict.keys():
+      for varTypes in list(self.varDict.keys()):
         if variablesList is not None:
           desiredVarList = []
-          for element in self.file[varTypes].keys():
+          for element in list(self.file[varTypes].keys()):
             if element in variablesList:
                 desiredVarList.append(element)
         else:
-          desiredVarList = self.file[varTypes].keys()
+          desiredVarList = list(self.file[varTypes].keys())
         for variables in desiredVarList:
           varGrp = self.file[varTypes]
           dataset = varGrp[variables]
@@ -409,8 +409,8 @@ class dataChest(dateStamp):
       else:
         self.readOnlyFlag = True
   
-      for varType in self.varDict.keys(): #copying varDict from file
-        varGroupAttributes = self.file[varType].attrs.keys()
+      for varType in list(self.varDict.keys()): #copying varDict from file
+        varGroupAttributes = list(self.file[varType].attrs.keys())
         varGrp = self.file[varType]
         for item in varGroupAttributes:
           #hack for backward compatibility with N-d datasets
@@ -453,9 +453,9 @@ class dataChest(dateStamp):
 
   def getParameterUnits(self, paramName):
     if self.currentHDF5Filename is not None:
-      if paramName in self.file["parameters"].attrs.keys():
+      if paramName in list(self.file["parameters"].attrs.keys()):
         return None
-      elif paramName in self.file["parameters"].keys():
+      elif paramName in list(self.file["parameters"].keys()):
         paramGrp = self.file["parameters"][paramName]
         paramUnits = str(paramGrp.attrs["units"])
         if paramUnits == "":
@@ -481,7 +481,7 @@ class dataChest(dateStamp):
         + "modify = True."
         )
     elif self.currentHDF5Filename is not None:
-      if paramName in self.file["parameters"].keys():
+      if paramName in list(self.file["parameters"].keys()):
         if type(paramUnits) == str:
           paramGrp = self.file["parameters"][paramName]
           paramGrp.attrs["units"] = paramUnits
@@ -510,7 +510,7 @@ class dataChest(dateStamp):
         )
     elif self.currentHDF5Filename is not None:
       if self._isParameterValid(paramName, paramValue, paramUnits, overwrite): 
-        if paramName not in self.file["parameters"].keys():
+        if paramName not in list(self.file["parameters"].keys()):
           self.file["parameters"].create_group(paramName)
 
         paramTypeStr = self._getParamterTypeString(paramValue)
@@ -532,10 +532,10 @@ class dataChest(dateStamp):
 
   def getParameter(self, paramName, bypassIOError=False):
     if self.currentHDF5Filename is not None:
-      if paramName in self.file["parameters"].attrs.keys():
+      if paramName in list(self.file["parameters"].attrs.keys()):
         paramValue = self.file["parameters"].attrs[paramName] # add in type preservation here
         return paramValue
-      elif paramName in self.file["parameters"].keys():
+      elif paramName in list(self.file["parameters"].keys()):
         paramGrp = self.file["parameters"][paramName]
         paramValue = paramGrp.attrs["value"]
         paramType = str(paramGrp.attrs["dtype"])
@@ -572,10 +572,10 @@ class dataChest(dateStamp):
   def getParameterList(self):
     if self.currentHDF5Filename is not None:
       #backwards compatibility
-      paramList1 = self.file["parameters"].attrs.keys()
+      paramList1 = list(self.file["parameters"].attrs.keys())
       paramList1 = [str(x) for x in paramList1] # convert from unicode
       #new style parameters
-      paramList2 = self.file["parameters"].keys()
+      paramList2 = list(self.file["parameters"].keys())
       paramList2 = [str(x) for x in paramList2]
       return paramList1 + paramList2
     else:
@@ -605,8 +605,8 @@ class dataChest(dateStamp):
 
     #varTypes in ['independents', 'dependents']
     #varAttrs in ['shapes','units','names','types']
-    for varTypes in varDict.keys():
-      for varAttrs in varDict[varTypes].keys():
+    for varTypes in list(varDict.keys()):
+      for varAttrs in list(varDict[varTypes].keys()):
         varGrp = self.file[varTypes]
         #hack for backward compatibility with N-d datasets
         if varAttrs == 'shapes': 
@@ -628,7 +628,7 @@ class dataChest(dateStamp):
         )
     elif self.currentHDF5Filename is not None:
       varDict = self.varDict
-      for varTypes in varDict.keys():
+      for varTypes in list(varDict.keys()):
         varList = varDict[varTypes]['names']
         for ii in range(0, len(varList)):
           if varName == varList[ii]:
@@ -636,7 +636,7 @@ class dataChest(dateStamp):
             varDict[varTypes]['units'][ii] = varUnits
             convertedShapesList = self._convertElementsToStr(varDict[varTypes]['units'])
             varGrp.attrs['units'] = convertedShapesList
-            self.file[varTypes][varName].attrs['units'] = unicode(varUnits, "utf-8")
+            self.file[varTypes][varName].attrs['units'] = str(varUnits, "utf-8")
             return
     raise IOError("Variable name " + str(varName) + " not found.")
     
@@ -698,7 +698,7 @@ class dataChest(dateStamp):
       #(sort of redundant as this is done at the varType group level)?
       for keys in varDict:
         if isinstance(varDict[keys][ii], str):
-          dset.attrs[keys] = unicode(varDict[keys][ii], "utf-8")
+          dset.attrs[keys] = str(varDict[keys][ii], "utf-8")
         elif isinstance(varDict[keys][ii], list):
           dset.attrs[keys] = varDict[keys][ii]
         else:
@@ -1073,7 +1073,7 @@ class dataChest(dateStamp):
         if not self._isTupleValid(varCategory, varsList[ii]):
           return False
       self._updateVariableDict(self.varDict[varCategory], varsList)
-      for varAttributes in self.varDict[varCategory].keys():
+      for varAttributes in list(self.varDict[varCategory].keys()):
         if len(self.varDict[varCategory][varAttributes])==0:
           return False
       return True
@@ -1131,13 +1131,13 @@ class dataChest(dateStamp):
         return False
       elif type(paramUnits) != str and type(paramUnits) != np.string_:
         self.exception = ValueError("Parameter units must be type str.")
-      elif overwrite is False and paramName in self.file["parameters"].attrs.keys():
+      elif overwrite is False and paramName in list(self.file["parameters"].attrs.keys()):
         self.exception = RuntimeError(
           "Parameter name already exists. \r\n\t"
           +"Parameter values cannot be overwritten."
           )
         return False
-      elif overwrite is False and paramName in self.file["parameters"].keys():
+      elif overwrite is False and paramName in list(self.file["parameters"].keys()):
         self.exception = RuntimeError(
           "Parameter name already exists. \r\n\t"
           +"Parameter values cannot be overwritten."
@@ -1268,7 +1268,7 @@ class dataChest(dateStamp):
     
     dataShape = np.asarray(data).shape
     totalNumVars = len(indepShapes+depShapes)
-    print "dataShape=", dataShape
+    print("dataShape=", dataShape)
     if len(dataShape) != 3:  # (1,totalNumVars,lengthOfDataArray)
       self.exception = ValueError(
         "Arbitrary Type 2 Data has rows\r\n\t"

@@ -19,7 +19,7 @@ labrad.gpib
 Superclass of GPIB device servers.
 """
 
-from __future__ import print_function
+
 
 from labrad import types as T, constants as C, util, errors
 from labrad.devices import DeviceWrapper, DeviceServer, DeviceLockedError
@@ -245,7 +245,7 @@ class ManagedDeviceServer(DeviceServer):
         names = [self.makeDeviceName(*dev[:3]) for dev in devs]
         additions = [self.handleDeviceMessage(*dev) for dev in devs]
         deletions = [self.removeDevice(name)
-                     for name in self.device_guids.keys()
+                     for name in list(self.device_guids.keys())
                      if name not in names]
         yield defer.DeferredList(additions + deletions)
 

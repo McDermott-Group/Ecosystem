@@ -63,7 +63,7 @@ class TestFPGAServer(object):
 
     def setup_method(self, method):
         # reset the calls on the DE, for some reason mock hangs onto them.
-        for dev in self.server.devices.values():
+        for dev in list(self.server.devices.values()):
             dev.server = mock.MagicMock()
 
     def test_setup(self):

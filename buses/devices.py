@@ -149,7 +149,7 @@ class DeviceServer(LabradServer):
     def stopServer(self):
         if hasattr(self, 'devices'):
             ds = [defer.maybeDeferred(dev.shutdown)
-                  for dev in self.devices.values()]
+                  for dev in list(self.devices.values())]
             yield defer.DeferredList(ds, fireOnOneErrback=True)
 
     def findDevices(self):
@@ -175,11 +175,11 @@ class DeviceServer(LabradServer):
         args and kw come from findDevices (ie same as are passed into the
         device wrapper's connect method).
         """
-        if 'device' in kw.keys():
+        if 'device' in list(kw.keys()):
             device = kw['device']
             return self.deviceWrappers[device]
         elif len(self.deviceWrappers) == 1:
-            return self.deviceWrappers.values()[0]
+            return list(self.deviceWrappers.values())[0]
         else:
             return self.deviceWrapper
 
@@ -223,7 +223,7 @@ class DeviceServer(LabradServer):
                 self._next_guid += 1
 
             deviceWrapper = self.chooseDeviceWrapper(name, *args, **kw)
-            if 'device' in kw.keys():
+            if 'device' in list(kw.keys()):
                 del kw['device']
             dev = deviceWrapper(guid, name)
             yield self.client.refresh()
@@ -248,7 +248,7 @@ class DeviceServer(LabradServer):
             self._next_guid += 1
 
         deviceWrapper = self.chooseDeviceWrapper(name, *args, **kw)
-        if 'device' in kw.keys():
+        if 'device' in list(kw.keys()):
             del kw['device']
         dev = deviceWrapper(guid, name)
         yield self.client.refresh()
@@ -383,7 +383,7 @@ class DeviceServer(LabradServer):
         disconnects and later reconnects under the same name.
         """
         IDs, names = self.deviceLists()
-        return zip(IDs, names)
+        return list(zip(IDs, names))
 
     @setting(2, 'Select Device',
                 key=[': Select first device',

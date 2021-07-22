@@ -450,7 +450,7 @@ class KeysightE5063ADeviceWrapper(AgilentN5230ADeviceWrapper):
 
         # Wait for the measurement to finish.
         yield self.query('*OPC?', timeout=24*units.h)
-        print(self.query('*OPC?', timeout=24*units.h))
+        print((self.query('*OPC?', timeout=24*units.h)))
 
         # Pull the data.
         yield self.write('FORM:DATA ASC')
@@ -602,12 +602,12 @@ class Agilent8720ETDeviceWrapper(ReadRawGPIBDeviceWrapper):
         else:
             if power['dBm'] < -100:
                 power = -100 * units.dBm
-                print('Minimum power level for %s is %s.'
-                        %(self.model, power))
+                print(('Minimum power level for %s is %s.'
+                        %(self.model, power)))
             if power['dBm'] > 10:
                 power = 10 * units.dBm
-                print('Maximum power level for %s is %s.'
-                        %(self.model, power))
+                print(('Maximum power level for %s is %s.'
+                        %(self.model, power)))
             yield self.write('POWE%iDB' %power['dBm'])
         returnValue(power)
 

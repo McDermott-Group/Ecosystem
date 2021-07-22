@@ -70,7 +70,7 @@ class LeidenDRPseudoserver(LabradServer):
         if not os.path.exists(self._path):
             raise Exception("Could not find the Leiden Log Files "
                             "Path: '%s'" % str(self._path))
-        print("Leiden Log Files Path is set to '%s'." % str(self._path))
+        print(("Leiden Log Files Path is set to '%s'." % str(self._path)))
 
     @inlineCallbacks
     def initServer(self):

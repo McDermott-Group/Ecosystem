@@ -78,52 +78,52 @@ POLARITY = {
 # for each bus, the settings are given as a map from name to numeric code.
 BUS_SETTINGS = {
     'Abus0': {
-        'A0': 80L,
-        'B0': 81L,
-        'C0': 82L,
-        'D0': 83L
+        'A0': 80,
+        'B0': 81,
+        'C0': 82,
+        'D0': 83
     },
     'Abus1': {
-        'A1': 88L,
-        'B1': 89L,
-        'C1': 90L,
-        'D1': 91L
+        'A1': 88,
+        'B1': 89,
+        'C1': 90,
+        'D1': 91
     },
     'Dbus0': {
-        'trigA': 64L,
-        'trigB': 65L,
-        'trigC': 66L,
-        'trigD': 67L,
-        'Pbus0': 64L,
-        'clk': 65L,
-        'clockon': 66L,
-        'cardsel': 67L,
-        'dadata': 68L,
-        'done': 69L,
-        'strobe': 70L,
-        'clk': 71L,
-        'clk1': 68L,
-        'clk2': 69L,
-        'clk3': 70L,
-        'clk4': 71L
+        'trigA': 64,
+        'trigB': 65,
+        'trigC': 66,
+        'trigD': 67,
+        'Pbus0': 64,
+        'clk': 65,
+        'clockon': 66,
+        'cardsel': 67,
+        'dadata': 68,
+        'done': 69,
+        'strobe': 70,
+        'clk': 71,
+        'clk1': 68,
+        'clk2': 69,
+        'clk3': 70,
+        'clk4': 71
     },
     'Dbus1': {
-        'FOoutA': 72L,
-        'FOoutB': 73L,
-        'FOoutC': 74L,
-        'FOoutD': 75L,
-        'foin1': 72L,
-        'foin2': 73L,
-        'foin3': 74L,
-        'foin4': 75L,
-        'dasyn': 76L,
-        'cardsel': 77L,
-        'Pbus0': 78L,
-        'Clockon': 79L,
-        'on1': 76L,
-        'on2': 77L,
-        'on3': 78L,
-        'on4': 79L
+        'FOoutA': 72,
+        'FOoutB': 73,
+        'FOoutC': 74,
+        'FOoutD': 75,
+        'foin1': 72,
+        'foin2': 73,
+        'foin3': 74,
+        'foin4': 75,
+        'dasyn': 76,
+        'cardsel': 77,
+        'Pbus0': 78,
+        'Clockon': 79,
+        'on1': 76,
+        'on2': 77,
+        'on3': 78,
+        'on4': 79
     }
 }
 
@@ -141,7 +141,7 @@ class DcRackWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port, cards):
         """Connect to a dc rack device."""
-        print 'connecting to "{}" on port "{}"...'.format(server.name, port)
+        print('connecting to "{}" on port "{}"...'.format(server.name, port))
         self.rackCards = {}
         self.rackMonitor = Monitor()
         self.activeCard = 100
@@ -150,7 +150,7 @@ class DcRackWrapper(DeviceWrapper):
         self.port = port
         p = self.packet()
         p.open(port)
-        p.baudrate(115200L)
+        p.baudrate(115200)
         p.read() # clear out the read buffer
         p.timeout(TIMEOUT)
         yield p.send()
@@ -159,7 +159,7 @@ class DcRackWrapper(DeviceWrapper):
                 self.rackCards[card[0]] = Preamp()
             else:
                 self.rackCards[card[0]] = 'fastbias'
-        print 'done.'
+        print('done.')
 
     def packet(self):
         """Create a packet in our private context."""
@@ -184,8 +184,8 @@ class DcRackWrapper(DeviceWrapper):
     def selectCard(self, data):
         """Sends a select card command."""
         self.activeCard = str(data)
-        yield self.write([long(data & 0x3f)])
-        returnValue(long(data & 0x3f))
+        yield self.write([int(data & 0x3f)])
+        returnValue(int(data & 0x3f))
 
     @inlineCallbacks
     def changeHighPassFilter(self, channel, data):
@@ -292,7 +292,7 @@ class DcRackWrapper(DeviceWrapper):
 
     def returnCardList(self):
         cards = []
-        for key in self.rackCards.keys():
+        for key in list(self.rackCards.keys()):
             if self.rackCards[key] == 'fastbias':
                 cards.append([key, 'fastbias'])
             else:
@@ -320,7 +320,7 @@ class DcRackWrapper(DeviceWrapper):
             p.set(cardName, (state(card.A), state(card.B), state(card.C), state(card.D)))
             yield p.send()
         else:
-            print 'card is not a preamp'
+            print('card is not a preamp')
 
     @inlineCallbacks
     def commitLedStateToRegistry(self, reg, ledState):
@@ -335,7 +335,7 @@ class DcRackWrapper(DeviceWrapper):
             p.set(cardName, ledState)
             yield p.send()
         else:
-            print 'card is not a preamp'        
+            print('card is not a preamp')        
 
     @inlineCallbacks
     def commitMonitorStateToRegistry(self, reg):
@@ -363,7 +363,7 @@ class DcRackWrapper(DeviceWrapper):
             self.rackMonitor.updateBus('Abus0', ans[2][0], ans[2][1])
             self.rackMonitor.updateBus('Abus1', ans[3][0], ans[3][1]) 
         else:
-            print "Registry settings for the monitor state of this DC Rack have not been saved yet."
+            print("Registry settings for the monitor state of this DC Rack have not been saved yet.")
 
     @inlineCallbacks
     def getLedStateFromRegistry(self, reg):
@@ -382,7 +382,7 @@ class DcRackWrapper(DeviceWrapper):
                #print "Registry settings for the LED state of card =",self.activeCard ," have not been saved yet."
                returnValue(-1)
         else:
-            print 'card is not a preamp'
+            print('card is not a preamp')
         
 
     @inlineCallbacks
@@ -405,7 +405,7 @@ class DcRackWrapper(DeviceWrapper):
             else:
                 returnValue(-1)
         else:
-            print 'card is not a preamp'
+            print('card is not a preamp')
 
 
     @inlineCallbacks
@@ -433,10 +433,10 @@ class DcRackWrapper(DeviceWrapper):
 
         # convert voltage into 16-bit number, plus low bit for DAC selection
         if dac:
-            dac_value = long(float(num+2.5)/5.0 * 0xffff)
+            dac_value = int(float(num+2.5)/5.0 * 0xffff)
             reg = (dac_value << 1) | 1
         else:
-            dac_value = long(float(num)/2.5 * 0xffff)
+            dac_value = int(float(num)/2.5 * 0xffff)
             reg = (dac_value << 1)
 
         # set high bit for slew rate
@@ -477,9 +477,9 @@ class DcRackServer(DeviceServer):
 
     @inlineCallbacks
     def initServer(self):
-        print 'loading config info...',
+        print('loading config info...', end=' ')
         yield self.loadConfigInfo()
-        print 'done.'
+        print('done.')
         yield DeviceServer.initServer(self)
 
     @inlineCallbacks
@@ -498,7 +498,7 @@ class DcRackServer(DeviceServer):
     def findDevices(self):
         """Find available devices from list stored in the registry."""
         devs = []
-        for name, (server, port, cards) in self.serialLinks.items():
+        for name, (server, port, cards) in list(self.serialLinks.items()):
             if server not in self.client.servers:
                 continue
             server = self.client[server]
