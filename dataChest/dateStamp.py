@@ -23,7 +23,7 @@ class dateStamp(object):
       base = 26
       if num > 0:
           digits = []
-          while num:
+          while int(num) != 0: # python 2to3: needed to cast num as int
               digits.append(int(num % base))
               num /= base
           converted_digits = digits[::-1]

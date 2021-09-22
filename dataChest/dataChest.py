@@ -590,7 +590,7 @@ class dataChest(dateStamp):
     self.numIndepWrites = 0
     self.numDepWrites = 0
     
-    self.file = h5py.File(self.pwd()+"/"+filename) #Try catch this
+    self.file = h5py.File(self.pwd()+"/"+filename, 'w') #Try catch this
     self.currentHDF5Filename = self.pwd()+"/"+filename
     self.readOnlyFlag = False # gives user read and write access
     
@@ -698,7 +698,7 @@ class dataChest(dateStamp):
       #(sort of redundant as this is done at the varType group level)?
       for keys in varDict:
         if isinstance(varDict[keys][ii], str):
-          dset.attrs[keys] = str(varDict[keys][ii], "utf-8")
+          dset.attrs[keys] = str(varDict[keys][ii]) # python 2to3: removed arg "utf-8"
         elif isinstance(varDict[keys][ii], list):
           dset.attrs[keys] = varDict[keys][ii]
         else:
@@ -745,9 +745,9 @@ class dataChest(dateStamp):
     units = varDict.attrs["units"]
     varList = []
     for ii in range(0, len(names)):
-      #hack for backward compatibility with N-d datasets1
-      if type(shapes[ii].tolist()) == str:
-        tempShape = ast.literal_eval(shapes[ii].tolist())
+      #hack for backward compatibility with N-d datasets      
+      if type(shapes[ii]) == str: # python 2 to 3: removed .tolist()
+        tempShape = ast.literal_eval(shapes[ii]) # python 2 to 3: removed .tolist()
         varTup = (names[ii],tempShape,types[ii],units[ii])
       else:
         varTup = (names[ii],shapes[ii].tolist(),types[ii],units[ii])
