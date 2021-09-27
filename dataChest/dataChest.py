@@ -370,7 +370,14 @@ class dataChest(dateStamp):
                  + self.varDict["dependents"]["names"])
       if self.getDataCategory() == "Arbitrary Type 1":
         for ii in range(0, len(allVars)):
-          data.append(dataDict[allVars[ii]][()])
+          item=allVars[ii]
+          if type(item) is bytes:
+            item = str(item).lstrip("b'")
+            item = item.rstrip("'")
+          data.append(dataDict[item][()])
+          #previous error: key error caused by bytes adding b'...' to key
+          #current working solution: turn byte into string, and removing the tag
+          #caveat independend and depenents can't begin with b' or end with '
         data = np.array(data)
         data = data.T
         return data[startIndex:stopIndex]
