@@ -385,7 +385,7 @@ class dataChest(dateStamp):
         for ii in range(startIndex,stopIndex): #making slicing efficient
           row = []
           for jj in range(0,len(allVars)):
-            row.append(dataDict[allVars[jj]][ii])
+            row.append(dataDict[allVars[jj]][ii] if isinstance(allVars[jj],str) else allVars[jj].decode('utf-8'))
           data.append(row)
         return data
     else:
