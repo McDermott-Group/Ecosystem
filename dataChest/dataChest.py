@@ -422,7 +422,7 @@ class dataChest(dateStamp):
         for item in varGroupAttributes:
           #hack for backward compatibility with N-d datasets
           if item == 'shapes':
-            tempList = varGrp.attrs[item].tolist()
+            tempList = varGrp.attrs[item]
             if type(tempList[0]) == str:
               tempList = self._convertElementsToLists(tempList)
               self.varDict[varType][str(item)] = tempList
@@ -616,11 +616,22 @@ class dataChest(dateStamp):
       for varAttrs in list(varDict[varTypes].keys()):
         varGrp = self.file[varTypes]
         #hack for backward compatibility with N-d datasets
+
         if varAttrs == 'shapes': 
           convertedShapesList = self._convertElementsToStr(varDict[varTypes][varAttrs])
-          varGrp.attrs[varAttrs] = convertedShapesList
+          varGrp.attrs[varAttrs] = str(convertedShapesList)
         else:
-          varGrp.attrs[varAttrs] = varDict[varTypes][varAttrs]
+          if isinstance(varDict[varTypes][varAttrs], str):
+            varGrp.attrs[varAttrs] = str(varDict[varTypes][varAttrs])  # python 2to3:
+          elif isinstance(varDict[varTypes][varAttrs], list):
+            # print(varDict[varTypes][varAttrs][0])
+            # print(type(varDict[varTypes][varAttrs][0]))
+            varGrp.attrs[varAttrs]=varDict[varTypes][varAttrs]
+
+          # varGrp.attrs[varAttrs] = ((varDict[varTypes][varAttrs]))
+          # varGrp.attrs[varAttrs]=np.array(varDict[varTypes][varAttrs]).astype(str)
+          # TypeError: No conversion path for dtype: dtype('<U9')
+          
       self._initDatasetGroup(varGrp, varDict[varTypes])
     self.file.flush()
 
@@ -665,9 +676,10 @@ class dataChest(dateStamp):
     return convertedList
 
   def _convertElementsToLists(self, listToConvert):
+    conversion1 = ast.literal_eval(listToConvert) #python 2to3: needed to convert string to list; this does the trick
     convertedList = []
-    for ii in range(0, len(listToConvert)):
-      convertedList.append(ast.literal_eval(listToConvert[ii]))
+    for ii in range(0, len(conversion1)):
+      convertedList.append(ast.literal_eval(conversion1[ii]))
     return convertedList
     
   def _initDatasetGroup(self, group, varDict):
@@ -751,13 +763,17 @@ class dataChest(dateStamp):
     types = varDict.attrs["types"]
     units = varDict.attrs["units"]
     varList = []
+    if type(shapes) == str:
+      tempShapes = ast.literal_eval(shapes)# python 2 to 3 because we removed the tolist(s) everywhere
+    else:
+      tempShapes = shapes
     for ii in range(0, len(names)):
-      #hack for backward compatibility with N-d datasets      
-      if type(shapes[ii]) == str: # python 2 to 3: removed .tolist()
-        tempShape = ast.literal_eval(shapes[ii]) # python 2 to 3: removed .tolist()
+      #hack for backward compatibility with N-d datasets
+      if type(tempShapes[ii]) == str: # python 2 to 3: removed .tolist()
+        tempShape = ast.literal_eval((tempShapes[ii])) # python 2 to 3: removed .tolist()
         varTup = (names[ii],tempShape,types[ii],units[ii])
       else:
-        varTup = (names[ii],shapes[ii].tolist(),types[ii],units[ii])
+        varTup = (names[ii],tempShapes[ii],types[ii],units[ii])
       varList.append(varTup)
     return varList
     
@@ -1275,7 +1291,7 @@ class dataChest(dateStamp):
     
     dataShape = np.asarray(data).shape
     totalNumVars = len(indepShapes+depShapes)
-    print("dataShape=", dataShape)
+    # print("dataShape=", dataShape)
     if len(dataShape) != 3:  # (1,totalNumVars,lengthOfDataArray)
       self.exception = ValueError(
         "Arbitrary Type 2 Data has rows\r\n\t"

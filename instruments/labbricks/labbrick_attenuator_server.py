@@ -72,8 +72,8 @@ class LBAttenuatorServer(LabradServer):
     def initServer(self):
         """Initialize the Lab Brick Attenuator Server."""
         area51_root = os.path.join(os.environ['REPOSITORY_ROOT'], 'area51')
-        self.DLL_path = os.path.join(area51_root, 'instruments\\labbricks\\VNX_atten.dll')
-        self.DLL_path_old = os.path.join(area51_root, 'instruments\\labbricks\\VNX_atten_old.dll')
+        self.DLL_path = os.path.join(area51_root, 'instruments\\labbricks\\VNX_atten64.dll')
+        self.DLL_path_old = os.path.join(area51_root, 'instruments\\labbricks\\VNX_atten64.dll') #this will FAIL when attempting to get device ID; function no longer exists in DLL.
         self.autoRefresh = True
         try:
             self.VNXdll = yield ctypes.CDLL(self.DLL_path)

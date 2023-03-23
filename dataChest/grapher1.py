@@ -3,7 +3,7 @@
 import os
 import sys
 from importlib import import_module
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from functools import partial
 import pyqtgraph as pg
 import pyqtgraph.exporters
@@ -45,7 +45,8 @@ class TimeAxisItem(pg.AxisItem):
                                   .strftime("%H:%M:%S")) for value in values]
 
 
-class Grapher(QtGui.QWidget):
+                                  
+class Grapher(QtWidgets.QWidget): # python 2to3: QtGui.QWidget >> QtWidgets.QWidget
 
     def __init__(self, parent = None):
         self.cb = None
@@ -59,22 +60,22 @@ class Grapher(QtGui.QWidget):
         self.pluginRoot = os.environ["REPOSITORY_ROOT"]
         self.pluginRoot = os.path.join(self.pluginRoot, "servers", "dataChest", "Plugins")
 
-        self.filters = QtCore.QStringList()
+        self.filters = [] #         self.filters = QtCore.QStringList()
         self.filters.append("*.hdf5")
         self.dir_filters = QtCore.QRegExp('^((?!MATLABData|TextData|TEST).)*$')
 
         self.d = dataChest(None, True)
 
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
 
         # Directory browser configuration.
-        self.model = QtGui.QFileSystemModel(self)
-        self.model.setRootPath(QtCore.QString(self.root))
+        self.model = QtWidgets.QFileSystemModel(self)
+        self.model.setRootPath(self.root)         # self.model.setRootPath(QtCore.QString(self.root))
         self.model.setNameFilterDisables(False)
         self.model.nameFilterDisables()
         self.model.setNameFilters(self.filters)
         
-        self.proxyModel = QtGui.QSortFilterProxyModel()
+        self.proxyModel = QtCore.QSortFilterProxyModel()
         self.proxyModel.setSourceModel(self.model)
         self.proxyModel.setFilterRegExp(self.dir_filters)
         
@@ -83,15 +84,15 @@ class Grapher(QtGui.QWidget):
 
         self.indexRoot = self.model.index(self.model.rootPath())
 
-        self.directoryBrowserLabel = QtGui.QLabel(self)
+        self.directoryBrowserLabel = QtWidgets.QLabel(self)
         self.directoryBrowserLabel.setText("Directory Browser:")
 
-        self.directoryTree = QtGui.QTreeView(self)
+        self.directoryTree = QtWidgets.QTreeView(self)
         self.directoryTree.setModel(self.proxyModel)
         self.directoryTree.setRootIndex(self.proxyModel.mapFromSource(self.indexRoot))
         self.directoryTree.setIndentation(10)
         self.directoryTree.hideColumn(2)
-        self.directoryTree.header().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        self.directoryTree.header().setResizeMode(QtWidgets.QHeaderView.ResizeToContents)
         self.directoryTree.header().setStretchLastSection(False)
         self.directoryTree.clicked.connect(self.fileBrowserSelectionMade)
 
@@ -99,51 +100,51 @@ class Grapher(QtGui.QWidget):
         # self.sort.setSourceModel(self.model)
         self.directoryTree.setSortingEnabled(True)
 
-        self.dirTreeWidget = QtGui.QWidget(self)
-        self.dirTreeLayout = QtGui.QVBoxLayout()
+        self.dirTreeWidget = QtWidgets.QWidget(self)
+        self.dirTreeLayout = QtWidgets.QVBoxLayout()
         self.dirTreeWidget.setLayout(self.dirTreeLayout)
         self.dirTreeLayout.addWidget(self.directoryBrowserLabel)
         self.dirTreeLayout.addWidget(self.directoryTree)
         self.dirTreeWidget.installEventFilter(self)
 
         # Plot types drop down list configuration.
-        self.plotTypesComboBoxLabel = QtGui.QLabel(self)
+        self.plotTypesComboBoxLabel = QtWidgets.QLabel(self)
         self.plotTypesComboBoxLabel.setText("Available Plot Types:")
 
-        self.plotTypesComboBox = QtGui.QComboBox(self)
+        self.plotTypesComboBox = QtWidgets.QComboBox(self)
         self.plotTypesComboBox.activated[str].connect(self.plotTypeSelected)
 
         # Configure scrolling widget.
-        self.scrollWidget = QtGui.QWidget(self)
-        self.scrollLayout = QtGui.QHBoxLayout()
+        self.scrollWidget = QtWidgets.QWidget(self)
+        self.scrollLayout = QtWidgets.QHBoxLayout()
         self.scrollWidget.setLayout(self.scrollLayout)
-        self.scrollArea = QtGui.QScrollArea(self)
+        self.scrollArea = QtWidgets.QScrollArea(self)
         self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.scrollArea.setWidget(self.scrollWidget)
         self.scrollArea.setWidgetResizable(True) # What happens without?
 
         # Configure plugin widget.
-        self.pluginTypesList = QtGui.QListWidget(self)
+        self.pluginTypesList = QtWidgets.QListWidget(self)
         self.populatePluginList(self)
 
         self.pluginTypesList.itemClicked.connect(self.pluginClicked)
         self.pluginTypesList.setAlternatingRowColors(True)
-        self.pluginTypesWidget = QtGui.QWidget(self)
-        self.pluginTypesLayout = QtGui.QVBoxLayout()
+        self.pluginTypesWidget = QtWidgets.QWidget(self)
+        self.pluginTypesLayout = QtWidgets.QVBoxLayout()
         self.pluginTypesWidget.setLayout(self.pluginTypesLayout)
         self.pluginTypesLayout.addWidget(self.pluginTypesList)
         self.pluginTypesLayout.addWidget(self.scrollArea)
 
-        self.plotOptionsWidget = QtGui.QWidget(self)
-        self.plotOptionsLayout = QtGui.QVBoxLayout()
+        self.plotOptionsWidget = QtWidgets.QWidget(self)
+        self.plotOptionsLayout = QtWidgets.QVBoxLayout()
         self.plotOptionsWidget.setLayout(self.plotOptionsLayout)
         self.plotOptionsLayout.addWidget(self.plotTypesComboBoxLabel)
         self.plotOptionsLayout.addWidget(self.plotTypesComboBox)
         self.plotOptionsLayout.addWidget(self.scrollArea)
         self.plotOptionButtonList = []
 
-        self.splitterVertical = QtGui.QSplitter(QtCore.Qt.Vertical) #, self)
+        self.splitterVertical = QtWidgets.QSplitter(QtCore.Qt.Vertical) #, self)
         self.splitterVertical.addWidget(self.dirTreeWidget)
         self.splitterVertical.addWidget(self.pluginTypesList)
         self.splitterVertical.addWidget(self.plotOptionsWidget)
@@ -156,32 +157,32 @@ class Grapher(QtGui.QWidget):
         self.graphicsLayout = pg.GraphicsLayoutWidget(self)
         self.graphicsLayout.setMinimumHeight(740)
 
-        self.graphsWidget = QtGui.QWidget(self)
+        self.graphsWidget = QtWidgets.QWidget(self)
 
-        self.graphsLayout = QtGui.QVBoxLayout()
+        self.graphsLayout = QtWidgets.QVBoxLayout()
         self.graphsWidget.setLayout(self.graphsLayout)
         self.graphsLayout.addWidget(self.graphicsLayout)
 
-        self.graphScrollArea = QtGui.QScrollArea(self)
+        self.graphScrollArea = QtWidgets.QScrollArea(self)
         self.graphScrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.graphScrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.graphScrollArea.setWidget(self.graphsWidget)
         self.graphScrollArea.setWidgetResizable(True) # What happens without?
 
-        self.parameterTable = QtGui.QTableWidget(self)
+        self.parameterTable = QtWidgets.QTableWidget(self)
         self.parameterTable.horizontalHeader().setStretchLastSection(False)
         
-        self.coBox = QtGui.QLabel(self)
+        self.coBox = QtWidgets.QLabel(self)
         coFont = QtGui.QFont()
         coFont.setPointSize(12)
         coFont.setBold(True)
         self.coBox.setFont(coFont)
         self.coBox.setAlignment(QtCore.Qt.AlignCenter)
-        self.coSplitter = QtGui.QSplitter(QtCore.Qt.Vertical)
+        self.coSplitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         self.coSplitter.addWidget(self.parameterTable)
         self.coSplitter.addWidget(self.coBox)
 
-        self.splitterHorizontal = QtGui.QSplitter(QtCore.Qt.Horizontal)
+        self.splitterHorizontal = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.splitterHorizontal.addWidget(self.splitterVertical)
         self.splitterHorizontal.addWidget(self.graphScrollArea)
         self.splitterHorizontal.addWidget(self.coSplitter)
@@ -189,7 +190,7 @@ class Grapher(QtGui.QWidget):
 
         hbox.addWidget(self.splitterHorizontal)
         self.setLayout(hbox)
-        QtGui.QApplication.setStyle(QtGui.QStyleFactory.create('Cleanlooks'))
+        QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create('Cleanlooks'))
 
         self.groupVarsWithCommonUnits = True
 
@@ -262,11 +263,11 @@ class Grapher(QtGui.QWidget):
                 if pluginDescription.startswith('#DESCR:'):
                     pluginDescription = pluginDescription[8:].strip()
                     # listItem = QtGui.QListWidgetItem(pluginTitle + '   |   ' + pluginDescription)
-                    listItem = QtGui.QListWidgetItem(pluginFilename)
+                    listItem = QtWidgets.QListWidgetItem(pluginFilename)
                 else:
-                    listItem = QtGui.QListWidgetItem(pluginTitle)
+                    listItem = QtWidgets.QListWidgetItem(pluginTitle)
             else:
-                listItem = QtGui.QListWidgetItem(pluginFilename)
+                listItem = QtWidgets.QListWidgetItem(pluginFilename)
 
             listItem.setWhatsThis(pluginFilename)
             listItem.setFlags(QtCore.Qt.ItemIsUserCheckable)
@@ -374,7 +375,7 @@ class Grapher(QtGui.QWidget):
         for parameter in self.parameters:
             if skip == False:
                 parameterValueText = str(d.getParameter(str(parameter)))
-                parameterValue = QtGui.QTableWidgetItem(parameterValueText)
+                parameterValue = QtWidgets.QTableWidgetItem(parameterValueText)
                 parameterValue.setToolTip(parameterValueText)
                 try:
                     parameterUnit = d.getParameter(str(parameter) + ' Units')
@@ -382,23 +383,23 @@ class Grapher(QtGui.QWidget):
                 except:
                     parameterUnit = None
                 parameterText = str(parameter)
-                parameter = QtGui.QTableWidgetItem(parameterText)
+                parameter = QtWidgets.QTableWidgetItem(parameterText)
                 parameter.setToolTip(parameterText)
                 self.parameterTable.setItem(i, 0, parameter)
                 self.parameterTable.setItem(i, 1, parameterValue)
 
                 if parameterUnit is not None:
                     parameterUnitText = str(parameterUnit)
-                    parameterUnit = QtGui.QTableWidgetItem(parameterUnitText)
+                    parameterUnit = QtWidgets.QTableWidgetItem(parameterUnitText)
                     parameterUnit.setToolTip(parameterUnitText)
                     self.parameterTable.setItem(i, 2, parameterUnit)
                 i = i+1
             else:
                 skip = False
 
-        self.parameterTable.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.Interactive)
-        self.parameterTable.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
-        self.parameterTable.horizontalHeader().setResizeMode(2, QtGui.QHeaderView.Interactive)
+        self.parameterTable.horizontalHeader().setResizeMode(0, QtWidgets.QHeaderView.Interactive)
+        self.parameterTable.horizontalHeader().setResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        self.parameterTable.horizontalHeader().setResizeMode(2, QtWidgets.QHeaderView.Interactive)
 
     def updatePlotTypeSelector(self):
         """Update plotTypes list based on selected dataset.  Selects currently
@@ -436,25 +437,39 @@ class Grapher(QtGui.QWidget):
         self.clearLayout(self.scrollLayout)
         for elem in self.plotOptionButtonList:
             del elem
-        optionsSlice = QtGui.QVBoxLayout()
+        optionsSlice = QtWidgets.QVBoxLayout()
         self.plotOptionButtonList = [optionsSlice]
-        self.optionsGroup = QtGui.QButtonGroup()
+        self.optionsGroup = QtWidgets.QButtonGroup()
         if plotType == "1D" or plotType == "Histogram":
             self.optionsGroup.setExclusive(False)
         for var in self.depVarsList:
             if plotType == "1D" or plotType == "Histogram":
-                checkBox = QtGui.QCheckBox(var[0], self)  # widget to log
-                checkBox.toggled.connect(partial(self.varStateChanged, var[0]))
+                # python 2to3: decode numpy.bytes_ strings
+                varstr = var[0]
+                if isinstance(var[0], np.bytes_):
+                    varstr = var[0].decode('UTF-8') 
+                    
+                checkBox = QtWidgets.QCheckBox(varstr, self)  # widget to log python 2to3: varstr hack for nump.bytes_
+                checkBox.toggled.connect(partial(self.varStateChanged, varstr)) # python 2to3: varstr hack for nump.bytes_
+                
                 if var[0] in self.selectedDepVars:
                     checkBox.setCheckState(QtCore.Qt.Checked)
             elif plotType == '2D Scan':
-                checkBox = QtGui.QRadioButton(var[0], self)
-                checkBox.toggled.connect(partial(self.varStateChanged, var[0]))
+                # python 2to3: decode numpy.bytes_ strings
+                varstr = var[0]
+                if isinstance(var[0], np.bytes_):
+                    varstr = var[0].decode('UTF-8')
+                    
+                checkBox = QtWidgets.QRadioButton(varstr, self)
+                checkBox.toggled.connect(partial(self.varStateChanged, varstr))
                 if var[0] in self.selectedDepVars:
                     checkBox.setChecked(True)
-            optionsSlice.addWidget(checkBox)
-            self.optionsGroup.addButton(checkBox)
-            self.plotOptionButtonList.append(checkBox)
+            try:
+                optionsSlice.addWidget(checkBox)
+                self.optionsGroup.addButton(checkBox)
+                self.plotOptionButtonList.append(checkBox)
+            except Exception:
+                pass
         self.selectedDepVars = [str(button.text()) for button in self.optionsGroup.buttons()
                                                     if button.isChecked()]
         optionsSlice.addStretch(1)
@@ -508,18 +523,17 @@ class Grapher(QtGui.QWidget):
         stime=time()
         if self.cb is not None:
             self.cb.hide()
-
-        varNames = [var[0] for var in self.depVarsList]
-        varUnits = [var[3] for var in self.depVarsList]
-        indicies = [varNames.index(var)+1 for var in self.selectedDepVars]
+        varNames = [var[0].decode('UTF-8') if isinstance(var[0],np.bytes_) else var[0] for var in self.depVarsList]        # python 2to3: decode numpy.bytes_ strings
+        varUnits = [var[3].decode('UTF-8') if isinstance(var[3],np.bytes_) else var[3] for var in self.depVarsList]        # python 2to3: decode numpy.bytes_ strings
+        indicies = [varNames.index((var.decode('UTF-8') if isinstance(var,np.bytes_) else var))+1 for var in self.selectedDepVars]
         commonUnit = varUnits[indicies[0]-1]
         yVals = self.selectedData[indicies,:]
         pOptions = {
                 "X Scale": "Linear",
-                "X Label": self.indepVarsList[0][0],
-                "X Units": self.indepVarsList[0][3],
+                "X Label": self.indepVarsList[0][0].decode('UTF-8') if isinstance(self.indepVarsList[0][0], np.bytes_) else self.indepVarsList[0][0],   # python 2to3: decode numpy.bytes_ strings
+                "X Units": self.indepVarsList[0][3].decode('UTF-8') if isinstance(self.indepVarsList[0][3], np.bytes_) else self.indepVarsList[0][3],   # python 2to3: decode numpy.bytes_ strings
                 "Y Scale": "Linear",
-                "Y Label": '',
+                "Y Label": '', # python 2to3: this axis is not labeled in old version. Maybe want to change this?
                 "Y Units": commonUnit,
                 "Title": self.datasetName,
                 "Color": None,
@@ -557,8 +571,8 @@ class Grapher(QtGui.QWidget):
     def plot2D(self):
         stime = time()
         (xVals, yVals), depGrids = self.extractIndepData(self.selectedData)
-        varNames = [var[0] for var in self.depVarsList]
-        index = varNames.index(self.selectedDepVars[0])
+        varNames = [var[0].decode('UTF-8') if isinstance(var[0],np.bytes_) else var[0] for var in self.depVarsList]     # python 2to3: decode numpy.bytes_ strings
+        index = varNames.index(self.selectedDepVars[0].decode('UTF-8') if isinstance(self.selectedDepVars[0], np.bytes_) else self.selectedDepVars[0])     # python 2to3: decode numpy.bytes_ strings
         self.graphicsLayout.clear()
         axis = {}
         for i in range(len(self.indepVarsList)):
@@ -567,8 +581,10 @@ class Grapher(QtGui.QWidget):
                 pOptions[['X Units','Y Units'][i]] = None
         self.p = self.graphicsLayout.addPlot(axisItems=axis, row=1, col=1)
         self.p.setTitle(self.datasetName, size='22pt')
-        self.p.setLabel('bottom', self.indepVarsList[0][0], units=self.indepVarsList[0][3], **STYLE_DEFAULTS)
-        self.p.setLabel('left', self.indepVarsList[1][0], units=self.indepVarsList[1][3], **STYLE_DEFAULTS)
+        self.p.setLabel('bottom', self.indepVarsList[0][0].decode('UTF-8') if isinstance(self.indepVarsList[0][0], np.bytes_) else self.indepVarsList[0][0], 
+                        units=self.indepVarsList[0][3].decode('UTF-8') if isinstance(self.indepVarsList[0][3], np.bytes_) else self.indepVarsList[0][3], **STYLE_DEFAULTS) # python 2to3: decode numpy.bytes_ strings
+        self.p.setLabel('left', self.indepVarsList[1][0].decode('UTF-8') if isinstance(self.indepVarsList[1][0], np.bytes_) else self.indepVarsList[1][0], 
+                        self.indepVarsList[1][3].decode('UTF-8') if isinstance(self.indepVarsList[1][3], np.bytes_) else self.indepVarsList[1][3], **STYLE_DEFAULTS) # python 2to3: decode numpy.bytes_ strings
         self.p.getAxis('bottom').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
         self.p.getAxis('left').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22))
         img = pg.ImageItem()
@@ -578,13 +594,12 @@ class Grapher(QtGui.QWidget):
         pixelY = (yVals[-1]-yVals[0])/len(yVals)
         img.translate(xVals[0],yVals[0])
         img.scale(pixelX,pixelY)
-        print(depGrids[index])
-        print(xVals)
-        print(yVals)
+        # print(depGrids[index])
+        # print(xVals)
+        # print(yVals)
         self.xValPass = xVals
         self.yValPass = yVals
         self.zValPass = depGrids[index]
-       
         self.proxy = pg.SignalProxy(self.p.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
 
         # bipolar colormap
@@ -626,9 +641,9 @@ class Grapher(QtGui.QWidget):
         for i in reversed(list(range(layout.count()))):
             item = layout.itemAt(i)
 
-            if isinstance(item, QtGui.QWidgetItem):
+            if isinstance(item, QtWidgets.QWidgetItem):
                 item.widget().close()
-            elif not isinstance(item, QtGui.QSpacerItem):
+            elif not isinstance(item, QtWidgets.QSpacerItem):
                 self.clearLayout(item.layout())
             # remove the item from layout
             layout.removeItem(item)
@@ -730,8 +745,11 @@ class Grapher(QtGui.QWidget):
             yLen = len(self.yValPass)
             
             yMouseIndex = int(floor((self.yMouseVal - yMin) / ((yMax - yMin) / yLen)))
-            self.zMouseVal = self.zValPass[xMouseIndex, yMouseIndex]
-            self.coBox.setText(str(round(self.zMouseVal, 3)) + ', ' + str(round(self.yMouseVal, 3)) + ', ' + str(round(self.zMouseVal, 3)))
+            try:
+                self.zMouseVal = self.zValPass[xMouseIndex, yMouseIndex]
+                self.coBox.setText(str(round(self.zMouseVal, 3)) + ', ' + str(round(self.yMouseVal, 3)) + ', ' + str(round(self.zMouseVal, 3)))
+            except Exception:
+                pass
         #self.co_label.setText("<span style='font-size: 14pt; color: white'> x = %0.2f, <span style='color: white'> y = %0.2f</span>" % (mousePoint.x(), mousePoint.y()))
 
 class ColorBar(pg.GraphicsObject):
@@ -801,15 +819,9 @@ class ColorBar(pg.GraphicsObject):
 
     def mouseReleaseEvent(self, *args, **kwargs):
         self.setOpacity(1.0)
-      
-        
-        
-
-    
-
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName('MyWindow')
 
     main = Grapher()
