@@ -33,7 +33,7 @@ timeout = 20
 """
 
 import string
-import visa
+import pyvisa as visa
 from pyvisa.errors import VisaIOError
 
 from twisted.internet.defer import inlineCallbacks
