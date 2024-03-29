@@ -38,34 +38,38 @@ from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
 import time
 
+
 class SIM925Server(GPIBManagedServer):
     """Provides basic control for SRS SIM925 Multiplexer Module"""
-    name = 'SIM925'
-    deviceName = 'STANFORD RESEARCH SYSTEMS SIM925' # *IDN? = "Stanford_Research_Systems,SIM921,s/n105794,ver3.6"
+
+    name = "SIM925"
+    deviceName = "STANFORD RESEARCH SYSTEMS SIM925"  # *IDN? = "Stanford_Research_Systems,SIM921,s/n105794,ver3.6"
     deviceWrapper = GPIBDeviceWrapper
-    
+
     def __init__(self):
         GPIBManagedServer.__init__(self)
-        self.channel = 0 #channel 2 is the FAA pill.  GGG pill is chan 1
+        self.channel = 0  # channel 2 is the FAA pill.  GGG pill is chan 1
         self.lastTime = time.time()
 
-    @setting(101, 'Get Time Since Channel Set', returns=['v[ms]'])
+    @setting(101, "Get Time Since Channel Set", returns=["v[ms]"])
     def getTimeSinceChannelSet(self, c):
         """Get the time since the current channel was last changed."""
         return time.time() - self.lastTime
 
-    @setting(102, 'Channel', channel=['v'], returns=['v'])
+    @setting(102, "Channel", channel=["v"], returns=["v"])
     def chan(self, c, channel=None):
         """Get or set the current channel."""
         if channel != None and channel != self.channel:
             self.channel = channel
             dev = self.selectedDevice(c)
-            yield dev.write("CHAN %d" %channel)
+            yield dev.write("CHAN %d" % channel)
             self.lastTime = time.time()
-        returnValue( self.channel )
+        returnValue(self.channel)
+
 
 __server__ = SIM925Server()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from labrad import util
+
     util.runServer(__server__)

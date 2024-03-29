@@ -23,13 +23,14 @@ __status__ = "Beta"
 # Import MNodeEditor libraries
 from MNodeEditor.MNode import MNode
 from MNodeEditor.MAnchor import MAnchor
+
 # Numpy to help with numbers
 import numpy as np
 
 
 class spikeFilter(MNode):
     def __init__(self, *args, **kwargs):
-        '''Initialize parent, and begin the parent.'''
+        """Initialize parent, and begin the parent."""
         # Initialize parent.
         super(spikeFilter, self).__init__(*args, **kwargs)
         # Begin parent.
@@ -40,20 +41,20 @@ class spikeFilter(MNode):
         self.curr = np.nan
 
     def onBegin(self, *args, **kwargs):
-        '''Called when parent finished beginning.'''
+        """Called when parent finished beginning."""
         # Anchor for the raw data input
-        self.dataAnchor = self.addAnchor(name='raw_data', type='input')
+        self.dataAnchor = self.addAnchor(name="raw_data", type="input")
         # Anchor for the threshold (we dont necessarily need
         # to create an anchor for this, but we will anyway.)
-        self.thresholdAnchor = self.addAnchor(name='threshold', type='input')
+        self.thresholdAnchor = self.addAnchor(name="threshold", type="input")
         # An anchor for the data output.
         # Note that this anchor has an 'ouput' type.
-        self.output = self.addAnchor(name='filtered_data', type='output')
+        self.output = self.addAnchor(name="filtered_data", type="output")
         # Set the title of our node.
         self.setTitle("Spike Filter")
 
     def onRefreshData(self):
-        '''Refresh anchor data.'''
+        """Refresh anchor data."""
         # Get the current reading from the data anchor.
         self.curr = self.dataAnchor.getData()
         # Get the threshold value from the threshold anchor.
@@ -61,8 +62,8 @@ class spikeFilter(MNode):
         # If the previous reading is a valid number (not
         # necessarily the case on startup) then continue.
         if self.prev != np.nan or self.prev != None:
-                # If the absolute value of the difference is less than
-                # the threshold...
+            # If the absolute value of the difference is less than
+            # the threshold...
             if abs(self.prev - self.curr) < threshold:
                 # Then set the data on the output anchor to the current
                 # reading.

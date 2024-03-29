@@ -36,55 +36,55 @@ import labrad.units as units
 
 
 class AgilentPSServer(GPIBManagedServer):
-    name = 'Agilent 6641A PS'
-    deviceName = 'HEWLETT-PACKARD 6641A'
+    name = "Agilent 6641A PS"
+    deviceName = "HEWLETT-PACKARD 6641A"
     deviceWrapper = GPIBDeviceWrapper
-    
-    @setting(10000, 'Output State', os=['b'], returns=['b'])
+
+    @setting(10000, "Output State", os=["b"], returns=["b"])
     def output_state(self, c, os=None):
         """Get or set the output state, on or off."""
         dev = self.selectedDevice(c)
         if os is None:
-            resp = yield dev.query('OUTP?')
+            resp = yield dev.query("OUTP?")
             os = bool(int(resp))
         else:
-            print('OUTP %i' % int(os))
-            yield dev.write('OUTP %i' % int(os))
+            print("OUTP %i" % int(os))
+            yield dev.write("OUTP %i" % int(os))
         returnValue(os)
 
-    @setting(10001, 'Current', cur=['v[A]'], returns=['v[A]'])
+    @setting(10001, "Current", cur=["v[A]"], returns=["v[A]"])
     def current(self, c, cur=None):
         """Get or set the current."""
         dev = self.selectedDevice(c)
         if cur is None:
-            resp = yield dev.query('MEAS:CURR?')
-            cur = float(resp)*units.A
+            resp = yield dev.query("MEAS:CURR?")
+            cur = float(resp) * units.A
         else:
-            yield dev.write('CURR %f' % cur['A'])
+            yield dev.write("CURR %f" % cur["A"])
         returnValue(cur)
 
-    @setting(10002, 'Voltage', v=['v[V]'], returns=['v[V]'])
+    @setting(10002, "Voltage", v=["v[V]"], returns=["v[V]"])
     def voltage(self, c, v=None):
         """Get or set the voltage."""
         dev = self.selectedDevice(c)
         if v is None:
-            resp = yield dev.query('MEAS:VOLT?')
-            v = float(resp)*units.V
+            resp = yield dev.query("MEAS:VOLT?")
+            v = float(resp) * units.V
         else:
-            yield dev.write('VOLT %f' % v['V'])
+            yield dev.write("VOLT %f" % v["V"])
         returnValue(v)
-    
-    @setting(10003, 'Reset')
+
+    @setting(10003, "Reset")
     def reset(self, c):
         """Reset the PS."""
         dev = self.selectedDevice(c)
-        yield dev.write('*RST')
-    
-    @setting(10004, 'Get Operating Mode', returns=['s'])
+        yield dev.write("*RST")
+
+    @setting(10004, "Get Operating Mode", returns=["s"])
     def getOpsReg(self, c):
         """Get the operating mode."""
         dev = self.selectedDevice(c)
-        returnedVal = yield dev.query('STAT:OPER:COND?')#.strip('\x00'))
+        returnedVal = yield dev.query("STAT:OPER:COND?")  # .strip('\x00'))
         opCode = int(returnedVal)
         codeList = [int(x) for x in "{0:016b}".format(opCode)]
         codeList.reverse()
@@ -92,41 +92,60 @@ class AgilentPSServer(GPIBManagedServer):
         WTG = bool(codeList[5])
         CV = bool(codeList[8])
         CC = bool(codeList[10])
-        if CV: returnValue( 'CV Mode' )
-        elif CC: returnValue( 'CC Mode' )
-        else: returnValue( 'OutputOff' )
-    
-    @setting(10005, 'Initialize PS')
-    def initialize(self, c, currentLimit=9.0*units.A):
+        if CV:
+            returnValue("CV Mode")
+        elif CC:
+            returnValue("CC Mode")
+        else:
+            returnValue("OutputOff")
+
+    @setting(10005, "Initialize PS")
+    def initialize(self, c, currentLimit=9.0 * units.A):
         """Initialize the PS, keeping the current and voltage as they are.  The default current limit is 9A."""
         dev = self.selectedDevice(c)
-        #current = yield self.current(c)
+        # current = yield self.current(c)
         cur = yield self.current(c)
-        if cur-(0.01*units.A) >= currentLimit:
-            message = 'Current too high! Manually lower before trying to run again. Please quit now.\n'
-            #self.log.log(message, alert=True)
+        if cur - (0.01 * units.A) >= currentLimit:
+            message = "Current too high! Manually lower before trying to run again. Please quit now.\n"
+            # self.log.log(message, alert=True)
         else:
             state = yield self.getOpsReg(c)
-            if state == 'OutputOff':
-                message = 'Output Off. Setting Current to '+str(currentLimit)+' Amps and voltage to 0 Volts.\n'
-                #self.log.log(message)
+            if state == "OutputOff":
+                message = (
+                    "Output Off. Setting Current to "
+                    + str(currentLimit)
+                    + " Amps and voltage to 0 Volts.\n"
+                )
+                # self.log.log(message)
                 yield self.reset(c)
-                yield self.current(c,currentLimit)
-                yield self.voltage(c,0*units.V)
-                yield self.output_state(c,True)
-            elif state == 'CV Mode':
-                message = 'Starting in CV Mode. Setting Current to '+str(currentLimit)+' Amps.\n'
-                #self.log.log(message)
-                yield self.current(c, currentLimit )
-            elif state == 'CC Mode':
+                yield self.current(c, currentLimit)
+                yield self.voltage(c, 0 * units.V)
+                yield self.output_state(c, True)
+            elif state == "CV Mode":
+                message = (
+                    "Starting in CV Mode. Setting Current to "
+                    + str(currentLimit)
+                    + " Amps.\n"
+                )
+                # self.log.log(message)
+                yield self.current(c, currentLimit)
+            elif state == "CC Mode":
                 V_now = yield self.voltage(c)
-                message = 'Starting in CC Mode. Setting Current to '+str(currentLimit)+' Amps and voltage to '+str(V_now)+' Volts.\n'
-                #self.log.log(message)
-                yield self.voltage(c, V_now )
-                yield self.current(c, currentLimit )
+                message = (
+                    "Starting in CC Mode. Setting Current to "
+                    + str(currentLimit)
+                    + " Amps and voltage to "
+                    + str(V_now)
+                    + " Volts.\n"
+                )
+                # self.log.log(message)
+                yield self.voltage(c, V_now)
+                yield self.current(c, currentLimit)
+
 
 __server__ = AgilentPSServer()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from labrad import util
+
     util.runServer(__server__)

@@ -1,6 +1,6 @@
 # Copyright (C) 2008  Matthew Neeley
-#           (C) 2015  Chris Wilen, Ivan Pechenezhskiy, Joseph Suttle 
-#          
+#           (C) 2015  Chris Wilen, Ivan Pechenezhskiy, Joseph Suttle
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
@@ -38,17 +38,20 @@ from pyvisa.errors import VisaIOError
 
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.reactor import callLater
+
 # from twisted.internet.task import LoopingCall
 
 from labrad.server import LabradServer, setting
 from labrad.errors import DeviceNotSelectedError
 import labrad.units as units
 
+
 class GPIBBusServer(LabradServer):
     """Provides direct access to GPIB-enabled devices."""
-    name = '%LABRADNODE% GPIB Bus'
+
+    name = "%LABRADNODE% GPIB Bus"
     # refreshInterval = 10
-    defaultTimeout = 1.0*units.s
+    defaultTimeout = 1.0 * units.s
 
     def initServer(self):
         self.mydevices = {}
@@ -70,10 +73,10 @@ class GPIBBusServer(LabradServer):
 
     # @inlineCallbacks
     # def stopServer(self):
-        # """Kill the device refresh loop and wait for it to terminate."""
-        # if hasattr(self, 'refresher'):
-            # self.refresher.stop()
-            # yield self.refresherDone
+    # """Kill the device refresh loop and wait for it to terminate."""
+    # if hasattr(self, 'refresher'):
+    # self.refresher.stop()
+    # yield self.refresherDone
 
     def refreshDevices(self):
         """Refresh the list of known devices on this bus.
@@ -89,37 +92,36 @@ class GPIBBusServer(LabradServer):
             deletions = set(self.mydevices.keys()) - set(addresses)
             for addr in additions:
                 try:
-                    if addr.startswith('GPIB'):
+                    if addr.startswith("GPIB"):
                         instName = addr
-                    elif addr.startswith('TCPIP'):
+                    elif addr.startswith("TCPIP"):
                         instName = addr
-                    elif addr.startswith('USB'):
-                        if '::INSTR' in addr:
+                    elif addr.startswith("USB"):
+                        if "::INSTR" in addr:
                             instName = addr
                         else:
-                            instName = addr + '::INSTR'
+                            instName = addr + "::INSTR"
                     else:
                         continue
-                    instr = self.rm.open_resource(instName,
-                            open_timeout=1.0)
+                    instr = self.rm.open_resource(instName, open_timeout=1.0)
                     # instr.write_termination = u'\r\n'
                     instr.clear()
                     self.mydevices[addr] = instr
-                    self.sendDeviceMessage('GPIB Device Connect', addr)
+                    self.sendDeviceMessage("GPIB Device Connect", addr)
                 except Exception as e:
-                    print(('Failed to add %s: %s' %(addr, str(e))))
+                    print(("Failed to add %s: %s" % (addr, str(e))))
             # Because pyvisa's list_resources() command doesn't list
             # TCPIP addresses, we need to make sure we don't delete them
             # everytime we refresh the address list.
             for addr in deletions:
-                if not(addr.startswith('TCPIP')):  
+                if not (addr.startswith("TCPIP")):
                     del self.mydevices[addr]
-                self.sendDeviceMessage('GPIB Device Disconnect', addr)
+                self.sendDeviceMessage("GPIB Device Disconnect", addr)
         except Exception as e:
-            print(('Problem while refreshing devices: %s' %str(e)))
-    
-    @setting(27,tcpAddr='s')    
-    def addTCPIPDevice(self,c,tcpAddr=None):
+            print(("Problem while refreshing devices: %s" % str(e)))
+
+    @setting(27, tcpAddr="s")
+    def addTCPIPDevice(self, c, tcpAddr=None):
         """refreshDevices fails to find TCPIP VISA objects, so you need
         to add them manually.  This function allows you to do that. The
         address should look like this: 'TCPIP::10.128.226.234::INSTR'.
@@ -127,17 +129,16 @@ class GPIBBusServer(LabradServer):
         try:
             self.rm = visa.ResourceManager()
             try:
-                instr = self.rm.open_resource(tcpAddr,
-                        open_timeout=10.0)
+                instr = self.rm.open_resource(tcpAddr, open_timeout=10.0)
                 # instr.write_termination = u'\r\n'
-                print((instr.query('*IDN?')))
+                print((instr.query("*IDN?")))
                 instr.clear()
                 self.mydevices[tcpAddr] = instr
-                self.sendDeviceMessage('GPIB Device Connect', tcpAddr)
+                self.sendDeviceMessage("GPIB Device Connect", tcpAddr)
             except Exception as e:
-                print(('Failed to add %s: %s' %(tcpAddr, str(e))))
+                print(("Failed to add %s: %s" % (tcpAddr, str(e))))
         except Exception as e:
-            print(('Problem while adding TCPIP address: %s' %str(e)))
+            print(("Problem while adding TCPIP address: %s" % str(e)))
 
     def getSocketsList(self):
         """Get a list of all connected devices.
@@ -149,32 +150,32 @@ class GPIBBusServer(LabradServer):
         return self.rm.list_resources()
 
     def sendDeviceMessage(self, msg, addr):
-        print(('%s: %s' %(msg, addr)))
+        print(("%s: %s" % (msg, addr)))
         self.client.manager.send_named_message(msg, (self.name, addr))
 
     def initContext(self, c):
-        c['timeout'] = self.defaultTimeout
-  
+        c["timeout"] = self.defaultTimeout
+
     def getDevice(self, c):
-        if 'addr' not in c:
+        if "addr" not in c:
             raise DeviceNotSelectedError("No GPIB address selected")
-        if c['addr'] not in self.mydevices:
-            raise Exception('Could not find device %s' %c['addr'])
-        instr = self.mydevices[c['addr']]
-        instr.timeout = c['timeout']['ms']
+        if c["addr"] not in self.mydevices:
+            raise Exception("Could not find device %s" % c["addr"])
+        instr = self.mydevices[c["addr"]]
+        instr.timeout = c["timeout"]["ms"]
         return instr
 
-    @setting(19, returns='*s')
+    @setting(19, returns="*s")
     def list_addresses(self, c):
         """Get a list of GPIB addresses on this bus."""
         return sorted(self.mydevices.keys())
 
     @setting(21)
     def refresh_devices(self, c):
-        '''Manually refresh devices.'''
+        """Manually refresh devices."""
         self.refreshDevices()
- 
-    @setting(20, addr='s', returns='s')
+
+    @setting(20, addr="s", returns="s")
     def address(self, c, addr=None):
         """Get or set the GPIB address for this context.
 
@@ -182,17 +183,17 @@ class GPIBBusServer(LabradServer):
         setting.
         """
         if addr is not None:
-            c['addr'] = addr
-        return c['addr']
+            c["addr"] = addr
+        return c["addr"]
 
-    @setting(22, time='v[s]', returns='v[s]')
+    @setting(22, time="v[s]", returns="v[s]")
     def timeout(self, c, time=None):
         """Get or set the GPIB timeout."""
         if time is not None:
-            c['timeout'] = time
-        return c['timeout'] 
+            c["timeout"] = time
+        return c["timeout"]
 
-    @setting(23, data='s', returns='')
+    @setting(23, data="s", returns="")
     def write(self, c, data):
         """Write a string to the GPIB bus."""
         try:
@@ -200,9 +201,9 @@ class GPIBBusServer(LabradServer):
             # print c['addr'], unicode(data)
             self.getDevice(c).write(str(data))
         except VisaIOError:
-            print(("Could not write '%s' to %s" %(str(data), c['addr'])))
+            print(("Could not write '%s' to %s" % (str(data), c["addr"])))
 
-    @setting(24, bytes='w', returns='s')
+    @setting(24, bytes="w", returns="s")
     def read_raw(self, c, bytes=None):
         """Read a raw string from the GPIB bus.
 
@@ -216,22 +217,22 @@ class GPIBBusServer(LabradServer):
             else:
                 return instr.read_raw(bytes)
         except VisaIOError:
-            print(("No response from %s" %c['addr']))
-            return ''
+            print(("No response from %s" % c["addr"]))
+            return ""
 
-    @setting(25, returns='s')
+    @setting(25, returns="s")
     def read(self, c):
         """Read from the GPIB bus."""
         try:
             # Note the explicit conversion from Unicode to ASCII.
             resp = self.getDevice(c).read()
-            resp = resp.strip(string.whitespace + '\x00')
-            return resp.encode('ascii', 'ignore')
+            resp = resp.strip(string.whitespace + "\x00")
+            return resp.encode("ascii", "ignore")
         except VisaIOError:
-            print(("No response from %s" %c['addr']))
-            return ''
+            print(("No response from %s" % c["addr"]))
+            return ""
 
-    @setting(26, data='s', returns='s')
+    @setting(26, data="s", returns="s")
     def query(self, c, data):
         """Make a GPIB query.
 
@@ -241,14 +242,16 @@ class GPIBBusServer(LabradServer):
         try:
             # Note the explicit conversion from Unicode to ASCII.
             resp = self.getDevice(c).query(data)
-            resp = resp.strip(string.whitespace + '\x00')
-            return resp.encode('ascii', 'ignore')
+            resp = resp.strip(string.whitespace + "\x00")
+            return resp.encode("ascii", "ignore")
         except VisaIOError:
-            print(("No response from %s to '%s'" %(c['addr'], str(data))))
-            return ''
+            print(("No response from %s to '%s'" % (c["addr"], str(data))))
+            return ""
+
 
 __server__ = GPIBBusServer()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from labrad import util
+
     util.runServer(__server__)

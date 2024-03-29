@@ -20,8 +20,9 @@ description = Monitors Leiden Devices
 """
 
 import sys
+
 sys.dont_write_bytecode = True
-import MGui     # Handles all GUI operations. Independent of  LabRAD.
+import MGui  # Handles all GUI operations. Independent of  LabRAD.
 
 from Device import Device
 from multiprocessing.pool import ThreadPool
@@ -32,14 +33,17 @@ import time
 from dataChestWrapper import *
 from tendo import singleton
 
+
 class nViewer:
     gui = None
-    devices =[]
-    
-    def __init__(self, parent = None):
+    devices = []
+
+    def __init__(self, parent=None):
         # Establish a connection to LabRAD.
         try:
-            me = singleton.SingleInstance() # will sys.exit(-1) if other instance is running
+            me = (
+                singleton.SingleInstance()
+            )  # will sys.exit(-1) if other instance is running
         except:
             print("Multiple instances cannot be running")
             time.sleep(2)
@@ -56,8 +60,7 @@ class nViewer:
             print("Please start the telecomm server")
             time.sleep(2)
             sys.exit(1)
-    
-        
+
         PT1000s = Device("PT1000s")
         PT1000s.connection(cxn)
         PT1000s.setServerName("goldstein_s_pt1000_temperature_monitor")
@@ -65,21 +68,19 @@ class nViewer:
         PT1000s.addParameter("50K", "get_temperatures", None, 1)
         PT1000s.selectDeviceCommand("select_device", 0)
         PT1000s.setYLabel("Temperature")
-        #PT1000s.addPlot()
+        # PT1000s.addPlot()
         PT1000s.begin()
         self.devices.append(PT1000s)
-        
-        
-   
+
         # Start the datalogger. This line can be commented
         # out if no datalogging is required.
-        #self.chest = dataChestWrapper(self.devices)
-        
+        # self.chest = dataChestWrapper(self.devices)
+
         # Create the gui.
         self.gui = MGui.MGui()
-        self.gui.startGui(self.devices, 'Leiden DR GUI', 'Leiden Data', tele)
-        
-        
+        self.gui.startGui(self.devices, "Leiden DR GUI", "Leiden Data", tele)
+
+
 # In Python, the main class's __init__() IS NOT automatically called.
-viewer = nViewer()    
+viewer = nViewer()
 viewer.__init__()

@@ -33,6 +33,7 @@ timeout = 20
 import os
 import sys
 import time
+
 # The LoopingCall function allows a function to be called periodically
 # on a time interval.
 from twisted.internet.task import LoopingCall
@@ -44,12 +45,12 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
-if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
+if __file__ in [f for f in os.listdir(".") if os.path.isfile(f)]:
     SCRIPT_PATH = os.path.dirname(os.getcwd())
 else:
     SCRIPT_PATH = os.path.dirname(__file__)
-LOCAL_PATH = SCRIPT_PATH.rsplit('instruments', 1)[0]
-INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, 'instruments')
+LOCAL_PATH = SCRIPT_PATH.rsplit("instruments", 1)[0]
+INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, "instruments")
 if INSTRUMENTS_PATH not in sys.path:
     sys.path.append(INSTRUMENTS_PATH)
 
@@ -61,7 +62,7 @@ class OmegaRatemeterWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to an Omega rate monitor."""
-        print(('Connecting to "%s" on port "%s"...' %(server.name, port)))
+        print(('Connecting to "%s" on port "%s"...' % (server.name, port)))
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -72,21 +73,21 @@ class OmegaRatemeterWrapper(DeviceWrapper):
         p.baudrate(9600)
         p.stopbits(1)
         p.bytesize(7)
-        p.parity('E')
+        p.parity("E")
         p.rts(False)
         p.timeout(5 * units.s)
         # Clear out the read buffer. This is necessary for some devices.
         p.read_line()
         yield p.send()
-        
+
     def packet(self):
         """Create a packet in our private context."""
         return self.server.packet(context=self.ctx)
-    
+
     def shutdown(self):
         """Disconnect from the serial port when we shut down."""
         return self.packet().close().send()
-    
+
     @inlineCallbacks
     def write_line(self, code):
         """Write data value to the rate monitor."""
@@ -100,22 +101,22 @@ class OmegaRatemeterWrapper(DeviceWrapper):
 
 
 class OmegaRatemeterServer(DeviceServer):
-    deviceName = 'Omega Ratemeter'
-    name = 'Omega Ratemeter'
+    deviceName = "Omega Ratemeter"
+    name = "Omega Ratemeter"
     deviceWrapper = OmegaRatemeterWrapper
-    
+
     @inlineCallbacks
     def initServer(self):
         """Initializes the server"""
-        print("Server Initializing...")        
+        print("Server Initializing...")
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
         # Set the maximum acceptible flow rate.
         self.thresholdMax = 5 * units.galUS / units.min
         # Set the minimum acceptible flow rate.
-        self.thresholdMin = 1.5* units.galUS / units.min
-        self.alertInterval = 10 # seconds
+        self.thresholdMin = 1.5 * units.galUS / units.min
+        self.alertInterval = 10  # seconds
         self.t1 = 0
         self.t2 = 0
 
@@ -132,18 +133,18 @@ class OmegaRatemeterServer(DeviceServer):
     @inlineCallbacks
     def stopServer(self):
         """Kill the device refresh loop and wait for it to terminate."""
-        if hasattr(self, 'refresher'):
+        if hasattr(self, "refresher"):
             self.refresher.stop()
             yield self.refresherDone
-      
-    @setting(9, 'Start Server', returns='b')
+
+    @setting(9, "Start Server", returns="b")
     def startServer(self, c):
         """Initialize the repeated flow rate measurement."""
         self.dev = self.selectedDevice(c)
         callLater(0.1, self.startRefreshing)
         return True
-    
-    @setting(10, 'Set Thresholds', low='v[ml/min]', high='v[ml/min]')
+
+    @setting(10, "Set Thresholds", low="v[ml/min]", high="v[ml/min]")
     def setThresholds(self, ctx, low, high):
         """
         This setting configures the trigger thresholds.
@@ -152,31 +153,31 @@ class OmegaRatemeterServer(DeviceServer):
         if low >= high:
             return "The minimum threshold cannot be greater than the maximum\
                     threshold"
-        self.thresholdMax = units.WithUnit(high,' ml / min')
-        self.thresholdMin = units.WithUnit(low,' ml / min')
+        self.thresholdMax = units.WithUnit(high, " ml / min")
+        self.thresholdMin = units.WithUnit(low, " ml / min")
         return True
-   
-    @setting(11, 'Set Alert Interval', interval='v[s]')
+
+    @setting(11, "Set Alert Interval", interval="v[s]")
     def setAlertInterval(self, ctx, interval):
         """Configure the alert interval."""
-        self.alertInterval = interval['s']
-    
-    @setting(12, 'Get Rate', returns='?')
+        self.alertInterval = interval["s"]
+
+    @setting(12, "Get Rate", returns="?")
     def rateSetting(self, ctx):
         """Setting that returns rate"""
         self.dev = self.selectedDevice(ctx)
         rate = yield self.getRate(self.dev)
         if rate is None:
-            rate = 0 * units.galUS/units.min
+            rate = 0 * units.galUS / units.min
         returnValue(rate)
-        
+
     @inlineCallbacks
     def getRate(self, dev):
         """Get flow rate."""
         # The string '@U?V' asks the device for the current reading
         # The '\r' at the end is the carriage return letting the device
         # know that it was the end of the command.
-        #print("getting rate")
+        # print("getting rate")
         yield dev.write_line("@U?V\r")
         yield sleep(0.5)
         reading = yield dev.read_line()
@@ -189,7 +190,7 @@ class OmegaRatemeterServer(DeviceServer):
             # Strip the 'L' off the string.
             reading = float(reading.lstrip("L"))
             # Convert the reading to the correct units.
-            gal = units.WithUnit(1, 'gal')
+            gal = units.WithUnit(1, "gal")
             output = reading * gal / units.min
             returnValue(output)
 
@@ -199,19 +200,25 @@ class OmegaRatemeterServer(DeviceServer):
         rate = yield self.getRate(self.dev)
         if rate:
             if rate > self.thresholdMax:
-                self.sendAlert(rate,
-                        "Flow rate above maximum threshold of {0}.".format(
-                        str(self.thresholdMax)))
+                self.sendAlert(
+                    rate,
+                    "Flow rate above maximum threshold of {0}.".format(
+                        str(self.thresholdMax)
+                    ),
+                )
             elif rate < self.thresholdMin:
-                self.sendAlert(rate,
-                        "Flow rate below minimum threshold of {0}.".format(
-                        str(self.thresholdMin)))
-        
+                self.sendAlert(
+                    rate,
+                    "Flow rate below minimum threshold of {0}.".format(
+                        str(self.thresholdMin)
+                    ),
+                )
+
     @inlineCallbacks
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'Omega Ratemeter', 'Links'], True)
+        yield reg.cd(["", "Servers", "Omega Ratemeter", "Links"], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -232,11 +239,15 @@ class OmegaRatemeterServer(DeviceServer):
             # Store the last time an alert was sent in the form of
             # seconds since the epoch (1/1/1970).
             self.t2 = self.t1
-            print(("{0}\n\t{1}\n\t{2}".format(message,
-                                             time.ctime(self.t1),
-                                             str(measurement))))
+            print(
+                (
+                    "{0}\n\t{1}\n\t{2}".format(
+                        message, time.ctime(self.t1), str(measurement)
+                    )
+                )
+            )
 
-    @inlineCallbacks    
+    @inlineCallbacks
     def findDevices(self):
         """Find available devices from a list stored in the registry."""
         devs = []
@@ -247,7 +258,7 @@ class OmegaRatemeterServer(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '{} - {}'.format(server, port)
+            devName = "{} - {}".format(server, port)
             devs += [(name, (server, port))]
         returnValue(devs)
 
@@ -255,5 +266,5 @@ class OmegaRatemeterServer(DeviceServer):
 __server__ = OmegaRatemeterServer()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     util.runServer(__server__)

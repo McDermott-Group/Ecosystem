@@ -35,8 +35,7 @@ class NodeTree:
     # def __init__(self):
     nodes = []
     # print os.getcwd()
-    path = os.path.dirname(os.path.abspath(
-        inspect.getfile(inspect.currentframe())))
+    path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
     os.chdir(path + "\MNodes")
     # print os.getcwd()
@@ -45,16 +44,16 @@ class NodeTree:
         # print file
 
     def getPipes(self):
-        '''Returns all pipes in the tree.'''
+        """Returns all pipes in the tree."""
         return self.pipes
 
     def addPipe(self, pipe):
-        '''Add a pipe to the tree.'''
+        """Add a pipe to the tree."""
         self.pipes.append(pipe)
         return self.pipes[-1]
 
     def deletePipe(self, pipeToDel):
-        '''Delete pipe from tree'''
+        """Delete pipe from tree"""
 
         pipeToDel.setLabel(None)
         start = pipeToDel.getStartAnchor()
@@ -72,7 +71,7 @@ class NodeTree:
             end.parentNode().pipeDisconnected()
 
     def connect(self, anchor, endAnchor=None):
-        '''Connect anchors with a pipe.'''
+        """Connect anchors with a pipe."""
         try:
             # print "endAnchor:", endAnchor
             # print "anchor:", anchor
@@ -93,7 +92,7 @@ class NodeTree:
                         self.getPipes()[-1].connect(anchor)
                         pipe = self.getPipes()[-1]
                     else:
-                       # print "Creating pipe"
+                        # print "Creating pipe"
                         pipe = self.addPipe(MPipe(anchor, self.scene))
 
                 anchor.pipeConnected(pipe)
@@ -115,4 +114,4 @@ class NodeTree:
         return self.nodes
 
     def getGuiNodes(self):
-        return [node for node in self.getNodes() if node.getType() == 'output']
+        return [node for node in self.getNodes() if node.getType() == "output"]

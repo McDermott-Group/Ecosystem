@@ -5,3 +5,5 @@ ghz_fpga/fpgalib/docs/~$ocumentationGHzDAC_V8.doc
 GUI/TestGui/NotifierConfig.mview
 GUI/LeidenVitalsGUI/NotifierConfig.mview
 .idea/
+*.bak*
+*.bakgit

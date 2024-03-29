@@ -35,32 +35,41 @@ from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad import units
 
+
 class SIM922Server(GPIBManagedServer):
     """Provides basic control for SRS SIM922 Diode Temperature Monitor Module"""
-    name = 'SIM922'
-    deviceName = 'STANFORD RESEARCH SYSTEMS SIM922' # *IDN? = "Stanford_Research_Systems,SIM922,s/n105794,ver3.6"
+
+    name = "SIM922"
+    deviceName = "STANFORD RESEARCH SYSTEMS SIM922"  # *IDN? = "Stanford_Research_Systems,SIM922,s/n105794,ver3.6"
     deviceWrapper = GPIBDeviceWrapper
 
-    @setting(101, 'Get Diode Temperatures', returns=['*v[K]'])
+    @setting(101, "Get Diode Temperatures", returns=["*v[K]"])
     def getDiodeTemperatures(self, c):
         """Get the temperatures of the Si Diode Thermometers connected to the first two slots of the SIM922."""
         dev = self.selectedDevice(c)
         diodeMonitorReturnString = yield dev.query("TVAL? 0")
-        temperatures = [float(x)*units.K for x in diodeMonitorReturnString.strip('\x00').split(',')][:2]
-        returnValue( temperatures )
+        temperatures = [
+            float(x) * units.K
+            for x in diodeMonitorReturnString.strip("\x00").split(",")
+        ][:2]
+        returnValue(temperatures)
 
-    @setting(102, 'Get Magnet Voltage', returns=['v[V]'])
+    @setting(102, "Get Magnet Voltage", returns=["v[V]"])
     def getMagnetVoltage(self, c):
         """Get the voltage across the magnet.  Two values are measured (third and fourth slots in the SIM922)
-           and averaged for the returned result."""
+        and averaged for the returned result."""
         dev = self.selectedDevice(c)
         dev.write("*CLS")
         diodeMonitorReturnString = yield dev.query("VOLT? 0")
-        magnetVoltages = [float(x) for x in diodeMonitorReturnString.strip('\x00').split(',')][2:]
-        returnValue( (abs(magnetVoltages[0])+abs(magnetVoltages[1]))/2*units.V )
+        magnetVoltages = [
+            float(x) for x in diodeMonitorReturnString.strip("\x00").split(",")
+        ][2:]
+        returnValue((abs(magnetVoltages[0]) + abs(magnetVoltages[1])) / 2 * units.V)
+
 
 __server__ = SIM922Server()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from labrad import util
+
     util.runServer(__server__)

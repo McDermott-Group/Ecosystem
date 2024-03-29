@@ -59,18 +59,22 @@ from labrad.errors import DeviceNotSelectedError
 from labrad.units import Hz, dBm, s
 from labrad import util
 
-MAX_NUM_RFGEN = 8       # Maximum number of connected RF generators. this is just a guess
-MAX_MODEL_NAME = 8      # Size of the SN. not a guess
+MAX_NUM_RFGEN = 8  # Maximum number of connected RF generators. this is just a guess
+MAX_MODEL_NAME = 8  # Size of the SN. not a guess
 
-#SC5503b specs
-MIN_FREQ = 50e6 * Hz 
-MAX_FREQ = 10E9 * Hz
+# SC5503b specs
+MIN_FREQ = 50e6 * Hz
+MAX_FREQ = 10e9 * Hz
 
 MIN_POW = -60 * dBm
 MAX_POW = +17 * dBm
 
+
 class RFParams(Structure):
-    _fields_ = [("frequency", c_ulonglong), ("powerLevel", c_float),] + [
+    _fields_ = [
+        ("frequency", c_ulonglong),
+        ("powerLevel", c_float),
+    ] + [
         (name, c_ubyte)
         for name in (
             "rfEnable",
@@ -81,7 +85,8 @@ class RFParams(Structure):
             "referenceSetting",
         )
     ]
-    
+
+
 class DeviceStatus(Structure):
     _fields_ = [
         (name, c_ubyte)
@@ -101,22 +106,25 @@ class DeviceStatus(Structure):
             "pxiClkEnable",
         )
     ]
-    
+
+
 class SCRFGenServer(LabradServer):
-    name = '%LABRADNODE% SignalCore RF Generators'
+    name = "%LABRADNODE% SignalCore RF Generators"
     refreshInterval = 60 * s
-    
+
     @inlineCallbacks
     def initServer(self):
         """Initialize the SignalCore RF Generator Server."""
-        #yield self.getRegistryKeys()
-        area51_root = os.path.join(os.environ['REPOSITORY_ROOT'], 'area51')
-        self.DLL_path = os.path.join(area51_root, 'instruments\\SignalCore\\sc5503b_usb.dll')
+        # yield self.getRegistryKeys()
+        area51_root = os.path.join(os.environ["REPOSITORY_ROOT"], "area51")
+        self.DLL_path = os.path.join(
+            area51_root, "instruments\\SignalCore\\sc5503b_usb.dll"
+        )
         self.autoRefresh = True
         try:
             self.SCdll = yield CDLL(self.DLL_path)
         except Exception:
-            raise Exception('Could not find SignalCore RF Generator DLL')
+            raise Exception("Could not find SignalCore RF Generator DLL")
 
         # Number of the currently connected devices.
         self._num_devs = 0
@@ -124,10 +132,12 @@ class SCRFGenServer(LabradServer):
         # frequency.
         self._last_freq = {}
         self._last_pow = {}
-        self._SNdict = {}        # Create serial number dictionary, keys are SN strings, values are C objects
-        self._status = 0      # running status
-        
-        #Set argtypes and restypes
+        self._SNdict = (
+            {}
+        )  # Create serial number dictionary, keys are SN strings, values are C objects
+        self._status = 0  # running status
+
+        # Set argtypes and restypes
         self.SCdll.sc5503b_OpenDevice.argtypes = [c_char_p, POINTER(c_void_p)]
         self.SCdll.sc5503b_CloseDevice.argtypes = [c_void_p]
         self.SCdll.sc5503b_SetFrequency.argtypes = [c_void_p, c_ulonglong]
@@ -135,9 +145,15 @@ class SCRFGenServer(LabradServer):
         self.SCdll.sc5503b_SetRfOutput.argtypes = [c_void_p, c_bool]
         self.SCdll.sc5503b_GetRfParameters.argtypes = [c_void_p, POINTER(RFParams)]
         self.SCdll.sc5503b_GetDeviceStatus.argtypes = [c_void_p, POINTER(DeviceStatus)]
-        self.SCdll.sc5503b_SetClockReference.argtypes = [c_void_p, c_bool, c_bool, c_bool, c_bool]
-        self._handle=c_void_p()
-        
+        self.SCdll.sc5503b_SetClockReference.argtypes = [
+            c_void_p,
+            c_bool,
+            c_bool,
+            c_bool,
+            c_bool,
+        ]
+        self._handle = c_void_p()
+
         # Create a context for the server.
         self._pseudo_ctx = {}
         if self.autoRefresh:
@@ -154,38 +170,34 @@ class SCRFGenServer(LabradServer):
         deferred to fire to indicate that it has terminated.
         """
         self.refresher = LoopingCall(self.refreshRFGenerators)
-        self.refresherDone = \
-            self.refresher.start(self.refreshInterval['s'],
-                                 now=True)
+        self.refresherDone = self.refresher.start(self.refreshInterval["s"], now=True)
 
     @inlineCallbacks
     def stopServer(self):
         """Kill the device refresh loop and wait for it to terminate."""
-        if hasattr(self, 'refresher'):
+        if hasattr(self, "refresher"):
             self.refresher.stop()
             yield self.refresherDone
         self.disconnect(self._pseudo_ctx)
         self.killRFGenConnections()
 
-    
     @inlineCallbacks
     def killRFGenConnections(self):
         try:
             yield self.SCdll.sc5503b_CloseDevice(handle)
         except Exception:
             pass
-    
 
     @inlineCallbacks
     def refreshRFGenerators(self):
         """Refresh RF generators list."""
         SNs_new = [create_string_buffer(MAX_MODEL_NAME) for i in range(MAX_NUM_RFGEN)]
-        SNs_ptr = (c_char_p*MAX_MODEL_NAME)(*map(addressof, SNs_new))
+        SNs_ptr = (c_char_p * MAX_MODEL_NAME)(*map(addressof, SNs_new))
         n = yield self.SCdll.sc5503b_SearchDevices(SNs_ptr)
         if n == self._num_devs:
             pass
         elif n == 0:
-            print('SignalCore RF Generators disconnected')
+            print("SignalCore RF Generators disconnected")
             self._num_devs = n
             self._last_freq.clear()
             self._last_pow.clear()
@@ -194,34 +206,37 @@ class SCRFGenServer(LabradServer):
             for idx in range(n):
                 SN = SNs_new[idx].value.decode()
                 if SN not in self._SNdict:
-                    self._SNdict[SN]=SNs_new[idx]
-                    #Select device
+                    self._SNdict[SN] = SNs_new[idx]
+                    # Select device
                     self.select_device(self._pseudo_ctx, SN)
-                    #get RF params
+                    # get RF params
                     freq = yield self.frequency(self._pseudo_ctx)
                     power = yield self.power(self._pseudo_ctx)
                     state = yield self.output(self._pseudo_ctx)
                     ref = yield self.external_pll(self._pseudo_ctx)
                     self._last_freq.update({SN: freq})
                     self._last_pow.update({SN: power})
-                    print('Found a SignalCore RF generator, serial '
-                          'number: %s, current power: %s, current '
-                          'frequency: %s, output state: %s, '
-                          'external reference: %s'
-                          % (SN, power, freq, state, ref))
-                    #disconnect from device
+                    print(
+                        "Found a SignalCore RF generator, serial "
+                        "number: %s, current power: %s, current "
+                        "frequency: %s, output state: %s, "
+                        "external reference: %s" % (SN, power, freq, state, ref)
+                    )
+                    # disconnect from device
                     self.deselect_device(self._pseudo_ctx)
-                    
+
     def getCObjectSN(self, c):
-        if 'SN' not in c:
-            raise DeviceNotSelectedError('No SignalCore RF Generator '
-                                         'serial number selected')
-        if c['SN'] not in list(self._SNdict.keys()):
-            raise Exception('Could not find Lab Brick RF Generator '
-                            'with serial number ' + c['SN'])
-        return self._SNdict[c['SN']]
-    
-    @setting(559, 'Get Device Status')
+        if "SN" not in c:
+            raise DeviceNotSelectedError(
+                "No SignalCore RF Generator " "serial number selected"
+            )
+        if c["SN"] not in list(self._SNdict.keys()):
+            raise Exception(
+                "Could not find Lab Brick RF Generator " "with serial number " + c["SN"]
+            )
+        return self._SNdict[c["SN"]]
+
+    @setting(559, "Get Device Status")
     def get_dev_status(self, c):
         status = DeviceStatus()
         SN_call = self.getCObjectSN(c)
@@ -229,8 +244,8 @@ class SCRFGenServer(LabradServer):
         yield self.SCdll.sc5503b_GetDeviceStatus(self._handle, status)
         yield self.SCdll.sc5503b_CloseDevice(self._handle)
         returnValue(status)
-        
-    @setting(560, 'Get RF Parameter List')
+
+    @setting(560, "Get RF Parameter List")
     def get_rf_params(self, c):
         rf_params = RFParams()
         status = DeviceStatus()
@@ -238,73 +253,79 @@ class SCRFGenServer(LabradServer):
         yield self.SCdll.sc5503b_OpenDevice(SN_call, byref(self._handle))
         yield self.SCdll.sc5503b_GetRfParameters(self._handle, rf_params)
         yield self.SCdll.sc5503b_GetDeviceStatus(self._handle, status)
-        rf_params.rfEnable=status.rfEnable
+        rf_params.rfEnable = status.rfEnable
         yield self.SCdll.sc5503b_CloseDevice(self._handle)
         returnValue(rf_params)
-    
-    
-    @setting(561, 'Refresh Device List')
+
+    @setting(561, "Refresh Device List")
     def refresh_device_list(self, c):
         """Manually refresh RF generator list."""
         self.refreshRFGenerators()
 
-    @setting(562, 'List Devices', returns='*s')
+    @setting(562, "List Devices", returns="*s")
     def list_devices(self, c):
         """Return list of RF generator serial numbers."""
         return [s for s in self._SNdict]
-    
-    @setting(565, 'Select Device', SN='s', returns='')
+
+    @setting(565, "Select Device", SN="s", returns="")
     def select_device(self, c, SN):
         """
         Select RF generator by its serial number.
         """
-        c['SN'] = SN
+        c["SN"] = SN
 
-    @setting(566, 'Deselect Device', returns='')
+    @setting(566, "Deselect Device", returns="")
     def deselect_device(self, c):
         """Deselect RF generator."""
-        if 'SN' in c:
-            del c['SN']
-            
-    
-    @setting(568, 'External PLL', ext_pll = 'b', returns = 'b')
-    def external_pll(self, c, ext_pll = None):
-        '''
+        if "SN" in c:
+            del c["SN"]
+
+    @setting(568, "External PLL", ext_pll="b", returns="b")
+    def external_pll(self, c, ext_pll=None):
+        """
         Get or set External PLL (bool). Assumes ref out, HF ref out, and PXI clock will always be set 0. Error code None.
-        '''
+        """
         SN_call = self.getCObjectSN(c)
         yield self.SCdll.sc5503b_OpenDevice(SN_call, byref(self._handle))
         if ext_pll == None:
             rf_params = yield self.get_rf_params(c)
             ext_pll = bool(rf_params.referenceSetting)
         else:
-            self._status = yield self.SCdll.sc5503b_SetClockReference(self._handle, c_bool(ext_pll), c_bool(0), c_bool(0), c_bool(0))
+            self._status = yield self.SCdll.sc5503b_SetClockReference(
+                self._handle, c_bool(ext_pll), c_bool(0), c_bool(0), c_bool(0)
+            )
             if self._status:  # non zero status values indicate error
-                raise RuntimeError("Unable to connect to device, error code "+str(self._status))
-            
+                raise RuntimeError(
+                    "Unable to connect to device, error code " + str(self._status)
+                )
+
         returnValue(ext_pll)
         yield self.SCdll.sc5503b_CloseDevice(self._handle)
-    
-    @setting(570, 'Output', state='b', returns='b')
+
+    @setting(570, "Output", state="b", returns="b")
     def output(self, c, state=None):
         """Get or set RF generator output state (on/off). state must be either None, True or False. Error code None."""
         SN_call = self.getCObjectSN(c)
-        if state==None:
+        if state == None:
             rf_params = yield self.get_rf_params(c)
             state = bool(rf_params.rfEnable)
         elif state == False or state == True:
             yield self.SCdll.sc5503b_OpenDevice(SN_call, byref(self._handle))
-            self._status = yield self.SCdll.sc5503b_SetRfOutput(self._handle, c_bool(state))
+            self._status = yield self.SCdll.sc5503b_SetRfOutput(
+                self._handle, c_bool(state)
+            )
             if self._status:  # non zero status values indicate error
-                raise RuntimeError("Error setting RF output, code "+str(self._status))
+                raise RuntimeError("Error setting RF output, code " + str(self._status))
                 state = None
             yield self.SCdll.sc5503b_CloseDevice(self._handle)
         else:
-            raise RuntimeError("Input must be None, True or False!. RF output not changed.")
+            raise RuntimeError(
+                "Input must be None, True or False!. RF output not changed."
+            )
             state = None
         returnValue(state)
 
-    @setting(582, 'Frequency', freq='v[Hz]', returns='v[Hz]')
+    @setting(582, "Frequency", freq="v[Hz]", returns="v[Hz]")
     def frequency(self, c, freq=None):
         """Set or get RF generator output frequency. Error code -1"""
         SN_call = self.getCObjectSN(c)
@@ -312,67 +333,79 @@ class SCRFGenServer(LabradServer):
             rf_params = yield self.get_rf_params(c)
             freq = rf_params.frequency * Hz
         else:
-            '''KNOWN BUG ALERT: when both frequency and power are changed while output is disabled, output is
+            """KNOWN BUG ALERT: when both frequency and power are changed while output is disabled, output is
             is enabled w/out the device becoming aware. Fix: before the frequency is changed, RF output
             is queried, then after the frequency is changed, RF output is changed back to that value.
-            '''
-            if self._last_freq[c['SN']] == freq:
+            """
+            if self._last_freq[c["SN"]] == freq:
                 returnValue(freq)
-            if freq['Hz'] < MIN_FREQ['Hz']:
+            if freq["Hz"] < MIN_FREQ["Hz"]:
                 freq = MIN_FREQ
-                print(f"Frequency too small! Must be None (to get current frequency) or between {MIN_FREQ} and {MAX_FREQ}. Frequency set to minimum frequency.")
-            elif freq['Hz'] > MAX_FREQ['Hz']: 
+                print(
+                    f"Frequency too small! Must be None (to get current frequency) or between {MIN_FREQ} and {MAX_FREQ}. Frequency set to minimum frequency."
+                )
+            elif freq["Hz"] > MAX_FREQ["Hz"]:
                 freq = MAX_FREQ
-                print(f"Frequency too large! Must be None (to get current frequency) or between {MIN_FREQ} and {MAX_FREQ}. Frequency set to maximum frequency.")
+                print(
+                    f"Frequency too large! Must be None (to get current frequency) or between {MIN_FREQ} and {MAX_FREQ}. Frequency set to maximum frequency."
+                )
             rf_state = yield self.output(c)
-            
+
             yield self.SCdll.sc5503b_OpenDevice(SN_call, byref(self._handle))
-            self._status = yield self.SCdll.sc5503b_SetFrequency(self._handle, c_uint64(int(freq['Hz'])))
+            self._status = yield self.SCdll.sc5503b_SetFrequency(
+                self._handle, c_uint64(int(freq["Hz"]))
+            )
             yield self.SCdll.sc5503b_CloseDevice(self._handle)
-            
+
             if self._status:  # non zero status values indicate error
-                raise RuntimeError("Error setting frequency, code "+str(self._status))
+                raise RuntimeError("Error setting frequency, code " + str(self._status))
                 returnValue(-1 * Hz)
-            
+
             yield self.output(c, rf_state)
         returnValue(freq)
-        self._last_freq[c['SN']] = freq
-        
-    @setting(583, 'Power', power='v[dBm]', returns='v[dBm]')
-    def power(self, c, power = None):
+        self._last_freq[c["SN"]] = freq
+
+    @setting(583, "Power", power="v[dBm]", returns="v[dBm]")
+    def power(self, c, power=None):
         """Set or get RF generator output power."""
         SN_call = self.getCObjectSN(c)
         if power is None:
             rf_params = yield self.get_rf_params(c)
             power = rf_params.powerLevel * dBm
         else:
-            '''KNOWN BUG ALERT: when both frequency and power are changed while output is disabled, output is
+            """KNOWN BUG ALERT: when both frequency and power are changed while output is disabled, output is
             is enabled w/out the device becoming aware. Fix: before the power is changed, RF output
             is queried, then after the frequency is changed, RF output is changed back to that value.
-            '''
-            if self._last_pow[c['SN']] == power:
+            """
+            if self._last_pow[c["SN"]] == power:
                 returnValue(power)
-            if power['dBm'] < MIN_POW['dBm']:
+            if power["dBm"] < MIN_POW["dBm"]:
                 power = MIN_POW
-                print(f"Power too small! Must be None (to get current power) or between {MIN_POW} and {MAX_POW}. Power set to minimum power.")
-            elif power['dBm'] > MAX_POW['dBm']:
+                print(
+                    f"Power too small! Must be None (to get current power) or between {MIN_POW} and {MAX_POW}. Power set to minimum power."
+                )
+            elif power["dBm"] > MAX_POW["dBm"]:
                 power = MAX_POW
-                print(f"Power too large! Must be None (to get current power) or between {MIN_POW} and {MAX_POW}. Power set to maximum power.")
+                print(
+                    f"Power too large! Must be None (to get current power) or between {MIN_POW} and {MAX_POW}. Power set to maximum power."
+                )
             rf_state = yield self.output(c)
-            
+
             yield self.SCdll.sc5503b_OpenDevice(SN_call, byref(self._handle))
-            self._status = yield self.SCdll.sc5503b_SetPowerLevel(self._handle, c_float(power['dBm']))
+            self._status = yield self.SCdll.sc5503b_SetPowerLevel(
+                self._handle, c_float(power["dBm"])
+            )
             if self._status:  # non zero status values indicate error
-                raise RuntimeError("Error setting power, code "+str(self._status))
+                raise RuntimeError("Error setting power, code " + str(self._status))
             yield self.SCdll.sc5503b_CloseDevice(self._handle)
-            
+
             yield self.output(c, rf_state)
         returnValue(power)
-        self._last_pow[c['SN']] = power
+        self._last_pow[c["SN"]] = power
 
 
 __server__ = SCRFGenServer()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     util.runServer(__server__)

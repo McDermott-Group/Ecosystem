@@ -35,8 +35,8 @@ from adr_server import *
 import sys
 
 if __name__ == "__main__":
-    if '-a' not in sys.argv:
-        sys.argv.append('-a')
-        sys.argv.append('ADR1')
+    if "-a" not in sys.argv:
+        sys.argv.append("-a")
+        sys.argv.append("ADR1")
     __server__ = ADRServer(sys.argv)
     util.runServer(__server__)

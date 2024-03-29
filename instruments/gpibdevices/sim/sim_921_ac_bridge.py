@@ -36,40 +36,53 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad import units
 import numpy as np
 
+
 class SIM921Server(GPIBManagedServer):
     """Provides basic control for SRS SIM921 AC Resistance Bridge Module"""
-    name = 'SIM921'
-    deviceName = 'STANFORD RESEARCH SYSTEMS SIM921' # *IDN? = "Stanford_Research_Systems,SIM921,s/n105794,ver3.6"
+
+    name = "SIM921"
+    deviceName = "STANFORD RESEARCH SYSTEMS SIM921"  # *IDN? = "Stanford_Research_Systems,SIM921,s/n105794,ver3.6"
     deviceWrapper = GPIBDeviceWrapper
 
-    @setting(101, 'Get Time Constant', returns=['v[ms]'])
+    @setting(101, "Get Time Constant", returns=["v[ms]"])
     def getTimeConstant(self, c):
         """Get the time constant (in ms) currently set for the AC Res Bridge."""
         dev = self.selectedDevice(c)
-        timeConstCodes = {-1:'filter off', 0:0.3, 1:1, 2:3, 3:10, 4:30, 5:100, 6:300}
+        timeConstCodes = {
+            -1: "filter off",
+            0: 0.3,
+            1: 1,
+            2: 3,
+            3: 10,
+            4: 30,
+            5: 100,
+            6: 300,
+        }
         returnCode = yield dev.query("TCON?")
-        t = timeConstCodes[int(returnCode)]*units.s
+        t = timeConstCodes[int(returnCode)] * units.s
         returnValue(t)
 
-    @setting(102, 'Get Ruox Temperature', returns=['v[K]'])
+    @setting(102, "Get Ruox Temperature", returns=["v[K]"])
     def getRuoxTemperature(self, c):
         """Get temperature being read by the AC Res Bridge right now."""
         dev = self.selectedDevice(c)
         gpibstring = yield dev.query("TVAL?")
         try:
-            T = float(gpibstring.strip('\x00'))*units.K
+            T = float(gpibstring.strip("\x00")) * units.K
         except ValueError:
             T = np.NaN
-        returnValue( T )
-    
-    @setting(103, 'Set Curve', curve=['v'])
+        returnValue(T)
+
+    @setting(103, "Set Curve", curve=["v"])
     def setCurve(self, c, curve):
         """Get temperature being read by the AC Res Bridge right now."""
         dev = self.selectedDevice(c)
-        yield dev.write("CURV %d" %curve)
+        yield dev.write("CURV %d" % curve)
+
 
 __server__ = SIM921Server()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from labrad import util
+
     util.runServer(__server__)

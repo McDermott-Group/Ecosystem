@@ -24,6 +24,7 @@ import traceback
 import inspect
 import MPersistentData
 import sys
+
 sys.dont_write_bytecode = True
 
 
@@ -33,6 +34,7 @@ class web:
     access important parameters central to mView. Stores and opens all
     data.
     """
+
     # Store minimum and maximum values for all readings. MAlert uses
     # this to check if readings are still in bounds.
 

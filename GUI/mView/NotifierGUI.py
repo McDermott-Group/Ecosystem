@@ -33,13 +33,13 @@ import pickle as pickle
 import os
 import inspect
 import traceback
+
 sys.dont_write_bytecode = True
 
 
 class NotifierGUI(QtGui.QDialog):
-
     def __init__(self, loader, parent=None):
-        '''Initialize the Notifier Gui'''
+        """Initialize the Notifier Gui"""
         super(NotifierGUI, self).__init__(parent)
         # Create a new tab
         tabWidget = QtGui.QTabWidget()
@@ -79,7 +79,7 @@ class NotifierGUI(QtGui.QDialog):
         self.saveData()
 
     def saveData(self):
-        '''Save the data upon exit'''
+        """Save the data upon exit"""
         try:
             # For each device
             for device in web.devices:
@@ -88,38 +88,48 @@ class NotifierGUI(QtGui.QDialog):
                 # For each nickname (parameter)
                 for nickname in device.getFrame().getNicknames():
                     # If the nickname is not none, then we can store the data
-                    if(nickname is not None):
+                    if nickname is not None:
                         # The key is in the format device:paramName
                         key = title + ":" + nickname
                         # Temporary array used for assembling the data on each
                         # line
                         deviceDataArray = []
                         # Store the state of the checkbox
-                        deviceDataArray.append(self.alert
-                                               .allWidgetDict[key][0].isChecked())
+                        deviceDataArray.append(
+                            self.alert.allWidgetDict[key][0].isChecked()
+                        )
                         if len(self.alert.allWidgetDict[key][1].text()) is not 0:
                             # Store the text if there is any
-                            deviceDataArray.append(float(self.alert
-                                                         .allWidgetDict[key][1].text()))
+                            deviceDataArray.append(
+                                float(self.alert.allWidgetDict[key][1].text())
+                            )
                         else:
                             # Otherwise store a blank string
-                            deviceDataArray.append('')
+                            deviceDataArray.append("")
                         if len(self.alert.allWidgetDict[key][2].text()) is not 0:
-                            deviceDataArray.append(float(self.alert
-                                                         .allWidgetDict[key][2].text()))
+                            deviceDataArray.append(
+                                float(self.alert.allWidgetDict[key][2].text())
+                            )
                         else:
-                            deviceDataArray.append('')
-                        deviceDataArray.append(self.alert
-                                               .allWidgetDict[key][3].text())
-                        if(deviceDataArray[1] > deviceDataArray[2]
-                                and deviceDataArray[1] is not None
-                                and deviceDataArray[2] is not None):
+                            deviceDataArray.append("")
+                        deviceDataArray.append(self.alert.allWidgetDict[key][3].text())
+                        if (
+                            deviceDataArray[1] > deviceDataArray[2]
+                            and deviceDataArray[1] is not None
+                            and deviceDataArray[2] is not None
+                        ):
                             raise
-                        self.allDataDict[title + ":" +
-                                         nickname] = deviceDataArray
+                        self.allDataDict[title + ":" + nickname] = deviceDataArray
                 # Pickle the arrays and store them
-            pickle.dump(self.allDataDict, open(
-                os.path.join(self.location, str(self.loader)+'_NotifierSettings.config'), 'wb'))
+            pickle.dump(
+                self.allDataDict,
+                open(
+                    os.path.join(
+                        self.location, str(self.loader) + "_NotifierSettings.config"
+                    ),
+                    "wb",
+                ),
+            )
             self.alert.allDataDict = self.allDataDict
             web.limitDict = self.allDataDict
         except ValueError:
@@ -192,30 +202,38 @@ class AlertConfig(QtGui.QWidget):
             for y in range(1, len(web.devices[j].getFrame().getNicknames()) + 1):
                 paramName = web.devices[j].getFrame().getNicknames()[y - 1]
                 u = y - 1
-                if(paramName is not None):
+                if paramName is not None:
                     title = web.devices[j].getFrame().getTitle()
                     nickname = web.devices[j].getFrame().getNicknames()[u]
-                    key = (title + ":" + nickname)
-                    if(key in self.allDataDict):
+                    key = title + ":" + nickname
+                    if key in self.allDataDict:
                         for data in self.allDataDict[key]:
                             # All widget dict holds the Qt objects
-                            self.allWidgetDict[key] = [QtGui.QCheckBox(),
-                                                       QtGui.QLineEdit(),
-                                                       QtGui.QLineEdit(),
-                                                       QtGui.QLineEdit()]
+                            self.allWidgetDict[key] = [
+                                QtGui.QCheckBox(),
+                                QtGui.QLineEdit(),
+                                QtGui.QLineEdit(),
+                                QtGui.QLineEdit(),
+                            ]
                             self.allWidgetDict[key][0].setChecked(
-                                self.allDataDict[key][0])
+                                self.allDataDict[key][0]
+                            )
                             self.allWidgetDict[key][1].setText(
-                                str(self.allDataDict[key][1]))
+                                str(self.allDataDict[key][1])
+                            )
                             self.allWidgetDict[key][2].setText(
-                                str(self.allDataDict[key][2]))
+                                str(self.allDataDict[key][2])
+                            )
                             self.allWidgetDict[key][3].setText(
-                                str(self.allDataDict[key][3]))
+                                str(self.allDataDict[key][3])
+                            )
                     else:
-                        self.allWidgetDict[key] = [QtGui.QCheckBox(),
-                                                   QtGui.QLineEdit(),
-                                                   QtGui.QLineEdit(),
-                                                   QtGui.QLineEdit()]
+                        self.allWidgetDict[key] = [
+                            QtGui.QCheckBox(),
+                            QtGui.QLineEdit(),
+                            QtGui.QLineEdit(),
+                            QtGui.QLineEdit(),
+                        ]
                     label = QtGui.QLabel()
                     # Add the new widgets
                     label.setText(paramName)
@@ -227,8 +245,9 @@ class AlertConfig(QtGui.QWidget):
 
                     unitLabel = QtGui.QLabel()
                     if web.devices[j].getFrame().getUnit(paramName) is not None:
-                        unitLabel.setText(str(web.devices[j].getFrame()
-                                              .getUnit(paramName)))
+                        unitLabel.setText(
+                            str(web.devices[j].getFrame().getUnit(paramName))
+                        )
                         layout.addWidget(unitLabel, z, 4)
 
                     layout.addWidget(unitLabel, z, 6)
@@ -237,11 +256,20 @@ class AlertConfig(QtGui.QWidget):
                     x = x + 1
 
     def openData(self):
-        '''Retreive a user's previous settings.'''
+        """Retreive a user's previous settings."""
         try:
-            print("Starting notifier, looking for config file: ",str(self.loader)+'_NotifierSettings.config')
-            self.allDataDict = pickle.load(open(os.path.join(
-                self.location, str(self.loader)+'_NotifierSettings.config'), 'rb'))
+            print(
+                "Starting notifier, looking for config file: ",
+                str(self.loader) + "_NotifierSettings.config",
+            )
+            self.allDataDict = pickle.load(
+                open(
+                    os.path.join(
+                        self.location, str(self.loader) + "_NotifierSettings.config"
+                    ),
+                    "rb",
+                )
+            )
             NotifierGUI.allDataDict = self.allDataDict
             print("Config Data Opened")
 

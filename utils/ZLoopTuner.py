@@ -7,11 +7,13 @@ from matplotlib import pyplot
 
 class ZLoopTuner:
     def __init__(self):
-        self.sample_time = 360 # amount of time to collect temperature data before changing kp
+        self.sample_time = (
+            360  # amount of time to collect temperature data before changing kp
+        )
         self.num_periods = 1
         self.cxn = labrad.connect()
         self.reg = self.cxn.registry
-        self.reg.cd('ADR Settings', 'ADR3')
+        self.reg.cd("ADR Settings", "ADR3")
         self.adr = self.cxn.adr3
         self.kp = 0
         self.ki = 0
@@ -35,11 +37,11 @@ class ZLoopTuner:
             end_time = time.time() + self.sample_time
             self.sampling_period = 0
             self.num_periods = 1
-            print('Editing Kp, curr value = ' +str(self.kp))
+            print("Editing Kp, curr value = " + str(self.kp))
             while time.time() < end_time:
-                time.sleep(.1)
-                #TODO FIX THIS LINE
-                curr_temp = self.adr.temperatures()[3]['K']
+                time.sleep(0.1)
+                # TODO FIX THIS LINE
+                curr_temp = self.adr.temperatures()[3]["K"]
                 curr_time = time.time()
                 time_diff = curr_time - last_time
                 last_time = curr_time
@@ -60,15 +62,15 @@ class ZLoopTuner:
             max_freq = time_fft[index_fft]
 
             if max_temp_fft > (avg_fft + (3 * std_fft)):
-                print('Critical Kp determined.')
+                print("Critical Kp determined.")
                 pyplot.plot(time_fft, temp_fft)
                 pyplot.show()
                 self.periodic = True
-                self.tu = (1 / max_freq)
+                self.tu = 1 / max_freq
                 self.ku = self.kp
 
             else:
-                print('Periodicity not detected.')
+                print("Periodicity not detected.")
                 pyplot.plot(time_fft, temp_fft)
                 pyplot.show()
                 self.kp = self.kp + 0.01
@@ -76,7 +78,7 @@ class ZLoopTuner:
 
         # DETERMINE FINAL GAINS
         # final gains set according to Ziegler-Nichols method
-        print('Setting final gains')
+        print("Setting final gains")
         self.kp = self.ku * 0.6
         self.ki = self.ku / self.tu * 1.2
         self.kd = self.ku * self.tu * 3 / 40
@@ -85,8 +87,8 @@ class ZLoopTuner:
         self.adr.set_pid_ki(self.ki)
         self.adr.set_pid_kd(self.kd)
 
-        print('PID is tuned. Have nice day.')
-    
+        print("PID is tuned. Have nice day.")
+
     def update_period(self, time_diff):
         td_weight = (1.0 / self.num_periods) * time_diff
         ex_weight = ((self.num_periods - 1.0) / self.num_periods) * self.sampling_period

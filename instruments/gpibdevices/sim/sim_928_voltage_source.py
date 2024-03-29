@@ -47,56 +47,57 @@ class SIM928Wrapper(GPIBDeviceWrapper):
 
     @inlineCallbacks
     def reset(self):
-        yield self.write('*CLS;*RST')
+        yield self.write("*CLS;*RST")
         yield self.initialize()
 
     @inlineCallbacks
     def getVoltage(self):
         try:
-            voltage = yield self.query('VOLT?')
+            voltage = yield self.query("VOLT?")
             self.voltage = float(voltage) * V
         except BaseException:
-            print('Failed to read the voltage')
+            print("Failed to read the voltage")
             self.voltage = yield self.getVoltage()
         returnValue(self.voltage)
 
     @inlineCallbacks
     def getOutput(self):
         try:
-            output = yield self.query('EXON?')
+            output = yield self.query("EXON?")
             self.output = bool(int(output))
         except BaseException:
-            print('Failed to read the output state')
+            print("Failed to read the output state")
             self.output = yield self.getOutput()
         returnValue(self.output)
 
     @inlineCallbacks
     def setVoltage(self, v):
         if self.voltage != v:
-            yield self.write('VOLT {:.5f}'.format(v['V']))
+            yield self.write("VOLT {:.5f}".format(v["V"]))
             # Ensure that the voltage is actually set to the right level.
             self.voltage = yield self.getVoltage()
 
     @inlineCallbacks
     def setOutput(self, on):
         if self.output != bool(on):
-            yield self.write('EXON %d' % int(on))
+            yield self.write("EXON %d" % int(on))
             # Ensure that the output is set properly.
             self.output = yield self.getOutput()
 
 
 class SIM928Server(GPIBManagedServer):
     """Provides basic control for SRS SIM928 voltage source."""
-    name = 'SIM928'
-    deviceName = 'STANFORD RESEARCH SYSTEMS SIM928'
+
+    name = "SIM928"
+    deviceName = "STANFORD RESEARCH SYSTEMS SIM928"
     deviceWrapper = SIM928Wrapper
 
-    @setting(100, 'Reset')
+    @setting(100, "Reset")
     def reset(self, c):
         """Reset the voltage source."""
         yield self.selectedDevice(c).reset()
 
-    @setting(101, 'Voltage', v='v[V]', returns='v[V]')
+    @setting(101, "Voltage", v="v[V]", returns="v[V]")
     def voltage(self, c, v=None):
         """Get or set the voltage."""
         dev = self.selectedDevice(c)
@@ -104,7 +105,7 @@ class SIM928Server(GPIBManagedServer):
             yield dev.setVoltage(v)
         returnValue(dev.voltage)
 
-    @setting(102, 'Output', on='b', returns='b')
+    @setting(102, "Output", on="b", returns="b")
     def output(self, c, on=None):
         """Get or set the output (on/off)."""
         dev = self.selectedDevice(c)
@@ -116,5 +117,5 @@ class SIM928Server(GPIBManagedServer):
 __server__ = SIM928Server()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     util.runServer(__server__)

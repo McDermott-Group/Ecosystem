@@ -40,14 +40,16 @@ import numpy as np
 MIN_REFRESH_RATE = 1 * units.s
 TIME_CONSTANT_MULTIPLIER = 15
 
+
 class NRuoxServer(LabradServer):
     """
     Use a multiplexer to scroll through multiple channels and read many
     RuOx temps with the same AC bridge.  Note that the multiplexer
     channel must match the curve index in the AC Bridge.
     """
-    name = 'AC Bridge with Multiplexer'
-    allDeviceChans = {}    # { device addrs: {context: ctx, chan: temp, currentChan: i} }
+
+    name = "AC Bridge with Multiplexer"
+    allDeviceChans = {}  # { device addrs: {context: ctx, chan: temp, currentChan: i} }
 
     @inlineCallbacks
     def startTakingTemps(self, addrs):
@@ -55,35 +57,39 @@ class NRuoxServer(LabradServer):
         # if one chan, measure once a second
         # if more than one chan, switch, wait, measure, ...
         chanList = list(self.allDeviceChans[addrs].keys())
-        chanList.remove('context')
-        chanList.remove('currentChanIndex')
-        chanList.remove('deviceAddresses')
+        chanList.remove("context")
+        chanList.remove("currentChanIndex")
+        chanList.remove("deviceAddresses")
         # If no chans, refresh
-        if len( chanList ) < 1:
-            callLater(MIN_REFRESH_RATE['s'],self.startTakingTemps,addrs)
+        if len(chanList) < 1:
+            callLater(MIN_REFRESH_RATE["s"], self.startTakingTemps, addrs)
             return
         # If chan index is out of range, reset to 0
-        if self.allDeviceChans[addrs]['currentChanIndex'] >= len(chanList):
-            self.allDeviceChans[addrs]['currentChanIndex'] = 0
+        if self.allDeviceChans[addrs]["currentChanIndex"] >= len(chanList):
+            self.allDeviceChans[addrs]["currentChanIndex"] = 0
         # Switch channel -> wait time const -> measure temp.
-        index = self.allDeviceChans[addrs]['currentChanIndex']
+        index = self.allDeviceChans[addrs]["currentChanIndex"]
         chan = chanList[index]
-        ctx = self.allDeviceChans[addrs]['context']
-        deviceAddresses = self.allDeviceChans[addrs]['deviceAddresses']
+        ctx = self.allDeviceChans[addrs]["context"]
+        deviceAddresses = self.allDeviceChans[addrs]["deviceAddresses"]
         MP = self.client[deviceAddresses[1][0]]
         ACB = self.client[deviceAddresses[0][0]]
         yield MP.channel(chan, context=ctx)
         yield ACB.set_curve(chan, context=ctx)
         t = yield ACB.get_time_constant(context=ctx)
-        timeout = max(MIN_REFRESH_RATE['s'], TIME_CONSTANT_MULTIPLIER * t['s']) * units.s
-        if len(chanList) > 1: yield util.wakeupCall(timeout['s'])
-        else: yield util.wakeupCall(MIN_REFRESH_RATE['s'])
+        timeout = (
+            max(MIN_REFRESH_RATE["s"], TIME_CONSTANT_MULTIPLIER * t["s"]) * units.s
+        )
+        if len(chanList) > 1:
+            yield util.wakeupCall(timeout["s"])
+        else:
+            yield util.wakeupCall(MIN_REFRESH_RATE["s"])
         temp = yield ACB.get_ruox_temperature(context=ctx)
         self.allDeviceChans[addrs][chan] = temp
-        self.allDeviceChans[addrs]['currentChanIndex'] += 1
-        callLater(0.1,self.startTakingTemps,addrs)
+        self.allDeviceChans[addrs]["currentChanIndex"] += 1
+        callLater(0.1, self.startTakingTemps, addrs)
 
-    @setting(101, 'Select Device', addrs='*2s')
+    @setting(101, "Select Device", addrs="*2s")
     def select_device(self, c, addrs):
         """
         Set the device addresses. Input in form ['server_name',
@@ -91,7 +97,7 @@ class NRuoxServer(LabradServer):
         set, we can start a cycle with period timeconstant, switching
         between the channels and recording temperatures.
         """
-        #only add if loop with same device is not already running
+        # only add if loop with same device is not already running
         address = str(addrs)
         if address not in list(self.allDeviceChans.keys()):
             ctx = self.client.context()
@@ -99,50 +105,53 @@ class NRuoxServer(LabradServer):
             yield MP.select_device(addrs[1][1], context=ctx)
             ACB = self.client[addrs[0][0]]
             yield ACB.select_device(addrs[0][1], context=ctx)
-            self.allDeviceChans[address] = {'context':ctx, \
-                                            'currentChanIndex':0, \
-                                            'deviceAddresses':addrs}
-            callLater(0.1,self.startTakingTemps,address)
-        c['address'] = address # just to identify the device pair
+            self.allDeviceChans[address] = {
+                "context": ctx,
+                "currentChanIndex": 0,
+                "deviceAddresses": addrs,
+            }
+            callLater(0.1, self.startTakingTemps, address)
+        c["address"] = address  # just to identify the device pair
 
-    @setting(102, 'Add Channel', chan='i')
+    @setting(102, "Add Channel", chan="i")
     def add_channel(self, c, chan):
         """Add channel to measure."""
-        if 'chans' not in c:
-            c['chans'] = []
-        if chan not in c['chans']:
-            c['chans'].append(chan)
-        devChans = self.allDeviceChans[c['address']]
+        if "chans" not in c:
+            c["chans"] = []
+        if chan not in c["chans"]:
+            c["chans"].append(chan)
+        devChans = self.allDeviceChans[c["address"]]
         if chan not in list(devChans.keys()):
-            devChans[chan] = np.nan*units.K
+            devChans[chan] = np.nan * units.K
 
-    @setting(103, 'Remove Channel', chan='i')
+    @setting(103, "Remove Channel", chan="i")
     def remove_channel(self, c, chan):
         """No longer measure this channel."""
         try:
-            c['chans'].remove(chan)
+            c["chans"].remove(chan)
             # dont remove chan if it is also in use from another context
             allContexts = [self.contexts[key].data for key in self.contexts]
             alsoUsed = False
             for ctx in allContexts:
-                if ctx['address'] == c['address'] and \
-                   chan in ctx['chans']:
+                if ctx["address"] == c["address"] and chan in ctx["chans"]:
                     alsoUsed = True
             if not alsoUsed:
-                devChans = self.allDeviceChans[c['address']]
+                devChans = self.allDeviceChans[c["address"]]
                 del devChans[chan]
         except ValueError:
-            pass # if channel not already there ignore request
+            pass  # if channel not already there ignore request
 
-    @setting(104, 'Get Ruox Temperature', chan='i', returns='?')
+    @setting(104, "Get Ruox Temperature", chan="i", returns="?")
     def get_ruox_temperature(self, c, chan=None):
         """Returns the temperature for the specified channel, or if no
         channel is specified, returns a list of [chan,temp] pairs."""
-        tempDict = self.allDeviceChans[c['address']]
-        if chan == None: # return [[chan, temp]]
-            return [(key,tempDict[key]) for key in list(tempDict.keys()) \
-                                      if type(key) is not str \
-                                      and key in c['chans']]
+        tempDict = self.allDeviceChans[c["address"]]
+        if chan == None:  # return [[chan, temp]]
+            return [
+                (key, tempDict[key])
+                for key in list(tempDict.keys())
+                if type(key) is not str and key in c["chans"]
+            ]
         else:
             return tempDict[chan]
 
@@ -150,5 +159,5 @@ class NRuoxServer(LabradServer):
 __server__ = NRuoxServer()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     util.runServer(__server__)

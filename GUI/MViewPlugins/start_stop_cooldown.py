@@ -25,6 +25,8 @@ from MWidget import MWidget
 
 import time
 import re
+
+
 class MStartStopCooldownWidget(MWidget):
     def __init__(self, cdLoc, stbyLoc):
         super(MStartStopCooldownWidget, self).__init__(None)
@@ -36,19 +38,25 @@ class MStartStopCooldownWidget(MWidget):
         hbox = self.getHBox()
         self.cdButton = QtGui.QPushButton()
         self.cdButton.setFont(font)
-       
+
         self.cdButton.clicked.connect(self.toggleCD)
         hbox.addWidget(self.cdButton)
-        self.coolDown = web.persistentData.persistentDataAccess(None, 'cooldown_mode', default = True)
+        self.coolDown = web.persistentData.persistentDataAccess(
+            None, "cooldown_mode", default=True
+        )
         if not self.coolDown:
-             self.cdButton.setStyleSheet("background:rgb(70,88,70);color:rgb(189,195, 199)")
-             self.cdButton.setText("Start Cooldown")
+            self.cdButton.setStyleSheet(
+                "background:rgb(70,88,70);color:rgb(189,195, 199)"
+            )
+            self.cdButton.setText("Start Cooldown")
         else:
-            self.cdButton.setStyleSheet("background:rgb(88,70,70);color:rgb(189,195, 199)")
+            self.cdButton.setStyleSheet(
+                "background:rgb(88,70,70);color:rgb(189,195, 199)"
+            )
             self.cdButton.setText("Stop Cooldown")
         self.stbyLoc = stbyLoc
         self.cdLoc = cdLoc
-        
+
     def toggleCD(self):
         if self.coolDown:
             msg = "You are about to stop cooldown data collection."
@@ -56,33 +64,35 @@ class MStartStopCooldownWidget(MWidget):
             msg = "You are about to start cooldown data collection."
         p = QtGui.QMessageBox()
         p.setText(msg)
-        p.setStandardButtons(QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel);
+        p.setStandardButtons(QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
         result = p.exec_()
-        
+
         if result == QtGui.QMessageBox.Ok:
             if self.coolDown:
                 self.coolDown = False
-                web.persistentData.persistentDataAccess(False, 'cooldown_mode')
+                web.persistentData.persistentDataAccess(False, "cooldown_mode")
 
                 loc = self.stbyLoc
-                self.cdButton.setStyleSheet("background:rgb(70,88,70);color:rgb(189,195, 199)")
+                self.cdButton.setStyleSheet(
+                    "background:rgb(70,88,70);color:rgb(189,195, 199)"
+                )
                 self.cdButton.setText("Start Cooldown")
             else:
                 self.coolDown = True
-                web.persistentData.persistentDataAccess(True, 'cooldown_mode')
+                web.persistentData.persistentDataAccess(True, "cooldown_mode")
                 loc = self.cdLoc
-                self.cdButton.setStyleSheet("background:rgb(88,70,70);color:rgb(189,195, 199)")
+                self.cdButton.setStyleSheet(
+                    "background:rgb(88,70,70);color:rgb(189,195, 199)"
+                )
                 self.cdButton.setText("Stop Cooldown")
-            for i,device in enumerate(web.devices):
-                 chest = device.getFrame().getDataChestWrapper()
-                 path = loc.split('\\')
-                 r = re.compile('.{2}_.{2}_.{2}')
-                 print("Switching path to:", path)
-                 if not r.match(path[-1]):
-                      dateFolderName = time.strftime('%x').replace(' ', '_')
-                      dateFolderName = dateFolderName.replace('/','_')
-                      loc = loc+'\\'+dateFolderName
-                 if chest != None:
-                     chest.changeLocation(loc, True)
-                   
-            
+            for i, device in enumerate(web.devices):
+                chest = device.getFrame().getDataChestWrapper()
+                path = loc.split("\\")
+                r = re.compile(".{2}_.{2}_.{2}")
+                print("Switching path to:", path)
+                if not r.match(path[-1]):
+                    dateFolderName = time.strftime("%x").replace(" ", "_")
+                    dateFolderName = dateFolderName.replace("/", "_")
+                    loc = loc + "\\" + dateFolderName
+                if chest != None:
+                    chest.changeLocation(loc, True)

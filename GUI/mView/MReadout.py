@@ -30,14 +30,15 @@ class MReadout(QtGui.QWidget):
         self.parent = parent
         self.lcd = QtGui.QLCDNumber(parent)
         self.lcd.setSegmentStyle(QtGui.QLCDNumber.Flat)
-        self.label = QtGui.QLabel('', self.parent)
+        self.label = QtGui.QLabel("", self.parent)
         self.layout = QtGui.QHBoxLayout(parent)
         self.layout.addWidget(self.lcd)
         self.layout.addWidget(self.label)
         self.setLayout(self.layout)
         self.isLCD = True
         sizePolicy = QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum
+        )
         self.setSizePolicy(sizePolicy)
         self.lcd.setSizePolicy(sizePolicy)
         self.label.setSizePolicy(sizePolicy)
@@ -61,14 +62,12 @@ class MReadout(QtGui.QWidget):
         self.label.setFont(font)
 
     def display(self, data):
-
         try:
             float(data)
             self.lcd.display(data)
             self.lcd.show()
             self.label.hide()
         except:
-
             self.lcd.hide()
             self.label.show()
             self.label.setText(str(str(data)))

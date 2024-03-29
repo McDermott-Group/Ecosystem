@@ -45,12 +45,12 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
-if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
+if __file__ in [f for f in os.listdir(".") if os.path.isfile(f)]:
     SCRIPT_PATH = os.path.dirname(os.getcwd())
 else:
     SCRIPT_PATH = os.path.dirname(__file__)
-LOCAL_PATH = SCRIPT_PATH.rsplit('instruments', 1)[0]
-INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, 'instruments')
+LOCAL_PATH = SCRIPT_PATH.rsplit("instruments", 1)[0]
+INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, "instruments")
 if INSTRUMENTS_PATH not in sys.path:
     sys.path.append(INSTRUMENTS_PATH)
 
@@ -61,24 +61,24 @@ class VarianControllerWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect the the guage controller."""
-        print(('Connecting to "%s" on port "%s"...' %(server.name, port)))
+        print(('Connecting to "%s" on port "%s"...' % (server.name, port)))
         self.server = server
         self.ctx = server.context()
         self.port = port
-        # The following parameters match the default configuration of 
+        # The following parameters match the default configuration of
         # the Varian unit.
         p = self.packet()
         p.open(port)
         p.baudrate(9600)
         p.stopbits(1)
         p.bytesize(8)
-        p.parity('N')
+        p.parity("N")
         p.rts(False)
         p.timeout(2 * units.s)
         # Clear out the read buffer. This is necessary for some devices.
         p.read_line()
         yield p.send()
-        
+
     def packet(self):
         """Create a packet in our private context."""
         return self.server.packet(context=self.ctx)
@@ -103,10 +103,10 @@ class VarianControllerWrapper(DeviceWrapper):
 
 
 class VarianControllerServer(DeviceServer):
-    devicename = 'Varian Guage Controller'
-    name = 'Varian Guage Controller'
+    devicename = "Varian Guage Controller"
+    name = "Varian Guage Controller"
     deviceWrapper = VarianControllerWrapper
-    
+
     @inlineCallbacks
     def initServer(self):
         """Initialize the server."""
@@ -114,28 +114,28 @@ class VarianControllerServer(DeviceServer):
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
-    
-    @setting(12, 'Get Pressures', returns='*?')
+
+    @setting(12, "Get Pressures", returns="*?")
     def pressures(self, c):
         dev = self.selectedDevice(c)
         ans = yield self.getPressures(dev)
-        ans = ans.replace('>','')
-        ans = ans.rsplit(',')
+        ans = ans.replace(">", "")
+        ans = ans.rsplit(",")
         ans = [val.strip() for val in ans]
-        ans = [np.nan if not self.isFloat(val) else float(val) for val in ans ]
-        
+        ans = [np.nan if not self.isFloat(val) else float(val) for val in ans]
+
         unit = yield self.getUnits(dev)
-        if unit == '00':
+        if unit == "00":
             ans = ans * units.torr
-        elif unit == '01':
-            ans = [(val/1000) for val in ans]
-            ans = ans*units.bar
-        elif unit == '00':
+        elif unit == "01":
+            ans = [(val / 1000) for val in ans]
+            ans = ans * units.bar
+        elif unit == "00":
             ans = ans * units.Pa
-            
+
         returnValue(ans)
-        
-    @setting(100, 'emission_on', sensor = 's')
+
+    @setting(100, "emission_on", sensor="s")
     def emissionOn(self, c, sensor):
         """
         Turns emmissionOn for given sensor
@@ -144,29 +144,30 @@ class VarianControllerServer(DeviceServer):
         """
         print(sensor)
         dev = self.selectedDevice(c)
-        yield dev.rw_line('#0031U'+sensor+'\r')
+        yield dev.rw_line("#0031U" + sensor + "\r")
 
-    @setting(200, 'emission_off', sensor = 's')
+    @setting(200, "emission_off", sensor="s")
     def emissionOff(self, c, sensor):
-        '''Turns emmissionOn for given sensor
+        """Turns emmissionOn for given sensor
         args:
-        sensor  The name of the sensor to be turned on.'''
+        sensor  The name of the sensor to be turned on."""
         print(sensor)
         dev = self.selectedDevice(c)
-        yield dev.rw_line('#0030U'+sensor+'\r')
-        
+        yield dev.rw_line("#0030U" + sensor + "\r")
+
     @inlineCallbacks
     def getPressures(self, dev):
         ans = yield dev.rw_line("#000F\r")
         # Replace > symbol
         returnValue(ans)
-        
+
     @inlineCallbacks
     def getUnits(self, dev):
         ans = yield dev.rw_line("#0013\r")
         ans = ans.strip()
-        ans = ans.replace('>', '')
-        returnValue( ans)
+        ans = ans.replace(">", "")
+        returnValue(ans)
+
     def isFloat(self, val):
         try:
             float(val)
@@ -178,7 +179,7 @@ class VarianControllerServer(DeviceServer):
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'VarianController', 'Links'], True)
+        yield reg.cd(["", "Servers", "VarianController", "Links"], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -186,7 +187,7 @@ class VarianControllerServer(DeviceServer):
         ans = yield p.send()
         self.serialLinks = {k: ans[k] for k in keys}
 
-    @inlineCallbacks    
+    @inlineCallbacks
     def findDevices(self):
         """Find available devices from a list stored in the registry."""
         devs = []
@@ -197,7 +198,7 @@ class VarianControllerServer(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '{} - {}'.format(server, port)
+            devName = "{} - {}".format(server, port)
             devs += [(name, (server, port))]
         returnValue(devs)
 
@@ -205,5 +206,5 @@ class VarianControllerServer(DeviceServer):
 __server__ = VarianControllerServer()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     util.runServer(__server__)

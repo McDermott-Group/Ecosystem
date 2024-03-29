@@ -29,18 +29,17 @@ class MMail:
 
     def __init__(self, To, From, Subject, Body):
         msg = MIMEText(Body)
-        msg['Subject'] = Subject
-        msg['From'] = From
-        msg['To'] = To
-        smtpObj = smtplib.SMTP('smtp.gmail.com')
+        msg["Subject"] = Subject
+        msg["From"] = From
+        msg["To"] = To
+        smtpObj = smtplib.SMTP("smtp.gmail.com")
         # Say hello to the email server.
         smtpObj.ehlo()
         # Initialize TLS security.
         smtpObj.starttls()
         if To:
-            smtpObj.login('physics.labrad@gmail.com', 'mcdermott')
+            smtpObj.login("physics.labrad@gmail.com", "mcdermott")
             # Send the email.
-            smtpObj.sendmail('physics.labrad@gmail.com', To.split(','),
-                             msg.as_string())
+            smtpObj.sendmail("physics.labrad@gmail.com", To.split(","), msg.as_string())
             print("Successfully sent mail.")
         smtpObj.quit()

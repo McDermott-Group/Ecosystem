@@ -30,15 +30,19 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 
 LOCK_TIMEOUT = 10
 
+
 class DeviceLockedError(Error):
     """The device is locked."""
+
     # TODO should tell who holds lock and when it expires
     code = 4
 
+
 class DeviceWrapper(object):
     """A wrapper for a device."""
+
     def __init__(self, guid, name):
-        self.guid = guid # globally-unique identifier
+        self.guid = guid  # globally-unique identifier
         self.name = name
         self.locked = False
         self._lockContext = None
@@ -89,6 +93,7 @@ class DeviceWrapper(object):
     def deselect(self, context):
         """Deselect this device in a context."""
 
+
 class DeviceServer(LabradServer):
     """A server for devices.
     Creates a DeviceWrapper for each device it finds, based on a
@@ -120,18 +125,19 @@ class DeviceServer(LabradServer):
     Optionally specify a device specific identication function
     deviceIdentFunc = 'identify_device'
     """
-    name = 'Generic Device Server'
+
+    name = "Generic Device Server"
 
     # Default device name and wrapper for backwards compatibility with servers
     # written before we supported multiple different device types, and which
     # do not explicitly set deviceWrapper and/or deviceName.
-    deviceName = 'Generic Device'
+    deviceName = "Generic Device"
     deviceWrapper = DeviceWrapper
 
     def __init__(self):
-        #Backward compatibility for servers that don't use a
-        #deviceWrappers dict
-        if not hasattr(self, 'deviceWrappers'):
+        # Backward compatibility for servers that don't use a
+        # deviceWrappers dict
+        if not hasattr(self, "deviceWrappers"):
             names = self.deviceName
             if isinstance(names, str):
                 names = [names]
@@ -139,17 +145,18 @@ class DeviceServer(LabradServer):
         LabradServer.__init__(self)
 
     def initServer(self):
-        self.devices = MultiDict() # aliases -> device
-        self.device_guids = {} # name -> guid
+        self.devices = MultiDict()  # aliases -> device
+        self.device_guids = {}  # name -> guid
         self._next_guid = 0
         self._refreshLock = defer.DeferredLock()
         return self.refreshDeviceList()
 
     @inlineCallbacks
     def stopServer(self):
-        if hasattr(self, 'devices'):
-            ds = [defer.maybeDeferred(dev.shutdown)
-                  for dev in list(self.devices.values())]
+        if hasattr(self, "devices"):
+            ds = [
+                defer.maybeDeferred(dev.shutdown) for dev in list(self.devices.values())
+            ]
             yield defer.DeferredList(ds, fireOnOneErrback=True)
 
     def findDevices(self):
@@ -175,8 +182,8 @@ class DeviceServer(LabradServer):
         args and kw come from findDevices (ie same as are passed into the
         device wrapper's connect method).
         """
-        if 'device' in list(kw.keys()):
-            device = kw['device']
+        if "device" in list(kw.keys()):
+            device = kw["device"]
             return self.deviceWrappers[device]
         elif len(self.deviceWrappers) == 1:
             return list(self.deviceWrappers.values())[0]
@@ -186,7 +193,7 @@ class DeviceServer(LabradServer):
     @inlineCallbacks
     def _doRefresh(self):
         """Do the actual refreshing."""
-        self.log('refreshing device list...')
+        self.log("refreshing device list...")
         all_found = yield self.findDevices()
 
         # If there are devices for which we don't have wrappers,
@@ -201,16 +208,23 @@ class DeviceServer(LabradServer):
             args = f[1] if len(f) > 1 else ()
             kw = f[2] if len(f) > 2 else {}
             return name, args, kw
+
         all_found = [fixFound(f) for f in all_found]
 
-        additions = [(name, args, kw) for (name, args, kw) in all_found
-                     if name not in self.devices]
+        additions = [
+            (name, args, kw)
+            for (name, args, kw) in all_found
+            if name not in self.devices
+        ]
         names_found = [name for (name, args, kw) in all_found]
-        deletions = [name for name in self.device_guids
-                     if name in self.devices and name not in names_found]
-        self.log('all_found: %s' % all_found)
-        self.log('additions: %s' % additions)
-        self.log('deletions: %s' % deletions)
+        deletions = [
+            name
+            for name in self.device_guids
+            if name in self.devices and name not in names_found
+        ]
+        self.log("all_found: %s" % all_found)
+        self.log("additions: %s" % additions)
+        self.log("deletions: %s" % deletions)
 
         # start additions
         for name, args, kw in additions:
@@ -223,11 +237,11 @@ class DeviceServer(LabradServer):
                 self._next_guid += 1
 
             deviceWrapper = self.chooseDeviceWrapper(name, *args, **kw)
-            if 'device' in list(kw.keys()):
-                del kw['device']
+            if "device" in list(kw.keys()):
+                del kw["device"]
             dev = deviceWrapper(guid, name)
             yield self.client.refresh()
- 
+
             yield dev.connect(*args, **kw)
             self.devices[guid, name] = dev
 
@@ -238,7 +252,7 @@ class DeviceServer(LabradServer):
     @inlineCallbacks
     def addDevice(self, name, *args, **kw):
         if name in self.devices:
-            return # we already have this device
+            return  # we already have this device
         if name in self.device_guids:
             # we've seen this device before
             # so we'll reuse the old guid
@@ -248,8 +262,8 @@ class DeviceServer(LabradServer):
             self._next_guid += 1
 
         deviceWrapper = self.chooseDeviceWrapper(name, *args, **kw)
-        if 'device' in list(kw.keys()):
-            del kw['device']
+        if "device" in list(kw.keys()):
+            del kw["device"]
         dev = deviceWrapper(guid, name)
         yield self.client.refresh()
         yield dev.connect(*args, **kw)
@@ -277,8 +291,8 @@ class DeviceServer(LabradServer):
 
     def expireContext(self, c):
         """Release selected/locked device when context expires."""
-        if 'device' in c:
-            alias = c['device']
+        if "device" in c:
+            alias = c["device"]
             try:
                 dev = self.devices[alias]
                 if dev.lockedInContext(c):
@@ -298,7 +312,7 @@ class DeviceServer(LabradServer):
         if not len(self.devices):
             raise errors.NoDevicesAvailableError()
         try:
-            key = context['device']
+            key = context["device"]
         except KeyError:
             raise errors.DeviceNotSelectedError()
         try:
@@ -323,10 +337,10 @@ class DeviceServer(LabradServer):
         if not dev.accessibleFrom(context.ID):
             raise DeviceLockedError()
 
-        if 'device' in context:
-            if context['device'] != dev.guid:
+        if "device" in context:
+            if context["device"] != dev.guid:
                 try:
-                    oldDev = self.devices[context['device']]
+                    oldDev = self.devices[context["device"]]
                 except KeyError:
                     pass
                 else:
@@ -335,17 +349,17 @@ class DeviceServer(LabradServer):
                     if oldDev.lockedInContext(context.ID):
                         oldDev.unlock(context.ID)
                     oldDev.deselect(context)
-                context['device'] = dev.guid
+                context["device"] = dev.guid
                 dev.select(context)
         else:
-            context['device'] = dev.guid
+            context["device"] = dev.guid
             dev.select(context)
         return dev
 
     def deselectDevice(self, context):
-        if 'device' in context:
+        if "device" in context:
             try:
-                oldDev = self.devices[context['device']]
+                oldDev = self.devices[context["device"]]
             except KeyError:
                 pass
             else:
@@ -353,7 +367,7 @@ class DeviceServer(LabradServer):
                 if oldDev.lockedInContext(context.ID):
                     oldDev.unlock(context.ID)
                 oldDev.deselect(context)
-            del context['device']
+            del context["device"]
 
     def getDevice(self, context, key=None):
         if not len(self.devices):
@@ -371,7 +385,7 @@ class DeviceServer(LabradServer):
 
     # server settings
 
-    @setting(1, 'List Devices', returns='*(ws)')
+    @setting(1, "List Devices", returns="*(ws)")
     def list_devices(self, c):
         """Get a list of available devices.
         The list entries have a numerical ID and a string name.
@@ -385,39 +399,49 @@ class DeviceServer(LabradServer):
         IDs, names = self.deviceLists()
         return list(zip(IDs, names))
 
-    @setting(2, 'Select Device',
-                key=[': Select first device',
-                     's: Select device by name',
-                     'w: Select device by ID'],
-                returns='s: Name of the selected device')
+    @setting(
+        2,
+        "Select Device",
+        key=[
+            ": Select first device",
+            "s: Select device by name",
+            "w: Select device by ID",
+        ],
+        returns="s: Name of the selected device",
+    )
     def select_device(self, c, key=0):
         """Select a device for the current context."""
         dev = self.selectDevice(c, key=key)
         return dev.name
 
-    @setting(3, 'Deselect Device', returns='')
+    @setting(3, "Deselect Device", returns="")
     def deselect_device(self, c):
         """Deselect a device for the current context."""
         dev = self.deselectDevice(c)
 
-    @setting(4, 'Refresh Devices', returns=['*(ws)'])
+    @setting(4, "Refresh Devices", returns=["*(ws)"])
     def refresh_devices(self, c):
         """Refresh the list of available devices."""
         yield self.refreshDeviceList()
         returnValue(self.list_devices(c))
 
-    @setting(1000001, 'Lock Device',
-                      timeout=[': Lock the selected device for default time',
-                            'v[s]: Lock for specified time'],
-                      returns=[''])
+    @setting(
+        1000001,
+        "Lock Device",
+        timeout=[
+            ": Lock the selected device for default time",
+            "v[s]: Lock for specified time",
+        ],
+        returns=[""],
+    )
     def lock_device(self, c, timeout):
         """Lock a device to be accessible only in this context."""
         dev = self.selectedDevice(c)
         if timeout is not None:
-            timeout = timeout['s']
+            timeout = timeout["s"]
         dev.lock(c.ID, timeout)
 
-    @setting(1000002, 'Release Device', returns='')
+    @setting(1000002, "Release Device", returns="")
     def release_device(self, c):
         """Release the lock on the currently-locked device."""
         dev = self.selectedDevice(c)

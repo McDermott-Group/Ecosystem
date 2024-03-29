@@ -30,7 +30,8 @@ from matplotlib.dates import DateFormatter, AutoDateLocator
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
-matplotlib.use('TkAgg')
+
+matplotlib.use("TkAgg")
 
 from dateStamp import *
 from dataChest import *
@@ -42,7 +43,7 @@ class mGraph(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
         # Create a matplotlib figure.
         self.figure = plt.figure()
-        self.figure.set_facecolor('r')
+        self.figure.set_facecolor("r")
         # Create a QFrame to house the plot. This is not necessary,
         # just makes it look nice.
         self.matframe = QtGui.QFrame()
@@ -51,15 +52,18 @@ class mGraph(QtGui.QWidget):
         self.matframe.setLayout(self.matLayout)
         self.matframe.setFrameShape(QtGui.QFrame.Panel)
         self.matframe.setFrameShadow(QtGui.QFrame.Plain)
-        self.matframe.setStyleSheet("background-color: rgb(70,80,88); "
-                                    "margin:0px; border:2px solid rgb(0, 0, 0); ")
+        self.matframe.setStyleSheet(
+            "background-color: rgb(70,80,88); "
+            "margin:0px; border:2px solid rgb(0, 0, 0); "
+        )
         self.canvas = FigureCanvas(self.figure)
-        self.canvas.setSizePolicy(QtGui.QSizePolicy.Preferred,
-                                  QtGui.QSizePolicy.Preferred)
+        self.canvas.setSizePolicy(
+            QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred
+        )
         # This is the device we want to use.
         self.device = device
         # This sets up axis on which to plot.
-        color = (189. / 255, 195. / 255, 199. / 255)
+        color = (189.0 / 255, 195.0 / 255, 199.0 / 255)
         self.ax = self.figure.add_subplot(111, axisbg=color)
         ax = self.ax
         # Add the matplotlib canvas to the QFrame.
@@ -67,14 +71,14 @@ class mGraph(QtGui.QWidget):
         # The following lines set up all the colors, makes it look nice.
         # The code to do it is far from pretty and I am planning
         # on cleaning this up a bit.
-        self.figure.patch.set_color((70. / 255, 80. / 255, 88. / 255))
-        self.figure.patch.set_edgecolor((70. / 255, 80. / 255, 88. / 255))
-        ax.spines['bottom'].set_color(color)
-        ax.spines['top'].set_color(color)
-        ax.spines['right'].set_color(color)
-        ax.spines['left'].set_color(color)
-        ax.tick_params(axis='x', colors=color)
-        ax.tick_params(axis='y', colors=color)
+        self.figure.patch.set_color((70.0 / 255, 80.0 / 255, 88.0 / 255))
+        self.figure.patch.set_edgecolor((70.0 / 255, 80.0 / 255, 88.0 / 255))
+        ax.spines["bottom"].set_color(color)
+        ax.spines["top"].set_color(color)
+        ax.spines["right"].set_color(color)
+        ax.spines["left"].set_color(color)
+        ax.tick_params(axis="x", colors=color)
+        ax.tick_params(axis="y", colors=color)
         ax.title.set_color(color)
         ax.yaxis.label.set_color(color)
         ax.xaxis.label.set_color(color)
@@ -99,11 +103,14 @@ class mGraph(QtGui.QWidget):
         NavigationToolbar.home = self.enableAutoScaling
         self.toolbar = NavigationToolbar(self.canvas, self)
 
-        self.cid = self.canvas.mpl_connect('button_press_event',
-                                           self.disableAutoScaling)
-        self.setStyleSheet("QPushButton{\
+        self.cid = self.canvas.mpl_connect(
+            "button_press_event", self.disableAutoScaling
+        )
+        self.setStyleSheet(
+            "QPushButton{\
                     color:rgb(189,195, 199); \
-                    background:rgb(70, 80, 88)};")
+                    background:rgb(70, 80, 88)};"
+        )
         self.fullGraphBtn = QtGui.QPushButton("Show Interactive Graph")
         self.fullGraphBtn.clicked.connect(self.openFullGraphGui)
         self.toolbarFrame = QtGui.QFrame()
@@ -111,22 +118,27 @@ class mGraph(QtGui.QWidget):
         toolbarFrameLayout.addWidget(self.toolbar)
         self.toolbar.setParent(None)
         self.toolbarFrame.setLayout(toolbarFrameLayout)
-        self.toolbarFrame.setStyleSheet("\
+        self.toolbarFrame.setStyleSheet(
+            "\
                    border:2px solid rgb(0,0,0);\
                    color:rgb(189,195,199); \
-                   background:rgb(70, 80, 88);")
-        self.toolbar.setStyleSheet("\
+                   background:rgb(70, 80, 88);"
+        )
+        self.toolbar.setStyleSheet(
+            "\
                    border:0px solid rgb(0,0,0);\
-                   QDialog{background:rgb(70, 80, 88)}")
+                   QDialog{background:rgb(70, 80, 88)}"
+        )
         self.matPlotInfo = QtGui.QLabel()
         self.alertFont = QtGui.QFont()
         self.alertFont.setPointSize(12)
         self.matPlotInfo.setStyleSheet("color:rgb(200, 69, 50);")
-        self.matPlotInfo.setText("Auto refresh disabled, "
-                                 "click HOME button to enable.")
+        self.matPlotInfo.setText(
+            "Auto refresh disabled, " "click HOME button to enable."
+        )
         self.matPlotInfo.setFont(self.alertFont)
 
-        #self.refreshRateSec = device.getFrame().getPlotRefreshRate()
+        # self.refreshRateSec = device.getFrame().getPlotRefreshRate()
         self.refreshRateSec = device.getFrame().getPlotRefreshRate()
         self.timer = QtCore.QTimer(self)
 
@@ -136,9 +148,11 @@ class mGraph(QtGui.QWidget):
         self.currTimeRange = 120
         self.lineSelect = MCheckableComboBox()
         self.lineSelect.setSizeAdjustPolicy(0)
-        self.lineSelect.setStyleSheet("\
+        self.lineSelect.setStyleSheet(
+            "\
                     background-color:rgb(70, 80, 88);\
-                    color:rgb(189,195, 199);")
+                    color:rgb(189,195, 199);"
+        )
         self.plot(self.currTimeRange)
 
         self.timer.timeout.connect(partial(self.plot, self.currTimeRange))
@@ -282,8 +296,7 @@ class mGraph(QtGui.QWidget):
                 self.timer.stop()
                 self.timer.timeout.disconnect()
                 self.currTimeRange = timeRange
-                self.timer.timeout.connect(lambda:
-                                           self.plot(self.currTimeRange))
+                self.timer.timeout.connect(lambda: self.plot(self.currTimeRange))
                 self.timer.start(self.refreshRateSec * 1000)
             plotRefreshRate = self.device.getFrame().getPlotRefreshRate()
             if self.refreshRateSec != plotRefreshRate:
@@ -291,8 +304,7 @@ class mGraph(QtGui.QWidget):
                 self.timer.stop()
                 self.timer.timeout.disconnect()
                 self.currTimeRange = timeRange
-                self.timer.timeout.connect(lambda:
-                                           self.plot(self.currTimeRange))
+                self.timer.timeout.connect(lambda: self.plot(self.currTimeRange))
                 self.timer.start(self.refreshRateSec * 1000)
 
     def getDataRangeFromDataSet(self, dataSet, time):
@@ -326,7 +338,7 @@ class mGraph(QtGui.QWidget):
 
         if not self.initialized:
             self.initializePlot(dataSet)
-            self.legend = self.ax.legend(loc='upper left')
+            self.legend = self.ax.legend(loc="upper left")
             # This is the ONLY time canvas.draw is called. It should
             # NOT be called anywhere else if the graphing speed is
             # to be fast.
@@ -335,39 +347,38 @@ class mGraph(QtGui.QWidget):
             data = self.getDataRangeFromDataSet(dataSet, time)
             for i in range(len(data[0]) - 1):
                 if self.lineSelect.isChecked(i):
-                    times = [dt.datetime.fromtimestamp(row[0])
-                             for row in data]
+                    times = [dt.datetime.fromtimestamp(row[0]) for row in data]
                     column = [row[i + 1] for row in data]
                     if not self.line[i].get_visible():
                         self.line[i].set_visible(True)
                     self.line[i].set_data(times, column)
-                    self.legend = self.ax.legend(loc='upper left')
+                    self.legend = self.ax.legend(loc="upper left")
                     self.ax.grid(True)
                     self.ax.hold(True)
                 else:
                     self.line[i].set_visible(False)
                 pass
-            self.ax.set_title(self.device.getFrame().getTitle(),
-                              color=(189. / 255, 195. / 255, 199. / 255))
+            self.ax.set_title(
+                self.device.getFrame().getTitle(),
+                color=(189.0 / 255, 195.0 / 255, 199.0 / 255),
+            )
             if self.home and times:
                 self.ax.set_xlim(times[0], times[-1])
                 self.ax.relim(visible_only=True)
-                self.ax.autoscale(axis='y')
+                self.ax.autoscale(axis="y")
 
             frame = self.device.getFrame()
             yLabel = frame.getYLabel()
             if yLabel is not None:
                 if frame.getCustomUnits():
-                    self.ax.set_ylabel("%s (%s)" % (yLabel,
-                                                    frame.getCustomUnits()))
+                    self.ax.set_ylabel("%s (%s)" % (yLabel, frame.getCustomUnits()))
                 elif frame.getUnits()[i - 1]:
-                    self.ax.set_ylabel("%s (%s)" % (yLabel,
-                                                    frame.getUnits()[i - 1]))
+                    self.ax.set_ylabel("%s (%s)" % (yLabel, frame.getUnits()[i - 1]))
 
             locator = AutoDateLocator()
 
             self.ax.xaxis.set_major_locator(locator)
-            self.ax.xaxis.set_major_formatter(DateFormatter('%m/%d %H:%M:%S'))
+            self.ax.xaxis.set_major_formatter(DateFormatter("%m/%d %H:%M:%S"))
             self.figure.autofmt_xdate()
             self.ax.draw_artist(self.figure)
             self.ax.draw_artist(self.ax.patch)
@@ -397,7 +408,6 @@ class fullGraphContainer(QtGui.QWidget):
         self.canvas = FigureCanvas(self.figure)
         self.ax = self.figure.add_subplot(111)
         for i, name in enumerate(varNames):
-
             data[name] = None
             column = [elem[i + 1] for elem in dataSet]
             data[name] = column
@@ -409,13 +419,13 @@ class fullGraphContainer(QtGui.QWidget):
             # print name
 
         self.toolbar = NavigationToolbar(self.canvas, self)
-        self.legend = self.ax.legend(loc='upper left')
+        self.legend = self.ax.legend(loc="upper left")
         self.ax.set_xlabel("Time")
 
         locator = AutoDateLocator()
 
         self.ax.xaxis.set_major_locator(locator)
-        self.ax.xaxis.set_major_formatter(DateFormatter('%m/%d %H:%M:%S'))
+        self.ax.xaxis.set_major_formatter(DateFormatter("%m/%d %H:%M:%S"))
         self.figure.autofmt_xdate()
 
         layout.addWidget(self.canvas)

@@ -164,7 +164,6 @@
 # counter, LVDS SD, etc. See examples in dac.py
 
 
-
 """
 TODO
 cmdTime_cycles does not properly estimate sram length
@@ -221,9 +220,11 @@ from fpgalib.util import TimedLock, LoggingPacket
 # logging.INFO. To print the Direct Etherenet packets, set it to
 # logging.DEBUG.
 
+
 def timeString():
-    ts = ('{0.tm_year} {0.tm_mon} {0.tm_mday} {0.tm_hour} {0.tm_min} {0.tm_sec}'
-          .format(time.localtime()))
+    ts = "{0.tm_year} {0.tm_mon} {0.tm_mday} {0.tm_hour} {0.tm_min} {0.tm_sec}".format(
+        time.localtime()
+    )
     return ts
 
 
@@ -270,6 +271,7 @@ class BoardGroup(object):
     on some set of the boards in the group, new sequence data for the next
     point can be uploaded.
     """
+
     def __init__(self, fpgaServer, directEthernetServer, port):
         self.fpgaServer = fpgaServer
         self.directEthernetServer = directEthernetServer
@@ -301,13 +303,15 @@ class BoardGroup(object):
         server_ids = set(id for id, name in servers)
         if self.directEthernetServer.ID in server_ids:
             yield cxn.manager.expire_context(
-                    self.directEthernetServer.ID, context=self.ctx)
+                self.directEthernetServer.ID, context=self.ctx
+            )
 
     def configure(self, name, boards):
         """Update configuration for this board group."""
         self.name = name
-        self.boardOrder = ['{} {}'.format(name, boardName) for
-                           (boardName, delay) in boards]
+        self.boardOrder = [
+            "{} {}".format(name, boardName) for (boardName, delay) in boards
+        ]
         self.boardDelays = [delay for (boardName, delay) in boards]
 
     @inlineCallbacks
@@ -335,7 +339,7 @@ class BoardGroup(object):
                 if success:
                     found.extend(result)
                 else:
-                    print('autodetect error:')
+                    print("autodetect error:")
                     result.printTraceback()
 
             # Clear detection packets which may be buffered in device contexts.
@@ -357,29 +361,33 @@ class BoardGroup(object):
 
     def detectDACs(self, timeout=1.0):
         """Try to detect DAC boards on this board group."""
+
         def callback(src, data):
             board = int(src[-2:], 16)
             build = dac.DAC.readback2BuildNumber(data)
-            devName = '{} DAC {}'.format(self.name, board)
-            args = (devName, self, self.directEthernetServer, self.port, board,
-                    build)
+            devName = "{} DAC {}".format(self.name, board)
+            args = (devName, self, self.directEthernetServer, self.port, board, build)
             return (devName, args)
+
         macs = [dac.DAC.macFor(board) for board in range(256)]
-        return self._doDetection(macs, dac.DAC.regPing(),
-                                 dac.DAC.READBACK_LEN, callback)
+        return self._doDetection(
+            macs, dac.DAC.regPing(), dac.DAC.READBACK_LEN, callback
+        )
 
     def detectADCs(self, timeout=1.0):
         """Try to detect ADC boards on this board group."""
+
         def callback(src, data):
             board = int(src[-2:], 16)
             build = adc.ADC.readback2BuildNumber(data)
-            devName = '{} ADC {}'.format(self.name, board)
-            args = (devName, self, self.directEthernetServer, self.port, board,
-                    build)
+            devName = "{} ADC {}".format(self.name, board)
+            args = (devName, self, self.directEthernetServer, self.port, board, build)
             return (devName, args)
+
         macs = [adc.ADC.macFor(board) for board in range(256)]
-        return self._doDetection(macs, adc.ADC.regPing(),
-                                 adc.ADC.READBACK_LEN, callback)
+        return self._doDetection(
+            macs, adc.ADC.regPing(), adc.ADC.READBACK_LEN, callback
+        )
 
     @inlineCallbacks
     def _doDetection(self, macs, packet, respLength, callback, timeout=1.0):
@@ -398,7 +406,7 @@ class BoardGroup(object):
             p = self.directEthernetServer.packet()
             p.connect(self.port)
             p.require_length(respLength)
-            p.timeout(T.Value(timeout, 's'))
+            p.timeout(T.Value(timeout, "s"))
             p.listen()
             for mac in macs:
                 p.destination_mac(mac)
@@ -415,21 +423,23 @@ class BoardGroup(object):
                         devInfo = callback(src, data)
                         found.append(devInfo)
                 except T.Error as e:
-                    logging.error('timeout exception: {}'.format(e))
+                    logging.error("timeout exception: {}".format(e))
                     break  # Read timeout.
             returnValue(found)
         finally:
             # Expire the detection context.
             cxn = self.directEthernetServer._cxn
-            yield cxn.manager.expire_context(self.directEthernetServer.ID,
-                                             context=ctx)
+            yield cxn.manager.expire_context(self.directEthernetServer.ID, context=ctx)
 
     def devices(self):
         """
         Return a list of known device objects belonging to this board group.
         """
-        return [dev for dev in list(self.fpgaServer.devices.values())
-                    if dev.boardGroup == self]
+        return [
+            dev
+            for dev in list(self.fpgaServer.devices.values())
+            if dev.boardGroup == self
+        ]
 
     @inlineCallbacks
     def testMode(self, func, *a, **kw):
@@ -449,7 +459,6 @@ class BoardGroup(object):
         finally:
             for i in range(NUM_PAGES):
                 self.pipeSemaphore.release()
-
 
     def makePackets(self, runners, page, reps, timingOrder, sync=249):
         """Make packets to run a sequence on this board group.
@@ -548,8 +557,7 @@ class BoardGroup(object):
         runPkts = self.makeRunPackets(boards)
         # Collect and read (or discard) timing results.
         seqTime = max(runner.seqTime for runner in runners)
-        collectPkts = [runner.collectPacket(seqTime, self.ctx)
-                       for runner in runners]
+        collectPkts = [runner.collectPacket(seqTime, self.ctx) for runner in runners]
         readPkts = [runner.readPacket(timingOrder) for runner in runners]
 
         return loadPkts, setupPkts, runPkts, collectPkts, readPkts
@@ -573,13 +581,13 @@ class BoardGroup(object):
         run = self.directEthernetServer.packet(context=self.ctx)
         both = self.directEthernetServer.packet(context=self.ctx)
         if LOGGING_PACKET:
-            wait = LoggingPacket(wait, name='run=wait')
-            run = LoggingPacket(run, name='run=run')
-            both = LoggingPacket(both, name='run=both')
+            wait = LoggingPacket(wait, name="run=wait")
+            run = LoggingPacket(run, name="run=run")
+            both = LoggingPacket(both, name="run=both")
         # Wait for triggers and discard them. The actual number of triggers to
         # wait for will be decide later. The 0 is a placeholder here.
-        wait.wait_for_trigger(0, key='nTriggers')
-        both.wait_for_trigger(0, key='nTriggers')
+        wait.wait_for_trigger(0, key="nTriggers")
+        both.wait_for_trigger(0, key="nTriggers")
         # Run all boards.
         for dev, regs in data:
             bytes = regs.tostring()
@@ -592,29 +600,31 @@ class BoardGroup(object):
         return wait, run, both
 
     @inlineCallbacks
-    def run(self, runners, reps, setupPkts, setupState, sync, getTimingData,
-            timingOrder):
+    def run(
+        self, runners, reps, setupPkts, setupState, sync, getTimingData, timingOrder
+    ):
         """Run a sequence on this board group."""
         # Check whether this sequence will fit in just one page.
         if all(runner.pageable() for runner in runners):
             # Lock just one page.
             page = next(self.pageNums)
             pageLocks = [self.pageLocks[page]]
-            if not hasattr(self, '_previousPagingStatus') or \
-                    not self._previousPagingStatus:
-                print('Paging on.')
+            if (
+                not hasattr(self, "_previousPagingStatus")
+                or not self._previousPagingStatus
+            ):
+                print("Paging on.")
                 self._previousPagingStatus = True
         else:
             # Start on page 0 and set pageLocks to all pages.
-            if not hasattr(self, '_previousPagingStatus') or \
-                    self._previousPagingStatus:
-                print('Paging off: SRAM too long.')
+            if not hasattr(self, "_previousPagingStatus") or self._previousPagingStatus:
+                print("Paging off: SRAM too long.")
                 self._previousPagingStatus = False
             page = 0
             pageLocks = self.pageLocks
 
         # Prepare packets.
-        logging.info('making packets')
+        logging.info("making packets")
         pkts = self.makePackets(runners, page, reps, timingOrder, sync)
         loadPkts, boardSetupPkts, runPkts, collectPkts, readPkts = pkts
 
@@ -626,73 +636,74 @@ class BoardGroup(object):
 
         try:
             yield self.pipeSemaphore.acquire()
-            logging.info('pipe semaphore acquired')
+            logging.info("pipe semaphore acquired")
             try:
                 # Stage 1: load.
                 for pageLock in pageLocks:  # Lock pages to be written.
                     yield pageLock.acquire()
-                logging.info('page locks acquired')
+                logging.info("page locks acquired")
                 # Send load packets. Do not wait for response. We already
                 # acquired the page lock, so sending data to SRAM and memory is
                 # kosher at this time.
                 # TODO: Need to check what 'load packets' is for ADC and make
                 # sure sending load packets here is ok.
-                loadDone = self.sendAll(loadPkts, 'Load')
+                loadDone = self.sendAll(loadPkts, "Load")
                 # stage 2: run
                 # Send a request for the run lock, do not wait for response.
                 runNow = self.runLock.acquire()
                 try:
                     yield loadDone  # wait until load is finished.
                     yield runNow  # Wait for acquisition of the run lock.
-                    logging.info('run lock acquired')
+                    logging.info("run lock acquired")
                     # Set the number of triggers needed before we can actually
                     # run. We expect to get one trigger for each board that
                     # had to run and return data. This is the number of
                     # runners in the previous sequence.
-                    logging.info(
-                            'num prev triggers: {}'.format(self.prevTriggers))
+                    logging.info("num prev triggers: {}".format(self.prevTriggers))
                     waitPkt, runPkt, bothPkt = runPkts
-                    waitPkt['nTriggers'] = self.prevTriggers
-                    bothPkt['nTriggers'] = self.prevTriggers
+                    waitPkt["nTriggers"] = self.prevTriggers
+                    bothPkt["nTriggers"] = self.prevTriggers
                     # store the number of triggers for the next run
                     self.prevTriggers = len(runners)
-                    logging.info('num runners: {}'.format(len(runners)))
+                    logging.info("num runners: {}".format(len(runners)))
                     # If the passed in setup state setupState, or the current
                     # actual setup state, self.setupState are empty, we need
                     # to set things up. Also if the desired setup state isn't
                     # a subset of the actual one, we need to set up.
                     # XXX Check what setup state means for ADC. Should this
                     # include the trigger/demodulator tables or not?
-                    needSetup = ((not setupState) or (not self.setupState) or
-                                    (not (setupState <= self.setupState)))
+                    needSetup = (
+                        (not setupState)
+                        or (not self.setupState)
+                        or (not (setupState <= self.setupState))
+                    )
                     if needSetup:
-                        logging.info('needSetup = True')
+                        logging.info("needSetup = True")
                         # we require changes to the setup state so first, wait
                         # for triggers indicating that the previous run has
                         # collected.
                         # If this fails, something BAD happened!
                         r = yield waitPkt.send()
-                        logging.info('waitPkt sent')
+                        logging.info("waitPkt sent")
                         try:
                             # Then set up
-                            logging.info('sending setupPkts...')
-                            yield self.sendAll(setupPkts, 'Setup')
-                            logging.info('...setupPkts sent')
+                            logging.info("sending setupPkts...")
+                            yield self.sendAll(setupPkts, "Setup")
+                            logging.info("...setupPkts sent")
                             self.setupState = setupState
                         except Exception as e:
                             # if there was an error, clear setup state
-                            logging.info('catching setupPkts exception')
+                            logging.info("catching setupPkts exception")
                             self.setupState = set()
-                            logging.error(
-                                    'Exception in setupPkts: {}'.format(e))
+                            logging.error("Exception in setupPkts: {}".format(e))
                             raise e
                         # and finally run the sequence
-                        logging.info('sending runPkt...')
+                        logging.info("sending runPkt...")
                         yield runPkt.send()
-                        logging.info('...runPkt sent')
+                        logging.info("...runPkt sent")
                     else:
                         # if this fails, something BAD happened!
-                        logging.info('need setup = false')
+                        logging.info("need setup = false")
                         r = yield bothPkt.send()
 
                     # Keep track of how long the packet waited before being
@@ -700,18 +711,19 @@ class BoardGroup(object):
                     # XXX How does this work? Why is r['nTriggers'] the wait
                     # time?
                     # print "fpga server: r['nTriggers']: %s" % (r['nTriggers'])
-                    self.runWaitTimes.append(r['nTriggers']['s'])
+                    self.runWaitTimes.append(r["nTriggers"]["s"])
                     if len(self.runWaitTimes) > 100:
                         self.runWaitTimes.pop(0)
 
                     yield self.readLock.acquire()  # wait for our turn to read
-                    logging.info('read lock acquired')
+                    logging.info("read lock acquired")
                     # stage 3: collect
                     # Collect appropriate number of packets and then trigger
                     # the master context.
                     collectAll = defer.DeferredList(
-                            [p.send() for p in collectPkts], consumeErrors=True)
-                    logging.info('waiting for collect packets')
+                        [p.send() for p in collectPkts], consumeErrors=True
+                    )
+                    logging.info("waiting for collect packets")
                 finally:
                     # by releasing the runLock, we allow the next sequence to
                     # send its run packet. if our collect fails due to a
@@ -736,14 +748,14 @@ class BoardGroup(object):
                     # to go as soon as our triggers are received, but only if
                     # that run command has been sent!
                     self.runLock.release()
-                    logging.info('run lock released')
+                    logging.info("run lock released")
                 # Wait for data to be collected.
                 results = yield collectAll
-                logging.info('results collected')
+                logging.info("results collected")
             finally:
                 for pageLock in pageLocks:
                     pageLock.release()
-                logging.info('page lock released')
+                logging.info("page lock released")
 
             # check for a timeout and recover if necessary
             if not all(success for success, result in results):
@@ -757,7 +769,7 @@ class BoardGroup(object):
             # stage 4: read
             # no timeout, so go ahead and read data
             boardOrder = [runner.dev.devName for runner in runners]
-            readAll = self.sendAll(readPkts, 'Read', boardOrder)
+            readAll = self.sendAll(readPkts, "Read", boardOrder)
             self.readLock.release()
             # This line scales really badly with incrasing stats
             # At 9600 stats the next line takes 10s out of 20s per
@@ -765,35 +777,39 @@ class BoardGroup(object):
             results = yield readAll  # wait for read to complete
 
             # List the DACs that support the data readback.
-            timingDataDACs = [runner.dev.devName for runner in runners
-                    if type(runner) == dac.DacRunner_Build8]
-            
+            timingDataDACs = [
+                runner.dev.devName
+                for runner in runners
+                if type(runner) == dac.DacRunner_Build8
+            ]
+
             if getTimingData:
                 answers = []
                 # Cache of already-parsed data from a particular board.
                 # Prevents un-flattening a packet more than once.
                 extractedData = {}
                 for dataChannelName in timingOrder:
-                    if '::' in dataChannelName:
+                    if "::" in dataChannelName:
                         # If dataChannelName has :: in it, it's an ADC
                         # with specified demod channel
-                        boardName, channel = dataChannelName.split('::')
+                        boardName, channel = dataChannelName.split("::")
                         channel = int(channel)
-                    elif 'DAC' in dataChannelName:
+                    elif "DAC" in dataChannelName:
                         # Ensure that dataChannelName is among the DACs
                         # that support the data readback.
                         if dataChannelName in timingDataDACs:
                             boardName = dataChannelName
                             channel = None
                         else:
-                            raise RuntimeError('DAC data readback '
-                                ' supported only for DAC build 8')
-                    elif 'ADC' in dataChannelName:
+                            raise RuntimeError(
+                                "DAC data readback " " supported only for DAC build 8"
+                            )
+                    elif "ADC" in dataChannelName:
                         # ADC average mode
                         boardName = dataChannelName
                         channel = None
                     else:
-                        raise RuntimeError('channel format not understood')
+                        raise RuntimeError("channel format not understood")
 
                     if boardName in extractedData:
                         # If we have already parsed the packet for this
@@ -804,8 +820,7 @@ class BoardGroup(object):
                         # relevant part to the list of returned data
                         idx = boardOrder.index(boardName)
                         runner = runners[idx]
-                        result = [data for src, dest, eth, data in
-                                  results[idx]['read']]
+                        result = [data for src, dest, eth, data in results[idx]["read"]]
                         # Array of all timing results (DAC)
                         extracted = runner.extract(result)
                         # Wrap the DAC timing results in a tuple for
@@ -818,9 +833,11 @@ class BoardGroup(object):
                         # If this is an ADC demod channel, grab that
                         # channel's data only
                         if type(runner) == adc.AdcRunner_Build1:
-                            extractedChannel = extracted[0]    
-                            extractedChannel = [extractedChannel[0][::11],
-                                                extractedChannel[1][::11]]
+                            extractedChannel = extracted[0]
+                            extractedChannel = [
+                                extractedChannel[0][::11],
+                                extractedChannel[1][::11],
+                            ]
                         else:
                             extractedChannel = extracted[0][channel]
                     else:
@@ -835,27 +852,27 @@ class BoardGroup(object):
         """Send a list of packets and wrap them up in a deferred list."""
         # Remove packets which contain no actual requests.
         packets = [p for p in packets if p._packet]
-        results = yield defer.DeferredList([p.send() for p in packets],
-                            consumeErrors=True)  # [(success, result)...]
+        results = yield defer.DeferredList(
+            [p.send() for p in packets], consumeErrors=True
+        )  # [(success, result)...]
         if all(s for s, r in results):
             # return the list of results
             returnValue([r for s, r in results])
         else:
             # create an informative error message
-            msg = 'Error(s) occured during {}:\n'.format(info)
+            msg = "Error(s) occured during {}:\n".format(info)
             if infoList is None:
-                msg += (''.join(r.getBriefTraceback()
-                        for s, r in results if not s))
+                msg += "".join(r.getBriefTraceback() for s, r in results if not s)
             else:
                 for i, (s, r) in zip(infoList, results):
-                    m = 'OK' if s else ('error!\n' + r.getBriefTraceback())
-                    msg += '{} : {}\n\n'.format(i, m)
+                    m = "OK" if s else ("error!\n" + r.getBriefTraceback())
+                    msg += "{} : {}\n\n".format(i, m)
             raise Exception(msg)
 
     def extractTiming(self, packets):
         """Extract timing data coming back from a readPacket."""
-        data = ''.join(data[3:63] for data in packets)
-        return np.fromstring(data, dtype='<u2').astype('u4')
+        data = "".join(data[3:63] for data in packets)
+        return np.fromstring(data, dtype="<u2").astype("u4")
 
     @inlineCallbacks
     def recoverFromTimeout(self, runners, results):
@@ -874,7 +891,7 @@ class BoardGroup(object):
         run context since the trigger would not have been sent yet if packet
         collection failed.
         """
-        print('RECOVERING FROM TIMEOUT')
+        print("RECOVERING FROM TIMEOUT")
 
         # Get execution counts.
         for runner, (success, result) in zip(runners, results):
@@ -884,12 +901,12 @@ class BoardGroup(object):
                 # (build 15) the start field is set to master, which means when
                 # we ping these boards they will emit daisy chain signals.
                 p = runner.dev.regPingPacket()
-                p.timeout(U.Value(1.0, 's')).read(1)
+                p.timeout(U.Value(1.0, "s")).read(1)
                 resp = yield p.send()
                 regs = runner.dev.processReadback(resp.read[0][3])
-                runner.executionCount = regs.get('executionCounter', None)
+                runner.executionCount = regs.get("executionCounter", None)
             except Exception:
-                logging.error('Exception in recoverFromTimeout', exc_info=True)
+                logging.error("Exception in recoverFromTimeout", exc_info=True)
 
         # Send triggers.
         for runner, (success, result) in zip(runners, results):
@@ -899,22 +916,22 @@ class BoardGroup(object):
 
     def timeoutReport(self, runners, results):
         """Create a nice error message explaining which boards timed out."""
-        lines = ['Some boards failed:']
+        lines = ["Some boards failed:"]
         for runner, (success, result) in zip(runners, results):
-            line = '{name}: {state}. Executions: expected={expected}, actual={actual}'.format(
+            line = "{name}: {state}. Executions: expected={expected}, actual={actual}".format(
                 name=runner.dev.devName,
-                state='OK' if success else 'timeout!',
+                state="OK" if success else "timeout!",
                 expected=runner.reps,
-                actual=getattr(runner, 'executionCount', 'unknown')
+                actual=getattr(runner, "executionCount", "unknown"),
             )
             lines.append(line)
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
 
 class FPGAServer(DeviceServer):
-    """Server for GHz DAC and ADC boards.
-    """
-    name = 'GHz FPGAs'
+    """Server for GHz DAC and ADC boards."""
+
+    name = "GHz FPGAs"
     retries = 5
 
     @inlineCallbacks
@@ -924,31 +941,30 @@ class FPGAServer(DeviceServer):
 
     @inlineCallbacks
     def loadBoardGroupConfig(self):
-        print('Loading board group definitions from registry...')
+        print("Loading board group definitions from registry...")
         p = self.client.registry.packet()
-        p.cd(['', 'Servers', 'GHz FPGAs'], True)
-        p.get('boardGroups', True, [], key='boardGroups')
+        p.cd(["", "Servers", "GHz FPGAs"], True)
+        p.get("boardGroups", True, [], key="boardGroups")
         ans = yield p.send()
-        print('Board group definitions loaded.')
+        print("Board group definitions loaded.")
         # validate board group definitions
         valid = True
         names = set()
         adapters = set()
-        for name, server, port, boards in ans['boardGroups']:
+        for name, server, port, boards in ans["boardGroups"]:
             if name in names:
                 print('Multiple board groups with name "{}"'.format(name))
                 valid = False
             names.add(name)
             if (server, port) in adapters:
-                print('Multiple board groups for adapter ({}, {})'.format(
-                        server, port))
+                print("Multiple board groups for adapter ({}, {})".format(server, port))
                 valid = False
             adapters.add((server, port))
         if valid:
-            self.boardGroupDefs = ans['boardGroups']
-            print('Board group definitions ok.')
+            self.boardGroupDefs = ans["boardGroups"]
+            print("Board group definitions ok.")
         else:
-            print('Please fix the board group configuration.')
+            print("Please fix the board group configuration.")
 
     @inlineCallbacks
     def adapterExists(self, server, port):
@@ -967,19 +983,20 @@ class FPGAServer(DeviceServer):
 
     @inlineCallbacks
     def findDevices(self):
-        print('Refreshing client connection...')
+        print("Refreshing client connection...")
         cxn = self.client
         yield cxn.refresh()
 
         # Reload the board group configuration from the registry.
         yield self.loadBoardGroupConfig()  # Creates self.boardGroupDefs
-        config = dict(((server, port), (name, boards))  # The keys are tuples!
-                      for name, server, port, boards in self.boardGroupDefs)
+        config = dict(
+            ((server, port), (name, boards))  # The keys are tuples!
+            for name, server, port, boards in self.boardGroupDefs
+        )
 
         # Determine what board groups are to be added, removed and kept as is.
         existing = set(self.boardGroups.keys())
-        configured = set((server, port)
-                         for _, server, port, _ in self.boardGroupDefs)
+        configured = set((server, port) for _, server, port, _ in self.boardGroupDefs)
 
         additions = configured - existing
         removals = existing - configured
@@ -990,8 +1007,12 @@ class FPGAServer(DeviceServer):
             server, port = key
             exists = yield self.adapterExists(server, port)
             if not exists:
-                print(('Adapter "{}" (port {}) does not exist. Group will not '
-                       'be added.'.format(server, port)))
+                print(
+                    (
+                        'Adapter "{}" (port {}) does not exist. Group will not '
+                        "be added.".format(server, port)
+                    )
+                )
                 additions.remove(key)
 
         # Check each keeper to see whether the server/port still exists.
@@ -999,13 +1020,17 @@ class FPGAServer(DeviceServer):
             server, port = key
             exists = yield self.adapterExists(server, port)
             if not exists:
-                print(('Adapter "{}" (port {}) does not exist. Group will be '
-                       'removed.'.format(server, port)))
+                print(
+                    (
+                        'Adapter "{}" (port {}) does not exist. Group will be '
+                        "removed.".format(server, port)
+                    )
+                )
                 keepers.remove(key)
                 removals.add(key)
 
-        print('Board groups to be added:', additions)
-        print('Board groups to be removed:', removals)
+        print("Board groups to be added:", additions)
+        print("Board groups to be removed:", removals)
 
         # Remove board groups which are no longer configured.
         for key in removals:
@@ -1014,14 +1039,20 @@ class FPGAServer(DeviceServer):
             try:
                 yield bg.shutdown()
             except Exception as e:
-                logging.error('Error removing board group: {}'.format(key),
-                              exc_info=True)
+                logging.error(
+                    "Error removing board group: {}".format(key), exc_info=True
+                )
 
         # Add new board groups.
         for server, port in additions:
             name, boards = config[server, port]
-            print(('Creating board group "{}": server="{}", port={}'
-                   .format(name, server, port)))
+            print(
+                (
+                    'Creating board group "{}": server="{}", port={}'.format(
+                        name, server, port
+                    )
+                )
+            )
             de = cxn.servers[server]
             boardGroup = BoardGroup(self, de, port)  # Sets attributes.
             self.boardGroups[server, port] = boardGroup
@@ -1042,10 +1073,9 @@ class FPGAServer(DeviceServer):
                 if len(result):
                     print('Devices detected on board group "{}":'.format(name))
                     for devName, args in result:
-                        print(' ', devName)
+                        print(" ", devName)
                 else:
-                    print(('No devices detected on board group "{}".'
-                           .format(name)))
+                    print(('No devices detected on board group "{}".'.format(name)))
                 found.extend(result)
             else:
                 print('Autodetection failed on board group "{}":'.format(name))
@@ -1055,36 +1085,37 @@ class FPGAServer(DeviceServer):
     def chooseDeviceWrapper(self, name, *args, **kw):
         """Choose which FPGA class to use for this device"""
         _, boardGroup, ethernetServer, port, boardNumber, build = args
-        _, boardType, _ = name.rsplit(' ', 2)
+        _, boardType, _ = name.rsplit(" ", 2)
         try:
             return fpga.REGISTRY[(boardType, build)]
         except KeyError as e:
             raise Exception(
-                    'Unknown fpga build: boardType={}, build={}, '
-                    'ethernetServer={}, port={}, boardNumber={}'.format(
-                            boardType, build, ethernetServer.name, port,
-                            boardNumber))
+                "Unknown fpga build: boardType={}, build={}, "
+                "ethernetServer={}, port={}, boardNumber={}".format(
+                    boardType, build, ethernetServer.name, port, boardNumber
+                )
+            )
 
     # Trigger refreshes if a direct ethernet server connects or disconnects.
     def serverConnected(self, ID, name):
-        if 'Direct Ethernet' in name:
+        if "Direct Ethernet" in name:
             self.refreshDeviceList()
 
     def serverDisconnected(self, ID, name):
-        if 'Direct Ethernet' in name:
+        if "Direct Ethernet" in name:
             self.refreshDeviceList()
 
     # Allow selecting different kinds of devices in each context.
     def selectedDAC(self, context):
         dev = self.selectedDevice(context)
         if not isinstance(dev, dac.DAC):
-            raise Exception('selected device is not a DAC board')
+            raise Exception("selected device is not a DAC board")
         return dev
 
     def selectedADC(self, context):
         dev = self.selectedDevice(context)
         if not isinstance(dev, adc.ADC):
-            raise Exception('selected device is not an ADC board')
+            raise Exception("selected device is not an ADC board")
         return dev
 
     def getBoardGroup(self, name):
@@ -1096,13 +1127,13 @@ class FPGAServer(DeviceServer):
 
     def initContext(self, c):
         """Initialize a new context."""
-        c['daisy_chain'] = []
-        c['timing_order'] = None
-        c['master_sync'] = 249
+        c["daisy_chain"] = []
+        c["timing_order"] = None
+        c["master_sync"] = 249
 
     # Remote settings.
 
-    @setting(1, 'List Devices', boardGroup='s', returns='*(ws)')
+    @setting(1, "List Devices", boardGroup="s", returns="*(ws)")
     def list_devices(self, c, boardGroup=None):
         """List available devices.
 
@@ -1114,16 +1145,17 @@ class FPGAServer(DeviceServer):
         if boardGroup is not None:
             # Make sure this board group exists
             bg = self.getBoardGroup(boardGroup)
-            devices = [(id, name) for (id, name) in devices
-                       if name.startswith(boardGroup)]
+            devices = [
+                (id, name) for (id, name) in devices if name.startswith(boardGroup)
+            ]
         return devices
 
-    @setting(10, 'List Board Groups', returns='*s')
+    @setting(10, "List Board Groups", returns="*s")
     def list_board_groups(self, c):
         """Get a list of existing board groups."""
         return sorted(bg.name for bg in list(self.boardGroups.values()))
 
-    @setting(11, 'List DACs', boardGroup='s', returns='*s')
+    @setting(11, "List DACs", boardGroup="s", returns="*s")
     def list_dacs(self, c, boardGroup=None):
         """List available DACs.
 
@@ -1133,14 +1165,14 @@ class FPGAServer(DeviceServer):
         IDs, names = self.deviceLists()
 
         devices = list(zip(IDs, names))
-        devices = [name for (id, name) in devices if 'DAC' in name]
+        devices = [name for (id, name) in devices if "DAC" in name]
         if boardGroup is not None:
             # Make sure this board group exists
             bg = self.getBoardGroup(boardGroup)
             devices = [name for name in devices if name.startswith(boardGroup)]
         return devices
 
-    @setting(12, 'List ADCs', boardGroup='s', returns='*s')
+    @setting(12, "List ADCs", boardGroup="s", returns="*s")
     def list_adcs(self, c, boardGroup=None):
         """List available ADCs.
 
@@ -1150,7 +1182,7 @@ class FPGAServer(DeviceServer):
         IDs, names = self.deviceLists()
 
         devices = list(zip(IDs, names))
-        devices = [name for (id, name) in devices if 'ADC' in name]
+        devices = [name for (id, name) in devices if "ADC" in name]
         if boardGroup is not None:
             # Make sure this board group exists
             bg = self.getBoardGroup(boardGroup)
@@ -1159,7 +1191,7 @@ class FPGAServer(DeviceServer):
 
     # Memory and SRAM upload.
 
-    @setting(20, 'SRAM', data='*w: SRAM Words to be written', returns='')
+    @setting(20, "SRAM", data="*w: SRAM Words to be written", returns="")
     def dac_sram(self, c, data):
         """Writes data to the SRAM at the current starting address.
 
@@ -1173,14 +1205,17 @@ class FPGAServer(DeviceServer):
         dev = self.selectedDAC(c)
         d = c.setdefault(dev, {})
         if not isinstance(data, str):
-            data = np.array(data, dtype='<u4').tostring()
-        d['sram'] = data
+            data = np.array(data, dtype="<u4").tostring()
+        d["sram"] = data
 
-    @setting(21, 'SRAM dual block',
-             block0='*w: SRAM Words for first block',
-             block1='*w: SRAM Words for second block',
-             delay='w: nanoseconds to delay',
-             returns='')
+    @setting(
+        21,
+        "SRAM dual block",
+        block0="*w: SRAM Words for first block",
+        block1="*w: SRAM Words for second block",
+        delay="w: nanoseconds to delay",
+        returns="",
+    )
     def dac_sram_dual_block(self, c, block0, block1, delay):
         """
         Writes a dual-block SRAM sequence with a delay between the two blocks.
@@ -1195,12 +1230,12 @@ class FPGAServer(DeviceServer):
         """
         dev = self.selectedDAC(c)
         d = c.setdefault(dev, {})
-        sram = d.get('sram', '')
+        sram = d.get("sram", "")
         # Convert SRAM blocks to byte strings.
         if not isinstance(block0, str):
-            block0 = np.array(block0, dtype='<u4').tostring()
+            block0 = np.array(block0, dtype="<u4").tostring()
         if not isinstance(block1, str):
-            block1 = np.array(block1, dtype='<u4').tostring()
+            block1 = np.array(block1, dtype="<u4").tostring()
         # Block delays come in chunks of 1024ns. Thus we need to package
         # the desired delay into an integral number of delay blocks, with
         # the difference made up by adding data to block1
@@ -1213,9 +1248,9 @@ class FPGAServer(DeviceServer):
         endPad = 4 - (len(block1) / 4) % 4
         if endPad != 4:
             block1 = block1 + block1[-4:] * endPad
-        d['sram'] = (block0, block1, delayBlocks)
+        d["sram"] = (block0, block1, delayBlocks)
 
-    @setting(22, 'SRAM Address', addr='w', returns='')
+    @setting(22, "SRAM Address", addr="w", returns="")
     def dac_sram_address(self, c, addr):
         """Sets address for next SRAM write.
 
@@ -1223,19 +1258,20 @@ class FPGAServer(DeviceServer):
         call it!
         """
         dev = self.selectedDAC(c)
-        print('Deprecation warning: SRAM Address called unnecessarily')
+        print("Deprecation warning: SRAM Address called unnecessarily")
 
-    @setting(30, 'Memory', data='*w: Memory Words to be written', returns='')
+    @setting(30, "Memory", data="*w: Memory Words to be written", returns="")
     def dac_memory(self, c, data):
         """Writes data to the Memory at the current starting address."""
         dev = self.selectedDAC(c)
         d = c.setdefault(dev, {})
-        d['mem'] = data
+        d["mem"] = data
 
     # ADC configuration (pre v7)
 
-    @setting(40, 'ADC Filter Func', bytes='s', stretchLen='w', stretchAt='w',
-                                    returns='')
+    @setting(
+        40, "ADC Filter Func", bytes="s", stretchLen="w", stretchAt="w", returns=""
+    )
     def adc_filter_func(self, c, bytes, stretchLen=0, stretchAt=0):
         """
         Set the filter function to be used with the selected ADC board.
@@ -1247,17 +1283,19 @@ class FPGAServer(DeviceServer):
         """
         dev = self.selectedADC(c)
         if not isinstance(dev, adc.ADC_Build1):
-            raise Exception('Deprecated for ADC Build 7')
-        assert len(bytes) <= dev.FILTER_LEN, ('Filter function max length is {}'
-                                              .format(dev.FILTER_LEN))
-        bytes = np.fromstring(bytes, dtype='<u1')
+            raise Exception("Deprecated for ADC Build 7")
+        assert len(bytes) <= dev.FILTER_LEN, "Filter function max length is {}".format(
+            dev.FILTER_LEN
+        )
+        bytes = np.fromstring(bytes, dtype="<u1")
         d = c.setdefault(dev, {})
-        d['filterFunc'] = bytes
-        d['filterStretchLen'] = stretchLen
-        d['filterStretchAt'] = stretchAt
+        d["filterFunc"] = bytes
+        d["filterStretchLen"] = stretchLen
+        d["filterStretchAt"] = stretchAt
 
-    @setting(41, 'ADC Trig Magnitude',
-            channel='w', sineAmp='w', cosineAmp='w', returns='')
+    @setting(
+        41, "ADC Trig Magnitude", channel="w", sineAmp="w", cosineAmp="w", returns=""
+    )
     def adc_trig_magnitude(self, c, channel, sineAmp, cosineAmp):
         """
         Set the magnitude of sine and cosine functions for a demodulation
@@ -1286,27 +1324,29 @@ class FPGAServer(DeviceServer):
         # device is not an ADC
         dev = self.selectedADC(c)
         if not isinstance(dev, adc.ADC_Build1):
-            raise Exception('Deprecated for ADC Build 7')
-        assert 0 <= channel < dev.DEMOD_CHANNELS, ('channel out of range: {}'
-                                                   .format(channel))
-        assert 0 <= sineAmp <= dev.TRIG_AMP, ('sine amplitude out of range: {}'
-                                              .format(sineAmp))
-        assert 0 <= cosineAmp <= dev.TRIG_AMP, ('cosine amplitude out of range:'
-                                                ' {}'.format(cosineAmp))
+            raise Exception("Deprecated for ADC Build 7")
+        assert 0 <= channel < dev.DEMOD_CHANNELS, "channel out of range: {}".format(
+            channel
+        )
+        assert 0 <= sineAmp <= dev.TRIG_AMP, "sine amplitude out of range: {}".format(
+            sineAmp
+        )
+        assert (
+            0 <= cosineAmp <= dev.TRIG_AMP
+        ), "cosine amplitude out of range:" " {}".format(cosineAmp)
         d = c.setdefault(dev, {})
         ch = d.setdefault(channel, {})
-        ch['sineAmp'] = sineAmp
-        ch['cosineAmp'] = cosineAmp
+        ch["sineAmp"] = sineAmp
+        ch["cosineAmp"] = cosineAmp
         N = dev.LOOKUP_TABLE_LEN
-        phi = np.pi/2 * (np.arange(N) + 0.5) / N
+        phi = np.pi / 2 * (np.arange(N) + 0.5) / N
         # Sine waveform for this channel
-        ch['sine'] = np.floor(sineAmp * np.sin(phi) + 0.5).astype('uint8')
+        ch["sine"] = np.floor(sineAmp * np.sin(phi) + 0.5).astype("uint8")
         # Cosine waveform for this channel, note that the function is still a
         # SINE function!
-        ch['cosine'] = np.floor(cosineAmp * np.sin(phi) + 0.5).astype('uint8')
+        ch["cosine"] = np.floor(cosineAmp * np.sin(phi) + 0.5).astype("uint8")
 
-    @setting(42, 'ADC Demod Phase',
-             channel='w', dPhi='i', phi0='i', returns='')
+    @setting(42, "ADC Demod Phase", channel="w", dPhi="i", phi0="i", returns="")
     def adc_demod_frequency(self, c, channel, dPhi, phi0=0):
         """
         Set the trig table address step and initial phase for a demodulation
@@ -1340,17 +1380,16 @@ class FPGAServer(DeviceServer):
         """
         dev = self.selectedADC(c)
         if not isinstance(dev, adc.ADC_Build1):
-            raise Exception('Deprecated for ADC Build 7')
+            raise Exception("Deprecated for ADC Build 7")
         # 16 bit 2's compliment number for demod trig function
-        assert -2**15 <= dPhi < 2**15, 'delta phi out of range'
-        assert -2**15 <= phi0 < 2**15, 'phi0 out of range'
+        assert -(2**15) <= dPhi < 2**15, "delta phi out of range"
+        assert -(2**15) <= phi0 < 2**15, "phi0 out of range"
         d = c.setdefault(dev, {})
         ch = d.setdefault(channel, {})
-        ch['dPhi'] = dPhi
-        ch['phi0'] = phi0
+        ch["dPhi"] = dPhi
+        ch["phi0"] = phi0
 
-
-    @setting(44, 'ADC Run Mode', mode='s', returns='')
+    @setting(44, "ADC Run Mode", mode="s", returns="")
     def adc_run_mode(self, c, mode):
         """
         Set the run mode for the current ADC board, 'average' or 'demodulate'.
@@ -1358,23 +1397,21 @@ class FPGAServer(DeviceServer):
         """
         # print 'setting ADC run mode to: ', mode
         mode = mode.lower()
-        assert mode in ['average', 'demodulate'], ('unknown mode: "{}"'
-                                                   .format(mode))
+        assert mode in ["average", "demodulate"], 'unknown mode: "{}"'.format(mode)
         dev = self.selectedADC(c)
         # if c[dev] exists, d = c[dev]. Otherwise d = {} and c[dev] = {}
         d = c.setdefault(dev, {})
         # d points to the same object as c[dev], which is MUTABLE. Mutating d
         # mutates c[dev]!!!
-        d['runMode'] = mode
+        d["runMode"] = mode
 
-    @setting(45, 'Start Delay', delay='w', returns='')
+    @setting(45, "Start Delay", delay="w", returns="")
     def start_delay(self, c, delay):
         dev = self.selectedDevice(c)
         d = c.setdefault(dev, {})
-        d['startDelay'] = delay
+        d["startDelay"] = delay
 
-    @setting(46, 'ADC Demod Range',
-             returns='i{Imax}, i{Imin}, i{Qmax}, i{Qmin}')
+    @setting(46, "ADC Demod Range", returns="i{Imax}, i{Imin}, i{Qmax}, i{Qmin}")
     def adc_demod_range(self, c):
         """
         Get the demodulation ranges for the last sequence run in this context.
@@ -1382,12 +1419,12 @@ class FPGAServer(DeviceServer):
         """
         dev = self.selectedADC(c)
         if not isinstance(dev, adc.ADC_Build1):
-            raise Exception('Deprecated for ADC Build 7')
-        return c[dev]['ranges']
+            raise Exception("Deprecated for ADC Build 7")
+        return c[dev]["ranges"]
 
     # ADC configuration (v7)
 
-    @setting(47, 'ADC Trigger Table', data='*(i, i, i, i)', returns='')
+    @setting(47, "ADC Trigger Table", data="*(i, i, i, i)", returns="")
     def adc_trigger_table(self, c, data):
         """
         Set the ADC trigger table
@@ -1398,9 +1435,9 @@ class FPGAServer(DeviceServer):
         """
         dev = self.selectedADC(c)
         info = c.setdefault(dev, {})
-        info['triggerTable'] = data
+        info["triggerTable"] = data
 
-    @setting(48, 'ADC Mixer Table', channel='w', data='*2i')
+    @setting(48, "ADC Mixer Table", channel="w", data="*2i")
     def adc_mixer_table(self, c, channel, data):
         """Set the ADC mixer table for a given demodulator channel
 
@@ -1411,18 +1448,20 @@ class FPGAServer(DeviceServer):
         dev = self.selectedADC(c)
         info = c.setdefault(dev, {})
         channel = info.setdefault(channel, {})
-        channel['mixerTable'] = data
+        channel["mixerTable"] = data
 
     # multiboard sequence execution
 
-    @setting(50, 'Run Sequence',
-             reps='w',
-             getTimingData='b',
-             setupPkts='?{(((ww), s, ((s?)(s?)(s?)...))...)}',
-             setupState='*s',
-             returns=['*4i', '*3i', '*2i', ''])
-    def run_sequence(self, c, reps=30, getTimingData=True, setupPkts=[],
-                     setupState=[]):
+    @setting(
+        50,
+        "Run Sequence",
+        reps="w",
+        getTimingData="b",
+        setupPkts="?{(((ww), s, ((s?)(s?)(s?)...))...)}",
+        setupState="*s",
+        returns=["*4i", "*3i", "*2i", ""],
+    )
+    def run_sequence(self, c, reps=30, getTimingData=True, setupPkts=[], setupState=[]):
         """Executes a sequence on one or more boards.
 
         Args:
@@ -1461,46 +1500,50 @@ class FPGAServer(DeviceServer):
             ADC boards must be either all in average mode or all in demodulate
             mode.
         """
-        logging.info('Run sequence')
-        logging.debug('Setup packets: {}'.format(setupPkts))
+        logging.info("Run sequence")
+        logging.debug("Setup packets: {}".format(setupPkts))
         # determine timing order
         if getTimingData:
-            if c['timing_order'] is None:
-                if len(c['daisy_chain']):
+            if c["timing_order"] is None:
+                if len(c["daisy_chain"]):
                     # Changed in this version: require timing order to be
                     # specified for multiple boards.
-                    raise Exception('You must specify a timing order to get'
-                                    'data back from multiple boards')
+                    raise Exception(
+                        "You must specify a timing order to get"
+                        "data back from multiple boards"
+                    )
                 else:
                     # Only running one board, which must be a DAC, so just get
                     # timing from it.
                     timingOrder = [d.devName for d in devs]
             else:
-                timingOrder = c['timing_order']
+                timingOrder = c["timing_order"]
         else:
             timingOrder = []
 
         # Round reps to multiple of 30 if DACs are in timing order.
         for chan in timingOrder:
-            if 'DAC' in chan:
+            if "DAC" in chan:
                 # Round stats up to multiple of the timing packet length.
                 reps += dac.DAC.TIMING_PACKET_LEN - 1
                 reps -= reps % dac.DAC.TIMING_PACKET_LEN
                 break
 
-        if len(c['daisy_chain']):
+        if len(c["daisy_chain"]):
             # Run multiple boards, with first board as master.
-            devs = [self.getDevice(c, name) for name in c['daisy_chain']]
+            devs = [self.getDevice(c, name) for name in c["daisy_chain"]]
         else:
             # run the selected device only (must be a DAC)
             devs = [self.selectedDAC(c)]
 
-        logging.info('You have {} devs'.format(len(devs)))
+        logging.info("You have {} devs".format(len(devs)))
 
         # check to make sure that all boards are in the same board group
         if len(set(dev.boardGroup for dev in devs)) > 1:
-            raise Exception('Can only run multiboard sequence if all boards '
-                            'are in the same board group!')
+            raise Exception(
+                "Can only run multiboard sequence if all boards "
+                "are in the same board group!"
+            )
         bg = devs[0].boardGroup
 
         # build a list of runners which have necessary sequence information
@@ -1510,45 +1553,54 @@ class FPGAServer(DeviceServer):
 
         # build setup requests
         setupReqs = _process_setup_packets(self.client, setupPkts)
-        logging.debug('Setup Reqs: {}'.format(setupReqs))
+        logging.debug("Setup Reqs: {}".format(setupReqs))
 
         # run the sequence, with possible retries if it fails
         retries = self.retries
         attempt = 1
         while True:
             try:
-                ans = yield bg.run(runners, reps, setupReqs, set(setupState),
-                                   c['master_sync'], getTimingData,
-                                   timingOrder)
+                ans = yield bg.run(
+                    runners,
+                    reps,
+                    setupReqs,
+                    set(setupState),
+                    c["master_sync"],
+                    getTimingData,
+                    timingOrder,
+                )
                 # For ADCs in demodulate mode, store their I and Q ranges to
                 # check for possible clipping.
                 for runner in runners:
-                    if (getTimingData and isinstance(runner, adc.AdcRunner) and
-                            runner.runMode == 'demodulate' and
-                            runner.dev.devName in timingOrder):
-                        c[runner.dev]['ranges'] = runner.ranges
+                    if (
+                        getTimingData
+                        and isinstance(runner, adc.AdcRunner)
+                        and runner.runMode == "demodulate"
+                        and runner.dev.devName in timingOrder
+                    ):
+                        c[runner.dev]["ranges"] = runner.ranges
                 if ans is not None:
                     ans = np.asarray(ans)
                 returnValue(ans)
             except TimeoutError as err:
                 # log attempt to stdout and file
-                userpath = os.path.expanduser('~')
-                logpath = os.path.join(userpath, 'dac_timeout_log.txt')
-                with open(logpath, 'a') as logfile:
+                userpath = os.path.expanduser("~")
+                logpath = os.path.join(userpath, "dac_timeout_log.txt")
+                with open(logpath, "a") as logfile:
                     t = timeString()
-                    msg = '{}: attempt {} - error: {}'.format(t, attempt, err)
+                    msg = "{}: attempt {} - error: {}".format(t, attempt, err)
                     print(msg)
-                    logfile.write(msg+'\n')
+                    logfile.write(msg + "\n")
                     if attempt == retries:
-                        logfile.write('FAIL\n')
+                        logfile.write("FAIL\n")
                         # TODO: notify users via SMS.
                         raise
                     else:
-                        print('retrying...')
-                        logfile.write('retrying...')
+                        print("retrying...")
+                        logfile.write("retrying...")
                         attempt += 1
 
-    @setting(52, 'Daisy Chain', boards='*s', returns='*s')
+    @setting(52, "Daisy Chain", boards="*s", returns="*s")
     def sequence_boards(self, c, boards=None):
         """
         Set or get the boards to run.
@@ -1564,12 +1616,12 @@ class FPGAServer(DeviceServer):
         ADCs always pass the daisychain pulse.
         """
         if boards is None:
-            boards = c['daisy_chain']
+            boards = c["daisy_chain"]
         else:
-            c['daisy_chain'] = boards
+            c["daisy_chain"] = boards
         return boards
 
-    @setting(54, 'Timing Order', boards='*s', returns='*s')
+    @setting(54, "Timing Order", boards="*s", returns="*s")
     def sequence_timing_order(self, c, boards=None):
         """Set or get the timing order for boards.
 
@@ -1600,14 +1652,14 @@ class FPGAServer(DeviceServer):
         """
         if boards is None:
             # Get timing order.
-            boards = c['timing_order']
+            boards = c["timing_order"]
         else:
             # Set timing order.
-            c['timing_order'] = boards
+            c["timing_order"] = boards
 
         return boards
 
-    @setting(55, 'Master Sync', sync='w', returns='w')
+    @setting(55, "Master Sync", sync="w", returns="w")
     def sequence_master_sync(self, c, sync=None):
         """Set or get the master sync.
 
@@ -1616,12 +1668,12 @@ class FPGAServer(DeviceServer):
         default is 249, which sets the master to start only every 1 us.
         """
         if sync is None:
-            sync = c['master_sync']
+            sync = c["master_sync"]
         else:
-            c['master_sync'] = sync
+            c["master_sync"] = sync
         return sync
 
-    @setting(59, 'Performance Data', returns='*((sw)(*v, *v, *v, *v, *v))')
+    @setting(59, "Performance Data", returns="*((sw)(*v, *v, *v, *v, *v))")
     def sequence_performance_data(self, c):
         """Get data about the pipeline performance.
 
@@ -1644,11 +1696,15 @@ class FPGAServer(DeviceServer):
             runTime = group.runLock.times
             runWaitTime = group.runWaitTimes
             readTime = group.readLock.times
-            ans.append(((server, port), (pageTimes[0], pageTimes[1], runTime,
-                                         runWaitTime, readTime)))
+            ans.append(
+                (
+                    (server, port),
+                    (pageTimes[0], pageTimes[1], runTime, runWaitTime, readTime),
+                )
+            )
         return ans
 
-    @setting(200, 'PLL Init', returns='')
+    @setting(200, "PLL Init", returns="")
     def pll_init(self, c, data):
         """Sends the initialization sequence to the PLL. (DAC and ADC)
 
@@ -1657,13 +1713,13 @@ class FPGAServer(DeviceServer):
         dev = self.selectedDevice(c)
         yield dev.initPLL()
 
-    @setting(201, 'PLL Reset', returns='')
+    @setting(201, "PLL Reset", returns="")
     def pll_reset(self, c):
         """Resets the FPGA internal GHz serializer PLLs. (DAC only)"""
         dev = self.selectedDAC(c)
         yield dev.resetPLL()
 
-    @setting(202, 'PLL Query', returns='b')
+    @setting(202, "PLL Query", returns="b")
     def pll_query(self, c):
         """
         Checks the FPGA internal GHz serializer PLLs for lock failures.
@@ -1675,28 +1731,27 @@ class FPGAServer(DeviceServer):
         unlocked = yield dev.queryPLL()
         returnValue(unlocked)
 
-    @setting(203, 'Build Number', returns='s')
+    @setting(203, "Build Number", returns="s")
     def build_number(self, c):
         """Gets the build number of selected device (DAC and ADC)"""
         dev = self.selectedDevice(c)
         buildNumber = yield dev.buildNumber()
         returnValue(buildNumber)
 
-    @setting(204, 'Execution count', returns='i')
+    @setting(204, "Execution count", returns="i")
     def execution_counter(self, c):
         """Query sequence executions since last start command"""
         dev = self.selectedDevice(c)
         count = yield dev.executionCount()
         returnValue(int(count))
 
-    @setting(1080, 'DAC Debug Output', data='wwww', returns='')
+    @setting(1080, "DAC Debug Output", data="wwww", returns="")
     def dac_debug_output(self, c, data):
         """Outputs data directly to the output bus. (DAC only)"""
         dev = self.selectedDAC(c)
         yield dev.debugOutput(*data)
 
-    @setting(1081, 'DAC Run SRAM',
-             data='*w', loop='b', blockDelay='w', returns='')
+    @setting(1081, "DAC Run SRAM", data="*w", loop="b", blockDelay="w", returns="")
     def dac_run_sram(self, c, data, loop=False, blockDelay=0):
         """Loads data into the SRAM and executes as master. (DAC only)
 
@@ -1707,12 +1762,12 @@ class FPGAServer(DeviceServer):
         for a multiblock sequence.
         """
         if len(data) < 20:
-            raise ValueError('Cannot play less than 20 ns of data.')
+            raise ValueError("Cannot play less than 20 ns of data.")
 
         dev = self.selectedDAC(c)
         yield dev.runSram(data, loop, blockDelay)
 
-    @setting(2081, 'DAC Write SRAM', data='*w')
+    @setting(2081, "DAC Write SRAM", data="*w")
     def dac_write_sram(self, c, data):
         """Write data to SRAM.
 
@@ -1724,11 +1779,14 @@ class FPGAServer(DeviceServer):
         This command just writes data into the board's SRAM buffer, that's it.
         """
         dev = self.selectedDAC(c)
-        yield dev._sendSRAM(np.array(data, dtype='<u4').tostring())
+        yield dev._sendSRAM(np.array(data, dtype="<u4").tostring())
 
-    @setting(1082, 'Jump Table Add Entry',
-             name='s',
-             arg=['ww{IDLE}', 'www{JUMP}', 'w{NOP,END}', 'wwww{CYCLE}'])
+    @setting(
+        1082,
+        "Jump Table Add Entry",
+        name="s",
+        arg=["ww{IDLE}", "www{JUMP}", "w{NOP,END}", "wwww{CYCLE}"],
+    )
     def jump_table_add_entry(self, c, name, arg=None):
         """Add a new jump table entry.
 
@@ -1769,13 +1827,13 @@ class FPGAServer(DeviceServer):
         dev = self.selectedDAC(c)
         _assert_has_jump_table(dev)
         d = c.setdefault(dev, {})
-        entries = d.setdefault('jt_entries', [])
+        entries = d.setdefault("jt_entries", [])
         # we always want a list of int, even if there's only one
-        if name == 'NOP' or name == 'END':
+        if name == "NOP" or name == "END":
             arg = [arg]
         entries.append(dev.make_jump_table_entry(name, arg))
 
-    @setting(1083, 'Jump Table Clear')
+    @setting(1083, "Jump Table Clear")
     def jump_table_clear(self, c):
         """Clear the saved jump table.
 
@@ -1788,17 +1846,17 @@ class FPGAServer(DeviceServer):
         """
         dev = self.selectedDAC(c)
         d = c.setdefault(dev, {})
-        d['jt_entries'] = []
-        d['jt_counters'] = []
+        d["jt_entries"] = []
+        d["jt_counters"] = []
 
-    @setting(1084, 'Jump Table Set Counters', counters='*w')
+    @setting(1084, "Jump Table Set Counters", counters="*w")
     def jump_table_set_counters(self, c, counters):
         dev = self.selectedDAC(c)
         _assert_has_jump_table(dev)
         d = c.setdefault(dev, {})
-        d['jt_counters'] = counters
+        d["jt_counters"] = counters
 
-    @setting(1085, 'Loop Delay', delay='v[us]')
+    @setting(1085, "Loop Delay", delay="v[us]")
     def loop_delay(self, c, delay):
         """Set the loop delay (delay between stats).
 
@@ -1807,9 +1865,9 @@ class FPGAServer(DeviceServer):
         dev = self.selectedDAC(c)
         _assert_has_jump_table(dev)
         d = c.setdefault(dev, {})
-        d['loop_delay'] = int(delay['us'])
+        d["loop_delay"] = int(delay["us"])
 
-    @setting(1100, 'DAC I2C', data='*w', returns='*w')
+    @setting(1100, "DAC I2C", data="*w", returns="*w")
     def dac_i2c(self, c, data):
         """Runs an I2C Sequence (DAC only)
 
@@ -1831,7 +1889,7 @@ class FPGAServer(DeviceServer):
                 return []
             try:
                 i = l.index(sentinel)  # Find next occurence of sentinel.
-                rest = partition(l[i+1:], sentinel)  # Partition rest of list.
+                rest = partition(l[i + 1 :], sentinel)  # Partition rest of list.
                 if i > 0:
                     return [l[:i]] + rest
                 else:
@@ -1843,39 +1901,46 @@ class FPGAServer(DeviceServer):
         pkts = partition(data, I2C_END)
         return dev.runI2C(pkts)
 
-    @setting(1110, 'DAC LEDs', data=['w', 'bbbbbbbb'], returns='w')
+    @setting(1110, "DAC LEDs", data=["w", "bbbbbbbb"], returns="w")
     def dac_leds(self, c, data):
         """Sets the status of the 8 I2C LEDs. (DAC only)"""
         dev = self.selectedDAC(c)
 
         if isinstance(data, tuple):
             # convert to a list of digits, and interpret as binary int
-            data = int(''.join(str(int(b)) for b in data), 2)
+            data = int("".join(str(int(b)) for b in data), 2)
 
         pkts = [[200, 68, data & 0xFF]]  # 192 for build 1
         yield dev.runI2C(pkts)
         returnValue(data)
 
-    @setting(1120, 'DAC Reset Phasor', returns='b: phase detector output')
+    @setting(1120, "DAC Reset Phasor", returns="b: phase detector output")
     def dac_reset_phasor(self, c):
         """Resets the clock phasor. (DAC only)"""
         dev = self.selectedDAC(c)
 
-        pkts = [[152, 0, 127, 0],   # set I to 0 deg
-                [152, 34, 254, 0],  # set Q to 0 deg
-                [112, 65],          # set enable bit high
-                [112, 193],         # set reset high
-                [112, 65],          # set reset low
-                [112, 1],           # set enable low
-                [113, I2C_RB]]      # read phase detector
+        pkts = [
+            [152, 0, 127, 0],  # set I to 0 deg
+            [152, 34, 254, 0],  # set Q to 0 deg
+            [112, 65],  # set enable bit high
+            [112, 193],  # set reset high
+            [112, 65],  # set reset low
+            [112, 1],  # set enable low
+            [113, I2C_RB],
+        ]  # read phase detector
 
         r = yield dev.runI2C(pkts)
         returnValue((r[0] & 1) > 0)
 
-    @setting(1121, 'DAC Set Phasor',
-             data=[': poll phase detector only',
-                   'v[rad]: set angle (in rad, deg, \xF8, \', or ")'],
-             returns='b: phase detector output')
+    @setting(
+        1121,
+        "DAC Set Phasor",
+        data=[
+            ": poll phase detector only",
+            "v[rad]: set angle (in rad, deg, \xF8, ', or \")",
+        ],
+        returns="b: phase detector output",
+    )
     def dac_set_phasor(self, c, data=None):
         """
         Sets the clock phasor angle and reads the phase detector bit.
@@ -1884,40 +1949,34 @@ class FPGAServer(DeviceServer):
         dev = self.selectedDAC(c)
 
         if data is None:
-            pkts = [[112, 1],
-                    [113, I2C_RB]]
+            pkts = [[112, 1], [113, I2C_RB]]
         else:
-            sn = int(round(127 + 127*np.sin(data))) & 0xFF
-            cs = int(round(127 + 127*np.cos(data))) & 0xFF
-            pkts = [[152,  0, sn, 0],
-                    [152, 34, cs, 0],
-                    [112, 1],
-                    [113, I2C_RB]]
+            sn = int(round(127 + 127 * np.sin(data))) & 0xFF
+            cs = int(round(127 + 127 * np.cos(data))) & 0xFF
+            pkts = [[152, 0, sn, 0], [152, 34, cs, 0], [112, 1], [113, I2C_RB]]
 
         r = yield dev.runI2C(pkts)
         returnValue((r[0] & 1) > 0)
 
-    @setting(1130, 'DAC Vout', chan='s', V='v[V]', returns='w')
+    @setting(1130, "DAC Vout", chan="s", V="v[V]", returns="w")
     def dac_vout(self, c, chan, V):
-        """Sets the output voltage of any Vout channel, A, B, C or D. (DAC only)
-        """
-        cmd = dac.DAC.getCommand({'A': 16, 'B': 18, 'C': 20, 'D': 22}, chan)
+        """Sets the output voltage of any Vout channel, A, B, C or D. (DAC only)"""
+        cmd = dac.DAC.getCommand({"A": 16, "B": 18, "C": 20, "D": 22}, chan)
         dev = self.selectedDAC(c)
-        val = int(max(min(round(V*0x3333), 0x10000), 0))
+        val = int(max(min(round(V * 0x3333), 0x10000), 0))
         pkts = [[154, cmd, (val >> 8) & 0xFF, val & 0xFF]]
         yield dev.runI2C(pkts)
         returnValue(val)
 
-    @setting(1135, 'DAC Ain', returns='v[V]')
+    @setting(1135, "DAC Ain", returns="v[V]")
     def dac_ain(self, c):
         """Reads the voltage on Ain. (DAC only)"""
         dev = self.selectedDAC(c)
-        pkts = [[144, 0],
-                [145, I2C_RB_ACK, I2C_RB]]
+        pkts = [[144, 0], [145, I2C_RB_ACK, I2C_RB]]
         r = yield dev.runI2C(pkts)
-        returnValue(T.Value(((r[0] << 8) + r[1]) / 819.0, 'V'))
+        returnValue(T.Value(((r[0] << 8) + r[1]) / 819.0, "V"))
 
-    @setting(1200, 'DAC PLL', data='*w', returns='*w')
+    @setting(1200, "DAC PLL", data="*w", returns="*w")
     def dac_pll(self, c, data):
         """Sends a sequence of commands to the PLL. (DAC only)
 
@@ -1927,7 +1986,7 @@ class FPGAServer(DeviceServer):
         dev = self.selectedDAC(c)
         return dev.runSerial(1, data)
 
-    @setting(1204, 'DAC Serial Command', chan='s', data='*w', returns='*w')
+    @setting(1204, "DAC Serial Command", chan="s", data="*w", returns="*w")
     def dac_cmd(self, c, chan, data):
         """Send a sequence of commands to either DAC. (DAC only)
 
@@ -1935,33 +1994,37 @@ class FPGAServer(DeviceServer):
         The returned list of words contains any read-back values.
         It has the same length as the sent list.
         """
-        cmd = dac.DAC.getCommand({'A': 2, 'B': 3}, chan)
+        cmd = dac.DAC.getCommand({"A": 2, "B": 3}, chan)
         dev = self.selectedDAC(c)
         return dev.runSerial(cmd, data)
 
-    @setting(1206, 'DAC Clock Polarity', chan='s', invert='b', returns='b')
+    @setting(1206, "DAC Clock Polarity", chan="s", invert="b", returns="b")
     def dac_pol(self, c, chan, invert):
         """Sets the clock polarity for either DAC. (DAC only)"""
         dev = self.selectedDAC(c)
         yield dev.setPolarity(chan, invert)
         returnValue(invert)
 
-    @setting(1220, 'DAC Init', chan='s', signed='b', returns='b')
+    @setting(1220, "DAC Init", chan="s", signed="b", returns="b")
     def dac_init(self, c, chan, signed=False):
         """Sends an initialization sequence to either DAC. (DAC only)
 
         For unsigned data, this sequence is 0026, 0006, 1603, 0500
         For signed data, this sequence is 0024, 0004, 1603, 0500
         """
-        cmd = dac.DAC.getCommand({'A': 2, 'B': 3}, chan)
+        cmd = dac.DAC.getCommand({"A": 2, "B": 3}, chan)
         dev = self.selectedDAC(c)
-        pkt = ([0x0024, 0x0004, 0x1603, 0x0500] if signed else
-               [0x0026, 0x0006, 0x1603, 0x0500])
+        pkt = (
+            [0x0024, 0x0004, 0x1603, 0x0500]
+            if signed
+            else [0x0026, 0x0006, 0x1603, 0x0500]
+        )
         yield dev.runSerial(cmd, pkt)
         returnValue(signed)
 
-    @setting(1221, 'DAC LVDS', chan='s', optimizeSD='b', data='w',
-                               returns='biii(*w*b*b)w')
+    @setting(
+        1221, "DAC LVDS", chan="s", optimizeSD="b", data="w", returns="biii(*w*b*b)w"
+    )
     def dac_lvds(self, c, chan, optimizeSD=False, data=None):
         """Calibrate LVDS Phase Shift. (DAC Only)
 
@@ -1991,12 +2054,12 @@ class FPGAServer(DeviceServer):
                       B=1: An LVDS input was below specification
                       C=1: Sampling in correct data cycle
         """
-        cmd = dac.DAC.getCommand({'A': 2, 'B': 3}, chan)
+        cmd = dac.DAC.getCommand({"A": 2, "B": 3}, chan)
         dev = self.selectedDAC(c)
         ans = yield dev.setLVDS(cmd, data, optimizeSD)
         returnValue(ans)
 
-    @setting(1222, 'DAC FIFO', chan='s', targetFifo='w', returns='bbiww')
+    @setting(1222, "DAC FIFO", chan="s", targetFifo="w", returns="bbiww")
     def dac_fifo(self, c, chan, targetFifo=None):
         """Adjust FIFO buffer. (DAC only)
 
@@ -2017,34 +2080,33 @@ class FPGAServer(DeviceServer):
         Returns:
             success, clock polarity, PHOF, number of tries, FIFO counter
         """
-        op = dac.DAC.getCommand({'A': 2, 'B': 3}, chan)
+        op = dac.DAC.getCommand({"A": 2, "B": 3}, chan)
         dev = self.selectedDAC(c)
         ans = yield dev.setFIFO(chan, op, targetFifo)
         returnValue(ans)
 
-    @setting(1223, 'DAC Cross Controller', chan='s', delay='i', returns='i')
+    @setting(1223, "DAC Cross Controller", chan="s", delay="i", returns="i")
     def dac_xctrl(self, c, chan, delay=0):
         """Sets the cross controller delay on either DAC. (DAC only)
 
         Range for delay is -63 to 63.
         """
         dev = self.selectedDAC(c)
-        cmd = dac.DAC.getCommand({'A': 2, 'B': 3}, chan)
+        cmd = dac.DAC.getCommand({"A": 2, "B": 3}, chan)
         if delay < -63 or delay > 63:
-            raise T.Error(11, 'Delay must be between -63 and 63')
+            raise T.Error(11, "Delay must be between -63 and 63")
 
-        seq = ([0x0A00, 0x0B00 - delay] if delay < 0
-               else [0x0A00 + delay, 0x0B00])
+        seq = [0x0A00, 0x0B00 - delay] if delay < 0 else [0x0A00 + delay, 0x0B00]
         yield dev.runSerial(cmd, seq)
         returnValue(delay)
 
-    @setting(1225, 'DAC BIST', chan='s', data='*w', returns='b(ww)(ww)(ww)')
+    @setting(1225, "DAC BIST", chan="s", data="*w", returns="b(ww)(ww)(ww)")
     def dac_bist(self, c, chan, data):
         """Run a Built-In Self Test on the given SRAM sequence. (DAC only)
 
         Returns success, theory, LVDS, FIFO
         """
-        cmd, shift = dac.DAC.getCommand({'A': (2, 0), 'B': (3, 14)}, chan)
+        cmd, shift = dac.DAC.getCommand({"A": (2, 0), "B": (3, 14)}, chan)
         dev = self.selectedDAC(c)
         ans = yield dev.runBIST(cmd, shift, data)
         # This is coming back with 64-bit ints, the coercing of which needs to
@@ -2053,17 +2115,24 @@ class FPGAServer(DeviceServer):
 
         def coerce(xs):
             return tuple(int(x) for x in xs)
+
         returnValue((ans[0], coerce(ans[1]), coerce(ans[2]), coerce(ans[3])))
 
-    @setting(1300, 'DAC Bringup',
-             lvdsOptimize='b',
-             lvdsSD='w',
-             signed='b',
-             targetFifo='w',
-             returns=('*((ss)(sb)(si)(si)(sw)(s(*w*b*b))(sw)(sb)(sb)(si)(sw)'
-                      '(sw)(sb)(s(ww))(s(ww))(s(ww)))'))
-    def dac_bringup(self, c, lvdsOptimize=False, lvdsSD=None, signed=True,
-                    targetFifo=None):
+    @setting(
+        1300,
+        "DAC Bringup",
+        lvdsOptimize="b",
+        lvdsSD="w",
+        signed="b",
+        targetFifo="w",
+        returns=(
+            "*((ss)(sb)(si)(si)(sw)(s(*w*b*b))(sw)(sb)(sb)(si)(sw)"
+            "(sw)(sb)(s(ww))(s(ww))(s(ww)))"
+        ),
+    )
+    def dac_bringup(
+        self, c, lvdsOptimize=False, lvdsSD=None, signed=True, targetFifo=None
+    ):
         """
         Runs the bringup procedure.
 
@@ -2077,71 +2146,85 @@ class FPGAServer(DeviceServer):
         yield dev.initPLL()
         time.sleep(0.100)
         yield dev.resetPLL()
-        for dac in ['A', 'B']:
-            ansDAC = [('dac', dac)]
-            cmd, shift = {'A': (2, 0), 'B': (3, 14)}[dac]
+        for dac in ["A", "B"]:
+            ansDAC = [("dac", dac)]
+            cmd, shift = {"A": (2, 0), "B": (3, 14)}[dac]
             # Initialize DAC.
             # See HardRegProgram.txt for byte sequence definition.
-            pkt = ([0x0024, 0x0004, 0x1603, 0x0500] if signed else
-                   [0x0026, 0x0006, 0x1603, 0x0500])
+            pkt = (
+                [0x0024, 0x0004, 0x1603, 0x0500]
+                if signed
+                else [0x0026, 0x0006, 0x1603, 0x0500]
+            )
             yield dev.runSerial(cmd, pkt)
             lvdsAns = yield dev.setLVDS(cmd, lvdsSD, lvdsOptimize)
-            lvdsKeys = ['lvdsSuccess', 'lvdsMSD', 'lvdsMHD', 'lvdsSD',
-                        'lvdsTiming', 'lvdsCheck']
+            lvdsKeys = [
+                "lvdsSuccess",
+                "lvdsMSD",
+                "lvdsMHD",
+                "lvdsSD",
+                "lvdsTiming",
+                "lvdsCheck",
+            ]
             for key, val in zip(lvdsKeys, lvdsAns):
                 ansDAC.append((key, val))
             fifoAns = yield dev.setFIFO(dac, cmd, targetFifo)
-            fifoKeys = ['fifoSuccess', 'fifoClockPolarity', 'fifoPHOF',
-                        'fifoTries', 'fifoCounter']
+            fifoKeys = [
+                "fifoSuccess",
+                "fifoClockPolarity",
+                "fifoPHOF",
+                "fifoTries",
+                "fifoCounter",
+            ]
             for key, val in zip(fifoKeys, fifoAns):
                 ansDAC.append((key, val))
             bistData = [random.randint(0, 0x3FFF) for i in range(1000)]
             bistAns = yield dev.runBIST(cmd, shift, bistData)
-            bistKeys = ['bistSuccess', 'bistTheory', 'bistLVDS', 'bistFIFO']
+            bistKeys = ["bistSuccess", "bistTheory", "bistLVDS", "bistFIFO"]
             for key, val in zip(bistKeys, bistAns):
                 ansDAC.append((key, val))
             ans.append(tuple(ansDAC))
         returnValue(ans)
 
-    @setting(1313, 'DAC Serial', cmd='w', pkts='*w', returns='?')
+    @setting(1313, "DAC Serial", cmd="w", pkts="*w", returns="?")
     def dac_serial(self, c, cmd, pkts):
         dev = self.selectedDAC(c)
         ans = yield dev.runSerial(cmd, pkts)
         returnValue(ans)
 
-    @setting(1100000, 'Debug Print Context')
+    @setting(1100000, "Debug Print Context")
     def debug_print_context(self, c):
         """Prints the context to the server's stdout."""
         print(c)
 
-    @setting(1100001, 'Debug Clear Ethernet')
+    @setting(1100001, "Debug Clear Ethernet")
     def debug_clear_ethernet(self, c):
         for dev in list(self.devices.values()):
             dev.clear().send()
 
-    @setting(2500, 'ADC Recalibrate', returns='')
+    @setting(2500, "ADC Recalibrate", returns="")
     def adc_recalibrate(self, c):
         """Recalibrate the analog-to-digital converters. (ADC only)"""
         dev = self.selectedADC(c)
         yield dev.recalibrate()
 
-    @setting(2501, 'ADC Register Readback', returns='s')
+    @setting(2501, "ADC Register Readback", returns="s")
     def adc_register_readback(self, c):
         """Register Readback. (ADC only)"""
         dev = self.selectedADC(c)
         ans = yield dev.registerReadback()
         returnValue(str(ans))
 
-    @setting(2502, 'ADC Monitor Outputs', mon0=['s', 'w'], mon1=['s', 'w'])
+    @setting(2502, "ADC Monitor Outputs", mon0=["s", "w"], mon1=["s", "w"])
     def adc_monitor_outputs(self, c, mon0, mon1):
         """Specify monitor outputs. (ADC only)"""
         dev = self.selectedADC(c)
         info = c.setdefault(dev, {})
-        print('monitor outputs: ', mon0, mon1)
-        info['mon0'] = mon0
-        info['mon1'] = mon1
+        print("monitor outputs: ", mon0, mon1)
+        info["mon0"] = mon0
+        info["mon1"] = mon1
 
-    @setting(2600, 'ADC Run Average', returns='*i{I},*i{Q}')
+    @setting(2600, "ADC Run Average", returns="*i{I},*i{Q}")
     def adc_run_average(self, c):
         """Run the selected ADC board once in average mode. (ADC only)
 
@@ -2160,24 +2243,23 @@ class FPGAServer(DeviceServer):
         ans = yield dev.runAverage()
         returnValue(ans)
 
-    @setting(2601, 'ADC Run Calibrate', returns='')
+    @setting(2601, "ADC Run Calibrate", returns="")
     def adc_run_calibrate(self, c):
         """Recalibrate the ADC chips"""
-        raise Exception('Depricated. Use ADC Recalibrate instead')
+        raise Exception("Depricated. Use ADC Recalibrate instead")
         dev = self.selectedADC(c)
         info = c.setdefault(dev, {})
-        filterFunc = info.get('filterFunc', np.array([255], dtype='<u1'))
+        filterFunc = info.get("filterFunc", np.array([255], dtype="<u1"))
         # Default to no stretch.
-        filterStretchLen = info.get('filterStretchLen', 0)
+        filterStretchLen = info.get("filterStretchLen", 0)
         # Default to stretch at 0.
-        filterStretchAt = info.get('filterStretchAt', 0)
-        demods = (dict((i, info[i]) for i in
-                  range(dev.DEMOD_CHANNELS) if i in info))
+        filterStretchAt = info.get("filterStretchAt", 0)
+        demods = dict((i, info[i]) for i in range(dev.DEMOD_CHANNELS) if i in info)
         yield dev.runCalibrate()
 
-    @setting(2602, 'ADC Run Demod', mode='s', returns='*3i{I,Q}, *i, *i')
+    @setting(2602, "ADC Run Demod", mode="s", returns="*3i{I,Q}, *i, *i")
     # @setting(2602, 'ADC Run Demod', returns='*i')
-    def adc_run_demod(self, c, mode='iq'):
+    def adc_run_demod(self, c, mode="iq"):
         """
         Run the ADC in demod mode but with no synchronization to the DAC.
         This runs only a single shot, and returns (*I, *Q) with a single I
@@ -2188,11 +2270,11 @@ class FPGAServer(DeviceServer):
         """
         dev = self.selectedADC(c)
         info = c.setdefault(dev, {})
-        info['mode'] = mode
+        info["mode"] = mode
         ans = yield dev.runDemod(info)
         returnValue(ans)
 
-    @setting(2700, 'ADC Bringup', returns='')
+    @setting(2700, "ADC Bringup", returns="")
     def adc_bringup(self, c):
         """Runs the bringup procedure.
 
@@ -2208,6 +2290,7 @@ class FPGAServer(DeviceServer):
     #   - ADC boards: either one waveform (averaged) for whole run
     #                 or one demodulation packet for each repetition
 
+
 # Runners contain information for running a sequence on a particular board.
 #
 # Other info these should provide:
@@ -2216,9 +2299,10 @@ class FPGAServer(DeviceServer):
 # - how many packets to expect, based on repetitions.
 # - whether discard is possible.
 
+
 # Some helper methods.
 def _assert_has_jump_table(dev):
-  assert dev.HAS_JUMP_TABLE, 'device is not a jump table board: {}'.format(dev)
+    assert dev.HAS_JUMP_TABLE, "device is not a jump table board: {}".format(dev)
 
 
 def _process_setup_packets(cxn, setupPkts):
@@ -2229,25 +2313,30 @@ def _process_setup_packets(cxn, setupPkts):
     pkts = []
     for ctxt, server, settings in setupPkts:
         if ctxt[0] == 0:
-            print ('Using a context with high ID = 0 for packet requests might '
-                   'not do what you want!!!')
+            print(
+                "Using a context with high ID = 0 for packet requests might "
+                "not do what you want!!!"
+            )
         p = cxn[server].packet(context=ctxt)
         for rec in settings:
             if len(rec) == 2:
                 setting, data = rec
                 p[setting](data)
             elif len(rec) == 1:
-                setting, = rec
+                (setting,) = rec
                 p[setting]()
             else:
-                raise Exception('Malformed setup packet: ctx={}, server={}, '
-                                'settings={}'.format(ctxt, server, settings))
+                raise Exception(
+                    "Malformed setup packet: ctx={}, server={}, "
+                    "settings={}".format(ctxt, server, settings)
+                )
         pkts.append(p)
     return pkts
 
+
 __server__ = FPGAServer()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(level=logging.WARNING)
-    logging.info('running server')
+    logging.info("running server")
     labrad.util.runServer(__server__)

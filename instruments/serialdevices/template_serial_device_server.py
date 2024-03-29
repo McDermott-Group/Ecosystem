@@ -45,57 +45,58 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
+
 class SR560Wrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to an SR560 Amplifier."""
-        print(('Connecting to "%s" on port "%s"...' %(server.name, port)))
+        print(('Connecting to "%s" on port "%s"...' % (server.name, port)))
         self.server = server
         self.ctx = server.context()
         self.port = port
         p = self.packet()
         p.open(port)
-        # The following parameters match the default configuration of 
+        # The following parameters match the default configuration of
         # the SR560 unit. You should go to the instrument menu and change
         # the settings below.
         p.baudrate(9600)
         p.stopbits(2)
         p.bytesize(8)
-        p.parity('N')
+        p.parity("N")
         p.rts(False)
         p.timeout(2 * units.s)
         # Clear out the read buffer. This is necessary for some devices.
         p.read_line()
         yield p.send()
-        
+
     def packet(self):
         """Create a packet in our private context."""
         return self.server.packet(context=self.ctx)
-    
+
     def shutdown(self):
         """Disconnect from the serial port when we shut down."""
-        return self.packet().close().send()   
+        return self.packet().close().send()
 
     @inlineCallbacks
     def write(self, code):
         """Write data value to the SR560 unit."""
-        yield self.server.write(code, context=self.ctx)       
+        yield self.server.write(code, context=self.ctx)
 
     @inlineCallbacks
     def read(self):
         """Read data value from the SR560 unit."""
         ans = yield self.server.read(context=self.ctx)
         returnValue(ans)
-    
 
 
 class SR560Server(DeviceServer):
     """Provides direct access to serial devices."""
-    deviceName = 'SR560'
-    name = 'SR560'
-    deviceWrapper =  SR560Wrapper
-    
-    @inlineCallbacks  
+
+    deviceName = "SR560"
+    name = "SR560"
+    deviceWrapper = SR560Wrapper
+
+    @inlineCallbacks
     def initServer(self):
         self.mydevices = {}
         yield self.loadConfigInfo()
@@ -108,7 +109,7 @@ class SR560Server(DeviceServer):
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.client.registry()
-        yield reg.cd(['', 'Servers', 'SR560', 'Links'], True)
+        yield reg.cd(["", "Servers", "SR560", "Links"], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -117,7 +118,7 @@ class SR560Server(DeviceServer):
         self.serialLinks = {k: ans[k] for k in keys}
         print(self.serialLinks)
 
-    @inlineCallbacks    
+    @inlineCallbacks
     def findDevices(self):
         """Find available devices from a list stored in the registry."""
         devs = []
@@ -128,37 +129,30 @@ class SR560Server(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '{} - {}'.format(server, port)
+            devName = "{} - {}".format(server, port)
             devs += [(name, (server, port))]
         returnValue(devs)
-        
 
-        
-    @setting(9, 'set_input_coupling', coupling='s', returns='s')
+    @setting(9, "set_input_coupling", coupling="s", returns="s")
     def set_input_coupling(self, c, coupling=None):
-        coupling_dict = {
-            'GND': 0,
-            'DC' : 1,
-            'AC' : 2
-        }
+        coupling_dict = {"GND": 0, "DC": 1, "AC": 2}
         coupling_number = coupling_dict[coupling]
         dev = self.selectedDevice(c)
         yield dev.write("LISN 3\r\n")
         yield dev.write("CPLG {}\r\n".format(coupling_number))
-        returnValue('Input coupling has been set to {}'.format(coupling))    
-        
-        
-       
-    @setting(100, 'reset', returns='s')
+        returnValue("Input coupling has been set to {}".format(coupling))
+
+    @setting(100, "reset", returns="s")
     def reset(self, c):
         """Recalls default settings."""
         dev = self.selectedDevice(c)
         yield dev.write("LISN 3\r\n")
         yield dev.write("*RST")
-        returnValue('Recalls default settings')
+        returnValue("Recalls default settings")
+
 
 __server__ = SR560Server()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     util.runServer(__server__)

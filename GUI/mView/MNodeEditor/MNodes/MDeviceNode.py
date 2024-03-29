@@ -51,8 +51,8 @@ class MDeviceNode(MNode):
         self.dontAddanotherparam = True
 
         for i, param in enumerate(nicknames):
-            self.addAnchor(MAnchor(param, self,  i + 1, type='output'))
-        devAnchor = self.addAnchor(name='Self', type='output')
+            self.addAnchor(MAnchor(param, self, i + 1, type="output"))
+        devAnchor = self.addAnchor(name="Self", type="output")
         devAnchor.setData(self.getDevice())
 
         self.dontAddanotherparam = False
@@ -72,23 +72,24 @@ class MDeviceNode(MNode):
     def onRefreshData(self):
         try:
             for i, anchor in enumerate(self.getAnchors()):
-
-                if str(anchor) == 'Self':
+                if str(anchor) == "Self":
                     continue
                 reading = self.device.getReading(str(anchor))
 
-                if anchor.getType() == 'output' and anchor.param != 'Self' and reading != None:
+                if (
+                    anchor.getType() == "output"
+                    and anchor.param != "Self"
+                    and reading != None
+                ):
                     try:
-
                         data = self.device.getReading(str(anchor))
-                        metadata = (str(anchor), self.device.getUnit(
-                            str(anchor)), None)
+                        metadata = (str(anchor), self.device.getUnit(str(anchor)), None)
                         if data != None:
                             anchor.setMetaData(metadata)
                             anchor.setData(data)
                     except:
                         traceback.print_exc()
-                elif anchor.getType() == 'input':
+                elif anchor.getType() == "input":
                     data = anchor.getData()
                     metadata = anchor.getMetaData()
                     if data != None:

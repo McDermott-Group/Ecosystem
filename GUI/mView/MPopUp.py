@@ -26,6 +26,7 @@ from PyQt4 import QtCore, QtGui
 class PopUp(QtGui.QDialog):
     """Small class for a popup window which displays a message
     and allows the user to select OK or Cancel."""
+
     # Property 'consent' holds the user's decision.
     consent = None
 
@@ -63,7 +64,7 @@ class PopUp(QtGui.QDialog):
         HBox.addWidget(self.cancelButton)
         self.cancelButton.setText("Cancel")
         self.cancelButton.clicked.connect(self.cancelClicked)
-        self.setWindowTitle('Warning')
+        self.setWindowTitle("Warning")
 
     def okClicked(self):
         """Called when the ok button is clicked."""

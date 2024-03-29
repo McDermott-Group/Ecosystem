@@ -8,6 +8,7 @@ from MNodes.MCompare import MCompare
 from MWeb import web
 import importlib
 import inspect
+
 app = QtGui.QApplication([])
 
 
@@ -23,7 +24,7 @@ class NodeGui(QtGui.QDialog):
         lbl.setText("Logic Editor")
         mainLayout.addWidget(lbl)
 
-        #self.scene = QtGui.QGraphicsScene()
+        # self.scene = QtGui.QGraphicsScene()
         # if(not tree.getScene()is None):
         # self.scene = tree.getScene()
         # else:
@@ -53,17 +54,19 @@ class NodeGui(QtGui.QDialog):
         formattedItems = []
         for i, item in enumerate(items):
             item = item.replace(".py", "")
-            if item == '__init__' or item == 'MLabradNode':
+            if item == "__init__" or item == "MLabradNode":
                 pass
             else:
                 formattedItems.append(item)
         item, ok = QtGui.QInputDialog.getItem(
-            self, "Add Node", "Select Node:", formattedItems, editable=False)
+            self, "Add Node", "Select Node:", formattedItems, editable=False
+        )
 
         if ok:
-            #import MNodes.MCompare
+            # import MNodes.MCompare
             newNodeModule = importlib.import_module(
-                str('MNodeEditor.MNodes.' + str(item)))
+                str("MNodeEditor.MNodes." + str(item))
+            )
             # print "newNodeModule:", newNodeModule
 
             for name, obj in inspect.getmembers(newNodeModule):

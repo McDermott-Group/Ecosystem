@@ -33,6 +33,7 @@ timeout = 20
 import os
 import sys
 import time
+
 # The LoopingCall function allows a function to be called periodically
 # on a time interval.
 from twisted.internet.task import LoopingCall
@@ -44,51 +45,51 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
-if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
+if __file__ in [f for f in os.listdir(".") if os.path.isfile(f)]:
     SCRIPT_PATH = os.path.dirname(os.getcwd())
 else:
     SCRIPT_PATH = os.path.dirname(__file__)
-LOCAL_PATH = SCRIPT_PATH.rsplit('instruments', 1)[0]
-INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, 'instruments')
+LOCAL_PATH = SCRIPT_PATH.rsplit("instruments", 1)[0]
+INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, "instruments")
 if INSTRUMENTS_PATH not in sys.path:
     sys.path.append(INSTRUMENTS_PATH)
 
 from utilities.gpib_device_wrapper import ReadRawGPIBDeviceWrapper
 from utilities.sleep import sleep
 
-mbar = units.Unit('mbar')
+mbar = units.Unit("mbar")
 
 
 class PfeifferVacuumControlWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to an Pfeiffer Vacuum MaxiGauge."""
-        print(('Connecting to "%s" on port "%s"...' %(server.name, port)))
+        print(('Connecting to "%s" on port "%s"...' % (server.name, port)))
         self.server = server
         self.ctx = server.context()
         self.port = port
         p = self.packet()
         p.open(port)
-        # The following parameters match the default configuration of 
+        # The following parameters match the default configuration of
         # the MaxiGauge unit.
         p.baudrate(9600)
         p.stopbits(1)
         p.bytesize(8)
-        p.parity('N')
+        p.parity("N")
         p.rts(False)
         p.timeout(2 * units.s)
         # Clear out the read buffer. This is necessary for some devices.
         p.read_line()
         yield p.send()
-        
+
     def packet(self):
         """Create a packet in our private context."""
         return self.server.packet(context=self.ctx)
-    
+
     def shutdown(self):
         """Disconnect from the serial port when we shut down."""
         return self.packet().close().send()
-    
+
     @inlineCallbacks
     def write_line(self, code):
         """Write data value to the vacuum control unit."""
@@ -98,7 +99,7 @@ class PfeifferVacuumControlWrapper(DeviceWrapper):
     def write(self, code):
         """Write data value to the vacuum control unit."""
         yield self.server.write(code, context=self.ctx)
-        
+
     @inlineCallbacks
     def read_line(self):
         """Read data value from the vacuum control unit."""
@@ -113,14 +114,14 @@ class PfeifferVacuumControlWrapper(DeviceWrapper):
 
 
 class PfeifferVacuumControlServer(DeviceServer):
-    deviceName = 'Pfeiffer Vacuum MaxiGauge'
-    name = 'Pfeiffer Vacuum MaxiGauge'
+    deviceName = "Pfeiffer Vacuum MaxiGauge"
+    name = "Pfeiffer Vacuum MaxiGauge"
     deviceWrapper = PfeifferVacuumControlWrapper
-    
+
     @inlineCallbacks
     def initServer(self):
         """Initializes the server"""
-        print("Server initializing")        
+        print("Server initializing")
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
@@ -142,13 +143,13 @@ class PfeifferVacuumControlServer(DeviceServer):
         # is connected, and a 'don't-care' value is treated as an error.
         self.thresholdMax = [1500, 1500, 1500, 5e-4, 5e-4, 1e-1] * mbar
         # Set the minimum acceptible pressures.
-        self.thresholdMin = [0, 0, 0, 5E-5, 5E-5, 5E-5] * mbar
-        self.alertInterval = 10 # seconds
+        self.thresholdMin = [0, 0, 0, 5e-5, 5e-5, 5e-5] * mbar
+        self.alertInterval = 10  # seconds
         self.measurements = [0, 0, 0, 0, 0, 0] * mbar
         self.statusCodes = [0, 0, 0, 0, 0, 0]
-        self.t1 = [0,0,0,0,0,0]
-        self.t2 = [0,0,0,0,0,0]
-    
+        self.t1 = [0, 0, 0, 0, 0, 0]
+        self.t2 = [0, 0, 0, 0, 0, 0]
+
     def startRefreshing(self):
         """
         Start periodically refreshing the list of devices.
@@ -162,48 +163,52 @@ class PfeifferVacuumControlServer(DeviceServer):
     @inlineCallbacks
     def stopServer(self):
         """Kill the device refresh loop and wait for it to terminate."""
-        if hasattr(self, 'refresher'):
+        if hasattr(self, "refresher"):
             self.refresher.stop()
             yield self.refresherDone
-      
-    @setting(9, 'Start Server', returns='b')
+
+    @setting(9, "Start Server", returns="b")
     def startServer(self, c):
         """Initialize the repeated pressure measurement."""
         self.dev = self.selectedDevice(c)
         callLater(0.1, self.startRefreshing)
         return True
 
-    @setting(10, 'Set Thresholds', low='*v[mbar]', high='*v[mbar]')
+    @setting(10, "Set Thresholds", low="*v[mbar]", high="*v[mbar]")
     def setThresholds(self, ctx, low, high):
         """
         This setting configures the trigger thresholds.
         If a threshold is exceeded, then an alert is sent.
         """
         if not (len(low) == 6) or not (len(high) == 6):
-            raise Exception("The 'low' and 'high' parameters must be "
-                    "lists of exactly 6 elements.")
+            raise Exception(
+                "The 'low' and 'high' parameters must be "
+                "lists of exactly 6 elements."
+            )
         for i in range(6):
             if low[i] > high[i]:
-                raise Exception("The minimum threshold cannot be "
-                        "greater than the maximum threshold for "
-                        "sensor %d." %(i + 1))
+                raise Exception(
+                    "The minimum threshold cannot be "
+                    "greater than the maximum threshold for "
+                    "sensor %d." % (i + 1)
+                )
             self.thresholdMax[i] = high[i]
             self.thresholdMin[i] = low[i]
         return True
 
-    @setting(11, 'Set Alert Interval', interval='v[s]')
+    @setting(11, "Set Alert Interval", interval="v[s]")
     def setAlertInterval(self, ctx, interval):
         """Configure the alert interval."""
-        self.alertInterval = interval['s']
-    
-    @setting(12, 'Get Pressures', returns='*v[mbar]')
+        self.alertInterval = interval["s"]
+
+    @setting(12, "Get Pressures", returns="*v[mbar]")
     def pressure(self, c):
         """Setting that returns an array of pressures"""
         t1 = time.time()
         self.dev = self.selectedDevice(c)
         yield self.getPressures(self.dev)
         returnValue(self.measurements)
-        
+
     @inlineCallbacks
     def getPressures(self, dev):
         """Read sensor data."""
@@ -226,28 +231,36 @@ class PfeifferVacuumControlServer(DeviceServer):
             # The reading is formatted in the following way:
             # 'status,measurement.'
             # Separate the status code from the measurement.
-            response = response.rsplit(',')
+            response = response.rsplit(",")
             print(("response is", response))
-            pressure = response[1].strip().split('\r\n\x15')[0]
+            pressure = response[1].strip().split("\r\n\x15")[0]
             status = response[0]
             self.measurements[i - 1] = float(pressure) * mbar
-            self.statusCodes[i-1] = response[0]
-        
+            self.statusCodes[i - 1] = response[0]
+
     @inlineCallbacks
     def checkMeasurements(self):
         """Make sure the pressure is within range."""
         # Update the measuremets list by calling the getPressures method.
         yield self.getPressures(self.dev)
         for i in range(6):
-            if not self.statusCodes[i] == '5':
-                if self.measurements[i] > self.thresholdMax[i]:                    
-                    self.sendAlert(str(self.measurements[i]),
-                            "Sensor {0} pressure is above {1}."
-                            .format(i+1, str(self.thresholdMax[i])), i)
+            if not self.statusCodes[i] == "5":
+                if self.measurements[i] > self.thresholdMax[i]:
+                    self.sendAlert(
+                        str(self.measurements[i]),
+                        "Sensor {0} pressure is above {1}.".format(
+                            i + 1, str(self.thresholdMax[i])
+                        ),
+                        i,
+                    )
                 elif self.measurements[i] < self.thresholdMin[i]:
-                    self.sendAlert(str(self.measurements[i]),
-                            "Sensor {0} pressure is below {1}."
-                            .format(i+1, str(self.thresholdMin[i])), i)
+                    self.sendAlert(
+                        str(self.measurements[i]),
+                        "Sensor {0} pressure is below {1}.".format(
+                            i + 1, str(self.thresholdMin[i])
+                        ),
+                        i,
+                    )
 
     def sendAlert(self, measurement, message, sensor):
         """
@@ -259,20 +272,24 @@ class PfeifferVacuumControlServer(DeviceServer):
         # then send another alert.
         self.t1[sensor] = time.time()
         if self.t1[sensor] - self.t2[sensor] > self.alertInterval:
-            # Store the last time an alert was sent in the form of 
+            # Store the last time an alert was sent in the form of
             # seconds since the epoch (1/1/1970).
             # NOTE: the sensor variable is 0 indexed.
             self.t2[sensor] = self.t1[sensor]
-            print(("{0}\n\t{1}\n\t{2}".format(message,
-                                             time.ctime(self.t1[sensor]),
-                                             str(measurement))))
+            print(
+                (
+                    "{0}\n\t{1}\n\t{2}".format(
+                        message, time.ctime(self.t1[sensor]), str(measurement)
+                    )
+                )
+            )
         return
-    
+
     @inlineCallbacks
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'PfeifferVacuumControlServer', 'Links'], True)
+        yield reg.cd(["", "Servers", "PfeifferVacuumControlServer", "Links"], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -280,7 +297,7 @@ class PfeifferVacuumControlServer(DeviceServer):
         ans = yield p.send()
         self.serialLinks = {k: ans[k] for k in keys}
 
-    @inlineCallbacks    
+    @inlineCallbacks
     def findDevices(self):
         """Find available devices from a list stored in the registry."""
         devs = []
@@ -291,7 +308,7 @@ class PfeifferVacuumControlServer(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '{} - {}'.format(server, port)
+            devName = "{} - {}".format(server, port)
             devs += [(name, (server, port))]
         returnValue(devs)
 
@@ -299,5 +316,5 @@ class PfeifferVacuumControlServer(DeviceServer):
 __server__ = PfeifferVacuumControlServer()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     util.runServer(__server__)

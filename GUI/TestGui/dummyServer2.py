@@ -8,40 +8,46 @@ import urllib.request, urllib.error, urllib.parse
 import json
 import random
 
-class MyServer2(LabradServer):
-    name = "My Server2"    # Will be labrad name of server
 
-    start = t.time() 
+class MyServer2(LabradServer):
+    name = "My Server2"  # Will be labrad name of server
+
+    start = t.time()
     zip = 100
-    prev0 = 0 
+    prev0 = 0
     prev1 = 0
-    prev2 = 0 
-    @setting(10, returns='v[degF]')
+    prev2 = 0
+
+    @setting(10, returns="v[degF]")
     def Temperature(self, c):
-        new =  self.prev2 + self.zip*(random.random()-0.5)
+        new = self.prev2 + self.zip * (random.random() - 0.5)
         self.prev2 = new
-        return new*units.degF
-       # return 0.5
-    @setting(100, returns='v[bar]')
+        return new * units.degF
+
+    # return 0.5
+    @setting(100, returns="v[bar]")
     def pressure(self, c):
-       
-        new =  self.prev1 + self.zip*(random.random()-0.5)
+        new = self.prev1 + self.zip * (random.random() - 0.5)
         self.prev1 = new
-        return new*units.bar
-    @setting(200, returns='v[g]')
+        return new * units.bar
+
+    @setting(200, returns="v[g]")
     def moisture(self, c):
-       
-        new =  self.prev0 + self.zip*(random.random()-0.5)
+        new = self.prev0 + self.zip * (random.random() - 0.5)
         self.prev0 = new
-        return new*units.g
-    @setting(11, zip = 'i')
+        return new * units.g
+
+    @setting(11, zip="i")
     def changeLocation(self, ctx, zip):
         self.zip = zip
+
     def somethingElse(self):
         print("something Else")
-        
+
+
 __server__ = MyServer2()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from labrad import util
+
     util.runServer(__server__)

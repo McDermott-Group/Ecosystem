@@ -1,96 +1,112 @@
-#(count, delay, length, rchan)
+# (count, delay, length, rchan)
 
-idx = idx+1
-plt.close('all')
+idx = idx + 1
+plt.close("all")
 cxn.manager.expire_context()
 cxn.ghz_fpgas.select_device(1)
-cxn.ghz_fpgas.adc_monitor_outputs('start', 'demod0I[b0]')
-mix_wfm = np.exp(2*np.pi*1j*np.arange(512) * 2.0 * .0150)
-mixTable = np.array(np.column_stack((np.real(mix_wfm*127), np.imag(mix_wfm*127))), dtype=int)
-#mixTable = mixTable*0
-#mixTable[0,0] = idx
-plt.plot(mixTable[:,0])
-plt.plot(mixTable[:,1])
+cxn.ghz_fpgas.adc_monitor_outputs("start", "demod0I[b0]")
+mix_wfm = np.exp(2 * np.pi * 1j * np.arange(512) * 2.0 * 0.0150)
+mixTable = np.array(
+    np.column_stack((np.real(mix_wfm * 127), np.imag(mix_wfm * 127))), dtype=int
+)
+# mixTable = mixTable*0
+# mixTable[0,0] = idx
+plt.plot(mixTable[:, 0])
+plt.plot(mixTable[:, 1])
 triggerTable = [(1, 10, 100, 1)]
 cxn.ghz_fpgas.select_device(1)
 cxn.ghz_fpgas.adc_trigger_table(triggerTable)
 for jj in range(12):
     cxn.ghz_fpgas.adc_mixer_table(jj, mixTable)
-#cxn.ghz_fpgas.adc_mixer_table(0, mixTable)
+# cxn.ghz_fpgas.adc_mixer_table(0, mixTable)
 data = cxn.ghz_fpgas.adc_run_demod()
 data
 
-plt.close('all')
+plt.close("all")
 cxn.ghz_fpgas.adc_recalibrate()
 I, Q = cxn.ghz_fpgas.adc_run_average()
 plt.plot(I)
 
 
 x = []
-fs = np.linspace(-0.02,0.02,41)
+fs = np.linspace(-0.02, 0.02, 41)
 for f in fs:
     cxn.manager.expire_context()
     cxn.ghz_fpgas.select_device(1)
-    cxn.ghz_fpgas.adc_monitor_outputs('start', 'don')
-    mix_wfm = np.exp(2*np.pi*1j*np.arange(512) * 2.0 * f)
-    #mix_wfm = np.exp(2*np.pi*1j*np.arange(512) * 2.0 * .000)*np.exp(-1j*np.pi/4)
-    mixTable = np.array(np.column_stack((np.real(mix_wfm*127), np.imag(mix_wfm*127))), dtype=int)
+    cxn.ghz_fpgas.adc_monitor_outputs("start", "don")
+    mix_wfm = np.exp(2 * np.pi * 1j * np.arange(512) * 2.0 * f)
+    # mix_wfm = np.exp(2*np.pi*1j*np.arange(512) * 2.0 * .000)*np.exp(-1j*np.pi/4)
+    mixTable = np.array(
+        np.column_stack((np.real(mix_wfm * 127), np.imag(mix_wfm * 127))), dtype=int
+    )
     triggerTable = [(1, 10, 100, 1)]
     cxn.ghz_fpgas.select_device(1)
     cxn.ghz_fpgas.adc_trigger_table(triggerTable)
     cxn.ghz_fpgas.adc_mixer_table(0, mixTable)
-    #cxn.ghz_fpgas.adc_mixer_table(0, mixTable)
+    # cxn.ghz_fpgas.adc_mixer_table(0, mixTable)
     data = cxn.ghz_fpgas.adc_run_demod()
     x.append(data[0][0][0][0])
-    
-plt.plot(fs,x)
+
+plt.plot(fs, x)
 
 cxn.manager.expire_context()
 cxn.ghz_fpgas.select_device(1)
-cxn.ghz_fpgas.adc_monitor_outputs('ADdone', 'alldone')
-#mixTable *= 0
-#mixTable[3,:] = 127
+cxn.ghz_fpgas.adc_monitor_outputs("ADdone", "alldone")
+# mixTable *= 0
+# mixTable[3,:] = 127
 #            rcount rdelay rlen, rchan
 triggerTable = [(3, 10, 250, 12)]
 cxn.ghz_fpgas.select_device(1)
 cxn.ghz_fpgas.adc_trigger_table(triggerTable)
 for idx in range(12):
-    mix_wfm = np.exp(2*np.pi*1j*np.arange(512) * 2.0 * .010)#*np.exp(-1j*np.pi*idx/3)
-    mixTable = np.array(np.column_stack((np.real(mix_wfm*127), np.imag(mix_wfm*127))), dtype=int)    
+    mix_wfm = np.exp(
+        2 * np.pi * 1j * np.arange(512) * 2.0 * 0.010
+    )  # *np.exp(-1j*np.pi*idx/3)
+    mixTable = np.array(
+        np.column_stack((np.real(mix_wfm * 127), np.imag(mix_wfm * 127))), dtype=int
+    )
     cxn.ghz_fpgas.adc_mixer_table(idx, mixTable)
-#cxn.ghz_fpgas.adc_mixer_table(0, mixTable)
+# cxn.ghz_fpgas.adc_mixer_table(0, mixTable)
 data = cxn.ghz_fpgas.adc_run_demod()
 print(np.array(data[0]))
 
-def flatMix(mon0='start',mon1='don',triggerTable = [(1,1250,100,1)]):#trigger=1,chan=1):
+
+def flatMix(
+    mon0="start", mon1="don", triggerTable=[(1, 1250, 100, 1)]
+):  # trigger=1,chan=1):
     cxn.manager.expire_context()
     cxn.ghz_fpgas.select_device(1)
     cxn.ghz_fpgas.adc_monitor_outputs(mon0, mon1)
-    #mixTable *= 0
-    #mixTable[3,:] = 127
+    # mixTable *= 0
+    # mixTable[3,:] = 127
     #            rcount rdelay rlen, rchan
-    #triggerTable = [(trigger, 1250, 100, chan)]
+    # triggerTable = [(trigger, 1250, 100, chan)]
     cxn.ghz_fpgas.select_device(1)
     cxn.ghz_fpgas.adc_trigger_table(triggerTable)
     for idx in range(12):
-        mix_wfm = np.exp(2*np.pi*1j*np.arange(512) * 2.0 * .010)*np.exp(-1j*np.pi*idx/np.e)
-        mixTable = np.array(np.column_stack((np.real(mix_wfm*127), np.imag(mix_wfm*127))), dtype=int)    
+        mix_wfm = np.exp(2 * np.pi * 1j * np.arange(512) * 2.0 * 0.010) * np.exp(
+            -1j * np.pi * idx / np.e
+        )
+        mixTable = np.array(
+            np.column_stack((np.real(mix_wfm * 127), np.imag(mix_wfm * 127))), dtype=int
+        )
         cxn.ghz_fpgas.adc_mixer_table(idx, mixTable)
-    #cxn.ghz_fpgas.adc_mixer_table(0, mixTable)
+    # cxn.ghz_fpgas.adc_mixer_table(0, mixTable)
     data = cxn.ghz_fpgas.adc_run_demod()
 
     IQdata = np.array(data[0][0])
-    Z = IQdata[:,0] + 1j*IQdata[:,1]
+    Z = IQdata[:, 0] + 1j * IQdata[:, 1]
     print("absolute value: ", np.abs(Z))
-    print("angle: ", np.angle(Z)*180/np.pi, " degrees")
+    print("angle: ", np.angle(Z) * 180 / np.pi, " degrees")
     return Z
-    
+
+
 data = []
 for idx in range(512):
     mixerTable = fpgaTest.deltaMixerTable(idx)
-    currData = fpgaTest.mixerTriggerTable(s, cxn, mixerTable = mixerTable, demodFreq=None)
+    currData = fpgaTest.mixerTriggerTable(s, cxn, mixerTable=mixerTable, demodFreq=None)
     data.append(currData[0][0][0])
-    
+
 """
 List of experiments to check ADC:
 1. Check that multiple channels works as expected

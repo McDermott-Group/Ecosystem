@@ -42,47 +42,45 @@ import numpy as np
 
 
 class LakeshoreRuOxServer(GPIBManagedServer):
-	name = 'Lakeshore RuOx'
-	deviceName = 'LSCI MODEL370'
+    name = "Lakeshore RuOx"
+    deviceName = "LSCI MODEL370"
+
+    @setting(10, "Temperatures", returns="*v[K]")
+    def temperatures(self, c):
+        """Read channel temperatures.
+        Returns a ValueList of the channel temperatures in Kelvin.
+        """
+        dev = self.selectedDevice(c)
+        temperatures = []
+        # Sensors in range 1 to 16
+        for i in range(1, 17):
+            res = yield dev.query("RDGR? " + str(i))
+            res = float(res)
+            # Got this curve from the LABVIEW module
+            temp = np.power((2.85 / np.log((res - 652) / 100)), 4)
+            temperatures.append(temp)
+        temperatures = temperatures * units.K
+        returnValue(temperatures)
+
+    @setting(20, "Resistances", returns="*v[Ohm]")
+    def resistances(self, c):
+        """Read channel temperatures.
+        Returns a ValueList of the channel temperatures in Kelvin.
+        """
+        dev = self.selectedDevice(c)
+        resistances = []
+        # Sensors in range 1 to 16
+        for i in range(1, 17):
+            res = yield dev.query("RDGR? " + str(i))
+            resistances.append(float(res))
+
+        resistances = resistances * units.Ohm
+        returnValue(resistances)
 
 
-	@setting(10, 'Temperatures', returns='*v[K]')
-	def temperatures(self, c):
-		"""Read channel temperatures.
-		Returns a ValueList of the channel temperatures in Kelvin.
-		"""
-		dev = self.selectedDevice(c)
-		temperatures = []
-		# Sensors in range 1 to 16
-		for i in range(1, 17):
-			
-			res = yield dev.query("RDGR? "+str(i))
-			res = float(res)
-			# Got this curve from the LABVIEW module
-			temp = np.power((2.85/np.log((res-652)/100)),4)
-			temperatures.append(temp)
-		temperatures = temperatures * units.K
-		returnValue(temperatures)
-	
-	@setting(20, 'Resistances', returns='*v[Ohm]')
-	def resistances(self, c):
-		"""Read channel temperatures.
-		Returns a ValueList of the channel temperatures in Kelvin.
-		"""
-		dev = self.selectedDevice(c)
-		resistances = []
-		# Sensors in range 1 to 16
-		for i in range(1, 17):
-			
-			res = yield dev.query("RDGR? "+str(i))
-			resistances.append(float(res))
-			
-		resistances = resistances * units.Ohm
-		returnValue(resistances)
-	
-	
 __server__ = LakeshoreRuOxServer()
 
-if __name__ == '__main__':
-	from labrad import util
-	util.runServer(__server__)
+if __name__ == "__main__":
+    from labrad import util
+
+    util.runServer(__server__)

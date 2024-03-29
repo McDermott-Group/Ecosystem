@@ -2,32 +2,33 @@
 import keysightSD1 as keySD
 import numpy as np
 
-AWG_TYPE = 'M3202A'
-KEYSIGHT_LIBRARY_PATH = "C:\\Program Files (x86)\\Keysight" \
-                        "\\SD1\\Libraries\\Python\\keysightSD1"
+AWG_TYPE = "M3202A"
+KEYSIGHT_LIBRARY_PATH = (
+    "C:\\Program Files (x86)\\Keysight" "\\SD1\\Libraries\\Python\\keysightSD1"
+)
 TRIGGER_SOURCES = {
-    'Trigger 0': 4000,
-    'Trigger 1': 4001,
-    'Trigger 2': 4002,
-    'Trigger 3': 4003,
-    'Trigger 4': 4004,
-    'Trigger 5': 4005,
-    'Trigger 6': 4006,
-    'Trigger 7': 4007,
+    "Trigger 0": 4000,
+    "Trigger 1": 4001,
+    "Trigger 2": 4002,
+    "Trigger 3": 4003,
+    "Trigger 4": 4004,
+    "Trigger 5": 4005,
+    "Trigger 6": 4006,
+    "Trigger 7": 4007,
 }
 TRIGGER_VALUES = {
-    'High': 0,
-    'Low': 1,
+    "High": 0,
+    "Low": 1,
 }
-TRIGGER_SYNC_MODE ={
-    'Nearest CLK Edge': 1,
-    'Immediate': 0,
+TRIGGER_SYNC_MODE = {
+    "Nearest CLK Edge": 1,
+    "Immediate": 0,
 }
 TRIGGER_BEHAVIORS = {
-    'Active High': 1,
-    'Active Low': 2,
-    'Rising Edge': 3,
-    'Falling Edge': 4
+    "Active High": 1,
+    "Active Low": 2,
+    "Rising Edge": 3,
+    "Falling Edge": 4,
 }
 
 
@@ -49,14 +50,14 @@ def create_awg_object(slot_number, chassis_number=0):
     """
     if isinstance(slot_number, int) and slot_number in range(2, 11):
         awg = keySD.SD_AOU()
-        open_error_code = awg.openWithSlot(AWG_TYPE, chassis_number,
-                                           slot_number)
+        open_error_code = awg.openWithSlot(AWG_TYPE, chassis_number, slot_number)
         if open_error_code < 0:
-            raise Exception("While opening the AWG in slot number %i,"
-                            % slot_number + " error code %i was encountered."
-                            % open_error_code + " See the SD_Error() class in"
-                            " location: " + KEYSIGHT_LIBRARY_PATH +
-                            " for more details.")
+            raise Exception(
+                "While opening the AWG in slot number %i," % slot_number
+                + " error code %i was encountered." % open_error_code
+                + " See the SD_Error() class in"
+                " location: " + KEYSIGHT_LIBRARY_PATH + " for more details."
+            )
         return awg
     else:
         raise Exception("slot_number must be an integer from 2 to 10.")
@@ -73,15 +74,17 @@ def flush_waveforms_from_awg(awg):
     flushing_error_code = awg.waveformFlush()
     if flushing_error_code < 0:
         slot_number = awg.getSlot()
-        raise Exception("While flushing waveforms from the AWG in"
-                        " slot number %i," % slot_number + " error code %i"
-                        " was encountered." % flushing_error_code +
-                        " See the SD_Error() class in location: " +
-                        KEYSIGHT_LIBRARY_PATH + " for more details.")
+        raise Exception(
+            "While flushing waveforms from the AWG in"
+            " slot number %i," % slot_number + " error code %i"
+            " was encountered." % flushing_error_code
+            + " See the SD_Error() class in location: "
+            + KEYSIGHT_LIBRARY_PATH
+            + " for more details."
+        )
 
 
-def configure_awg_channel(awg, channel_number,
-                          output_mode=keySD.SD_Waveshapes.AOU_AWG):
+def configure_awg_channel(awg, channel_number, output_mode=keySD.SD_Waveshapes.AOU_AWG):
     """Sets the waveshape type for a given AWG channel number.
 
     Args:
@@ -95,23 +98,23 @@ def configure_awg_channel(awg, channel_number,
 
     """
     if channel_number in [1, 2, 3, 4]:
-        waveshape_error_code = awg.channelWaveShape(channel_number,
-                                                    output_mode)
+        waveshape_error_code = awg.channelWaveShape(channel_number, output_mode)
         if waveshape_error_code < 0:
             slot_number = awg.getSlot()
-            raise Exception("While configuring the wave shape for the AWG in"
-                            " slot number %i" % slot_number + ' with channel'
-                            ' number %i, ' % channel_number + "error code %i"
-                            " was encountered." % waveshape_error_code +
-                            " See the SD_Error() class in location: " +
-                            KEYSIGHT_LIBRARY_PATH + " for more details.")
+            raise Exception(
+                "While configuring the wave shape for the AWG in"
+                " slot number %i" % slot_number + " with channel"
+                " number %i, " % channel_number + "error code %i"
+                " was encountered." % waveshape_error_code
+                + " See the SD_Error() class in location: "
+                + KEYSIGHT_LIBRARY_PATH
+                + " for more details."
+            )
     else:
         raise Exception("channel_number must be an integer from 1 to 4.")
 
 
-def initialize_awg(slot_number,
-                   channel_numbers=[1, 2, 3, 4],
-                   chassis_number=0):
+def initialize_awg(slot_number, channel_numbers=[1, 2, 3, 4], chassis_number=0):
     """Creates an initialized AWG object with flushed waveforms and
     configured channels.
 
@@ -134,8 +137,9 @@ def initialize_awg(slot_number,
     awg = create_awg_object(slot_number, chassis_number)
     flush_waveforms_from_awg(awg)
     for channel_number in channel_numbers:
-        configure_awg_channel(awg, channel_number,
-                              output_mode=keySD.SD_Waveshapes.AOU_AWG)
+        configure_awg_channel(
+            awg, channel_number, output_mode=keySD.SD_Waveshapes.AOU_AWG
+        )
     return awg
 
 
@@ -155,26 +159,26 @@ def create_keysight_waveform_object(waveform_data, waveform_name):
         the Resources list in our ordinary experimental framework.
 
     """
-    if isinstance(waveform_data, np.ndarray) and \
-            len(waveform_data.shape) == 1:
+    if isinstance(waveform_data, np.ndarray) and len(waveform_data.shape) == 1:
         keysight_waveform_object = keySD.SD_Wave()
-        create_waveform_error_code = \
-            keysight_waveform_object.newFromArrayDouble(
-                keySD.SD_WaveformTypes.WAVE_ANALOG,
-                waveform_data.tolist())
+        create_waveform_error_code = keysight_waveform_object.newFromArrayDouble(
+            keySD.SD_WaveformTypes.WAVE_ANALOG, waveform_data.tolist()
+        )
         if create_waveform_error_code < 0:
-            raise Exception("While creating the waveform with name %s,"
-                            % waveform_name + " error code %i was"
-                            " encountered." % create_waveform_error_code +
-                            " See the SD_Error() class in location: " +
-                            KEYSIGHT_LIBRARY_PATH + " for more details.")
+            raise Exception(
+                "While creating the waveform with name %s," % waveform_name
+                + " error code %i was"
+                " encountered." % create_waveform_error_code
+                + " See the SD_Error() class in location: "
+                + KEYSIGHT_LIBRARY_PATH
+                + " for more details."
+            )
         return keysight_waveform_object
     else:
         raise Exception("waveform_data must be of a 1D numpy.ndarray.")
 
 
-def load_waveform_onto_awg(awg, keysight_waveform_object,
-                           waveform_id):
+def load_waveform_onto_awg(awg, keysight_waveform_object, waveform_id):
     """Loads a Keysight waveform object onto the onboard RAM of an AWG.
 
     Note: Within a given AWG, all waveform_id's must be unique!!!
@@ -191,23 +195,30 @@ def load_waveform_onto_awg(awg, keysight_waveform_object,
     """
     if not isinstance(waveform_id, int) or waveform_id < 0:
         raise Exception("waveform_id must be an integer >= 0.")
-    load_waveform_error_code = awg.waveformLoad(keysight_waveform_object,
-                                                waveform_id)
+    load_waveform_error_code = awg.waveformLoad(keysight_waveform_object, waveform_id)
     if load_waveform_error_code < 0:
         slot_number = awg.getSlot()
-        raise Exception("While loading the waveform with waveform ID %i"
-                        % waveform_id + " onto the AWG in slot number %i,"
-                        % slot_number + " error code %i was encountered."
-                        % load_waveform_error_code + " See the SD_Error() "
-                        "class in location: " + KEYSIGHT_LIBRARY_PATH +
-                        " for more details.")
+        raise Exception(
+            "While loading the waveform with waveform ID %i" % waveform_id
+            + " onto the AWG in slot number %i," % slot_number
+            + " error code %i was encountered." % load_waveform_error_code
+            + " See the SD_Error() "
+            "class in location: " + KEYSIGHT_LIBRARY_PATH + " for more details."
+        )
+
 
 ### the prescalar is changed from 0 to 1 for longer time measurement.
 ### the topological project will change it back after the measurement.
 ### Please double check if this is not changed back.
-def queue_waveform(awg, channel_number, waveform_id,
-                   trigger_mode=keySD.SD_TriggerModes.EXTTRIG,
-                   start_delay=0, cycles=1, prescalar=0):
+def queue_waveform(
+    awg,
+    channel_number,
+    waveform_id,
+    trigger_mode=keySD.SD_TriggerModes.EXTTRIG,
+    start_delay=0,
+    cycles=1,
+    prescalar=0,
+):
     """Queues the specified waveform onto one of AWGs channels.
 
     Note 1: At this stage, the waveform data has already been loaded
@@ -246,19 +257,18 @@ def queue_waveform(awg, channel_number, waveform_id,
     if cycles < 0:
         raise Exception("A negative number of cycles does not make sense.")
     if channel_number in [1, 2, 3, 4]:
-        queue_waveform_error_code = awg.AWGqueueWaveform(channel_number,
-                                                         waveform_id,
-                                                         trigger_mode,
-                                                         start_delay, cycles,
-                                                         prescalar)
+        queue_waveform_error_code = awg.AWGqueueWaveform(
+            channel_number, waveform_id, trigger_mode, start_delay, cycles, prescalar
+        )
         if queue_waveform_error_code < 0:
             slot_number = awg.getSlot()
-            raise Exception("While queueing the waveform with ID # %i"
-                            % waveform_id + " onto the AWG in slot number %i,"
-                            % slot_number + " error code %i was encountered."
-                            % queue_waveform_error_code + " See the SD_Error()"
-                            " class in location: " + KEYSIGHT_LIBRARY_PATH +
-                            " for more details.")
+            raise Exception(
+                "While queueing the waveform with ID # %i" % waveform_id
+                + " onto the AWG in slot number %i," % slot_number
+                + " error code %i was encountered." % queue_waveform_error_code
+                + " See the SD_Error()"
+                " class in location: " + KEYSIGHT_LIBRARY_PATH + " for more details."
+            )
     else:
         raise Exception("channel_number must be an integer from 1 to 4.")
 
@@ -278,12 +288,13 @@ def configure_synchronization_mode(awg, channel_number, sync_mode=1):
     sync_mode_error_code = awg.AWGqueueSyncMode(channel_number, sync_mode)
     if sync_mode_error_code < 0:
         slot_number = awg.getSlot()
-        raise Exception("While configuring the synchronization mode for the "
-                        "AWG in slot number %i," % slot_number +
-                        " error code %i was encountered."
-                        % sync_mode_error_code + " See the SD_Error()"
-                        " class in location: " + KEYSIGHT_LIBRARY_PATH +
-                        " for more details.")
+        raise Exception(
+            "While configuring the synchronization mode for the "
+            "AWG in slot number %i," % slot_number
+            + " error code %i was encountered." % sync_mode_error_code
+            + " See the SD_Error()"
+            " class in location: " + KEYSIGHT_LIBRARY_PATH + " for more details."
+        )
 
 
 def set_channel_amplitude(awg, channel_number, amplitude_in_volts=1.5):
@@ -305,16 +316,18 @@ def set_channel_amplitude(awg, channel_number, amplitude_in_volts=1.5):
         raise Exception("amplitude_in_volts must be < 1.5 in absolute value.")
     if not isinstance(amplitude_in_volts, float):
         raise Exception("amplitude_in_volts must be a float.")
-    set_amplitude_error_code = awg.channelAmplitude(channel_number,
-                                                    amplitude_in_volts)
+    set_amplitude_error_code = awg.channelAmplitude(channel_number, amplitude_in_volts)
     if set_amplitude_error_code < 0:
         slot_number = awg.getSlot()
-        raise Exception("While setting the amplitude for the AWG in"
-                        " slot number %i" % slot_number + ' with channel'
-                        ' number %i, ' % channel_number + "error code %i"
-                        " was encountered." % set_amplitude_error_code +
-                        " See the SD_Error() class in location: " +
-                        KEYSIGHT_LIBRARY_PATH + " for more details.")
+        raise Exception(
+            "While setting the amplitude for the AWG in"
+            " slot number %i" % slot_number + " with channel"
+            " number %i, " % channel_number + "error code %i"
+            " was encountered." % set_amplitude_error_code
+            + " See the SD_Error() class in location: "
+            + KEYSIGHT_LIBRARY_PATH
+            + " for more details."
+        )
 
 
 def start_awg(awg, channel_number):
@@ -335,19 +348,24 @@ def start_awg(awg, channel_number):
     start_awg_error_code = awg.AWGstart(channel_number)
     if start_awg_error_code < 0:
         slot_number = awg.getSlot()
-        raise Exception("While starting the AWG in slot number %i"
-                        % slot_number + ' with channel number %i, '
-                        % channel_number + "error code %i"
-                        " was encountered." % start_awg_error_code +
-                        " See the SD_Error() class in location: " +
-                        KEYSIGHT_LIBRARY_PATH + " for more details.")
+        raise Exception(
+            "While starting the AWG in slot number %i" % slot_number
+            + " with channel number %i, " % channel_number
+            + "error code %i"
+            " was encountered." % start_awg_error_code
+            + " See the SD_Error() class in location: "
+            + KEYSIGHT_LIBRARY_PATH
+            + " for more details."
+        )
 
 
 def configure_pxi_backplane_trigger(
-            awg, channel_number,
-            trigger_source=TRIGGER_SOURCES['Trigger 0'],
-            trigger_behavior=TRIGGER_BEHAVIORS['Rising Edge'],
-            sync_mode=TRIGGER_SYNC_MODE['Nearest CLK Edge']):
+    awg,
+    channel_number,
+    trigger_source=TRIGGER_SOURCES["Trigger 0"],
+    trigger_behavior=TRIGGER_BEHAVIORS["Rising Edge"],
+    sync_mode=TRIGGER_SYNC_MODE["Nearest CLK Edge"],
+):
     """Configures the PXIe chassis for backplane triggering.
 
     Note: This is how all AWGs within a chassis can be configured to
@@ -373,29 +391,35 @@ def configure_pxi_backplane_trigger(
     if channel_number not in [1, 2, 3, 4]:
         raise Exception("channel_number must be an integer from 1 to 4.")
     if trigger_source not in list(TRIGGER_SOURCES.values()):
-        raise Exception("Invalid trigger_number. See the "
-                        "TRIGGER_SOURCES dictionary"
-                        " for a complete set of options.")
+        raise Exception(
+            "Invalid trigger_number. See the "
+            "TRIGGER_SOURCES dictionary"
+            " for a complete set of options."
+        )
     if trigger_behavior not in list(TRIGGER_BEHAVIORS.values()):
-        raise Exception("Invalid trigger_behavior. See the "
-                        "TRIGGER_BEHAVIORS dictionary"
-                        " for a complete set of options.")
+        raise Exception(
+            "Invalid trigger_behavior. See the "
+            "TRIGGER_BEHAVIORS dictionary"
+            " for a complete set of options."
+        )
     configure_trigger_error_code = awg.AWGtriggerExternalConfig(
-        channel_number,
-        trigger_source,
-        trigger_behavior,
-        sync_mode)
+        channel_number, trigger_source, trigger_behavior, sync_mode
+    )
     if configure_trigger_error_code < 0:
         slot_number = awg.getSlot()
-        raise Exception("While configuring the backplane trigger for the AWG"
-                        " in slot number %i," % slot_number + " error code %i"
-                        " was encountered." % configure_trigger_error_code +
-                        " See the SD_Error() class in location: " +
-                        KEYSIGHT_LIBRARY_PATH + " for more details.")
+        raise Exception(
+            "While configuring the backplane trigger for the AWG"
+            " in slot number %i," % slot_number + " error code %i"
+            " was encountered." % configure_trigger_error_code
+            + " See the SD_Error() class in location: "
+            + KEYSIGHT_LIBRARY_PATH
+            + " for more details."
+        )
 
 
-def send_backplane_trigger_awg(awg, trigger_value,
-                               trigger_source=TRIGGER_SOURCES['Trigger 0']):
+def send_backplane_trigger_awg(
+    awg, trigger_value, trigger_source=TRIGGER_SOURCES["Trigger 0"]
+):
     """Sets the digital value of a PXI trigger on backplane of PXIe Chassis.
 
     Note: The PXI triggers on slots 1-5 and on slot 6-10 are not
@@ -414,21 +438,27 @@ def send_backplane_trigger_awg(awg, trigger_value,
 
     """
     if trigger_value not in list(TRIGGER_VALUES.values()):
-        raise Exception("Invalid trigger_value. See the TRIGGER_VALUES"
-                        " dictionary for a complete set of options.")
+        raise Exception(
+            "Invalid trigger_value. See the TRIGGER_VALUES"
+            " dictionary for a complete set of options."
+        )
     if trigger_source not in list(TRIGGER_SOURCES.values()):
-        raise Exception("Invalid trigger_number. See the "
-                        "TRIGGER_SOURCES dictionary"
-                        " for a complete set of options.")
-    trigger_error_code = awg.PXItriggerWrite(trigger_source,
-                                             trigger_value)
+        raise Exception(
+            "Invalid trigger_number. See the "
+            "TRIGGER_SOURCES dictionary"
+            " for a complete set of options."
+        )
+    trigger_error_code = awg.PXItriggerWrite(trigger_source, trigger_value)
     if trigger_error_code < 0:
         slot_number = awg.getSlot()
-        raise Exception("While sending a backplane trigger to the AWG"
-                        " in slot number %i," % slot_number + "error code %i"
-                        " was encountered." % trigger_error_code +
-                        " See the SD_Error() class in location: " +
-                        KEYSIGHT_LIBRARY_PATH + " for more details.")
+        raise Exception(
+            "While sending a backplane trigger to the AWG"
+            " in slot number %i," % slot_number + "error code %i"
+            " was encountered." % trigger_error_code
+            + " See the SD_Error() class in location: "
+            + KEYSIGHT_LIBRARY_PATH
+            + " for more details."
+        )
 
 
 def close_awg(awg):
@@ -445,15 +475,17 @@ def close_awg(awg):
     close_error_code = awg.close()
     if close_error_code < 0:
         slot_number = awg.getSlot()
-        raise Exception("While closing the AWG in slot number %i,"
-                        % slot_number + " error code %i was encountered."
-                        % close_error_code + " See the SD_Error() class"
-                        " in location: " + KEYSIGHT_LIBRARY_PATH +
-                        " for more details.")
+        raise Exception(
+            "While closing the AWG in slot number %i," % slot_number
+            + " error code %i was encountered." % close_error_code
+            + " See the SD_Error() class"
+            " in location: " + KEYSIGHT_LIBRARY_PATH + " for more details."
+        )
 
 
-def load_waveforms_onto_awg(awg, keysight_waveforms_list,
-                            original_waveforms_dict, n_reps, waveform_id=0):
+def load_waveforms_onto_awg(
+    awg, keysight_waveforms_list, original_waveforms_dict, n_reps, waveform_id=0
+):
     """Loads waveforms onto a properly initialized AWG.
 
     Args:
@@ -481,23 +513,24 @@ def load_waveforms_onto_awg(awg, keysight_waveforms_list,
         waveform_channel_number = waveform_obect.channel_number
         waveform_name = waveform_obect.waveform_name
         waveform_data = np.asarray(original_waveforms_dict[waveform_name])
-        channel_slot_pairs.append(
-            (waveform_slot_number, waveform_channel_number))
+        channel_slot_pairs.append((waveform_slot_number, waveform_channel_number))
         if waveform_slot_number == slot_number:  # cycles
             keysight_waveform_object = create_keysight_waveform_object(
-                waveform_data, waveform_name)
+                waveform_data, waveform_name
+            )
             load_waveform_onto_awg(awg, keysight_waveform_object, waveform_id)
             channel_number_channel_id_pairs.append(
-                [waveform_channel_number, waveform_id])
+                [waveform_channel_number, waveform_id]
+            )
             waveform_id += 1
-    duplicate_pairs = find_duplicate_slot_channel_pairs(
-        channel_slot_pairs)
+    duplicate_pairs = find_duplicate_slot_channel_pairs(channel_slot_pairs)
     if len(duplicate_pairs) != 0:
-        raise Exception("The following (slot_number, channel_number) pairs"
-                        " are duplicated %s", str(duplicate_pairs) +
-                        "All (slot_number, channel_number) pairs must be"
-                        " otherwise unique waveform to DAC assignments are"
-                        " ambiguous.")
+        raise Exception(
+            "The following (slot_number, channel_number) pairs" " are duplicated %s",
+            str(duplicate_pairs) + "All (slot_number, channel_number) pairs must be"
+            " otherwise unique waveform to DAC assignments are"
+            " ambiguous.",
+        )
     for pair in channel_number_channel_id_pairs:
         channel_number = pair[0]
         waveform_id = pair[1]
@@ -522,8 +555,10 @@ def find_duplicate_slot_channel_pairs(slot_number_channel_number_pairs):
     duplicates = []
     for ii in range(0, n_elements):
         for jj in range(ii + 1, n_elements):
-            if slot_number_channel_number_pairs[ii] == \
-                    slot_number_channel_number_pairs[jj]:
+            if (
+                slot_number_channel_number_pairs[ii]
+                == slot_number_channel_number_pairs[jj]
+            ):
                 duplicates.append(slot_number_channel_number_pairs[ii])
     return duplicates
 
@@ -549,8 +584,7 @@ def configure_awg(awg, channel_numbers=[1, 2, 3, 4]):
         start_awg(awg, channel_number)
 
 
-def load_awgs(keysight_waveforms_list, original_waveforms_dict, n_reps,
-              awgs=[]):
+def load_awgs(keysight_waveforms_list, original_waveforms_dict, n_reps, awgs=[]):
     """Prepares the AWGs for triggering, including initialization,
     waveform loading, synchronization settings.
 
@@ -575,14 +609,17 @@ def load_awgs(keysight_waveforms_list, original_waveforms_dict, n_reps,
     unique_slot_numbers = list(set(unique_slot_numbers))
     for slot_number in unique_slot_numbers:
         awg = initialize_awg(slot_number)
-        load_waveforms_onto_awg(awg, keysight_waveforms_list,
-                                original_waveforms_dict, n_reps)
+        load_waveforms_onto_awg(
+            awg, keysight_waveforms_list, original_waveforms_dict, n_reps
+        )
         awgs.append(awg)
     for awg in awgs:
         configure_awg(awg)
     if len(awgs) == 0:
-        raise Exception("AWGs list is empty. A minimal experiment will"
-                        " require at least an ADC trigger.")
+        raise Exception(
+            "AWGs list is empty. A minimal experiment will"
+            " require at least an ADC trigger."
+        )
     return awgs
 
 
@@ -595,11 +632,11 @@ def trigger_awgs(awgs):
 
     """
     awg = awgs[0]
-    send_backplane_trigger_awg(awg, trigger_value=TRIGGER_VALUES['Low'])
-    send_backplane_trigger_awg(awg, trigger_value=TRIGGER_VALUES['High'])
-    send_backplane_trigger_awg(awg, trigger_value=TRIGGER_VALUES['Low'])
-    send_backplane_trigger_awg(awg, trigger_value=TRIGGER_VALUES['High'])
-    send_backplane_trigger_awg(awg, trigger_value=TRIGGER_VALUES['Low'])
+    send_backplane_trigger_awg(awg, trigger_value=TRIGGER_VALUES["Low"])
+    send_backplane_trigger_awg(awg, trigger_value=TRIGGER_VALUES["High"])
+    send_backplane_trigger_awg(awg, trigger_value=TRIGGER_VALUES["Low"])
+    send_backplane_trigger_awg(awg, trigger_value=TRIGGER_VALUES["High"])
+    send_backplane_trigger_awg(awg, trigger_value=TRIGGER_VALUES["Low"])
 
 
 def close_awgs(awgs):

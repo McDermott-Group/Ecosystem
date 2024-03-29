@@ -83,6 +83,7 @@ import fpgalib.jump_table as jump_table
 # TODO
 # Think of better variable names than self.params and self.boardParams
 
+
 class InvalidBoardVersion(Exception):
     pass
 
@@ -96,7 +97,7 @@ MASTER_SRAM_DELAY_US = 2
 
 
 class DAC(fpga.FPGA):
-    MAC_PREFIX = '00:01:CA:AA:00:'
+    MAC_PREFIX = "00:01:CA:AA:00:"
     REG_PACKET_LEN = 56
     READBACK_LEN = 70
 
@@ -107,7 +108,7 @@ class DAC(fpga.FPGA):
     @classmethod
     def macFor(cls, board):
         """Get the MAC address of a DAC board as a string."""
-        return cls.MAC_PREFIX + '{:02X}'.format(int(board))
+        return cls.MAC_PREFIX + "{:02X}".format(int(board))
 
     @classmethod
     def isMac(cls, mac):
@@ -119,8 +120,9 @@ class DAC(fpga.FPGA):
     @inlineCallbacks
     def connect(self, name, group, de, port, board, build):
         """Establish a connection to the board."""
-        print('connecting to DAC board: {} (build #{})'.format(
-            self.macFor(board), build))
+        print(
+            "connecting to DAC board: {} (build #{})".format(self.macFor(board), build)
+        )
 
         self.boardGroup = group
         self.server = de
@@ -132,7 +134,7 @@ class DAC(fpga.FPGA):
         self.MAC = self.macFor(board)
         self.devName = name
         self.serverName = de._labrad_name
-        self.timeout = T.Value(1, 's')
+        self.timeout = T.Value(1, "s")
 
         # Set up our context with the ethernet server
         # This context is expired when the device shuts down
@@ -151,11 +153,11 @@ class DAC(fpga.FPGA):
         reg = self.cxn.registry
         ctxt = reg.context()
         p = reg.packet()
-        p.cd(['', 'Servers', 'GHz FPGAs'])
-        p.get('dac' + self.devName.split(' ')[-1], key='boardParams')
+        p.cd(["", "Servers", "GHz FPGAs"])
+        p.get("dac" + self.devName.split(" ")[-1], key="boardParams")
         try:
             resp = yield p.send()
-            boardParams = resp['boardParams']
+            boardParams = resp["boardParams"]
             self.parseBoardParameters(boardParams)
         finally:
             yield self.cxn.manager.expire_context(reg.ID, context=ctxt)
@@ -163,8 +165,7 @@ class DAC(fpga.FPGA):
     @inlineCallbacks
     def shutdown(self):
         """Called when this device is to be shutdown."""
-        yield self.cxn.manager.expire_context(self.server.ID,
-                                              context=self.ctx)
+        yield self.cxn.manager.expire_context(self.server.ID, context=self.ctx)
 
     def runSram(self, dataIn, loop, blockDelay):
         raise NotImplementedError()
@@ -174,7 +175,7 @@ class DAC(fpga.FPGA):
     @classmethod
     def regPing(cls):
         """Returns a numpy array of register bytes to ping DAC register"""
-        regs = np.zeros(cls.REG_PACKET_LEN, dtype='<u1')
+        regs = np.zeros(cls.REG_PACKET_LEN, dtype="<u1")
         regs[0] = 0  # No sequence start
         regs[1] = 1  # Readback after 2us
         return regs
@@ -182,14 +183,14 @@ class DAC(fpga.FPGA):
     @classmethod
     def regPllQuery(cls):
         """Returns a numpy array of register bytes to query PLL status"""
-        regs = np.zeros(cls.REG_PACKET_LEN, dtype='<u1')
+        regs = np.zeros(cls.REG_PACKET_LEN, dtype="<u1")
         regs[0] = 0  # No sequence start
         regs[1] = 1  # Readback after 2us
         return regs
 
     @classmethod
     def regSerial(cls, op, data):
-        regs = np.zeros(cls.REG_PACKET_LEN, dtype='<u1')
+        regs = np.zeros(cls.REG_PACKET_LEN, dtype="<u1")
         regs[0] = 0  # Start mode = no start
         regs[1] = 1  # Readback = readback after 2us to allow for serial
         regs[47] = op  # Set serial operation mode to op
@@ -199,10 +200,10 @@ class DAC(fpga.FPGA):
     @classmethod
     def regPllReset(cls):
         """Send reset pulse to 1GHz PLL"""
-        regs = np.zeros(cls.REG_PACKET_LEN, dtype='<u1')
+        regs = np.zeros(cls.REG_PACKET_LEN, dtype="<u1")
         regs[0] = 0
         regs[1] = 1
-        regs[46] = 0x80  #Set d[7..0] to 10000000 = reset 1GHz PLL pulse
+        regs[46] = 0x80  # Set d[7..0] to 10000000 = reset 1GHz PLL pulse
         return regs
 
     def resetPLL(self):
@@ -217,12 +218,12 @@ class DAC(fpga.FPGA):
     @classmethod
     def pktWriteSram(cls, derp, data):
         """A DAC packet to write one derp of SRAM
-        
+
         This function converts an array of SRAM words into a byte string
         appropriate for writing over ethernet to the board.
-        
+
         A derp is 256 words of SRAM, 1024 bytes
-        
+
         derp - int: Which derp to write, ie address in SRAM
         data - ndarray: array of SRAM words in <u4 format.
                Maximum length is SRAM_WRITE_PKT_LEN words, ie one derp.
@@ -230,13 +231,13 @@ class DAC(fpga.FPGA):
                If less than a full derp is written, the rest of the derp is
                populated with zeros.
         """
-        assert 0 <= derp < cls.SRAM_WRITE_DERPS, \
-            "SRAM derp out of range: %d" % derp
-        assert 0 < len(data) <= cls.SRAM_WRITE_PKT_LEN, \
-            "Tried to write %d words to SRAM derp" % len(data)
+        assert 0 <= derp < cls.SRAM_WRITE_DERPS, "SRAM derp out of range: %d" % derp
+        assert (
+            0 < len(data) <= cls.SRAM_WRITE_PKT_LEN
+        ), "Tried to write %d words to SRAM derp" % len(data)
         data = np.asarray(data)
         # Packet length is data length plus two bytes for write address (derp)
-        pkt = np.zeros(1026, dtype='<u1')
+        pkt = np.zeros(1026, dtype="<u1")
         # DAC firmware assumes SRAM write address lowest 8 bits = 0, so here
         # we're only setting the middle and high byte. This is good, because
         # it means that each time we increment derp by 1, we increment our
@@ -253,20 +254,20 @@ class DAC(fpga.FPGA):
         # Note that if len(data)<SRAM_WRITE_PKT_LEN, ie. smaller than a full
         # derp, we only take as much data as actually exists.
 
-        pkt[2:2 + len(data) * 4:4] = (data >> 0) & 0xFF  # Least sig. byte
-        pkt[3:3 + len(data) * 4:4] = (data >> 8) & 0xFF
-        pkt[4:4 + len(data) * 4:4] = (data >> 16) & 0xFF
-        pkt[5:5 + len(data) * 4:4] = (data >> 24) & 0xFF  # Most sig. byte
+        pkt[2 : 2 + len(data) * 4 : 4] = (data >> 0) & 0xFF  # Least sig. byte
+        pkt[3 : 3 + len(data) * 4 : 4] = (data >> 8) & 0xFF
+        pkt[4 : 4 + len(data) * 4 : 4] = (data >> 16) & 0xFF
+        pkt[5 : 5 + len(data) * 4 : 4] = (data >> 24) & 0xFF  # Most sig. byte
         return pkt
 
     @classmethod
     def pktWriteMem(cls, page, data):
         data = np.asarray(data)
-        pkt = np.zeros(769, dtype='<u1')
+        pkt = np.zeros(769, dtype="<u1")
         pkt[0] = page
-        pkt[1:1 + len(data) * 3:3] = (data >> 0) & 0xFF
-        pkt[2:2 + len(data) * 3:3] = (data >> 8) & 0xFF
-        pkt[3:3 + len(data) * 3:3] = (data >> 16) & 0xFF
+        pkt[1 : 1 + len(data) * 3 : 3] = (data >> 0) & 0xFF
+        pkt[2 : 2 + len(data) * 3 : 3] = (data >> 8) & 0xFF
+        pkt[3 : 3 + len(data) * 3 : 3] = (data >> 16) & 0xFF
         return pkt
 
     # Utility
@@ -274,13 +275,13 @@ class DAC(fpga.FPGA):
     @staticmethod
     def readback2BuildNumber(resp):
         """Get build number from register readback"""
-        a = np.fromstring(resp, dtype='<u1')
+        a = np.fromstring(resp, dtype="<u1")
         return a[51]
 
     def parseBoardParameters(self, parametersFromRegistry):
         """Handle board specific data retreived from registry"""
         self.boardParams = dict(parametersFromRegistry)
-        #for key, val in dict(parametersFromRegistry).items():
+        # for key, val in dict(parametersFromRegistry).items():
         #    setattr(self, key, val)
 
     @staticmethod
@@ -289,9 +290,9 @@ class DAC(fpga.FPGA):
         for i in range(0, len(data), 2):
             for j in range(2):
                 if data[i + j] & 0x3FFF != 0:
-                    bist[j] = (((bist[j] << 1) & 0xFFFFFFFE) | \
-                               ((bist[j] >> 31) & 1)) ^ \
-                              ((data[i + j] ^ 0x3FFF) & 0x3FFF)
+                    bist[j] = (
+                        ((bist[j] << 1) & 0xFFFFFFFE) | ((bist[j] >> 31) & 1)
+                    ) ^ ((data[i + j] ^ 0x3FFF) & 0x3FFF)
         return bist
 
     @classmethod
@@ -304,8 +305,9 @@ class DAC(fpga.FPGA):
         """
 
         def shiftAddr(cmd):
-            opcode, address = MemorySequence.getOpcode(cmd), \
-                              MemorySequence.getAddress(cmd)
+            opcode, address = MemorySequence.getOpcode(cmd), MemorySequence.getAddress(
+                cmd
+            )
             if opcode in [0x8, 0xA]:
                 address += page * cls.SRAM_PAGE_LEN
                 return (opcode << 20) + address
@@ -328,9 +330,8 @@ class DAC(fpga.FPGA):
     @classmethod
     def make_jump_table_entry(cls, name, arg):
         raise InvalidBoardVersion(
-            "Board version {} does not support the jump table.".format(
-                cls.__name__
-            ))
+            "Board version {} does not support the jump table.".format(cls.__name__)
+        )
 
 
 class DacRunner(object):
@@ -351,7 +352,7 @@ class DacRunner_Build7(DacRunner):
             # shorten our sram data so that it fits in one page
             # Why is there a factor of 4 here? Is this because each SRAM
             # word is 4 bytes? Check John's documentation
-            self.sram = self.sram[:self.dev.SRAM_PAGE_LEN * 4]
+            self.sram = self.sram[: self.dev.SRAM_PAGE_LEN * 4]
 
         # calculate expected number of packets
         self.nTimers = MemorySequence.timerCount(self.mem)
@@ -372,7 +373,7 @@ class DacRunner_Build7(DacRunner):
         """
         If this sequence is for dual-block sram, fix memory addresses and
         build sram.
-        
+
         When this function completes
           1. self.sram will be a byte string to be written to the
              physical memory block
@@ -381,18 +382,18 @@ class DacRunner_Build7(DacRunner):
           3. The memory sequence is adjusted so that SRAM start addr
              and SRAM end addr are set to properly execute the dual
              blocks of SRAM.
-        
+
         Input:
               Block0            Block1
               aaaaaaaaaaaaaDELAYbbbbbb
         Output:
         |00000aaaaaaaaaaaaa|bbbbbb
-        
+
         The sram byte string is prepended with zeros to make sure that
         our desired block0, represented by a's, lies with its end
         exactly at the end of the physical memory block0. The two blocks
         are concatened forming a single byte string.
-        
+
         Note that because the sram sequence will be padded to take up the
         entire first block of SRAM (before the delay section), this
         disables paging.
@@ -408,8 +409,9 @@ class DacRunner_Build7(DacRunner):
             # Prepend block0 with \x00's so that the actual signal data
             # exactly fills the first physical SRAM block
             # Note block0 length in bytes = 4*block0 length in words
-            data = '\x00' * (self.dev.SRAM_BLOCK0_LEN * 4 -
-                             len(block0)) + block0 + block1
+            data = (
+                "\x00" * (self.dev.SRAM_BLOCK0_LEN * 4 - len(block0)) + block0 + block1
+            )
             self.sram = data
             self.blockDelay = delayBlocks
 
@@ -432,8 +434,9 @@ class DacRunner_Build7(DacRunner):
     def runPacket(self, page, slave, delay, sync):
         """Create run packet."""
         startDelay = self.startDelay + delay
-        regs = self.dev.regRun(self.reps, page, slave, startDelay,
-                               blockDelay=self.blockDelay, sync=sync)
+        regs = self.dev.regRun(
+            self.reps, page, slave, startDelay, blockDelay=self.blockDelay, sync=sync
+        )
         return regs
 
     def collectPacket(self, seqTime, ctx):
@@ -453,13 +456,12 @@ class DacRunner_Build7(DacRunner):
         on whether timing results are wanted.
         """
         keep = any(s.startswith(self.dev.devName) for s in timingOrder)
-        return self.dev.read(self.nPackets) if keep else \
-            self.dev.discard(self.nPackets)
+        return self.dev.read(self.nPackets) if keep else self.dev.discard(self.nPackets)
 
     def extract(self, packets):
         """Extract timing data coming back from a readPacket."""
-        data = ''.join(data[3:63] for data in packets)
-        return np.fromstring(data, dtype='<u2').astype('u4')
+        data = "".join(data[3:63] for data in packets)
+        return np.fromstring(data, dtype="<u2").astype("u4")
 
 
 class DAC_Build7(DAC):
@@ -495,15 +497,15 @@ class DAC_Build7(DAC):
 
     def buildRunner(self, reps, info):
         """Get a runner for this board"""
-        mem = info.get('mem', None)
-        startDelay = info.get('startDelay', 0)
-        sram = info.get('sram', None)
+        mem = info.get("mem", None)
+        startDelay = info.get("startDelay", 0)
+        sram = info.get("sram", None)
         runner = self.RUNNER_CLASS(self, reps, startDelay, mem, sram)
         return runner
 
     @classmethod
     def regRun(cls, reps, page, slave, delay, blockDelay=None, sync=249):
-        regs = np.zeros(cls.REG_PACKET_LEN, dtype='<u1')
+        regs = np.zeros(cls.REG_PACKET_LEN, dtype="<u1")
         regs[0] = 1 + (page << 7)  # run memory in specified page
         regs[1] = 3  # stream timing data
         regs[13:15] = littleEndian(reps, 2)
@@ -518,12 +520,13 @@ class DAC_Build7(DAC):
 
     @classmethod
     def regRunSram(cls, startAddr, endAddr, loop=True, blockDelay=0, sync=249):
-        regs = np.zeros(cls.REG_PACKET_LEN, dtype='<u1')
-        regs[0] = (3 if loop else 4)  #3: continuous, 4: single run
-        regs[1] = 0  #No register readback
-        regs[13:16] = littleEndian(startAddr, 3)  #SRAM start address
-        regs[16:19] = littleEndian(endAddr - 1 +
-                                   cls.SRAM_DELAY_LEN * blockDelay, 3)  #SRAM end
+        regs = np.zeros(cls.REG_PACKET_LEN, dtype="<u1")
+        regs[0] = 3 if loop else 4  # 3: continuous, 4: single run
+        regs[1] = 0  # No register readback
+        regs[13:16] = littleEndian(startAddr, 3)  # SRAM start address
+        regs[16:19] = littleEndian(
+            endAddr - 1 + cls.SRAM_DELAY_LEN * blockDelay, 3
+        )  # SRAM end
         regs[19] = blockDelay
         regs[45] = sync
         return regs
@@ -532,11 +535,11 @@ class DAC_Build7(DAC):
     def regIdle(cls, delay):
         """
         Numpy array of register bytes for idle mode
-        
+
         TODO: Move into DAC superclass if this is common functionality.
               Need to check.
         """
-        regs = np.zeros(cls.REG_PACKET_LEN, dtype='<u1')
+        regs = np.zeros(cls.REG_PACKET_LEN, dtype="<u1")
         regs[0] = 0  # do not start
         regs[1] = 0  # no readback
         regs[43] = 3  # IDLE mode
@@ -546,8 +549,8 @@ class DAC_Build7(DAC):
 
     @classmethod
     def regClockPolarity(cls, chan, invert):
-        ofs = {'A': (4, 0), 'B': (5, 1)}[chan]
-        regs = np.zeros(cls.REG_PACKET_LEN, dtype='<u1')
+        ofs = {"A": (4, 0), "B": (5, 1)}[chan]
+        regs = np.zeros(cls.REG_PACKET_LEN, dtype="<u1")
         regs[0] = 0
         regs[1] = 1
         regs[46] = (1 << ofs[0]) + ((invert & 1) << ofs[1])
@@ -556,7 +559,7 @@ class DAC_Build7(DAC):
     @classmethod
     def regDebug(cls, word1, word2, word3, word4):
         """Returns as numpy arrya of register bytes to set DAC into debug mode"""
-        regs = np.zeros(cls.REG_PACKET_LEN, dtype='<u1')
+        regs = np.zeros(cls.REG_PACKET_LEN, dtype="<u1")
         regs[0] = 2
         regs[1] = 1
         regs[13:17] = littleEndian(word1)
@@ -567,16 +570,17 @@ class DAC_Build7(DAC):
 
     @classmethod
     def regI2C(cls, data, read, ack):
-        assert len(data) == len(read) == len(ack), \
-            "data, read and ack must have same length for I2C"
+        assert (
+            len(data) == len(read) == len(ack)
+        ), "data, read and ack must have same length for I2C"
         assert len(data) <= 8, "Cannot send more than 8 I2C data bytes"
-        regs = np.zeros(cls.REG_PACKET_LEN, dtype='<u1')
+        regs = np.zeros(cls.REG_PACKET_LEN, dtype="<u1")
         regs[0] = 0
         regs[1] = 2
         regs[2] = 1 << (8 - len(data))
         regs[3] = sum(((r & 1) << (7 - i)) for i, r in enumerate(read))
         regs[4] = sum(((a & a) << (7 - i)) for i, a in enumerate(ack))
-        regs[12:12 - len(data):-1] = data
+        regs[12 : 12 - len(data) : -1] = data
         return regs
 
     # Methods to get bytes to write data to the board
@@ -595,7 +599,7 @@ class DAC_Build7(DAC):
     @classmethod
     def makeSRAM(cls, data, p, page=0):
         """Update a packet for the ethernet server with SRAM commands.
-        
+
         Build parameters like SRAM_PAGE_LEN are in units of SRAM words,
         each of which is 14+14+4=32 bits = 4 bytes long. Therefore the
         actual length of corresponding byte strings have a *4 multiplier.
@@ -611,7 +615,7 @@ class DAC_Build7(DAC):
             # than the length of myArray, returns the entirety of myArray
             # and does NOT wrap around to the beginning
             chunk, data = data[:bytesPerDerp], data[bytesPerDerp:]
-            chunk = np.fromstring(chunk, dtype='<u4')
+            chunk = np.fromstring(chunk, dtype="<u4")
             dacPkt = cls.pktWriteSram(writeDerp, chunk)
             p.write(dacPkt.tostring())
             writeDerp += 1
@@ -649,11 +653,11 @@ class DAC_Build7(DAC):
                 bytes = [(b if b <= 0xFF else 0) for b in data]
                 read = [b & self.I2C_RB for b in data]
                 ack = [b & self.I2C_ACK for b in data]
-                
+
                 regs = self.regI2C(bytes, read, ack)
                 r = yield self._sendRegisters(regs)
                 # readout data wrapped around to end
-                ansBytes = self.processReadback(r)['I2Cbytes'][-len(data):]
+                ansBytes = self.processReadback(r)["I2Cbytes"][-len(data) :]
 
                 answer += [b for b, r in zip(ansBytes, read) if r]
         returnValue(answer)
@@ -666,7 +670,7 @@ class DAC_Build7(DAC):
             regs = self.regSerial(op, d)
             r = yield self._sendRegisters(regs)
             # turn these into python ints, instead of numpy ints
-            answer += [int(self.processReadback(r)['serDAC'])]
+            answer += [int(self.processReadback(r)["serDAC"])]
         returnValue(answer)
 
     @inlineCallbacks
@@ -716,7 +720,7 @@ class DAC_Build7(DAC):
 
     def initPLL(self):
         """Initial program  of PLL chip
-        
+
         I _believe_ this only has to be run once after the board has been
         powered on. DTS
         """
@@ -724,7 +728,7 @@ class DAC_Build7(DAC):
         @inlineCallbacks
         def func():
             yield self._runSerial(1, [0x1FC093, 0x1FC092, 0x100004, 0x000C11])
-            #Run sram with startAddress=endAddress=0. Run once, no loop.
+            # Run sram with startAddress=endAddress=0. Run once, no loop.
             regs = self.regRunSram(0, 0, loop=False)
             yield self._sendRegisters(regs, readback=False)
 
@@ -754,7 +758,7 @@ class DAC_Build7(DAC):
             pkt = self.regPing()
             yield self._sendRegisters(pkt)
 
-            data = np.array(dataIn, dtype='<u4').tostring()
+            data = np.array(dataIn, dtype="<u4").tostring()
             yield self._sendSRAM(data)
             startAddr, endAddr = 0, len(data) / 4
 
@@ -807,9 +811,12 @@ class DAC_Build7(DAC):
         # See U:\John\ProtelDesigns\GHzDAC_R3_1\Documentation\HardRegProgram.txt
         # for how this function works.
         def func():
-            #TODO: repeat LVDS measurement five times and average results.
-            pkt = [[0x0400 + (i << 4), 0x8500, 0x0400 + i, 0x8500][j]
-                   for i in range(16) for j in range(4)]
+            # TODO: repeat LVDS measurement five times and average results.
+            pkt = [
+                [0x0400 + (i << 4), 0x8500, 0x0400 + i, 0x8500][j]
+                for i in range(16)
+                for j in range(4)
+            ]
 
             if optimizeSD is True:
                 # Find the leading/trailing edges of the DATACLK_IN clock.
@@ -823,10 +830,14 @@ class DAC_Build7(DAC):
                 MSD = -2
                 MHD = -2
                 for i in range(16):
-                    if MSD == -2 and answer[i * 2] == 1: MSD = -1
-                    if MSD == -1 and answer[i * 2] == 0: MSD = i
-                    if MHD == -2 and answer[i * 2 + 1] == 1: MHD = -1
-                    if MHD == -1 and answer[i * 2 + 1] == 0: MHD = i
+                    if MSD == -2 and answer[i * 2] == 1:
+                        MSD = -1
+                    if MSD == -1 and answer[i * 2] == 0:
+                        MSD = i
+                    if MHD == -2 and answer[i * 2 + 1] == 1:
+                        MHD = -1
+                    if MHD == -1 and answer[i * 2 + 1] == 0:
+                        MHD = i
                 MSD = max(MSD, 0)
                 MHD = max(MHD, 0)
                 # Find the optimal SD based on MSD and MHD.
@@ -834,7 +845,7 @@ class DAC_Build7(DAC):
                 setMSDMHD = False
             elif sd is None:
                 # Get the SD value from the registry.
-                t = int(self.boardParams['lvdsSD']) & 0xF
+                t = int(self.boardParams["lvdsSD"]) & 0xF
                 MSD, MHD = -1, -1
                 setMSDMHD = True
             else:
@@ -856,17 +867,23 @@ class DAC_Build7(DAC):
             leadingEdge = MSDswitch.index(True)
             trailingEdge = MHDswitch.index(True)
             if setMSDMHD:
-                if sum(MSDswitch) == 1: MSD = leadingEdge
-                if sum(MHDswitch) == 1: MHD = trailingEdge
-            if abs(trailingEdge - leadingEdge) <= 1 and sum(MSDswitch) == 1 and \
-                            sum(MHDswitch) == 1:
+                if sum(MSDswitch) == 1:
+                    MSD = leadingEdge
+                if sum(MHDswitch) == 1:
+                    MHD = trailingEdge
+            if (
+                abs(trailingEdge - leadingEdge) <= 1
+                and sum(MSDswitch) == 1
+                and sum(MHDswitch) == 1
+            ):
                 success = True
             else:
                 success = False
             checkResp = yield self._runSerial(cmd, [0x8500])
             checkHex = checkResp[0] & 0x7
-            returnValue((success, MSD, MHD, t, (list(range(16)), MSDbits, MHDbits),
-                         checkHex))
+            returnValue(
+                (success, MSD, MHD, t, (list(range(16)), MSDbits, MHDbits), checkHex)
+            )
 
         return self.testMode(func)
 
@@ -899,7 +916,7 @@ class DAC_Build7(DAC):
         """
         if targetFifo is None:
             # Grab targetFifo from registry if not specified.
-            targetFifo = int(self.boardParams['fifoCounter'])
+            targetFifo = int(self.boardParams["fifoCounter"])
 
         @inlineCallbacks
         def func():
@@ -914,13 +931,10 @@ class DAC_Build7(DAC):
                 # Send all four PHOFs & measure resulting FIFO counters. If
                 # one of these equals targetFifo, set the PHOF and check that
                 # the FIFO counter is indeed targetFifo. If so, break out.
-                pkt = [0x0700, 0x8700, 0x0701, 0x8700, 0x0702, 0x8700,
-                       0x0703, 0x8700]
+                pkt = [0x0700, 0x8700, 0x0701, 0x8700, 0x0702, 0x8700, 0x0703, 0x8700]
                 reading = yield self._runSerial(op, pkt)
-                fifoCounters = np.array([(reading[i] >> 4) & 0xF for i in \
-                                         [1, 3, 5, 7]])
-                PHOF, found = yield self._checkPHOF(op, fifoCounters,
-                                                    targetFifo)
+                fifoCounters = np.array([(reading[i] >> 4) & 0xF for i in [1, 3, 5, 7]])
+                PHOF, found = yield self._checkPHOF(op, fifoCounters, targetFifo)
                 if found:
                     break
                 else:
@@ -937,7 +951,7 @@ class DAC_Build7(DAC):
         return self.testMode(func)
 
     def runBIST(self, cmd, shift, dataIn):
-        """ Run a BIST on the given SRAM sequence. (DAC only)
+        """Run a BIST on the given SRAM sequence. (DAC only)
 
         :param cmd: 2 or 3
         :param shift: 0 or 14, i.e. whether to use DAC A or B
@@ -954,7 +968,7 @@ class DAC_Build7(DAC):
             data = [0, 0, 0, 0] + [d << shift for d in dat]
             # make sure data is at least 20 words long by appending 0's
             data += [0] * (20 - len(data))
-            data = np.array(data, dtype='<u4').tostring()
+            data = np.array(data, dtype="<u4").tostring()
             yield self._sendSRAM(data)
             startAddr, endAddr = 0, len(data) // 4
             yield self._runSerial(cmd, [0x0004, 0x1107, 0x1106])
@@ -962,22 +976,43 @@ class DAC_Build7(DAC):
             pkt = self.regRunSram(startAddr, endAddr, loop=False)
             yield self._sendRegisters(pkt, readback=False)
 
-            seq = [0x1126, 0x9200, 0x9300, 0x9400, 0x9500,
-                   0x1166, 0x9200, 0x9300, 0x9400, 0x9500,
-                   0x11A6, 0x9200, 0x9300, 0x9400, 0x9500,
-                   0x11E6, 0x9200, 0x9300, 0x9400, 0x9500]
+            seq = [
+                0x1126,
+                0x9200,
+                0x9300,
+                0x9400,
+                0x9500,
+                0x1166,
+                0x9200,
+                0x9300,
+                0x9400,
+                0x9500,
+                0x11A6,
+                0x9200,
+                0x9300,
+                0x9400,
+                0x9500,
+                0x11E6,
+                0x9200,
+                0x9300,
+                0x9400,
+                0x9500,
+            ]
             theory = tuple(self.bistChecksum(dat))
             bist = yield self._runSerial(cmd, seq)
-            reading = [(bist[i + 4] << 0) + (bist[i + 3] << 8) +
-                       (bist[i + 2] << 16) + (bist[i + 1] << 24)
-                       for i in [0, 5, 10, 15]]
+            reading = [
+                (bist[i + 4] << 0)
+                + (bist[i + 3] << 8)
+                + (bist[i + 2] << 16)
+                + (bist[i + 1] << 24)
+                for i in [0, 5, 10, 15]
+            ]
             lvds, fifo = tuple(reading[0:2]), tuple(reading[2:4])
 
             # lvds and fifo may be reversed.  This is okay
             lvds = lvds[::-1] if lvds[::-1] == theory else lvds
             fifo = fifo[::-1] if fifo[::-1] == theory else fifo
-            returnValue((lvds == theory and fifo == theory, theory, lvds,
-                         fifo))
+            returnValue((lvds == theory and fifo == theory, theory, lvds, fifo))
 
         return self.testMode(func)
 
@@ -986,18 +1021,18 @@ class DAC_Build7(DAC):
     @staticmethod
     def processReadback(resp):
         """Interpret byte string returned by register readback"""
-        a = np.fromstring(resp, dtype='<u1')
+        a = np.fromstring(resp, dtype="<u1")
         return {
-            'build': a[51],
-            'serDAC': a[56],
-            'noPllLatch': bool((a[58] & 0x80) > 0),
-            'ackoutI2C': a[61],
-            'I2Cbytes': a[69:61:-1],
-            'executionCounter': (a[53] << 8) + a[52]
+            "build": a[51],
+            "serDAC": a[56],
+            "noPllLatch": bool((a[58] & 0x80) > 0),
+            "ackoutI2C": a[61],
+            "I2Cbytes": a[69:61:-1],
+            "executionCounter": (a[53] << 8) + a[52],
         }
 
 
-fpga.REGISTRY[('DAC', 7)] = DAC_Build7
+fpga.REGISTRY[("DAC", 7)] = DAC_Build7
 
 
 class DacRunner_Build8(DacRunner_Build7):
@@ -1016,7 +1051,7 @@ class DAC_Build8(DAC_Build7):
     SRAM_BLOCK1_LEN = 2048
 
 
-fpga.REGISTRY[('DAC', 8)] = DAC_Build8
+fpga.REGISTRY[("DAC", 8)] = DAC_Build8
 
 
 class DacRunner_Build12(DacRunner_Build8):
@@ -1027,8 +1062,7 @@ class DAC_Build12(DAC_Build8):
     pass
 
 
-fpga.REGISTRY[('DAC', 12)] = DAC_Build12
-
+fpga.REGISTRY[("DAC", 12)] = DAC_Build12
 
 
 class DacRunner_Build11(DacRunner_Build7):
@@ -1039,7 +1073,7 @@ class DAC_Build11(DAC_Build7):
     RUNNER_CLASS = DacRunner_Build11
 
 
-fpga.REGISTRY[('DAC', 11)] = DAC_Build11
+fpga.REGISTRY[("DAC", 11)] = DAC_Build11
 
 
 class DacRunner_Build12(DacRunner_Build8):
@@ -1050,13 +1084,16 @@ class DAC_Build12(DAC_Build8):
     pass
 
 
-fpga.REGISTRY[('DAC', 12)] = DAC_Build12
+fpga.REGISTRY[("DAC", 12)] = DAC_Build12
 
 
 # Jump table #
 
+
 class DacRunner_Build15(DacRunner_Build7):
-    def __init__(self, dev, reps, start_delay, jt_entries, jt_counters, sram, loop_delay):
+    def __init__(
+        self, dev, reps, start_delay, jt_entries, jt_counters, sram, loop_delay
+    ):
         """Initialize a DAC runner for a given device.
 
         See DAC_Build15.make_jump_table for info on the jt_entries and
@@ -1077,13 +1114,15 @@ class DacRunner_Build15(DacRunner_Build7):
         self.jump_table = self.dev.make_jump_table(jt_entries, jt_counters)
         self.sram = sram
         self.nPackets = 0  # we don't expect any packets back
-        self.seqTime = fpga.TIMEOUT_FACTOR * (100 * self.reps) * 10**-6 + 1  # TODO: what should we do here? issue #49
+        self.seqTime = (
+            fpga.TIMEOUT_FACTOR * (100 * self.reps) * 10**-6 + 1
+        )  # TODO: what should we do here? issue #49
 
     def pageable(self):
         return False  # no paging for JT
 
     def loadPacket(self, page, isMaster):
-        """ Create pipelined load packet, which includes JT and SRAM.
+        """Create pipelined load packet, which includes JT and SRAM.
 
         Note that this add 2 us to the delay for the master board.
 
@@ -1098,7 +1137,7 @@ class DacRunner_Build15(DacRunner_Build7):
         return self.dev.load(self.jump_table, self.sram)
 
     def runPacket(self, page, slave, delay, sync):
-        """ Create run packet.
+        """Create run packet.
 
         :param int page: must be 0 for JT boards
         :param int slave: 0==master, 1==slave, 3==idle
@@ -1107,13 +1146,21 @@ class DacRunner_Build15(DacRunner_Build7):
         :return: ndarray, ready to be tostring'ed to bytes for the DE server
         """
         start_delay = self.start_delay + delay
-        regs = self.dev.regRun(self.reps, page, slave, start_delay, readback=False,
-                               blockDelay=None, sync=sync, loop_delay=self.loop_delay)
+        regs = self.dev.regRun(
+            self.reps,
+            page,
+            slave,
+            start_delay,
+            readback=False,
+            blockDelay=None,
+            sync=sync,
+            loop_delay=self.loop_delay,
+        )
         return regs
 
 
 class DAC_Build15(DAC_Build8):
-    """ DAC Build 15 is the first (working) jump table build.
+    """DAC Build 15 is the first (working) jump table build.
 
     Note that when this DAC object builds jump tables, there are few offsets
     that it always applies:
@@ -1186,8 +1233,9 @@ class DAC_Build15(DAC_Build8):
     COUNTER_BYTES = 4
     IDLE_BITS = 15
     JUMP_TABLE_ENTRY_BYTES = 8
-    JUMP_TABLE_COUNT = (JUMP_TABLE_LEN - (NUM_COUNTERS * COUNTER_BYTES)
-                        ) / JUMP_TABLE_ENTRY_BYTES
+    JUMP_TABLE_COUNT = (
+        JUMP_TABLE_LEN - (NUM_COUNTERS * COUNTER_BYTES)
+    ) / JUMP_TABLE_ENTRY_BYTES
     JT_FROM_ADDR_OFFSET = -2
     JT_END_ADDR_OFFSET = JT_FROM_ADDR_OFFSET - 1
     JT_IDLE_OFFSET = -0
@@ -1207,7 +1255,7 @@ class DAC_Build15(DAC_Build8):
 
     @classmethod
     def convert_from_address(cls, x_ns):
-        """ Convert a from address from ns to SRAM index.
+        """Convert a from address from ns to SRAM index.
 
         This also checks bounds and applies offsets.
 
@@ -1216,16 +1264,20 @@ class DAC_Build15(DAC_Build8):
         :rtype: int
         """
         if x_ns % 4 != 0:
-            raise ValueError("From address must be divisible by 4 ({} given)".format(x_ns))
-        if not(cls.JT_MIN_FROM_ADDR <= x_ns // 4 <= cls.JT_MAX_FROM_ADDR):
-            raise ValueError("From address must be {}<x<{}, ({} given)".format(
-                cls.JT_MIN_FROM_ADDR*4, cls.JT_MAX_FROM_ADDR*4, x_ns
-            ))
+            raise ValueError(
+                "From address must be divisible by 4 ({} given)".format(x_ns)
+            )
+        if not (cls.JT_MIN_FROM_ADDR <= x_ns // 4 <= cls.JT_MAX_FROM_ADDR):
+            raise ValueError(
+                "From address must be {}<x<{}, ({} given)".format(
+                    cls.JT_MIN_FROM_ADDR * 4, cls.JT_MAX_FROM_ADDR * 4, x_ns
+                )
+            )
         return x_ns // 4 + cls.JT_FROM_ADDR_OFFSET
 
     @classmethod
     def convert_to_address(cls, x_ns):
-        """ Convert a to address from ns to SRAM index.
+        """Convert a to address from ns to SRAM index.
 
         This also checks bounds and applies offsets (there are currently no
         offsets for to addresses).
@@ -1235,16 +1287,20 @@ class DAC_Build15(DAC_Build8):
         :rtype: int
         """
         if x_ns % 4 != 0:
-            raise ValueError("To address must be divisible by 4 ({} given)".format(x_ns))
-        if not(cls.JT_MIN_TO_ADDR <= x_ns // 4 <= cls.JT_MAX_TO_ADDR):
-            raise ValueError("To address must be {}<x<{}, ({} given)".format(
-                cls.JT_MIN_TO_ADDR*4, cls.JT_MAX_TO_ADDR*4, x_ns
-            ))
+            raise ValueError(
+                "To address must be divisible by 4 ({} given)".format(x_ns)
+            )
+        if not (cls.JT_MIN_TO_ADDR <= x_ns // 4 <= cls.JT_MAX_TO_ADDR):
+            raise ValueError(
+                "To address must be {}<x<{}, ({} given)".format(
+                    cls.JT_MIN_TO_ADDR * 4, cls.JT_MAX_TO_ADDR * 4, x_ns
+                )
+            )
         return x_ns // 4
 
     @classmethod
     def convert_end_address(cls, x_ns):
-        """ Convert a from address _for the END command_ from ns to SRAM index.
+        """Convert a from address _for the END command_ from ns to SRAM index.
 
         This also checks bounds and applies offsets.
 
@@ -1253,16 +1309,20 @@ class DAC_Build15(DAC_Build8):
         :rtype: int
         """
         if x_ns % 4 != 0:
-            raise ValueError("End address must be divisible by 4 ({} given)".format(x_ns))
-        if not(cls.JT_MIN_END_ADDR <= x_ns // 4 <= cls.JT_MAX_END_ADDR):
-            raise ValueError("End address must be {}<x<{}, ({} given)".format(
-                cls.JT_MIN_END_ADDR*4, cls.JT_MAX_END_ADDR*4, x_ns
-            ))
+            raise ValueError(
+                "End address must be divisible by 4 ({} given)".format(x_ns)
+            )
+        if not (cls.JT_MIN_END_ADDR <= x_ns // 4 <= cls.JT_MAX_END_ADDR):
+            raise ValueError(
+                "End address must be {}<x<{}, ({} given)".format(
+                    cls.JT_MIN_END_ADDR * 4, cls.JT_MAX_END_ADDR * 4, x_ns
+                )
+            )
         return x_ns // 4 + cls.JT_END_ADDR_OFFSET
 
     @classmethod
     def convert_idle_duration(cls, x_ns):
-        """ Convert an idle duration from ns to clock cycles.
+        """Convert an idle duration from ns to clock cycles.
 
         This also checks bounds and applies offsets.
 
@@ -1271,16 +1331,20 @@ class DAC_Build15(DAC_Build8):
         :rtype: int
         """
         if x_ns % 4 != 0:
-            raise ValueError("IDLE duration must be divisible by 4 ({} given)".format(x_ns))
-        if not(cls.JT_IDLE_MIN <= x_ns // 4 <= cls.JT_IDLE_MAX):
-            raise ValueError("Idle duration must be {}<x<{}, ({} given)".format(
-                cls.JT_IDLE_MIN*4, cls.JT_IDLE_MAX*4, x_ns
-            ))
+            raise ValueError(
+                "IDLE duration must be divisible by 4 ({} given)".format(x_ns)
+            )
+        if not (cls.JT_IDLE_MIN <= x_ns // 4 <= cls.JT_IDLE_MAX):
+            raise ValueError(
+                "Idle duration must be {}<x<{}, ({} given)".format(
+                    cls.JT_IDLE_MIN * 4, cls.JT_IDLE_MAX * 4, x_ns
+                )
+            )
         return x_ns // 4 + cls.JT_IDLE_OFFSET
 
     @classmethod
     def convert_jt_idx(cls, jt_idx):
-        """ Offset jump table index to compensate for first NOP.
+        """Offset jump table index to compensate for first NOP.
 
         :param int jt_idx: jump table index in, with convention 0 is first user
                            defined entry.
@@ -1294,18 +1358,26 @@ class DAC_Build15(DAC_Build8):
         return jt_idx + cls.JT_IDX_OFFSET
 
     def buildRunner(self, reps, info):
-        jt_entries = info['jt_entries']
-        jt_counters = info['jt_counters']
-        start_delay = info.get('startDelay', 0)
-        loop_delay = info.get('loop_delay', 0)
-        sram = info.get('sram', None)
-        runner = self.RUNNER_CLASS(self, reps, start_delay, jt_entries, jt_counters, sram, loop_delay=loop_delay)
+        jt_entries = info["jt_entries"]
+        jt_counters = info["jt_counters"]
+        start_delay = info.get("startDelay", 0)
+        loop_delay = info.get("loop_delay", 0)
+        sram = info.get("sram", None)
+        runner = self.RUNNER_CLASS(
+            self,
+            reps,
+            start_delay,
+            jt_entries,
+            jt_counters,
+            sram,
+            loop_delay=loop_delay,
+        )
         return runner
 
     @classmethod
     def regPing(cls):
         """Returns a numpy array of register bytes to ping DAC register"""
-        regs = np.zeros(cls.REG_PACKET_LEN, dtype='<u1')
+        regs = np.zeros(cls.REG_PACKET_LEN, dtype="<u1")
         regs[0] = 1  # Master mode to prevent daisy passthrough.
         regs[1] = 1  # Readback after 2us
         regs[51] = cls.MONITOR_0
@@ -1319,7 +1391,7 @@ class DAC_Build15(DAC_Build8):
 
     @classmethod
     def regSerial(cls, op, data):
-        regs = np.zeros(cls.REG_PACKET_LEN, dtype='<u1')
+        regs = np.zeros(cls.REG_PACKET_LEN, dtype="<u1")
         regs[0] = 1  # Master mode to prevent daisy passthrough
         regs[1] = 1  # Readback = readback after 2us to allow for serial
         regs[47] = op  # Set serial operation mode to op
@@ -1331,7 +1403,7 @@ class DAC_Build15(DAC_Build8):
     @classmethod
     def regPllReset(cls):
         """Send reset pulse to 1GHz PLL"""
-        regs = np.zeros(cls.REG_PACKET_LEN, dtype='<u1')
+        regs = np.zeros(cls.REG_PACKET_LEN, dtype="<u1")
         regs[0] = 1  # master mode to prevent daisy passthrough
         regs[1] = 1
         regs[46] = 0x80  # Set d[7..0] to 10000000 = reset 1GHz PLL pulse
@@ -1340,14 +1412,25 @@ class DAC_Build15(DAC_Build8):
         return regs
 
     @classmethod
-    def regRun(cls, reps, page, slave, delay, blockDelay=None, sync=249,
-               loop_delay=0, readback=True, monitor_0=None, monitor_1=None):
+    def regRun(
+        cls,
+        reps,
+        page,
+        slave,
+        delay,
+        blockDelay=None,
+        sync=249,
+        loop_delay=0,
+        readback=True,
+        monitor_0=None,
+        monitor_1=None,
+    ):
         # TODO: probably get rid of page, blockDelay
         if blockDelay is not None:
             raise ValueError("JT board got a non-None blockDelay: ", blockDelay)
         if page:
             raise ValueError("JT board got a non-zero page: ", page)
-        regs = np.zeros(cls.REG_PACKET_LEN, dtype='<u1')
+        regs = np.zeros(cls.REG_PACKET_LEN, dtype="<u1")
         # old version of slave: 0 = master, 1 = slave, 3 = idle (bit 43)
         # new version: 0 = idle, 1 = master, 2 = test, 3 = slave (bit 0)
         if slave == 0:
@@ -1389,7 +1472,7 @@ class DAC_Build15(DAC_Build8):
         :return: numpy array of register bytes for idle mode
         :rtype: numpy.ndarray
         """
-        regs = np.zeros(cls.REG_PACKET_LEN, dtype='<u1')
+        regs = np.zeros(cls.REG_PACKET_LEN, dtype="<u1")
         regs[0] = 0  # do not start, daisy pass-through
         regs[1] = 0  # no readback
         regs[43:45] = littleEndian(int(delay), 2)
@@ -1402,7 +1485,7 @@ class DAC_Build15(DAC_Build8):
         raise NotImplementedError("Not sure what debug means for the JT")
 
     def load(self, jt, sram, page=None):
-        """ Get a load packet for this DAC.
+        """Get a load packet for this DAC.
 
         A load packet is a packet to the direct ethernet server that has
         commands for loading the jump table and the SRAM.
@@ -1432,43 +1515,45 @@ class DAC_Build15(DAC_Build8):
         :return: list of jump table entries
         :rtype: list[jump_table.JumpEntry]
         """
-        if name == 'CHECK':
+        if name == "CHECK":
             raise NotImplementedError("Check not implemented yet")
-        elif name == 'RAMP':
+        elif name == "RAMP":
             raise NotImplementedError("Ramp not implemented yet")
-        elif name == 'IDLE':
+        elif name == "IDLE":
             from_address_ns, idle_duration_ns = arg
             from_address = cls.convert_from_address(from_address_ns)
             op = jump_table.IDLE(cls.convert_idle_duration(idle_duration_ns))
             entry = jump_table.JumpEntry(from_address, 0, op)
-        elif name == 'JUMP':
+        elif name == "JUMP":
             from_address_ns, to_address_ns, jt_idx = arg
             jt_idx = cls.convert_jt_idx(jt_idx)
             from_address = cls.convert_from_address(from_address_ns)
             to_address = cls.convert_to_address(to_address_ns)
             op = jump_table.JUMP(jt_idx)
             entry = jump_table.JumpEntry(from_address, to_address, op)
-        elif name == 'CYCLE':
+        elif name == "CYCLE":
             from_address_ns, to_address_ns, jt_idx, counter_idx = arg
             jt_idx = cls.convert_jt_idx(jt_idx)
             from_address = cls.convert_from_address(from_address_ns)
             to_address = cls.convert_to_address(to_address_ns)
             if counter_idx >= cls.NUM_COUNTERS:
-                raise ValueError("Cannot specify counter > {0} (you said {1})".format(
-                    cls.NUM_COUNTERS, counter_idx
-                ))
+                raise ValueError(
+                    "Cannot specify counter > {0} (you said {1})".format(
+                        cls.NUM_COUNTERS, counter_idx
+                    )
+                )
             op = jump_table.CYCLE(counter_idx, jt_idx)
-            entry = (jump_table.JumpEntry(from_address, to_address, op))
-        elif name == 'NOP':
+            entry = jump_table.JumpEntry(from_address, to_address, op)
+        elif name == "NOP":
             from_address_ns = arg[0]
             entry = jump_table.JumpEntry(
-                cls.convert_from_address(from_address_ns),
-                0, jump_table.NOP())
-        elif name == 'END':
+                cls.convert_from_address(from_address_ns), 0, jump_table.NOP()
+            )
+        elif name == "END":
             from_address_ns = arg[0]
             entry = jump_table.JumpEntry(
-                cls.convert_end_address(from_address_ns),
-                0, jump_table.END())
+                cls.convert_end_address(from_address_ns), 0, jump_table.END()
+            )
         else:
             raise ValueError("'{}' is not a valid jump table command".format(name))
         return entry
@@ -1484,21 +1569,22 @@ class DAC_Build15(DAC_Build8):
         :rtype: jump_table.JumpTable
         """
         for i, a in enumerate(jt_entries):
-            for j, b in enumerate(jt_entries[i+1:]):
+            for j, b in enumerate(jt_entries[i + 1 :]):
                 if abs(a.from_addr - b.from_addr) < cls.JT_MIN_FROM_ADDR_SPACING:
                     raise ValueError(
                         "Entries {}({}) and {}({}) have from addrstoo close together.".format(
-                            i, a.operation, i+j+1, b.operation)
+                            i, a.operation, i + j + 1, b.operation
+                        )
                     )
         return jump_table.JumpTable(
             start_addr=cls.convert_to_address(start_address_ns),
             jumps=jt_entries,
-            counters=counters
+            counters=counters,
         )
 
     @classmethod
     def jt_run_sram(cls, start_addr_ns, end_addr_ns, loop=False):
-        """ Get a simple JT to run the SRAM
+        """Get a simple JT to run the SRAM
 
         :param int start_addr_ns: SRAM start address, ns
         :param int end_addr_ns: SRAM end address, ns
@@ -1508,17 +1594,20 @@ class DAC_Build15(DAC_Build8):
         """
         jump_entries = []
         if not loop:
-            jump_entries.append(jump_table.JumpEntry(
-                cls.convert_end_address(end_addr_ns), 0, jump_table.END()
-            ))
+            jump_entries.append(
+                jump_table.JumpEntry(
+                    cls.convert_end_address(end_addr_ns), 0, jump_table.END()
+                )
+            )
         else:
-            jump_entries.append(jump_table.JumpEntry(
-                cls.convert_from_address(end_addr_ns),
-                cls.convert_to_address(start_addr_ns),
-                jump_table.JUMP(1)
-            ))
-        return jump_table.JumpTable(cls.convert_to_address(start_addr_ns),
-                                    jump_entries)
+            jump_entries.append(
+                jump_table.JumpEntry(
+                    cls.convert_from_address(end_addr_ns),
+                    cls.convert_to_address(start_addr_ns),
+                    jump_table.JUMP(1),
+                )
+            )
+        return jump_table.JumpTable(cls.convert_to_address(start_addr_ns), jump_entries)
 
     @classmethod
     def makeMemory(cls, data, p, page=0):
@@ -1532,8 +1621,8 @@ class DAC_Build15(DAC_Build8):
         @inlineCallbacks
         def func():
             yield self._runSerial(1, [0x1FC093, 0x1FC092, 0x100004, 0x000C11])
-            yield self._sendSRAM(np.zeros(256*10, dtype='<u4').tostring())
-            jt = self.jt_run_sram(0, 256*10, False)
+            yield self._sendSRAM(np.zeros(256 * 10, dtype="<u4").tostring())
+            jt = self.jt_run_sram(0, 256 * 10, False)
             p = self.makePacket()
             p.write(jt.toString())
             yield p.send()
@@ -1545,7 +1634,7 @@ class DAC_Build15(DAC_Build8):
         @inlineCallbacks
         def func():
             # yield self._sendRegisters(self.regPing())  # Why is this here? DTS/PJJO
-            data = np.array(dataIn, dtype='<u4').tostring()
+            data = np.array(dataIn, dtype="<u4").tostring()
             yield self._sendSRAM(data)
             startAddr, endAddr = 0, len(dataIn)
             jt = self.jt_run_sram(startAddr, endAddr, loop)
@@ -1557,7 +1646,7 @@ class DAC_Build15(DAC_Build8):
         return self.testMode(func)
 
     def runBIST(self, cmd, shift, dataIn):
-        """ Run a BIST on given SRAM sequence. Jump Table DAC version.
+        """Run a BIST on given SRAM sequence. Jump Table DAC version.
 
         This is rewritten from the non-JT version because we can no longer
         run the SRAM directly with a register write.
@@ -1575,7 +1664,7 @@ class DAC_Build15(DAC_Build8):
             data = [0, 0, 0, 0] + [d << shift for d in dat]
             # make sure data is at least 20 words long by appending 0's
             data += [0] * (20 - len(data))
-            data = np.array(data, dtype='<u4').tostring()
+            data = np.array(data, dtype="<u4").tostring()
             yield self._sendSRAM(data)
             yield self._runSerial(cmd, [0x0004, 0x1107, 0x1106])
 
@@ -1590,15 +1679,37 @@ class DAC_Build15(DAC_Build8):
             yield self._sendRegisters(self.regRunSimple(readback=False), readback=False)
 
             # checksum
-            seq = [0x1126, 0x9200, 0x9300, 0x9400, 0x9500,
-                   0x1166, 0x9200, 0x9300, 0x9400, 0x9500,
-                   0x11A6, 0x9200, 0x9300, 0x9400, 0x9500,
-                   0x11E6, 0x9200, 0x9300, 0x9400, 0x9500]
+            seq = [
+                0x1126,
+                0x9200,
+                0x9300,
+                0x9400,
+                0x9500,
+                0x1166,
+                0x9200,
+                0x9300,
+                0x9400,
+                0x9500,
+                0x11A6,
+                0x9200,
+                0x9300,
+                0x9400,
+                0x9500,
+                0x11E6,
+                0x9200,
+                0x9300,
+                0x9400,
+                0x9500,
+            ]
             theory = tuple(self.bistChecksum(dat))
             bist = yield self._runSerial(cmd, seq)
-            reading = [(bist[i + 4] << 0) + (bist[i + 3] << 8) +
-                       (bist[i + 2] << 16) + (bist[i + 1] << 24)
-                       for i in [0, 5, 10, 15]]
+            reading = [
+                (bist[i + 4] << 0)
+                + (bist[i + 3] << 8)
+                + (bist[i + 2] << 16)
+                + (bist[i + 1] << 24)
+                for i in [0, 5, 10, 15]
+            ]
             # print "bist = ", bist
             # print "reading = ", reading
             lvds, fifo = tuple(reading[0:2]), tuple(reading[2:4])
@@ -1607,6 +1718,7 @@ class DAC_Build15(DAC_Build8):
             lvds = lvds[::-1] if lvds[::-1] == theory else lvds
             fifo = fifo[::-1] if fifo[::-1] == theory else fifo
             returnValue((lvds == theory and fifo == theory, theory, lvds, fifo))
+
         return self.testMode(func)
 
     # extensions to board communication
@@ -1617,10 +1729,11 @@ class DAC_Build15(DAC_Build8):
         p.send()
 
 
-fpga.REGISTRY[('DAC', 15)] = DAC_Build15
+fpga.REGISTRY[("DAC", 15)] = DAC_Build15
 
 
-#Utility functions
+# Utility functions
+
 
 def maxSRAM(cmds):
     """Determines the maximum SRAM address used in a memory sequence.
@@ -1630,13 +1743,17 @@ def maxSRAM(cmds):
     """
 
     def addr(cmd):
-        return MemorySequence.getAddress(cmd) if \
-            MemorySequence.getOpcode(cmd) in [0x8, 0xA] else 0
+        return (
+            MemorySequence.getAddress(cmd)
+            if MemorySequence.getOpcode(cmd) in [0x8, 0xA]
+            else 0
+        )
 
     return max(addr(cmd) for cmd in cmds)
 
 
-#Memory sequence functions
+# Memory sequence functions
+
 
 class MemorySequence(list):
     @staticmethod
@@ -1645,34 +1762,34 @@ class MemorySequence(list):
 
     @staticmethod
     def getAddress(cmd):
-        return (cmd & 0x0FFFFF)
+        return cmd & 0x0FFFFF
 
     def noOp(self):
         self.append(0x000000)
         return self
 
     def delayCycles(self, cycles):
-        assert cycles <= 0xfffff
+        assert cycles <= 0xFFFFF
         cmd = 0x300000
-        cycles = int(cycles) & 0xfffff
+        cycles = int(cycles) & 0xFFFFF
         self.append(cmd + cycles)
         return self
 
     def fo(self, ch, data):
         cmd = {0: 0x100000, 1: 0x200000}[ch]
-        cmd = cmd + (int(data) & 0xfffff)
+        cmd = cmd + (int(data) & 0xFFFFF)
         self.append(cmd)
         return self
 
     def fastbias(self, fo, fbDac, data, slow):
         """Set a fastbias DAC
-        
+
         fo - int: Which fiber to use on GHzDAC. Either 0 or 1
         fbDac - int: Which fastbias DAC. Either 0 or 1
         data: DAC level
         slow: Slow or fast channel. 1 = slow, 0 = fast.
             Only relevant for coarse DAC>
-        
+
         NOTES:
         fbDac slow  channel
         0     0     FINE
@@ -1681,11 +1798,11 @@ class MemorySequence(list):
         1     1     COARSE SLOW
         """
         if fbDac not in [0, 1]:
-            raise RuntimeError('fbDac must be 0 or 1')
+            raise RuntimeError("fbDac must be 0 or 1")
         if slow not in [0, 1]:
-            raise RuntimeError('slow must be 0 or 1')
+            raise RuntimeError("slow must be 0 or 1")
         a = {0: 0x100000, 1: 0x200000}[fo]
-        b = (data & 0xffff) << 3
+        b = (data & 0xFFFF) << 3
         c = fbDac << 19
         d = slow << 2
         self.append(a + b + c + d)
@@ -1712,22 +1829,22 @@ class MemorySequence(list):
         return self
 
     def branchToStart(self):
-        self.append(0xf00000)
+        self.append(0xF00000)
         return self
 
     @staticmethod
     def addMasterDelay(cmds, delay_us=MASTER_SRAM_DELAY_US):
         """Add delays to master board before SRAM calls.
-        
+
         Creates a memory sequence with delays added before all SRAM
         calls to ensure that boards stay properly synchronized by
         allowing extra time for slave boards to reach the SRAM
         synchronization point.  The delay is specified in microseconds.
-        
+
         TODO: check for repeated delay calls to make sure delays actually happen
         """
         newCmds = []
-        delayCycles = int(delay_us * 25)  #memory clock speed is 25MHz
+        delayCycles = int(delay_us * 25)  # memory clock speed is 25MHz
         assert delayCycles < 0xFFFFF
         delayCmd = 0x300000 + delayCycles
         for cmd in cmds:
@@ -1739,7 +1856,7 @@ class MemorySequence(list):
     @staticmethod
     def cmdTime_cycles(cmd):
         """A conservative estimate of the number of cycles a given command takes.
-        
+
         SRAM calls are assumed to take 12us. This is an upper bound.
         """
         opcode = MemorySequence.getOpcode(cmd)
@@ -1747,24 +1864,27 @@ class MemorySequence(list):
         # sram end addr
         if opcode in [0x0, 0x1, 0x2, 0x4, 0x8, 0xA]:
             return 1
-        #branch to start
+        # branch to start
         elif opcode == 0xF:
             return 2
-        #delay
+        # delay
         elif opcode == 0x3:
             return MemorySequence.getAddress(cmd) + 1
-        #run sram
+        # run sram
         elif opcode == 0xC:
             # TODO: Incorporate SRAMoffset when calculating sequence time.
             #       This gives a max of up to 12 + 255 us
-            return 25*12  # maximum SRAM length is 12us, with 25 cycles per us
+            return 25 * 12  # maximum SRAM length is 12us, with 25 cycles per us
         else:
-            raise Exception("Unknown opcode: %s address: %s" % (opcode, MemorySequence.getAddress(cmd)))
-    
+            raise Exception(
+                "Unknown opcode: %s address: %s"
+                % (opcode, MemorySequence.getAddress(cmd))
+            )
+
     @staticmethod
     def sequenceTime_sec(cmds):
         """Conservative estimate of the length of a sequence in seconds.
-        
+
         cmds - list of numbers: memory commands for GHz DAC
         """
         cycles = sum(MemorySequence.cmdTime_cycles(c) for c in cmds)
@@ -1773,27 +1893,27 @@ class MemorySequence(list):
     @staticmethod
     def fixSRAMaddresses(mem, sram, device):
         """Set the addresses of SRAM calls for multiblock sequences.
-        
+
         The addresses are set according to the following diagrams:
-        
+
         FIG1
         row1    00000000000000-------||-----00000
         row2    ^             x     ^||^   x    ^
-        
+
         FIG2
         row1    00000000000000-------|             |-----00000
         row2    ^             x     ^|    DELAY    |^   x    ^
-        
+
         FIG1 shows the physical sram block whereas FIG2 shows the sram as
         seen by the GHz clock, eg. including the inter-block delay.
-        
+
         row1 represents the sram data:
             0's indicate unused SRAM words
             -'s indicate used SRAM words
         row2 shows important points:
             ^'s indicate the physical start and end points of the SRAM blocks
             x's indicate where we want the sram to start and stop execution
-        
+
         Note that in FIG2 the distance between the starting x and the final x
         is larger than in FIG1. This means that the final SRAM word occurs at
         a clock count DELAY later than you would expect given the its
@@ -1810,18 +1930,24 @@ class MemorySequence(list):
             return mem
         numSramCalls = sum(MemorySequence.getOpcode(cmd) == 0xC for cmd in mem)
         if numSramCalls > 1:
-            raise Exception('Only one SRAM call allowed in multi-block sequences.')
+            raise Exception("Only one SRAM call allowed in multi-block sequences.")
 
         def fixAddr(cmd):
-            opcode, address = MemorySequence.getOpcode(cmd), MemorySequence.getAddress(cmd)
+            opcode, address = MemorySequence.getOpcode(cmd), MemorySequence.getAddress(
+                cmd
+            )
             if opcode == 0x8:
                 # SRAM start address
                 address = device.SRAM_BLOCK0_LEN - block0Len_words
                 return (opcode << 20) + address
             elif opcode == 0xA:
                 # SRAM end address
-                address = device.SRAM_BLOCK0_LEN + block1Len_words \
-                          + device.SRAM_DELAY_LEN * delayBlocks - 1
+                address = (
+                    device.SRAM_BLOCK0_LEN
+                    + block1Len_words
+                    + device.SRAM_DELAY_LEN * delayBlocks
+                    - 1
+                )
                 return (opcode << 20) + address
             else:
                 return cmd
@@ -1840,4 +1966,4 @@ class MemorySequence(list):
         these things are automatically checked).
         """
         return int(sum(np.asarray(cmds) == 0x400001))  # numpy version
-        #return cmds.count(0x400001) # python list version
+        # return cmds.count(0x400001) # python list version

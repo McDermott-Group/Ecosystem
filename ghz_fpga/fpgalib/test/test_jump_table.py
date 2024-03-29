@@ -25,7 +25,7 @@ def test_idle():
     with pytest.raises(ValueError):
         jump_table.JumpEntry(64, 0, jump_table.IDLE(-1)).as_bytes()
     with pytest.raises(ValueError):
-        jump_table.JumpEntry(64, 0, jump_table.IDLE(2 ** 15)).as_bytes()
+        jump_table.JumpEntry(64, 0, jump_table.IDLE(2**15)).as_bytes()
     data = jump_table.JumpEntry(64, 0, jump_table.IDLE(64)).as_bytes()
     assert data[6] >> 1 == 64
     assert data[7] == 0
@@ -34,7 +34,7 @@ def test_idle():
 def test_cycle():
     data = jump_table.JumpEntry(64, 259, jump_table.CYCLE(2, 1)).as_bytes()
     assert list(data) == [64, 0, 0, 3, 1, 0, 35, 1]
-    
+
 
 def test_jump():
     data = jump_table.JumpEntry(64, 259, jump_table.JUMP(2)).as_bytes()
@@ -55,7 +55,7 @@ def test_table():
     cycle = jump_table.JumpEntry(64, 0, jump_table.CYCLE(0, 1))
     end = jump_table.JumpEntry(80, 0, jump_table.END())
     jt = jump_table.JumpTable(32, [cycle, end], [259, 0, 0, 0])
-    data = np.fromstring(jt.toString(), dtype='u1')
+    data = np.fromstring(jt.toString(), dtype="u1")
     # counters
     assert data[0] == 3
     assert data[1] == 1
@@ -71,5 +71,5 @@ def test_table():
     assert np.array_equal(data[32:40], end.as_bytes())
 
 
-if __name__ == '__main__':
-    pytest.main(['-v', __file__])
+if __name__ == "__main__":
+    pytest.main(["-v", __file__])

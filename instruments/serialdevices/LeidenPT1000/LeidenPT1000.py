@@ -41,12 +41,12 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
-if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
+if __file__ in [f for f in os.listdir(".") if os.path.isfile(f)]:
     SCRIPT_PATH = os.path.dirname(os.getcwd())
 else:
     SCRIPT_PATH = os.path.dirname(__file__)
-LOCAL_PATH = SCRIPT_PATH.rsplit('instruments', 1)[0]
-INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, 'instruments')
+LOCAL_PATH = SCRIPT_PATH.rsplit("instruments", 1)[0]
+INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, "instruments")
 if INSTRUMENTS_PATH not in sys.path:
     sys.path.append(INSTRUMENTS_PATH)
 
@@ -56,20 +56,20 @@ from utilities.sleep import sleep
 class goldsteinsPT1000TemperatureMonitorWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
-        print(('Connecting to {0} on port {1}...'.format(server.name, port)))
+        print(("Connecting to {0} on port {1}...".format(server.name, port)))
         self.server = server
         self.ctx = server.context()
         self.port = port
         p = self.packet()
         p.open(port)
         p.baudrate(9600)
-        p.timeout(1*units.s)
+        p.timeout(1 * units.s)
         p.read_line()
         yield p.send()
-        
+
     def packet(self):
         return self.server.packet(context=self.ctx)
-    
+
     def shutdown(self):
         return self.packet().close().send()
 
@@ -87,52 +87,51 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
     deviceName = "Goldstein's PT1000 Temperature Monitor"
     name = "Goldstein's PT1000 Temperature Monitor"
     deviceWrapper = goldsteinsPT1000TemperatureMonitorWrapper
-    
+
     @inlineCallbacks
-    def initServer(self): 
+    def initServer(self):
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
 
-    @setting(100, 'Get Resistances', returns='*v[Ohm]')
+    @setting(100, "Get Resistances", returns="*v[Ohm]")
     def getResistances(self, ctx):
         readings = []
         self.dev = self.selectedDevice(ctx)
 
         for i in range(2):
-            yield self.dev.write_line(str(i+1))
+            yield self.dev.write_line(str(i + 1))
             yield sleep(0.2)
             reading = yield self.dev.read_line()
-           
+
             readings.append(reading)
             readings[i] = reading.strip()
-            if(reading == "OL\r\n"):
+            if reading == "OL\r\n":
                 readings[i] = np.nan
             elif len(reading) is 0:
                 readings[i] = np.nan
             else:
                 readings[i] = reading.strip()
         try:
-            readings = [float(readings[0]) * units.Ohm,
-                        float(readings[1]) * units.Ohm]
+            readings = [float(readings[0]) * units.Ohm, float(readings[1]) * units.Ohm]
         except:
             traceback.print_exc()
         returnValue(readings)
-        
+
     def _pt1000_res2temp(self, resistance):
-        R = resistance['Ohm']
-        
+        R = resistance["Ohm"]
+
         # PT1000 room temperature resistance.
-        R0 = 1000 # Ohm
-        
+        R0 = 1000  # Ohm
+
         # ITS-90 calibration coefficients.
         A = 3.9083e-3
         B = -5.7750e-7
 
-        temp = -R0 * A + np.sqrt((R0 * A)**2 - 4 * R0 * B * (R0 - R))
+        temp = -R0 * A + np.sqrt((R0 * A) ** 2 - 4 * R0 * B * (R0 - R))
         temp /= 2 * R0 * B
-        temp += 273.15 # K
-        
+        temp += 273.15  # K
+
         # Extra error correction obtained by fitting the error function to
         # the 6th-degree polynomial.
         p1 = 6.0933e-17
@@ -142,48 +141,56 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
         p5 = 0.00033726
         p6 = -0.070257
         p7 = 2.7358
-        temp -= (p1 * R**6 + p2 * R**5 + p3 * R**4 + p4 * R**3 +
-                 p5 * R**2 + p6 * R + p7)
+        temp -= (
+            p1 * R**6
+            + p2 * R**5
+            + p3 * R**4
+            + p4 * R**3
+            + p5 * R**2
+            + p6 * R
+            + p7
+        )
 
         # Extra error correction obtaine by fitting the residual error to
         # the 3rd-degree rational funciton.
-        a1 = 3.508e+04
+        a1 = 3.508e04
         q1 = -78.44
         q2 = 2275
-        q3 = -1.855e+04
+        q3 = -1.855e04
         temp -= a1 / (R**3 + q1 * R**2 + q2 * R + q3)
 
         return temp
-    
-    @setting(110, 'Get Temperatures', returns='*v[K]')
+
+    @setting(110, "Get Temperatures", returns="*v[K]")
     def getTemperatures(self, ctx):
         resistances = yield self.getResistances(ctx)
-        readings = [self._pt1000_res2temp(resistances[0]) * units.K,
-                    self._pt1000_res2temp(resistances[1]) * units.K]
+        readings = [
+            self._pt1000_res2temp(resistances[0]) * units.K,
+            self._pt1000_res2temp(resistances[1]) * units.K,
+        ]
         returnValue(readings)
 
-    @setting(200, 'Get Device Info', returns='s')
+    @setting(200, "Get Device Info", returns="s")
     def getInfo(self, ctx):
         self.dev = self.selectedDevice(ctx)
-        yield self.dev.write_line('?')
+        yield self.dev.write_line("?")
         yield sleep(0.05)
         reading = yield self.dev.read_line()
-    
+
         returnValue(reading)
-    
+
     @inlineCallbacks
     def loadConfigInfo(self):
         reg = self.reg
-        yield reg.cd(['', 'Servers','PT1000TemperatureMonitor',
-                'Links'], True)
+        yield reg.cd(["", "Servers", "PT1000TemperatureMonitor", "Links"], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
-            p.get(k, key = k)
+            p.get(k, key=k)
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys)
         print(self.serialLinks)
-    
+
     @inlineCallbacks
     def findDevices(self):
         devs = []
@@ -194,13 +201,13 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '{} - {}'.format(server, port)
+            devName = "{} - {}".format(server, port)
             devs += [(name, (server, port))]
         returnValue(devs)
 
-        
+
 __server__ = goldsteinsPT1000TemperatureMonitorServer()
 
 
-if __name__=='__main__':
+if __name__ == "__main__":
     util.runServer(__server__)

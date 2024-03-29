@@ -20,7 +20,6 @@ Superclass of GPIB device servers.
 """
 
 
-
 from labrad import types as T, constants as C, util, errors
 from labrad.devices import DeviceWrapper, DeviceServer, DeviceLockedError
 from labrad.server import LabradServer, setting
@@ -28,6 +27,7 @@ from labrad.support import MultiDict
 
 from twisted.internet import defer
 from twisted.internet.defer import inlineCallbacks, returnValue
+
 
 class GPIBDeviceWrapper(DeviceWrapper):
     """A wrapper for a gpib device."""
@@ -40,10 +40,10 @@ class GPIBDeviceWrapper(DeviceWrapper):
         for talking to this device.  Then call initialize, which may
         be overridden in subclasses.
         """
-        self.gpib = server # wrapper for the gpib server
+        self.gpib = server  # wrapper for the gpib server
         self.addr = address
-        self._context = self.gpib.context() # create a new context for this device
-        self._timeout = T.Value(C.TIMEOUT, 's')
+        self._context = self.gpib.context()  # create a new context for this device
+        self._timeout = T.Value(C.TIMEOUT, "s")
 
         # set the address and timeout in this context
         p = self._packet()
@@ -60,7 +60,7 @@ class GPIBDeviceWrapper(DeviceWrapper):
     @inlineCallbacks
     def timeout(self, seconds):
         """Set the GPIB timeout for this device."""
-        self._timeout = T.Value(seconds, 's')
+        self._timeout = T.Value(seconds, "s")
         p = self._packet()
         p.timeout(self._timeout)
         yield p.send()
@@ -101,7 +101,6 @@ class GPIBDeviceWrapper(DeviceWrapper):
         resp = yield p.send()
         returnValue(resp.write_raw)
 
-
     @inlineCallbacks
     def read(self, bytes=None, timeout=None):
         """Read a string from the device."""
@@ -134,6 +133,7 @@ class GPIBDeviceWrapper(DeviceWrapper):
         the device state.
         """
 
+
 class GPIBDeviceServer(DeviceServer):
     """A server for a GPIB device.
 
@@ -146,25 +146,27 @@ class GPIBDeviceServer(DeviceServer):
     2013 October 22 - Daniel Sank
     I'm pretty sure this is obsolte and you should use the GPIBManagedServer
     """
-    name = 'Generic GPIB Device Server'
-    deviceName = 'Generic GPIB Device'
+
+    name = "Generic GPIB Device Server"
+    deviceName = "Generic GPIB Device"
     deviceWrapper = GPIBDeviceWrapper
 
     def serverConnected(self, ID, name):
         """Refresh devices when a gpib server comes on line."""
-        if 'gpib' in name.lower():
+        if "gpib" in name.lower():
             self.refreshDeviceList()
 
     def serverDisconnected(self, ID, name):
         """Refresh devices when a gpib server goes off line."""
-        if 'gpib' in name.lower():
+        if "gpib" in name.lower():
             self.refreshDeviceList()
 
     @inlineCallbacks
     def findDevices(self):
         """Find all available matching GPIB devices."""
-        searches = [self._findDevicesForServer(srv)
-                    for srv in _gpibServers(self.client)]
+        searches = [
+            self._findDevicesForServer(srv) for srv in _gpibServers(self.client)
+        ]
         found = []
         for search in searches:
             found += yield search
@@ -175,7 +177,7 @@ class GPIBDeviceServer(DeviceServer):
         """Find matching devices on a given server."""
         devices = yield srv.list_devices()
         found = []
-        for address, deviceName in zip(devices, ['<UNKNOWN>']*len(devices)):
+        for address, deviceName in zip(devices, ["<UNKNOWN>"] * len(devices)):
             if deviceName == self.deviceName:
                 name = _getDeviceName(srv, address)
                 found.append((name, (srv, address), {}))
@@ -183,28 +185,30 @@ class GPIBDeviceServer(DeviceServer):
 
     # server settings
 
-    @setting(1001, 'GPIB Write', string='s', returns='*b')
+    @setting(1001, "GPIB Write", string="s", returns="*b")
     def gpib_write(self, c, string):
         """Write a string to the device over GPIB."""
         return self.selectedDevice(c).write(string)
 
-    @setting(1002, 'GPIB Read', bytes='w', returns='s')
+    @setting(1002, "GPIB Read", bytes="w", returns="s")
     def gpib_read(self, c, bytes=None):
         """Read a string from the device over GPIB."""
         return self.selectedDevice(c).read(bytes)
 
-    @setting(1003, 'GPIB Query', query='s', returns='s')
+    @setting(1003, "GPIB Query", query="s", returns="s")
     def gpib_query(self, c, query):
         """Write a string over GPIB and read the response."""
         return self.selectedDevice(c).query(query)
+
 
 class ManagedDeviceServer(DeviceServer):
     """Builds off DeviceServer class by adding methods to interface with a
     server that manages different devices.  Devices are broadcast from that
     server and then added here when appropriate.
     """
-    name = 'Generic Device Server'
-    deviceManager = 'Device Manager'
+
+    name = "Generic Device Server"
+    deviceManager = "Device Manager"
 
     messageID = 21436587
 
@@ -218,35 +222,40 @@ class ManagedDeviceServer(DeviceServer):
             yield self.connectToDeviceManager()
 
     def makeDeviceName(self, device, server, address):
-        return server + ' - ' + address
+        return server + " - " + address
 
     @inlineCallbacks
     def handleDeviceMessage(self, device, server, address, isConnected=True):
-        print('Device message:', device, server, address, isConnected)
+        print("Device message:", device, server, address, isConnected)
         name = self.makeDeviceName(device, server, address)
-        if isConnected: # add device
-            self.addDevice(name, device=device, server=self.client[server], address=address)
-        else: # remove device
+        if isConnected:  # add device
+            self.addDevice(
+                name, device=device, server=self.client[server], address=address
+            )
+        else:  # remove device
             yield self.removeDevice(name)
 
     @inlineCallbacks
     def connectToDeviceManager(self):
-        """
-        """
+        """ """
         yield self.client.refresh()
         manager = self.client[self.deviceManager]
-        #If we have a device identification function register it with the device manager
-        if hasattr(self, 'deviceIdentFunc'):
+        # If we have a device identification function register it with the device manager
+        if hasattr(self, "deviceIdentFunc"):
             yield manager.register_ident_function(self.deviceIdentFunc)
-        #Register ourself as a server who cares about devices
-        devs = yield manager.register_server(list(self.deviceWrappers.keys()), self.messageID)
+        # Register ourself as a server who cares about devices
+        devs = yield manager.register_server(
+            list(self.deviceWrappers.keys()), self.messageID
+        )
         # the devs list is authoritative any devices we have
         # that are _not_ on this list should be removed
         names = [self.makeDeviceName(*dev[:3]) for dev in devs]
         additions = [self.handleDeviceMessage(*dev) for dev in devs]
-        deletions = [self.removeDevice(name)
-                     for name in list(self.device_guids.keys())
-                     if name not in names]
+        deletions = [
+            self.removeDevice(name)
+            for name in list(self.device_guids.keys())
+            if name not in names
+        ]
         yield defer.DeferredList(additions + deletions)
 
     def serverConnected(self, ID, name):
@@ -256,7 +265,7 @@ class ManagedDeviceServer(DeviceServer):
     def refreshDeviceList(self):
         return
 
-        
+
 class GPIBManagedServer(ManagedDeviceServer):
     """A server for a GPIB device.
 
@@ -266,36 +275,39 @@ class GPIBManagedServer(ManagedDeviceServer):
     refreshing the list of devices.  Also, allows us to read from,
     write to, and query the selected GPIB device directly.
     """
-    name = 'Generic GPIB Device Server'
-    deviceManager = 'GPIB Device Manager'
-    deviceName = 'Generic GPIB Device'
+
+    name = "Generic GPIB Device Server"
+    deviceManager = "GPIB Device Manager"
+    deviceName = "Generic GPIB Device"
     deviceWrapper = GPIBDeviceWrapper
     # server settings
 
-    @setting(1001, 'GPIB Write', string='s', timeout='v[s]', returns='')
+    @setting(1001, "GPIB Write", string="s", timeout="v[s]", returns="")
     def gpib_write(self, c, string, timeout=None):
         """Write a string to the device over GPIB."""
         return self.selectedDevice(c).write(string, timeout)
 
-    @setting(1002, 'GPIB Read', bytes='w', timeout='v[s]', returns='s')
+    @setting(1002, "GPIB Read", bytes="w", timeout="v[s]", returns="s")
     def gpib_read(self, c, bytes=None, timeout=None):
         """Read a string from the device over GPIB."""
         return self.selectedDevice(c).read(bytes, timeout)
 
-    @setting(1003, 'GPIB Query', query='s', timeout='v[s]', returns='s')
+    @setting(1003, "GPIB Query", query="s", timeout="v[s]", returns="s")
     def gpib_query(self, c, query, timeout=None):
         """Write a string over GPIB and read the response."""
         return self.selectedDevice(c).query(query, timeout=timeout)
+
 
 def _gpibServers(cxn):
     """Get a list of available GPIB servers."""
     gpibs = []
     for name in cxn.servers:
         srv = cxn.servers[name]
-        if 'gpib_bus' in name and 'list_devices' in srv.settings:
+        if "gpib_bus" in name and "list_devices" in srv.settings:
             gpibs.append(srv)
     return gpibs
 
+
 def _getDeviceName(server, deviceID):
     """Create a name for a device on a particular server."""
-    return '%s - %s' % (server.name, deviceID)
+    return "%s - %s" % (server.name, deviceID)

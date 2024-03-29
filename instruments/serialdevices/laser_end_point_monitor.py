@@ -41,12 +41,12 @@ import labrad.units as units
 from labrad import util
 import csv
 
-if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
+if __file__ in [f for f in os.listdir(".") if os.path.isfile(f)]:
     SCRIPT_PATH = os.path.dirname(os.getcwd())
 else:
     SCRIPT_PATH = os.path.dirname(__file__)
-LOCAL_PATH = SCRIPT_PATH.rsplit('instruments', 1)[0]
-INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, 'instruments')
+LOCAL_PATH = SCRIPT_PATH.rsplit("instruments", 1)[0]
+INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, "instruments")
 if INSTRUMENTS_PATH not in sys.path:
     sys.path.append(INSTRUMENTS_PATH)
 
@@ -56,20 +56,20 @@ from utilities.sleep import sleep
 class goldsteinsLaserEndpointMonitorWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
-        print(('Connecting to {0} on port {1}...'.format(server.name, port)))
+        print(("Connecting to {0} on port {1}...".format(server.name, port)))
         self.server = server
         self.ctx = server.context()
         self.port = port
         p = self.packet()
         p.open(port)
         p.baudrate(9600)
-        p.timeout(1*units.s)
+        p.timeout(1 * units.s)
         p.read_line()
         yield p.send()
-        
+
     def packet(self):
         return self.server.packet(context=self.ctx)
-    
+
     def shutdown(self):
         return self.packet().close().send()
 
@@ -86,8 +86,8 @@ class goldsteinsLaserEndpointMonitorWrapper(DeviceWrapper):
 class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
     deviceName = "Goldstein's Laser Endpoint Monitor"
     name = "Goldstein's Laser Endpoint Monitor"
-    deviceWrapper =  goldsteinsLaserEndpointMonitorWrapper
-    
+    deviceWrapper = goldsteinsLaserEndpointMonitorWrapper
+
     @inlineCallbacks
     def initServer(self):
         print("Server Initializing")
@@ -95,7 +95,7 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
 
-    @setting(100, 'Get Reading', returns = '?')
+    @setting(100, "Get Reading", returns="?")
     def getReading(self, ctx):
         self.dev = self.selectedDevice(ctx)
         yield self.dev.write_line("1")
@@ -103,29 +103,29 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
         reading = yield self.dev.read_line()
         reading = reading.strip()
         reading = float(reading)
-        reading = reading*units.V
+        reading = reading * units.V
         returnValue(reading)
-            
-    @setting(200, 'Get Device Info', returns = 's')
+
+    @setting(200, "Get Device Info", returns="s")
     def getInfo(self, ctx):
         self.dev = self.selectedDevice(ctx)
-        yield self.dev.write_line('?')
+        yield self.dev.write_line("?")
         yield sleep(0.05)
         reading = yield self.dev.read_line()
-    
+
         returnValue(reading)
-    
+
     @inlineCallbacks
     def loadConfigInfo(self):
         reg = self.reg
-        yield reg.cd(['', 'Servers','LaserEndpointMonitor', 'Links'], True)
+        yield reg.cd(["", "Servers", "LaserEndpointMonitor", "Links"], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
-            p.get(k, key = k)
+            p.get(k, key=k)
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys)
-    
+
     @inlineCallbacks
     def findDevices(self):
         devs = []
@@ -136,11 +136,12 @@ class goldsteinsPT1000TemperatureMonitorServer(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '{} - {}'.format(server, port)
+            devName = "{} - {}".format(server, port)
             devs += [(name, (server, port))]
         returnValue(devs)
-        
+
+
 __server__ = goldsteinsPT1000TemperatureMonitorServer()
 
-if __name__=='__main__':
+if __name__ == "__main__":
     util.runServer(__server__)

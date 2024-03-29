@@ -1,6 +1,11 @@
 from PyQt4 import QtGui, QtCore
-from PyQt4.QtGui import (QApplication, QColumnView, QFileSystemModel,
-                         QSplitter, QTreeView)
+from PyQt4.QtGui import (
+    QApplication,
+    QColumnView,
+    QFileSystemModel,
+    QSplitter,
+    QTreeView,
+)
 from PyQt4.QtCore import QDir, Qt
 import sys
 from MGrapher import mGraph as MGrapher
@@ -14,7 +19,7 @@ class MFileTree(QtGui.QTreeView):
         # model.setRootPath(QDir.rootPath())
         # view = QTreeView(parent)
         # self.show()
-        #app = QApplication(sys.argv)
+        # app = QApplication(sys.argv)
         # Splitter to show 2 views in same widget easily.
         splitter = QSplitter()
         # The model.
@@ -23,7 +28,7 @@ class MFileTree(QtGui.QTreeView):
         model.setRootPath(root)
         # List of views.
         self.views = []
-        #self.view = QTreeView(self)
+        # self.view = QTreeView(self)
         # self.itemPressed.connect(self.itemClicked)
         self.setModel(model)
         self.setRootIndex(model.index(root))
@@ -46,6 +51,7 @@ class MFileTree(QtGui.QTreeView):
         splitter.setWindowState(Qt.WindowMaximized)
 
         # Start the main loop.
+
     def resizeColumns(self):
         self.resizeColumnToContents(0)
 
@@ -59,13 +65,14 @@ class MFileTree(QtGui.QTreeView):
         self.callback = callback
 
     def selectionChanged(self, selected, deselected):
-        #col = self.itemFromIndex(modelIndex)
+        # col = self.itemFromIndex(modelIndex)
         self.path = self.model().filePath(selected.indexes()[0])
         print("clicked", self.path)
         self.callback(self.path)
         self.resizeColumns()
 
         # self.fileSelected()
+
     def mousePressEvent(self, event):
         QtGui.QTreeView.mousePressEvent(self, event)
         self.resizeColumns()

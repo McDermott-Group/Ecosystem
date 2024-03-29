@@ -7,15 +7,18 @@ Created on Fri Apr 07 19:26:23 2017
 
 from PyQt4 import QtCore, QtGui
 from CustomMViewTiles.tetrix import TetrixWindow as tetrix
+
+
 class tetris(QtGui.QFrame):
     def __init__(self):
         super(tetris, self).__init__(None)
-        self.setObjectName("myParentWidget");
-        self.setStyleSheet("QFrame#myParentWidget{background: rgb(52, 73, 94);"
-                           "margin:0px; border:2px solid rgb(0, 0, 0);}"
-                           "QPushButton{color:rgb(189,195, 199); background: rgb(70,80,88)}"
-                           "QLabel{color:rgb(189,195, 199); background: rgb(52, 73, 94)}"
-                           )
+        self.setObjectName("myParentWidget")
+        self.setStyleSheet(
+            "QFrame#myParentWidget{background: rgb(52, 73, 94);"
+            "margin:0px; border:2px solid rgb(0, 0, 0);}"
+            "QPushButton{color:rgb(189,195, 199); background: rgb(70,80,88)}"
+            "QLabel{color:rgb(189,195, 199); background: rgb(52, 73, 94)}"
+        )
         self.hidden = True
         self.font = QtGui.QFont()
         self.font.setBold(False)
@@ -23,17 +26,19 @@ class tetris(QtGui.QFrame):
         self.font.setKerning(True)
         self.font.setPointSize(20)
         self.label = QtGui.QLabel("Tetris")
-        self.label.setStyleSheet("QLabel{color:rgb(189,195, 199); background : rgb(52, 73, 94)}")
+        self.label.setStyleSheet(
+            "QLabel{color:rgb(189,195, 199); background : rgb(52, 73, 94)}"
+        )
         self.label.setFont(self.font)
         self.button = QtGui.QPushButton("Tetris")
-        
+
         self.button.clicked.connect(self.toggleTetris)
         self.layout = QtGui.QHBoxLayout()
         self.vlayout = QtGui.QVBoxLayout()
         self.setLayout(self.vlayout)
         self.vlayout.addWidget(self.label)
         self.buttonLayout = QtGui.QHBoxLayout()
-        
+
         self.buttonLayout.addWidget(self.button)
         self.buttonLayout.addStretch()
         self.vlayout.addLayout(self.buttonLayout)
@@ -42,7 +47,7 @@ class tetris(QtGui.QFrame):
         self.tet.hide()
         self.layout.addWidget(self.tet)
         self.layout.addStretch()
-        
+
     def toggleTetris(self):
         if self.hidden:
             self.tet.show()

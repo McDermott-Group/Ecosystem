@@ -20,8 +20,9 @@ description = Demonstration
 """
 
 import sys
+
 sys.dont_write_bytecode = True
-import MGui     # Handles all GUI operations. Independent of  LabRAD.
+import MGui  # Handles all GUI operations. Independent of  LabRAD.
 
 from MDevices.RS232Device import RS232Device
 
@@ -34,14 +35,17 @@ import time
 
 from tendo import singleton
 
+
 class mViewer:
     gui = None
-    devices =[]
-    
-    def __init__(self, parent = None):
+    devices = []
+
+    def __init__(self, parent=None):
         # Establish a connection to LabRAD.
         try:
-            me = singleton.SingleInstance() # will sys.exit(-1) if other instance is running
+            me = (
+                singleton.SingleInstance()
+            )  # will sys.exit(-1) if other instance is running
         except:
             print("Multiple instances cannot be running")
             time.sleep(2)
@@ -58,45 +62,49 @@ class mViewer:
             print("Please start the telecomm server")
             time.sleep(2)
             sys.exit(1)
-    
-        self.gui = MGui.MGui()
-        lm3000 = RS232Device("Light Meter 3000", "COM7", baud = 115200, lock_logging_settings = True)
 
-        lm3000.addButton("Off", 'b0', message = "You are about to turn off the LED.")
-        lm3000.addButton("20%", 'b2')
-        lm3000.addButton("50%", 'b5')
-        lm3000.addButton("80%", 'b8')
-        lm3000.addButton("100%", 'b9')
-        lm3000.addParameter("Light Level", "s", log = False, show = False)
+        self.gui = MGui.MGui()
+        lm3000 = RS232Device(
+            "Light Meter 3000", "COM7", baud=115200, lock_logging_settings=True
+        )
+
+        lm3000.addButton("Off", "b0", message="You are about to turn off the LED.")
+        lm3000.addButton("20%", "b2")
+        lm3000.addButton("50%", "b5")
+        lm3000.addButton("80%", "b8")
+        lm3000.addButton("100%", "b9")
+        lm3000.addParameter("Light Level", "s", log=False, show=False)
         lm3000.setYLabel("Light Level")
         lm3000.addPlot()
         lm3000.begin()
         self.gui.addDevice(lm3000)
 
         self.nodeTree = MNodeTree.NodeTree()
-        
+
         lightMeterNode = MDeviceNode.MDeviceNode(lm3000)
         self.nodeTree.addNode(lightMeterNode)
         rawLightOutput = lightMeterNode.getAnchorByName("Light Level")
-        filtLight = lightMeterNode.addAnchor(name = "Filtered Light Level", type = "input", terminate = True)
+        filtLight = lightMeterNode.addAnchor(
+            name="Filtered Light Level", type="input", terminate=True
+        )
 
         # avg = runningAverage.runningAverage()
         # avg.setWindowWidth(100)
         # avgInput = avg.getAnchorByName("data")
         # avgOutput = avg.getAnchorByName("running avg")
-        
+
         spikeFilt = spikeFilter.spikeFilter()
         # You can set the data of an input anchor when nothing is connected.
         spikeFilt.getAnchorByName("threshold").setData(50)
         rawSpikeDataInput = spikeFilt.getAnchorByName("raw_data")
         deSpikedData = spikeFilt.getAnchorByName("filtered_data")
-        
+
         self.nodeTree.connect(rawLightOutput, rawSpikeDataInput)
         self.nodeTree.connect(deSpikedData, filtLight)
 
-        self.gui.startGui('Light Meter 3000 GUI', tele)
-        
-        
+        self.gui.startGui("Light Meter 3000 GUI", tele)
+
+
 # In Python, the main class's __init__() IS NOT automatically called.
-viewer = mViewer()    
+viewer = mViewer()
 viewer.__init__()

@@ -33,6 +33,7 @@ timeout = 20
 import os
 import sys
 import time
+
 # The LoopingCall function allows a function to be called periodically
 # on a time interval
 from twisted.internet.task import LoopingCall
@@ -44,12 +45,12 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
-if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
+if __file__ in [f for f in os.listdir(".") if os.path.isfile(f)]:
     SCRIPT_PATH = os.path.dirname(os.getcwd())
 else:
     SCRIPT_PATH = os.path.dirname(__file__)
-LOCAL_PATH = SCRIPT_PATH.rsplit('instruments', 1)[0]
-INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, 'instruments')
+LOCAL_PATH = SCRIPT_PATH.rsplit("instruments", 1)[0]
+INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, "instruments")
 if INSTRUMENTS_PATH not in sys.path:
     sys.path.append(INSTRUMENTS_PATH)
 
@@ -61,7 +62,7 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to an Omega temperature monitor."""
-        print(('Connecting to "%s" on port "%s"...' %(server.name, port)))
+        print(('Connecting to "%s" on port "%s"...' % (server.name, port)))
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -72,20 +73,20 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
         p.baudrate(9600)
         p.stopbits(1)
         p.bytesize(7)
-        p.parity('O')
+        p.parity("O")
         p.timeout(0.01 * units.s)
         # Clear out the read buffer. This is necessary for some devices.
         p.read_line()
         yield p.send()
-        
+
     def packet(self):
         """Create a packet in our private context."""
         return self.server.packet(context=self.ctx)
-    
+
     def shutdown(self):
         """Disconnect from the serial port when we shut down."""
         return self.packet().close().send()
-    
+
     @inlineCallbacks
     def write_line(self, code):
         """Write a data value to the temperature monitor."""
@@ -96,13 +97,13 @@ class OmegaTempMonitorWrapper(DeviceWrapper):
         """Read a data value to the temperature monitor."""
         ans = yield self.server.read(context=self.ctx)
         returnValue(ans)
-   
-            
+
+
 class OmegaTempMonitorServer(DeviceServer):
-    deviceName = 'Omega Temperature Monitor'
-    name = 'Omega Temperature Monitor'
+    deviceName = "Omega Temperature Monitor"
+    name = "Omega Temperature Monitor"
     deviceWrapper = OmegaTempMonitorWrapper
-            
+
     @inlineCallbacks
     def initServer(self):
         """Initialize the Temperature Monitor Server"""
@@ -114,7 +115,7 @@ class OmegaTempMonitorServer(DeviceServer):
         self.thresholdMax = 50 * units.degF
         # Set the minimum acceptible temperature.
         self.thresholdMin = 30 * units.degF
-        self.alertInterval = 10 # seconds
+        self.alertInterval = 10  # seconds
         self.t1 = 0
         self.t2 = 0
 
@@ -127,22 +128,22 @@ class OmegaTempMonitorServer(DeviceServer):
         """
         self.refresher = LoopingCall(self.checkMeasurements)
         self.refresherDone = self.refresher.start(5.0, now=True)
-       
+
     @inlineCallbacks
     def stopServer(self):
         """Kill the device refresh loop and wait for it to terminate."""
-        if hasattr(self, 'refresher'):
+        if hasattr(self, "refresher"):
             self.refresher.stop()
             yield self.refresherDone
-            
-    @setting(9, 'Start Server', returns='b')
+
+    @setting(9, "Start Server", returns="b")
     def start_server(self, c):
         """Initialize the repeated temperature measurement."""
         self.dev = self.selectedDevice(c)
         callLater(0.1, self.startRefreshing)
         return True
 
-    @setting(10, 'Set Thresholds', low='v[degF]', high='v[degF]')
+    @setting(10, "Set Thresholds", low="v[degF]", high="v[degF]")
     def setThresholds(self, ctx, low, high):
         """
         This setting configures the trigger thresholds.
@@ -151,23 +152,23 @@ class OmegaTempMonitorServer(DeviceServer):
         if low >= high:
             return "The minimum threshold cannot be greater than the maximum\
                     threshold"
-        self.thresholdMax = units.WithUnit(high, 'degF')
-        self.thresholdMin = units.WithUnit(low, 'degF')
+        self.thresholdMax = units.WithUnit(high, "degF")
+        self.thresholdMin = units.WithUnit(low, "degF")
         return True
 
-    @setting(11, 'Set Alert Interval', interval='v[s]')
+    @setting(11, "Set Alert Interval", interval="v[s]")
     def setAlertInterval(self, ctx, interval):
         """Configure the alert interval."""
-        self.alertInterval = interval['s']
-    
-    @setting(12, 'Get Temperature', returns='v[degC]')
+        self.alertInterval = interval["s"]
+
+    @setting(12, "Get Temperature", returns="v[degC]")
     def temperatureSetting(self, ctx):
         """Setting that returns rate"""
         self.dev = self.selectedDevice(ctx)
         temperature = yield self.getTemperature(self.dev)
-        #print(temperature)
+        # print(temperature)
         returnValue(temperature)
-        
+
     @inlineCallbacks
     def getTemperature(self, dev):
         """
@@ -187,7 +188,7 @@ class OmegaTempMonitorServer(DeviceServer):
             # Strip the 'X01' off the returned string.
             reading = float(reading.lstrip("X01").strip())
             # Add correct units.
-            reading = (reading - 32)*(5.0/9.0) 
+            reading = (reading - 32) * (5.0 / 9.0)
             output = reading * units.degC
             returnValue(output)
 
@@ -197,12 +198,16 @@ class OmegaTempMonitorServer(DeviceServer):
         temperature = yield self.getTemperature(self.dev)
         if temperature:
             if temperature > self.thresholdMax:
-                    self.sendAlert(temperature,
-                    "Temperature is above {0}.".format(str(self.thresholdMax)))
+                self.sendAlert(
+                    temperature,
+                    "Temperature is above {0}.".format(str(self.thresholdMax)),
+                )
             elif temperature < self.thresholdMin:
-                    self.sendAlert(temperature,
-                    "Temperature is below {0}.".format(str(self.thresholdMin)))
-                
+                self.sendAlert(
+                    temperature,
+                    "Temperature is below {0}.".format(str(self.thresholdMin)),
+                )
+
     def sendAlert(self, measurement, message):
         """
         Deal with an out-of-bounds measurement by calling this method,
@@ -216,25 +221,28 @@ class OmegaTempMonitorServer(DeviceServer):
             # Store the last time an alert was sent in the form
             # seconds since the epoch (1/1/1970).
             self.t2 = self.t1
-            print(("{0}\n\t{1}\n\t{2}".format(message,
-                                             time.ctime(self.t1),
-                                             str(measurement))))
+            print(
+                (
+                    "{0}\n\t{1}\n\t{2}".format(
+                        message, time.ctime(self.t1), str(measurement)
+                    )
+                )
+            )
         return
-    
+
     @inlineCallbacks
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'Omega Temperature Monitor',
-                'Links'], True)
+        yield reg.cd(["", "Servers", "Omega Temperature Monitor", "Links"], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
             p.get(k, key=k)
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys)
-    
-    @inlineCallbacks    
+
+    @inlineCallbacks
     def findDevices(self):
         """Find available devices from list stored in the registry."""
         devs = []
@@ -245,7 +253,7 @@ class OmegaTempMonitorServer(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '{} - {}'.format(server, port)
+            devName = "{} - {}".format(server, port)
             devs += [(name, (server, port))]
         returnValue(devs)
 
@@ -253,5 +261,5 @@ class OmegaTempMonitorServer(DeviceServer):
 __server__ = OmegaTempMonitorServer()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     util.runServer(__server__)

@@ -14,7 +14,7 @@ class grapher(MNode):
 
     def begin(self, *args, **kwargs):
         super(grapher, self).begin()
-        self.addAnchor(name='Device', type='input')
+        self.addAnchor(name="Device", type="input")
         self.setTitle("Grapher")
 
     def pipeConnected(self, anchor, pipe):
@@ -40,4 +40,4 @@ class grapher(MNode):
         self.timer.start(2000)
 
     def refreshPlot(self):
-        self.graph.plot(time='last_valid')
+        self.graph.plot(time="last_valid")

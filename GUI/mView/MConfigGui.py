@@ -70,8 +70,9 @@ class refreshRateContents(QtGui.QWidget):
         self.refreshTabWidget.addTab(self.guiRefreshConfig(), "GUI")
 
         for device in web.devices:
-            self.refreshTabWidget.addTab(devRefRateConfig(device),
-                                         device.getFrame().getTitle())
+            self.refreshTabWidget.addTab(
+                devRefRateConfig(device), device.getFrame().getTitle()
+            )
 
     def guiRefreshConfig(self):
         guiRefConfig = QtGui.QWidget()
@@ -82,9 +83,10 @@ class refreshRateContents(QtGui.QWidget):
         self.refRateEdit = QtGui.QLineEdit()
         # print "Gui ref rate:", web.persistentData(None, 'guiRefreshRate')
         self.refRateEdit.setText(
-            str(web.persistentData.persistentDataAccess(None, 'guiRefreshRate')))
+            str(web.persistentData.persistentDataAccess(None, "guiRefreshRate"))
+        )
         guiRefLayoutH.addWidget(self.refRateEdit)
-        guiRefLayoutH.addWidget(QtGui.QLabel('s'))
+        guiRefLayoutH.addWidget(QtGui.QLabel("s"))
         self.refRateEdit.editingFinished.connect(self.updateMainGuiRefRate)
 
         guiRefLayout.addLayout(guiRefLayoutH)
@@ -94,7 +96,8 @@ class refreshRateContents(QtGui.QWidget):
     def updateMainGuiRefRate(self):
         try:
             web.persistentData.persistentDataAccess(
-                float(self.refRateEdit.text()), 'guiRefreshRate')
+                float(self.refRateEdit.text()), "guiRefreshRate"
+            )
 
         except:
             traceback.print_exc()
@@ -110,8 +113,7 @@ class devRefRateConfig(QtGui.QWidget):
         devRefLayout = QtGui.QVBoxLayout()
         devRefLayoutH = QtGui.QHBoxLayout()
         title = device.getFrame().getTitle()
-        devRefLayoutH.addWidget(QtGui.QLabel("%s update period:"
-                                             % title))
+        devRefLayoutH.addWidget(QtGui.QLabel("%s update period:" % title))
         devRefLayoutH.addStretch(0)
 
         devRefConfig.setLayout(devRefLayout)
@@ -120,23 +122,20 @@ class devRefRateConfig(QtGui.QWidget):
 
         self.devRefRateEdit.setText(str(device.getFrame().getRefreshRate()))
         devRefLayoutH.addWidget(self.devRefRateEdit)
-        devRefLayoutH.addWidget(QtGui.QLabel('s'))
+        devRefLayoutH.addWidget(QtGui.QLabel("s"))
 
         devRefLayout.addLayout(devRefLayoutH)
 
         if device.getFrame().isPlot():
             plotRefLayoutH = QtGui.QHBoxLayout()
             title = device.getFrame().getTitle()
-            plotRefLayoutH.addWidget(QtGui.QLabel("%s plot refresh rate:"
-                                                  % title))
+            plotRefLayoutH.addWidget(QtGui.QLabel("%s plot refresh rate:" % title))
             plotRefLayoutH.addStretch(0)
             self.plotRefRateEdit = QtGui.QLineEdit()
-            self.plotRefRateEdit.setText(
-                str(device.getFrame().getPlotRefreshRate()))
-            self.plotRefRateEdit.editingFinished.connect(
-                self.updateDevPlotRate)
+            self.plotRefRateEdit.setText(str(device.getFrame().getPlotRefreshRate()))
+            self.plotRefRateEdit.editingFinished.connect(self.updateDevPlotRate)
             plotRefLayoutH.addWidget(self.plotRefRateEdit)
-            plotRefLayoutH.addWidget(QtGui.QLabel('s'))
+            plotRefLayoutH.addWidget(QtGui.QLabel("s"))
             devRefLayout.addLayout(plotRefLayoutH)
         self.setLayout(devRefLayout)
 
@@ -146,8 +145,12 @@ class devRefRateConfig(QtGui.QWidget):
             self.device.getFrame().setPlotRefreshRate(float(refreshRate))
         except:
             traceback.print_exc()
-            print(("[%s]: %s is not a number."
-                  % (self.device.getFrame().getTitle(), refreshRate)))
+            print(
+                (
+                    "[%s]: %s is not a number."
+                    % (self.device.getFrame().getTitle(), refreshRate)
+                )
+            )
 
     def updateDevRefRate(self):
         refreshRate = self.devRefRateEdit.text()
@@ -155,5 +158,9 @@ class devRefRateConfig(QtGui.QWidget):
             self.device.getFrame().setRefreshRate(float(refreshRate))
         except:
             traceback.print_exc()
-            print(("[%s]: %s is not a number."
-                  % (self.device.getFrame().getTitle(), refreshRate)))
+            print(
+                (
+                    "[%s]: %s is not a number."
+                    % (self.device.getFrame().getTitle(), refreshRate)
+                )
+            )

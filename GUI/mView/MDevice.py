@@ -30,32 +30,33 @@ import time
 
 
 class MDevice(QThread):
-    '''
-  MView uses the MDevice class to give all sources of data a common 
-  interface with which to interact in the context of MView. These 
-  sources of data can be anything including but not limited to LabRad 
-  servers, RS232 devices, GPIB Devices, they can even represent the 
-  contents of .hdf5 files. Devices in MView are created by instantiating
-  their device drivers. For example, if there are two RS232 devices, 
-  we create two instances of the RS232 device driver. This means that 
-  only one generic device driver needs to be created for one interface 
-  (RS232, LabRad Servers, HDF5 files, etc.) and it can then be applied 
-  to all devices that use the same interface.
-  '''
+    """
+    MView uses the MDevice class to give all sources of data a common
+    interface with which to interact in the context of MView. These
+    sources of data can be anything including but not limited to LabRad
+    servers, RS232 devices, GPIB Devices, they can even represent the
+    contents of .hdf5 files. Devices in MView are created by instantiating
+    their device drivers. For example, if there are two RS232 devices,
+    we create two instances of the RS232 device driver. This means that
+    only one generic device driver needs to be created for one interface
+    (RS232, LabRad Servers, HDF5 files, etc.) and it can then be applied
+    to all devices that use the same interface.
+    """
+
     updateSignal = pyqtSignal()
     lock = threading.Lock()
 
     def __init__(self, name, *args, **kwargs):
-        '''Initializes the device:
+        """Initializes the device:
 
-    1. Sets the frame title. 1.
-    2. Sets the refresh rate. 2.
+        1. Sets the frame title. 1.
+        2. Sets the refresh rate. 2.
 
-    Function arguments:
+        Function arguments:
 
-    :param name: The name of the device
+        :param name: The name of the device
 
-   '''
+        """
         super(MDevice, self).__init__()
         self.lockLoggingSettings = kwargs.get("lock_logging_settings", False)
         self.defaultLogLocation = kwargs.get("default_log_location", None)
@@ -74,23 +75,24 @@ class MDevice(QThread):
 
         self.doneLoading = False
 
-        #self.memory_tracker = tracker.SummaryTracker()
+        # self.memory_tracker = tracker.SummaryTracker()
+
     def log(self, log):
-        """ Tell the device whether to log data or not
+        """Tell the device whether to log data or not
 
         :param log: Boolean
 
-    """
+        """
         self.frame.enableDataLogging(log)
         if not log:
             self.plot(False)
 
     def isLogging(self):
-        '''Getter for whether or not datalogging is enabled for this device.
+        """Getter for whether or not datalogging is enabled for this device.
 
-      :rtype: boolean
+        :rtype: boolean
 
-   '''
+        """
         return self.frame.isDataLogging()
 
     def setContainer(self, container):
@@ -102,9 +104,9 @@ class MDevice(QThread):
         return self.container
 
     def updateContainer(self):
-        '''Refresh the devices container (Tile) on the GUI
-      by emitting an update signal
-   '''
+        """Refresh the devices container (Tile) on the GUI
+        by emitting an update signal
+        """
         if self.container != None:
             self.updateSignal.emit()
 
@@ -134,7 +136,6 @@ class MDevice(QThread):
         self.units.append(units)
 
     def addPlot(self, length=None, *args):
-
         self.frame.addPlot(length)
         # Datalogging must be enabled if we want to plot data.
         self.log(True)
@@ -155,10 +156,9 @@ class MDevice(QThread):
         self.frame.setHasPlot(plot)
 
     def begin(self, **kwargs):
-        '''Start the device. 
-   '''
+        """Start the device."""
         # Automatically refresh node data in callQuery
-        self.refreshNodeDataInCallQuery = kwargs.get('auto_refresh_node', True)
+        self.refreshNodeDataInCallQuery = kwargs.get("auto_refresh_node", True)
         # if not self.refreshNodeDataInCallQuery:
         # print self, "will not automatically refresh node data"
         # traceback.print_stack()
@@ -168,43 +168,45 @@ class MDevice(QThread):
         # Each device NEEDS to run on a different thread
         # than the main thread (which ALWAYS runs the GUI).
         # This thread is responsible for querying the devices.
-#        self.deviceThread = threading.Thread(target=self.callQuery, args=[])
-#        # If the main thread stops, stop the child thread.
-#        self.deviceThread.daemon = True
-#        # Start the thread.
-#        self.deviceThread.start()
+        #        self.deviceThread = threading.Thread(target=self.callQuery, args=[])
+        #        # If the main thread stops, stop the child thread.
+        #        self.deviceThread.daemon = True
+        #        # Start the thread.
+        #        self.deviceThread.start()
         self.callQuery()
 
     def configureDataLogging(self):
         if self.isLogging():
             # print self, "is datalogging"
-            self.frame.DataLoggingInfo()['name'] = self.name
-            self.frame.DataLoggingInfo()['chest'] = dataChestWrapper(
-                self, data_type=self.dataType)
+            self.frame.DataLoggingInfo()["name"] = self.name
+            self.frame.DataLoggingInfo()["chest"] = dataChestWrapper(
+                self, data_type=self.dataType
+            )
             self.frame.DataLoggingInfo()[
-                'lock_logging_settings'] = self.lockLoggingSettings
+                "lock_logging_settings"
+            ] = self.lockLoggingSettings
             if self.defaultLogLocation != None:
                 # If the current directory is a subdirectory of the default,
                 # then that is ok and the current directory should not be
                 # changed.
-                print("current location:", self.frame.DataLoggingInfo()['location'])
+                print("current location:", self.frame.DataLoggingInfo()["location"])
                 print("default:", self.defaultLogLocation)
-                if not(self.defaultLogLocation in self.frame.DataLoggingInfo()['location']):
+                if not (
+                    self.defaultLogLocation in self.frame.DataLoggingInfo()["location"]
+                ):
                     print("Paths not ok")
 
-                    self.frame.DataLoggingInfo()[
-                        'location'] = self.defaultLogLocation
-            self.datachest = self.frame.DataLoggingInfo()['chest']
+                    self.frame.DataLoggingInfo()["location"] = self.defaultLogLocation
+            self.datachest = self.frame.DataLoggingInfo()["chest"]
 
     def onBegin(self):
-        '''Called at the end of MDevice.begin(). This is called before 
-        MView starts. This allows us to configure settings that 
-        MView might use while starting. This might include datalog 
-        locations or device-specific information.'''
+        """Called at the end of MDevice.begin(). This is called before
+        MView starts. This allows us to configure settings that
+        MView might use while starting. This might include datalog
+        locations or device-specific information."""
         pass
 
     def loaded(self):
-
         print(self, "loaded.")
         self.onLoad()
         self.doneLoading = True
@@ -213,19 +215,19 @@ class MDevice(QThread):
         return self.doneLoading
 
     def onLoad(self):
-        '''Called at the end of MGui.startGui(), when the main 
-        MView GUI has finished loading. This allows the 
+        """Called at the end of MGui.startGui(), when the main
+        MView GUI has finished loading. This allows the
         MDevice to configure pieces of MView only available
-        once the program has fully loaded.'''
+        once the program has fully loaded."""
         pass
 
     def onAddParameter(self, *args, **kwargs):
-        '''Called when when a new parameter is added. 
-    It is passed whatever MDevice.addParameter() is passed. 
-    (Note: MDevice.onAddParameter() and MDevice.addParameter() 
-    are different). This function must return a tuple in 
-    the form ((str) Parameter Name, (int)Precision, (str) units)
-   '''
+        """Called when when a new parameter is added.
+        It is passed whatever MDevice.addParameter() is passed.
+        (Note: MDevice.onAddParameter() and MDevice.addParameter()
+        are different). This function must return a tuple in
+        the form ((str) Parameter Name, (int)Precision, (str) units)
+        """
         return (args[0], args[1], args[2])
 
     def setPrecisions(self, precisions):
@@ -235,11 +237,11 @@ class MDevice(QThread):
         self.frame.setSigFigs(parameter, sigfigs)
 
     def _setReadings(self, readings, update=True):
-        '''Tell the frame what the readings are so that they can be logged.
+        """Tell the frame what the readings are so that they can be logged.
 
         :param readings: Type: list
 
-   '''
+        """
 
         # readings = self.frame.getReadings()
         # print "set readings called"
@@ -264,6 +266,7 @@ class MDevice(QThread):
         # print "comb readigns:", readings
 
         # else:
+
     def isOutOfRange(self, key):
         return self.frame.getOutOfRangeStatus(key)
 
@@ -326,28 +329,29 @@ class MDevice(QThread):
 
     def getReadingIndex(self, parameter):
         return self.frame.getReadingIndex(parameter)
-#    def addReading(self, reading, units=None, precision=None):
-#        currReadings = self.frame.getReadings()
-#        currReadings.extend(reading)
-#        self.frame.setReadings(currReadings)
-#
-#        if precision == None:
-#            currPrecisions = self.frame.getPrecisions()
-#            currPrecisions.append(precisions)
-#            self.frame.setPrecisions(precisions)
-#        if units == None:
-#            currUnits = self.frame.getUnits()
-#            currUnits.append(units)
-#            self.frame.setUnits(units)
-#
-#        self.updateContainer()
+
+    #    def addReading(self, reading, units=None, precision=None):
+    #        currReadings = self.frame.getReadings()
+    #        currReadings.extend(reading)
+    #        self.frame.setReadings(currReadings)
+    #
+    #        if precision == None:
+    #            currPrecisions = self.frame.getPrecisions()
+    #            currPrecisions.append(precisions)
+    #            self.frame.setPrecisions(precisions)
+    #        if units == None:
+    #            currUnits = self.frame.getUnits()
+    #            currUnits.append(units)
+    #            self.frame.setUnits(units)
+    #
+    #        self.updateContainer()
 
     def callQuery(self):
-        '''Automatically called periodically, 
-        determined by MDevice.Mframe.getRefreshRate(). 
+        """Automatically called periodically,
+        determined by MDevice.Mframe.getRefreshRate().
         There is also a MDevice.Mframe.setRefreshRate()
         function with which the refresh rate can be configured.
-        '''
+        """
         # print "-----------------------------------"
         if not self.keepGoing:
             return
@@ -372,18 +376,17 @@ class MDevice(QThread):
         self.updateContainer()
 
         if self.keepGoing:
-            threading.Timer(self.frame.getRefreshRate(),
-                            self.callQuery).start()
+            threading.Timer(self.frame.getRefreshRate(), self.callQuery).start()
 
     def prompt(self, button):
-        '''Called when 
-    a device's button is pushed. Button is an array which 
-    is associated with the button. The array is constructed 
-    in the device driver code, and the PyQT button is then appended
-    to the end by MView. The array associated with the button is passed 
-    to prompt() in the device driver. The device driver then determines 
-    what to do based on the button pushed. 
-   '''
+        """Called when
+        a device's button is pushed. Button is an array which
+        is associated with the button. The array is constructed
+        in the device driver code, and the PyQT button is then appended
+        to the end by MView. The array associated with the button is passed
+        to prompt() in the device driver. The device driver then determines
+        what to do based on the button pushed.
+        """
         pass
 
     def close(self):
@@ -396,16 +399,15 @@ class MDevice(QThread):
         try:
             name = args[0]
         except:
-            raise AttributError(
-                "The first argument of addParameter() must be a name")
+            raise AttributError("The first argument of addParameter() must be a name")
 
         show = kwargs.get("show", True)
-        units = kwargs.get('units', None)
-        sigfigs = kwargs.get('significant_figures', None)
-        precision = kwargs.get('precision', None)
+        units = kwargs.get("units", None)
+        sigfigs = kwargs.get("significant_figures", None)
+        precision = kwargs.get("precision", None)
         if sigfigs is None and precision is None:
             precision = 2
-        index = kwargs.get('index', None)
+        index = kwargs.get("index", None)
         log = kwargs.get("log", self.isLogging())
         self.frame.addParameter((name, units, precision))
         self.setReadingIndex(name, index)
@@ -414,7 +416,7 @@ class MDevice(QThread):
         self.setUnit(name, units)
         self.onAddParameter(*args, **kwargs)
         self.frame.setParamVisibility(name, show)
-        self.frame.DataLoggingInfo()['channels'][name] = log
+        self.frame.DataLoggingInfo()["channels"][name] = log
 
     def logData(self, b):
         """Enable or disable datalogging for the device."""

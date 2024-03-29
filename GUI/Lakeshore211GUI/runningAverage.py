@@ -15,9 +15,8 @@ class runningAverage(MNode):
 
     def begin(self, *args, **kwargs):
         super(runningAverage, self).begin()
-        self.input = self.addAnchor(name='data', type='input', data='float')
-        self.output = self.addAnchor(
-            name='running avg', type='output', data='float')
+        self.input = self.addAnchor(name="data", type="input", data="float")
+        self.output = self.addAnchor(name="running avg", type="output", data="float")
         self.setTitle("Running Avg")
 
     def setWindowWidth(self, width):
@@ -26,7 +25,7 @@ class runningAverage(MNode):
     def onRefreshData(self):
         t1 = time.time()
         self.data.append(self.input.getData())
-        self.data = self.data[-self.window::]
+        self.data = self.data[-self.window : :]
         # print "window size is: ", self.window
         # print "self.data in running average:", self.data
 
@@ -49,6 +48,5 @@ class runningAverage(MNode):
         t2 = time.time()
 
     def movingaverage(self, interval, window_size):
-
         window = np.ones(int(window_size)) / float(window_size)
-        return np.convolve(interval, window, mode='valid')
+        return np.convolve(interval, window, mode="valid")

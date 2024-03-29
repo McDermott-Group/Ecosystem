@@ -38,13 +38,12 @@ import labrad.units as units
 from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad import util
 
-    
+
 class ColdSwitchWrapper(DeviceWrapper):
-    
     @inlineCallbacks
     def connect(self, server, port, oldState):
         """Connect to a cold switch board."""
-        print('connecting to "%s" on port "%s"...' % (server.name, port), end=' ')
+        print('connecting to "%s" on port "%s"...' % (server.name, port), end=" ")
         self.state = oldState
         self.setTrace = []
         self.resetTrace = []
@@ -56,78 +55,89 @@ class ColdSwitchWrapper(DeviceWrapper):
         p.baudrate(1200)
         p.stopbits(1)
         p.bytesize(8)
-        p.parity('N')
-        p.read() # clear out the read buffer
+        p.parity("N")
+        p.read()  # clear out the read buffer
         p.timeout(TIMEOUT)
         yield p.send()
         self.changeAppliedVoltage(oldState[3])
-        print('done.')
-        
+        print("done.")
+
     def packet(self):
         """Create a packet in our private context."""
         return self.server.packet(context=self.ctx)
-    
+
     def shutdown(self):
         """Disconnect from the serial port when we shut down."""
         return self.packet().close().send()
-    
+
     @inlineCallbacks
-    def write(self, code, index = 0):
+    def write(self, code, index=0):
         """Write a data value to the cold switch."""
         p = self.packet()
         p.write(code)
         yield p.send()
-        
-        
+
     @inlineCallbacks
     def setPulse(self):
         """Send a set command to the cold switch and check
-           the current output to see that it set"""
-        output = ''
+        the current output to see that it set"""
+        output = ""
         self.setTrace = []
         p = self.packet()
-        p.write('S')
+        p.write("S")
         p.read_line()
         ans = yield p.send()
         output = ans.read_line
         for s in range(len(output)):
-                current = 4.0*ord(output[s])*(5.0/4095.0)/10.0
-                self.setTrace.append(current)
-
+            current = 4.0 * ord(output[s]) * (5.0 / 4095.0) / 10.0
+            self.setTrace.append(current)
 
     @inlineCallbacks
     def resetPulse(self):
         """Send a reset command to the cold switch and check
-           the current output to see that it reset"""
-        output = ''
+        the current output to see that it reset"""
+        output = ""
         self.resetTrace = []
         p = self.packet()
-        p.write('R')
+        p.write("R")
         p.read_line()
         ans = yield p.send()
         output = ans.read_line
         for s in range(len(output)):
-                current = 4.0*ord(output[s])*(5.0/4095.0)/10.0
-                self.resetTrace.append(current)
-    
-    
+            current = 4.0 * ord(output[s]) * (5.0 / 4095.0) / 10.0
+            self.resetTrace.append(current)
+
     @inlineCallbacks
     def changeAppliedVoltage(self, voltage):
         """Change the voltage applied during set or reset pulse"""
-        voltValues = {'0':'0','1':'1','2':'2','3':'3',
-                      '4':'4','5':'5','6':'6','7':'7',
-                      '8':'8','9':'9','10':':','11':';',
-                      '12':'<','13':'=','14':'>','15':'?'}
+        voltValues = {
+            "0": "0",
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9",
+            "10": ":",
+            "11": ";",
+            "12": "<",
+            "13": "=",
+            "14": ">",
+            "15": "?",
+        }
         yield self.write(voltValues[str(voltage)])
         self.state[3] = str(voltage)
         returnValue(voltValues[str(voltage)])
-    
-    @inlineCallbacks    
+
+    @inlineCallbacks
     def setFirstSwitchChannel(self, channel, commands):
         """change the channel set on the first switch"""
         chan = str(channel)
-        if self.state[0]!=chan and chan!='0':
-            if self.state[0]!='0':
+        if self.state[0] != chan and chan != "0":
+            if self.state[0] != "0":
                 reschan = commands[self.state[0]]
                 yield self.write(reschan)
                 yield self.resetPulse()
@@ -137,21 +147,21 @@ class ColdSwitchWrapper(DeviceWrapper):
             yield self.setPulse()
             yield util.wakeupCall(1)
             self.state[0] = chan
-            
-        if self.state[0]!=chan and chan =='0':
+
+        if self.state[0] != chan and chan == "0":
             reschan = commands[self.state[0]]
             yield self.write(reschan)
             yield self.resetPulse()
             self.state[0] = chan
-        
+
         returnValue(chan)
-    
-    @inlineCallbacks    
+
+    @inlineCallbacks
     def setSecondSwitchChannel(self, channel, commands):
         """change the channel set on the second switch"""
         chan = str(channel)
-        if self.state[1]!=chan and chan!='0':
-            if self.state[1]!='0':
+        if self.state[1] != chan and chan != "0":
+            if self.state[1] != "0":
                 reschan = commands[self.state[1]]
                 yield self.write(reschan)
                 yield self.resetPulse()
@@ -161,21 +171,21 @@ class ColdSwitchWrapper(DeviceWrapper):
             yield self.setPulse()
             yield util.wakeupCall(1)
             self.state[1] = chan
-            
-        if self.state[1]!=chan and chan=='0':
+
+        if self.state[1] != chan and chan == "0":
             reschan = commands[self.state[1]]
             yield self.write(reschan)
             yield self.resetPulse()
             self.state[1] = chan
-            
+
         returnValue(chan)
-    
-    @inlineCallbacks        
+
+    @inlineCallbacks
     def setThirdSwitchChannel(self, channel, commands):
         """change the channel set on the third switch"""
         chan = str(channel)
-        if self.state[2]!=chan and chan!='0':
-            if self.state[2]!='0':
+        if self.state[2] != chan and chan != "0":
+            if self.state[2] != "0":
                 reschan = commands[self.state[2]]
                 yield self.write(reschan)
                 yield self.resetPulse()
@@ -185,21 +195,21 @@ class ColdSwitchWrapper(DeviceWrapper):
             yield self.setPulse()
             yield util.wakeupCall(1)
             self.state[2] = chan
-            
-        if self.state[2]!=chan and chan=='0':
+
+        if self.state[2] != chan and chan == "0":
             reschan = commands[self.state[2]]
             yield self.write(reschan)
             yield self.resetPulse()
             self.state[2] = chan
-            
+
         returnValue(chan)
-            
-    @inlineCallbacks 
+
+    @inlineCallbacks
     def getSetTrace(self):
         """Check the current values of the last set or reset pulse"""
         returnValue(self.setTrace)
-    
-    @inlineCallbacks 
+
+    @inlineCallbacks
     def getResetTrace(self):
         """Check the current values of the last set or reset pulse"""
         returnValue(self.resetTrace)
@@ -208,7 +218,7 @@ class ColdSwitchWrapper(DeviceWrapper):
     def getSwitchState(self):
         switchState = self.state
         returnValue(switchState)
-        
+
     @inlineCallbacks
     def masterReset(self, switch, commands):
         for command in commands:
@@ -216,49 +226,45 @@ class ColdSwitchWrapper(DeviceWrapper):
             yield self.write(reschan)
             yield self.resetPulse()
             yield util.wakeupCall(2)
-        self.state[switch] = '0'
-    
+        self.state[switch] = "0"
+
     @inlineCallbacks
     def updateRegistry(self, reg):
-        yield reg.cd(['', 'Servers', 'Cold Switch', 'Links'], True)
+        yield reg.cd(["", "Servers", "Cold Switch", "Links"], True)
         p = reg.packet()
-        name = self.name.split( )
+        name = self.name.split()
         key = name[0]
-        ss = name[0]+' '+name[1]+' '+name[2]
-        p.set(key,(ss,self.port,self.state))
+        ss = name[0] + " " + name[1] + " " + name[2]
+        p.set(key, (ss, self.port, self.state))
         yield p.send()
-        
-    
-      
-        
-        
-        
+
+
 class ColdSwitchServer(DeviceServer):
-    deviceName = 'Cold Switch Server'
-    name = 'Cold Switch Server'
+    deviceName = "Cold Switch Server"
+    name = "Cold Switch Server"
     deviceWrapper = ColdSwitchWrapper
-    
+
     @inlineCallbacks
     def initServer(self):
-        print('loading config info...', end=' ')
+        print("loading config info...", end=" ")
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
-        print('done.')
+        print("done.")
         yield DeviceServer.initServer(self)
-    
+
     @inlineCallbacks
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'Cold Switch', 'Links'], True)
+        yield reg.cd(["", "Servers", "Cold Switch", "Links"], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
             p.get(k, key=k)
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys)
-    
-    @inlineCallbacks    
+
+    @inlineCallbacks
     def findDevices(self):
         """Find available devices from list stored in the registry."""
         devs = []
@@ -269,11 +275,11 @@ class ColdSwitchServer(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '%s - %s' % (serServer, port)
+            devName = "%s - %s" % (serServer, port)
             devs += [(devName, (server, port, oldState))]
         returnValue(devs)
-         
-    @setting(456, 'change voltage', data='w', returns='s')
+
+    @setting(456, "change voltage", data="w", returns="s")
     def change_voltage(self, c, data):
         """Changes the voltage applied to set or reset the switch"""
         dev = self.selectedDevice(c)
@@ -281,102 +287,111 @@ class ColdSwitchServer(DeviceServer):
         voltage = yield dev.changeAppliedVoltage(data)
         yield dev.updateRegistry(reg)
         returnValue(voltage)
-        
-    @setting(457, 'set switch1', data='w', returns='s')
+
+    @setting(457, "set switch1", data="w", returns="s")
     def set_switch1(self, c, data):
         """Changes which port on switch one is connected to the output"""
-        commandList =[{'1':'a','2':'b','3':'c','4':'d','5':'e','6':'f'},
-              {'1':'g','2':'h','3':'i','4':'j','5':'k','6':'l'},
-              {'1':'m','2':'n','3':'o','4':'p','5':'q','6':'r'}]
-        print('cs1')
+        commandList = [
+            {"1": "a", "2": "b", "3": "c", "4": "d", "5": "e", "6": "f"},
+            {"1": "g", "2": "h", "3": "i", "4": "j", "5": "k", "6": "l"},
+            {"1": "m", "2": "n", "3": "o", "4": "p", "5": "q", "6": "r"},
+        ]
+        print("cs1")
         dev = self.selectedDevice(c)
-        print('cs2')
+        print("cs2")
         reg = self.client.registry
-        print('cs3')
-        if dev.state[0]== 'null':
-            print('cs4')
-            returnValue('null')
-            print('cs5')
+        print("cs3")
+        if dev.state[0] == "null":
+            print("cs4")
+            returnValue("null")
+            print("cs5")
         else:
-            print('cs6')
-            channel =  yield dev.setFirstSwitchChannel(data, commandList[0])
-            print('cs7')
+            print("cs6")
+            channel = yield dev.setFirstSwitchChannel(data, commandList[0])
+            print("cs7")
             yield dev.updateRegistry(reg)
-            print('cs8')
+            print("cs8")
             returnValue(channel)
-            print('cs9')
-    
-    @setting(458, 'set switch2', data='w', returns='s')
+            print("cs9")
+
+    @setting(458, "set switch2", data="w", returns="s")
     def set_switch2(self, c, data):
         """Changes which port on switch two is connected to the output"""
-        commandList =[{'1':'a','2':'b','3':'c','4':'d','5':'e','6':'f'},
-              {'1':'g','2':'h','3':'i','4':'j','5':'k','6':'l'},
-              {'1':'m','2':'n','3':'o','4':'p','5':'q','6':'r'}]
+        commandList = [
+            {"1": "a", "2": "b", "3": "c", "4": "d", "5": "e", "6": "f"},
+            {"1": "g", "2": "h", "3": "i", "4": "j", "5": "k", "6": "l"},
+            {"1": "m", "2": "n", "3": "o", "4": "p", "5": "q", "6": "r"},
+        ]
         dev = self.selectedDevice(c)
         reg = self.client.registry
-        if dev.state[1]== 'null':
-            returnValue('null')
+        if dev.state[1] == "null":
+            returnValue("null")
         else:
             channel = yield dev.setSecondSwitchChannel(data, commandList[1])
             yield dev.updateRegistry(reg)
             returnValue(channel)
-    
-    @setting(459, 'set switch3', data='w', returns='s')
+
+    @setting(459, "set switch3", data="w", returns="s")
     def set_switch3(self, c, data):
         """Changes which port on switch three is connected to the output"""
-        commandList =[{'1':'a','2':'b','3':'c','4':'d','5':'e','6':'f'},
-              {'1':'g','2':'h','3':'i','4':'j','5':'k','6':'l'},
-              {'1':'m','2':'n','3':'o','4':'p','5':'q','6':'r'}]
+        commandList = [
+            {"1": "a", "2": "b", "3": "c", "4": "d", "5": "e", "6": "f"},
+            {"1": "g", "2": "h", "3": "i", "4": "j", "5": "k", "6": "l"},
+            {"1": "m", "2": "n", "3": "o", "4": "p", "5": "q", "6": "r"},
+        ]
         dev = self.selectedDevice(c)
         reg = self.client.registry
-        if dev.state[2]== 'null':
-            returnValue('null')
+        if dev.state[2] == "null":
+            returnValue("null")
         else:
             channel = yield dev.setThirdSwitchChannel(data, commandList[2])
             yield dev.updateRegistry(reg)
             returnValue(channel)
-    
-    @setting(461, 'get set trace')
+
+    @setting(461, "get set trace")
     def get_set_trace(self, c):
         """Returns a trace of the current going through the solenoid for the last switch set command"""
         dev = self.selectedDevice(c)
         currents = yield dev.getSetTrace()
         returnValue(currents)
-    
-    @setting(462, 'get reset trace')
+
+    @setting(462, "get reset trace")
     def get_reset_trace(self, c):
         """Returns a trace of the current going through the solenoid for the last switch reset command"""
         dev = self.selectedDevice(c)
         currents = yield dev.getResetTrace()
         returnValue(currents)
 
-    @setting(466, 'get switch state', returns = '*s')
+    @setting(466, "get switch state", returns="*s")
     def get_swtich_state(self, c):
         """Returns the current channel for each switch and the current applied voltage"""
         dev = self.selectedDevice(c)
         state = yield dev.getSwitchState()
         returnValue(state)
-    
-    @setting(467, 'master reset', data = 'w')
+
+    @setting(467, "master reset", data="w")
     def master_reset(self, c, data):
         """Ensures that all channels for a given switch are disconnected"""
-        commandList =[{'1':'a','2':'b','3':'c','4':'d','5':'e','6':'f'},
-                      {'1':'g','2':'h','3':'i','4':'j','5':'k','6':'l'},
-                      {'1':'m','2':'n','3':'o','4':'p','5':'q','6':'r'}]
-        switch = data-1
+        commandList = [
+            {"1": "a", "2": "b", "3": "c", "4": "d", "5": "e", "6": "f"},
+            {"1": "g", "2": "h", "3": "i", "4": "j", "5": "k", "6": "l"},
+            {"1": "m", "2": "n", "3": "o", "4": "p", "5": "q", "6": "r"},
+        ]
+        switch = data - 1
         dev = self.selectedDevice(c)
         reg = self.client.registry
-        if dev.state[switch]== 'null':
-            returnValue('null')
+        if dev.state[switch] == "null":
+            returnValue("null")
         else:
             yield dev.masterReset(switch, commandList[switch])
             yield dev.updateRegistry(reg)
-    
 
-TIMEOUT = 1*units.s
+
+TIMEOUT = 1 * units.s
 
 __server__ = ColdSwitchServer()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from labrad import util
+
     util.runServer(__server__)

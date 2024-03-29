@@ -19,26 +19,31 @@ version = 1.1.0
 description = Monitors Leiden Devices
 """
 import sys
-sys.dont_write_bytecode = True
-import MGui             # Handles all gui operations. Independent of labrad.
 
-#from PyQt4 import QtCore, QtGui
+sys.dont_write_bytecode = True
+import MGui  # Handles all gui operations. Independent of labrad.
+
+# from PyQt4 import QtCore, QtGui
 import time
 from MDevices.Device import Device
-#from multiprocessing.pool import ThreadPool
-#import threading
+
+# from multiprocessing.pool import ThreadPool
+# import threading
 import labrad
 import labrad.units as units
-#from dataChestWrapper import *
+
+# from dataChestWrapper import *
 import traceback
 import start_stop_cooldown as ssc
 from MDevices.Mhdf5Device import Mhdf5Device
 import os
+
+
 class nViewer:
     gui = None
-    devices =[]
-    
-    def __init__(self, parent = None):
+    devices = []
+
+    def __init__(self, parent=None):
         # Establish a connection to labrad
         try:
             cxn = labrad.connect()
@@ -56,16 +61,16 @@ class nViewer:
             traceback.print_exc()
             print("--------------------------------------")
             print("Please start the telecomm server")
-            
+
             time.sleep(2)
             sys.exit(1)
 
         self.gui = MGui.MGui()
-        
+
         Return = Device("Return")
         Return.setServerName("mks_pdr2000_server")
-        Return.addParameter("Pressure 1", "get_pressure", None, index = 0)
-        Return.addParameter("Pressure 2", "get_pressure", None, index = 1)
+        Return.addParameter("Pressure 1", "get_pressure", None, index=0)
+        Return.addParameter("Pressure 2", "get_pressure", None, index=1)
         Return.addPlot()
         Return.setPlotRefreshRate(3)
         Return.setRefreshRate(3)
@@ -74,11 +79,11 @@ class nViewer:
         Return.connection(cxn)
         Return.begin()
         self.gui.addDevice(Return)
-        
+
         Still = Device("Keg")
         Still.setServerName("mks_pdr2000_server")
-        Still.addParameter("Pressure 1", "get_pressure", None, index = 0)
-        Still.addParameter("Pressure 2", "get_pressure", None, index = 1)
+        Still.addParameter("Pressure 1", "get_pressure", None, index=0)
+        Still.addParameter("Pressure 2", "get_pressure", None, index=1)
         Still.addPlot()
         Still.setPlotRefreshRate(3)
         Still.setRefreshRate(3)
@@ -90,8 +95,8 @@ class nViewer:
 
         Keg = Device("Still")
         Keg.setServerName("mks_pdr2000_server")
-        Keg.addParameter("Pressure 1", "get_pressure", None, index = 0)
-        Keg.addParameter("Pressure 2", "get_pressure", None, index = 1)
+        Keg.addParameter("Pressure 1", "get_pressure", None, index=0)
+        Keg.addParameter("Pressure 2", "get_pressure", None, index=1)
         Keg.addPlot()
         Keg.setPlotRefreshRate(3)
         Keg.setRefreshRate(3)
@@ -100,14 +105,18 @@ class nViewer:
         Keg.connection(cxn)
         Keg.begin()
         self.gui.addDevice(Keg)
-        
+
         lake370 = Device("Lakeshore 370")
         lake370.setServerName("lakeshore_ruox")
-        lake370.addParameter("Mix 1", "temperatures", None,  index = 0, significant_figures = 2)
-        lake370.addParameter("Mix 2", "temperatures", None, index = 1, significant_figures = 2)
-        lake370.addParameter("Still", "temperatures", None, index = 2)
-        lake370.addParameter("1K Pot", "temperatures", None, index = 3)
-        lake370.addParameter("Exchange Plate", "temperatures", None, index = 4)
+        lake370.addParameter(
+            "Mix 1", "temperatures", None, index=0, significant_figures=2
+        )
+        lake370.addParameter(
+            "Mix 2", "temperatures", None, index=1, significant_figures=2
+        )
+        lake370.addParameter("Still", "temperatures", None, index=2)
+        lake370.addParameter("1K Pot", "temperatures", None, index=3)
+        lake370.addParameter("Exchange Plate", "temperatures", None, index=4)
         lake370.setYLabel("Temperature")
         lake370.selectDeviceCommand("select_device", 0)
         lake370.addPlot()
@@ -135,19 +144,21 @@ class nViewer:
         lake218.connection(cxn)
         lake218.begin()
         self.gui.addDevice(lake218)
-        
+
         # grapher = Mhdf5Device("Grapher")
         # grapher.begin()
         # self.gui.addDevice(grapher)
-        
-        bigButton = ssc.MStartStopCooldownWidget( os.environ['DATA_ROOT']+'\\cooldown',
-                                                        os.environ['DATA_ROOT']+'\\standbyData')
+
+        bigButton = ssc.MStartStopCooldownWidget(
+            os.environ["DATA_ROOT"] + "\\cooldown",
+            os.environ["DATA_ROOT"] + "\\standbyData",
+        )
         self.gui.addWidget(bigButton)
         # Create the gui
 
-        self.gui.startGui( 'DR1 Gui', tele)
-        
-        
+        self.gui.startGui("DR1 Gui", tele)
+
+
 # In phython, the main class's __init__() IS NOT automatically called
-viewer = nViewer()  
+viewer = nViewer()
 viewer.__init__()

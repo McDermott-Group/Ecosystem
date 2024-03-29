@@ -40,12 +40,12 @@ from labrad.server import setting
 from labrad.units import Hz, dBm
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 
-if __file__ in [f for f in os.listdir('.') if os.path.isfile(f)]:
+if __file__ in [f for f in os.listdir(".") if os.path.isfile(f)]:
     SCRIPT_PATH = os.path.dirname(os.getcwd())
 else:
     SCRIPT_PATH = os.path.dirname(__file__)
-LOCAL_PATH = SCRIPT_PATH.rsplit('instruments', 1)[0]
-INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, 'instruments')
+LOCAL_PATH = SCRIPT_PATH.rsplit("instruments", 1)[0]
+INSTRUMENTS_PATH = os.path.join(LOCAL_PATH, "instruments")
 if INSTRUMENTS_PATH not in sys.path:
     sys.path.append(INSTRUMENTS_PATH)
 
@@ -61,44 +61,44 @@ class HP83712BWrapper(GPIBDeviceWrapper):
 
     @inlineCallbacks
     def reset(self):
-        yield self.write('*CLS;*RST')
+        yield self.write("*CLS;*RST")
         yield self.initialize()
 
     @inlineCallbacks
     def getFrequency(self):
-        freq = yield self.query('FREQ?').addCallback(float)
+        freq = yield self.query("FREQ?").addCallback(float)
         self.frequency = freq * Hz
         returnValue(self.frequency)
 
     @inlineCallbacks
     def getPower(self):
-        self.power = (yield self.query('POW?').addCallback(float)) * dBm
+        self.power = (yield self.query("POW?").addCallback(float)) * dBm
         returnValue(self.power)
 
     @inlineCallbacks
     def getOutput(self):
-        output = yield self.query('OUTP?')
+        output = yield self.query("OUTP?")
         self.output = bool(float(output))
         returnValue(self.output)
 
     @inlineCallbacks
     def setFrequency(self, freq):
         if self.frequency != freq:
-            yield self.write('FREQ %s' % str(freq['Hz']))
+            yield self.write("FREQ %s" % str(freq["Hz"]))
             # Ensure that the frequency is set properly.
             self.frequency = yield self.getFrequency()
 
     @inlineCallbacks
     def setPower(self, pwr):
         if self.power != pwr:
-            yield self.write('POW %s' % str(pwr['dBm']))
+            yield self.write("POW %s" % str(pwr["dBm"]))
             # Ensure that the power is set properly.
             self.power = yield self.getPower()
 
     @inlineCallbacks
     def setOutput(self, out):
         if self.output != bool(out):
-            yield self.write('OUTP %s' % str(int(out)))
+            yield self.write("OUTP %s" % str(int(out)))
             # Ensure that the output is set properly.
             self.output = yield self.getOutput()
 
@@ -106,14 +106,14 @@ class HP83712BWrapper(GPIBDeviceWrapper):
 class HP83620AWrapper(HP83712BWrapper):
     @inlineCallbacks
     def getOutput(self):
-        output = yield self.query('POW:STAT?')
+        output = yield self.query("POW:STAT?")
         self.output = bool(float(output))
         returnValue(self.output)
 
     @inlineCallbacks
     def setOutput(self, out):
         if self.output != bool(out):
-            yield self.write('POW:STAT %s' % str(int(out)))
+            yield self.write("POW:STAT %s" % str(int(out)))
             # Ensure that the output is set properly.
             self.output = yield self.getOutput()
 
@@ -127,23 +127,23 @@ class HP8341BWrapper(ReadRawGPIBDeviceWrapper):
 
     @inlineCallbacks
     def reset(self):
-        yield self.write('CS')
+        yield self.write("CS")
         yield self.initialize()
 
     @inlineCallbacks
     def getFrequency(self):
-        freq = yield self.query('OK').addCallback(float)
+        freq = yield self.query("OK").addCallback(float)
         self.frequency = freq * Hz
         returnValue(self.frequency)
 
     @inlineCallbacks
     def getPower(self):
-        self.power = (yield self.query('OR').addCallback(float)) * dBm
+        self.power = (yield self.query("OR").addCallback(float)) * dBm
         returnValue(self.power)
 
     @inlineCallbacks
     def getOutput(self):
-        yield self.write('OM')
+        yield self.write("OM")
         status = yield self.read_raw()
         self.output = bool(ord(status[6]) & 32)
         returnValue(self.output)
@@ -151,21 +151,21 @@ class HP8341BWrapper(ReadRawGPIBDeviceWrapper):
     @inlineCallbacks
     def setFrequency(self, freq):
         if self.frequency != freq:
-            yield self.write('CW%sGZ' % str(freq['GHz']))
+            yield self.write("CW%sGZ" % str(freq["GHz"]))
             # Ensure that the frequency is set properly.
             self.frequency = yield self.getFrequency()
 
     @inlineCallbacks
     def setPower(self, pwr):
         if self.power != pwr:
-            yield self.write('PL%sDB' % str(pwr['dBm']))
+            yield self.write("PL%sDB" % str(pwr["dBm"]))
             # Ensure that the power is set properly.
             self.power = yield self.getPower()
 
     @inlineCallbacks
     def setOutput(self, out):
         if self.output != bool(out):
-            yield self.write('RF%s' % str(int(out)))
+            yield self.write("RF%s" % str(int(out)))
             # Ensure that the output is set properly.
             self.output = yield self.getOutput()
 
@@ -173,50 +173,53 @@ class HP8341BWrapper(ReadRawGPIBDeviceWrapper):
 class HP8673EWrapper(HP8341BWrapper):
     @inlineCallbacks
     def getFrequency(self):
-        freq = yield self.query('OK')
+        freq = yield self.query("OK")
         self.frequency = float(freq.strip(string.ascii_letters)) * Hz
         returnValue(self.frequency)
 
     @inlineCallbacks
     def getPower(self):
-        pwr = yield self.query('LEOA')
+        pwr = yield self.query("LEOA")
         self.power = float(pwr.strip(string.ascii_letters)) * dBm
         returnValue(self.power)
 
     @inlineCallbacks
     def setPower(self, pwr):
         if self.power != pwr:
-            yield self.write('LE%sDB' % str(pwr['dBm']))
+            yield self.write("LE%sDB" % str(pwr["dBm"]))
             # Ensure that the power is set properly.
             self.power = yield self.getPower()
 
     @inlineCallbacks
     def reset(self):
         HP8341BWrapper.reset(self)
-        yield self.write('RF0')
+        yield self.write("RF0")
 
     @inlineCallbacks
     def initialize(self):
         HP8341BWrapper.initialize(self)
-        yield self.write('RF0')
+        yield self.write("RF0")
 
 
 class RFGeneratorServer(GPIBManagedServer):
     """This server provides basic control for microwave generators."""
-    name = 'GPIB RF Generators'
-    deviceWrappers = {'HEWLETT-PACKARD 83620A': HP83620AWrapper,
-                      'HEWLETT-PACKARD 83711B': HP83712BWrapper,
-                      'HEWLETT-PACKARD 83712B': HP83712BWrapper,
-                      'HEWLETT-PACKARD 8340B': HP8341BWrapper,
-                      'HEWLETT-PACKARD 8341B': HP8341BWrapper,
-                      'HEWLETT-PACKARD 8673E': HP8673EWrapper}
 
-    @setting(9, 'Reset')
+    name = "GPIB RF Generators"
+    deviceWrappers = {
+        "HEWLETT-PACKARD 83620A": HP83620AWrapper,
+        "HEWLETT-PACKARD 83711B": HP83712BWrapper,
+        "HEWLETT-PACKARD 83712B": HP83712BWrapper,
+        "HEWLETT-PACKARD 8340B": HP8341BWrapper,
+        "HEWLETT-PACKARD 8341B": HP8341BWrapper,
+        "HEWLETT-PACKARD 8673E": HP8673EWrapper,
+    }
+
+    @setting(9, "Reset")
     def reset(self, c):
         """Reset the RF generator."""
         yield self.selectedDevice(c).reset()
 
-    @setting(10, 'Frequency', freq='v[Hz]', returns='v[Hz]')
+    @setting(10, "Frequency", freq="v[Hz]", returns="v[Hz]")
     def frequency(self, c, freq=None):
         """Get or set the CW frequency."""
         dev = self.selectedDevice(c)
@@ -224,7 +227,7 @@ class RFGeneratorServer(GPIBManagedServer):
             yield dev.setFrequency(freq)
         returnValue(dev.frequency)
 
-    @setting(11, 'Power', pwr='v[dBm]', returns='v[dBm]')
+    @setting(11, "Power", pwr="v[dBm]", returns="v[dBm]")
     def power(self, c, pwr=None):
         """Get or set the CW power."""
         dev = self.selectedDevice(c)
@@ -232,7 +235,7 @@ class RFGeneratorServer(GPIBManagedServer):
             yield dev.setPower(pwr)
         returnValue(dev.power)
 
-    @setting(12, 'Output', on='b', returns='b')
+    @setting(12, "Output", on="b", returns="b")
     def output(self, c, on=None):
         """Get or set the RF generator output state (on/off)."""
         dev = self.selectedDevice(c)
@@ -244,5 +247,5 @@ class RFGeneratorServer(GPIBManagedServer):
 __server__ = RFGeneratorServer()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     util.runServer(__server__)

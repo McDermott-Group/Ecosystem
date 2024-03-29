@@ -1,8 +1,9 @@
 import sys
-sys.dont_write_bytecode = True
-import MGui             # Handles all gui operations. Independent of labrad.
 
-#from PyQt4 import QtCore, QtGui
+sys.dont_write_bytecode = True
+import MGui  # Handles all gui operations. Independent of labrad.
+
+# from PyQt4 import QtCore, QtGui
 
 from Device import Device
 from multiprocessing.pool import ThreadPool
@@ -12,14 +13,18 @@ import labrad.units as units
 from dataChestWrapper import *
 import time
 from tendo import singleton
+
+
 class nViewer:
     gui = None
-    devices =[]
-    
-    def __init__(self, parent = None):
-        # Establish a connection to 
+    devices = []
+
+    def __init__(self, parent=None):
+        # Establish a connection to
         try:
-            me = singleton.SingleInstance() # will sys.exit(-1) if other instance is running
+            me = (
+                singleton.SingleInstance()
+            )  # will sys.exit(-1) if other instance is running
         except:
             print("Multiple instances cannot be running")
             time.sleep(2)
@@ -36,12 +41,12 @@ class nViewer:
             print("Please start the telecomm server")
             time.sleep(3)
             sys.exit(1)
-        
+
         laser = Device("Laser Endpoint Monitor")
         laser.connection(cxn)
 
         laser.setServerName("goldstein_s_laser_endpoint_monitor")
-        laser.addParameter("Voltage","get_reading", None)
+        laser.addParameter("Voltage", "get_reading", None)
         laser.selectDeviceCommand("select_device", 0)
 
         laser.addPlot()
@@ -51,13 +56,14 @@ class nViewer:
         laser.begin()
         self.devices.append(laser)
 
-
         # Create the gui
         self.gui = MGui.MGui()
         self.gui.setRefreshRate(0.02)
-        self.gui.startGui(self.devices, 'Laser Endpoint System Gui', 'Laser Endpoint Data', tele)
-        
-        
+        self.gui.startGui(
+            self.devices, "Laser Endpoint System Gui", "Laser Endpoint Data", tele
+        )
+
+
 # In phython, the main class's __init__() IS NOT automatically called
-viewer = nViewer()  
+viewer = nViewer()
 viewer.__init__()

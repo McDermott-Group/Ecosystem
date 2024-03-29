@@ -53,23 +53,26 @@ import serial.tools.list_ports
 
 class NoPortSelectedError(Error):
     """Please open a port first."""
+
     code = 1
 
 
 class NoPortsAvailableError(Error):
     """No serial ports are available."""
+
     code = 3
 
 
-SerialDevice = collections.namedtuple('SerialDevice', ['name', 'devicepath'])
+SerialDevice = collections.namedtuple("SerialDevice", ["name", "devicepath"])
 
 
 class SerialServer(LabradServer):
     """Provides access to a computer's serial (COM) ports."""
-    name = '%LABRADNODE% Serial Server'
+
+    name = "%LABRADNODE% Serial Server"
 
     def initServer(self):
-        if sys.platform.startswith('win32'):
+        if sys.platform.startswith("win32"):
             self.enumerate_serial_windows()
         else:
             self.enumerate_serial_pyserial()
@@ -86,22 +89,22 @@ class SerialServer(LabradServer):
         http://stackoverflow.com/questions/12090503/listing-available-com-ports-with-python
         """
         self.SerialPorts = []
-        print('Searching for COM ports:')
+        print("Searching for COM ports:")
         for a in range(1, 25):
             COMexists = True
-            dev_name = 'COM{}'.format(a)
-            dev_path = r'\\.\{}'.format(dev_name)
+            dev_name = "COM{}".format(a)
+            dev_path = r"\\.\{}".format(dev_name)
             try:
                 ser = Serial(dev_name)
                 ser.close()
             except SerialException as e:
-                if e.message.find('cannot find') >= 0:
+                if e.args[0].find("cannot find") >= 0:
                     COMexists = False
             if COMexists:
                 self.SerialPorts.append(SerialDevice(dev_name, dev_path))
                 print("  ", dev_name)
         if not len(self.SerialPorts):
-            print('  none')
+            print("  none")
 
     def enumerate_serial_pyserial(self):
         """This uses the pyserial built-in device enumeration.
@@ -128,17 +131,16 @@ class SerialServer(LabradServer):
                 self.SerialPorts.append(SerialDevice(dev_name, dev_path))
 
     def expireContext(self, c):
-        if 'PortObject' in c:
-            c['PortObject'].close()
+        if "PortObject" in c:
+            c["PortObject"].close()
 
     def getPort(self, c):
         try:
-            return c['PortObject']
+            return c["PortObject"]
         except:
             raise NoPortSelectedError()
 
-    @setting(1, 'List Serial Ports',
-             returns=['*s: List of serial ports'])
+    @setting(1, "List Serial Ports", returns=["*s: List of serial ports"])
     def list_serial_ports(self, c):
         """Retrieves a list of all serial ports.
 
@@ -150,11 +152,13 @@ class SerialServer(LabradServer):
 
         return port_list
 
-    @setting(10, 'Open',
-             port=[': Open the first available port',
-                   's: Port to open, e.g. COM4'],
-             returns=['s: Opened port'])
-    def open(self, c, port=''):
+    @setting(
+        10,
+        "Open",
+        port=[": Open the first available port", "s: Port to open, e.g. COM4"],
+        returns=["s: Opened port"],
+    )
+    def open(self, c, port=""):
         """Opens a serial port in the current context.
 
         args:
@@ -166,44 +170,45 @@ class SerialServer(LabradServer):
         /dev/ prefix.  This is case insensitive on windows, case sensitive
         on Linux.  For compatibility, always use the same case.
         """
-        c['Timeout'] = 0
-        if 'PortObject' in c:
-            c['PortObject'].close()
-            del c['PortObject']
+        c["Timeout"] = 0
+        if "PortObject" in c:
+            c["PortObject"].close()
+            del c["PortObject"]
         if not port:
             for i in range(len(self.SerialPorts)):
                 try:
-                    c['PortObject'] = Serial(self.SerialPorts[i].devicepath,
-                                             timeout=0)
+                    c["PortObject"] = Serial(self.SerialPorts[i].devicepath, timeout=0)
                     break
                 except SerialException:
                     pass
-            if 'PortObject' not in c:
+            if "PortObject" not in c:
                 raise NoPortsAvailableError()
         else:
             for x in self.SerialPorts:
                 if os.path.normcase(x.name) == os.path.normcase(port):
                     try:
-                        c['PortObject'] = Serial(x.devicepath, timeout=0)
+                        c["PortObject"] = Serial(x.devicepath, timeout=0)
                         return x.name
                     except SerialException as e:
-                        if e.message.find('cannot find') >= 0:
-                            raise Error(code=1, msg=e.message)
+                        if e.args[0].find("cannot find") >= 0:
+                            raise Error(code=1, msg=e.args[0])
                         else:
-                            raise Error(code=2, msg=e.message)
-        raise Error(code=1, msg='Unknown port %s' % (port,))
+                            raise Error(code=2, msg=e.args[0])
+        raise Error(code=1, msg="Unknown port %s" % (port,))
 
-    @setting(11, 'Close', returns=[''])
+    @setting(11, "Close", returns=[""])
     def close(self, c):
         """Closes the current serial port."""
-        if 'PortObject' in c:
-            c['PortObject'].close()
-            del c['PortObject']
+        if "PortObject" in c:
+            c["PortObject"].close()
+            del c["PortObject"]
 
-    @setting(20, 'Baudrate',
-             data=[': List baudrates',
-                   'w: Set baudrate (0: query current)'],
-             returns=['w: Selected baudrate', '*w: Available baudrates'])
+    @setting(
+        20,
+        "Baudrate",
+        data=[": List baudrates", "w: Set baudrate (0: query current)"],
+        returns=["w: Selected baudrate", "*w: Available baudrates"],
+    )
     def baudrate(self, c, data=None):
         """Sets the baudrate."""
         ser = self.getPort(c)
@@ -215,11 +220,12 @@ class SerialServer(LabradServer):
                 ser.baudrate = data
             return int(ser.baudrate)
 
-    @setting(21, 'Bytesize',
-             data=[': List bytesizes',
-                   'w: Set bytesize (0: query current)'],
-             returns=['*w: Available bytesizes',
-                      'w: Selected bytesize'])
+    @setting(
+        21,
+        "Bytesize",
+        data=[": List bytesizes", "w: Set bytesize (0: query current)"],
+        returns=["*w: Available bytesizes", "w: Selected bytesize"],
+    )
     def bytesize(self, c, data=None):
         """Sets the bytesize."""
         ser = self.getPort(c)
@@ -231,11 +237,12 @@ class SerialServer(LabradServer):
                 ser.bytesize = data
             return int(ser.bytesize)
 
-    @setting(22, 'Parity',
-             data=[': List parities',
-                   's: Set parity (empty: query current)'],
-             returns=['*s: Available parities',
-                      's: Selected parity'])
+    @setting(
+        22,
+        "Parity",
+        data=[": List parities", "s: Set parity (empty: query current)"],
+        returns=["*s: Available parities", "s: Selected parity"],
+    )
     def parity(self, c, data=None):
         """Sets the parity."""
         ser = self.getPort(c)
@@ -248,11 +255,12 @@ class SerialServer(LabradServer):
                 ser.parity = data
             return ser.parity
 
-    @setting(23, 'Stopbits',
-             data=[': List stopbits',
-                   'w: Set stopbits (0: query current)'],
-             returns=['*w: Available stopbits',
-                      'w: Selected stopbits'])
+    @setting(
+        23,
+        "Stopbits",
+        data=[": List stopbits", "w: Set stopbits (0: query current)"],
+        returns=["*w: Available stopbits", "w: Selected stopbits"],
+    )
     def stopbits(self, c, data=None):
         """Sets the number of stop bits."""
         ser = self.getPort(c)
@@ -264,52 +272,55 @@ class SerialServer(LabradServer):
                 ser.stopbits = data
             return int(ser.stopbits)
 
-    @setting(25, 'Timeout',
-             data=[': Return immediately',
-                   'v[s]: Timeout to use (max: 5min)'],
-             returns=['v[s]: Timeout being used (0 for immediate return)'])
-    def timeout(self, c, data=T.Value(0, 's')):
+    @setting(
+        25,
+        "Timeout",
+        data=[": Return immediately", "v[s]: Timeout to use (max: 5min)"],
+        returns=["v[s]: Timeout being used (0 for immediate return)"],
+    )
+    def timeout(self, c, data=T.Value(0, "s")):
         """Sets a timeout for read operations."""
-        c['Timeout'] = min(data['s'], 300)
-        return T.Value(c['Timeout'], 's')
+        c["Timeout"] = min(data["s"], 300)
+        return T.Value(c["Timeout"], "s")
 
-    @setting(30, 'RTS', data=['b'], returns=['b'])
+    @setting(30, "RTS", data=["b"], returns=["b"])
     def RTS(self, c, data):
         """Sets the state of the RTS line."""
         ser = self.getPort(c)
         ser.rts = int(data)
         return data
 
-    @setting(31, 'DTR', data=['b'], returns=['b'])
+    @setting(31, "DTR", data=["b"], returns=["b"])
     def DTR(self, c, data):
         """Sets the state of the DTR line."""
         ser = self.getPort(c)
         ser.dtr = int(data)
         return data
 
-    @setting(40, 'Write',
-             data=['s: Data to send',
-                   '*w: Byte-data to send'],
-             returns=['w: Bytes sent'])
+    @setting(
+        40,
+        "Write",
+        data=["s: Data to send", "*w: Byte-data to send"],
+        returns=["w: Bytes sent"],
+    )
     def write(self, c, data):
         """Sends data over the port."""
         ser = self.getPort(c)
         if not isinstance(data, str):
-            data = ''.join(chr(x & 255) for x in data)
-        ser.write(data)
+            data = "".join(chr(x & 255) for x in data)
+        ser.write(data.encode())
         return int(len(data))
 
-    @setting(41, 'Write Line', data=['s: Data to send'],
-             returns=['w: Bytes sent'])
+    @setting(41, "Write Line", data=["s: Data to send"], returns=["w: Bytes sent"])
     def write_line(self, c, data):
         """Sends data over the port appending CR LF."""
         ser = self.getPort(c)
-        ser.write(data + '\r\n')
+        ser.write(data + "\r\n")
         return int(len(data) + 2)
 
-    @setting(42, 'Pause', duration='v[s]: Time to pause', returns=[])
+    @setting(42, "Pause", duration="v[s]: Time to pause", returns=[])
     def pause(self, c, duration):
-        _ = yield deferLater(reactor, duration['s'], lambda: None)
+        _ = yield deferLater(reactor, duration["s"], lambda: None)
         return
 
     @inlineCallbacks
@@ -323,7 +334,7 @@ class SerialServer(LabradServer):
                     return d
                 sleep(0.01)
                 if time.time() > stop_time:
-                    return ''
+                    return ""
 
         data = yield threads.deferToThread(doRead, count)
         returnValue(data)
@@ -333,7 +344,7 @@ class SerialServer(LabradServer):
         killit = False
 
         def doRead(count):
-            d = ''
+            d = ""
             while not killit:
                 d = ser.read(count)
                 if d:
@@ -350,8 +361,8 @@ class SerialServer(LabradServer):
         if r == timeout_object:
             elapsed = time.time() - start_time
             print("deferredRead timed out after {} seconds".format(elapsed))
-            r = ''
-        if r == '':
+            r = ""
+        if r == "":
             r = ser.read(count)
 
         returnValue(r)
@@ -363,25 +374,28 @@ class SerialServer(LabradServer):
         if count == 0:
             returnValue(ser.read(10000))
 
-        timeout = c['Timeout']
+        timeout = c["Timeout"]
         if timeout == 0:
             returnValue(ser.read(count))
 
-        recd = ''
+        recd = ""
         while len(recd) < count:
             r = ser.read(count - len(recd))
-            if r == '':
+            if r == "":
                 r = yield self.deferredRead(ser, timeout, count - len(recd))
-                if r == '':
+                if r == "":
                     ser.close()
                     ser.open()
                     break
             recd += r
         returnValue(recd)
 
-    @setting(50, 'Read', count=[': Read all bytes in buffer',
-                                'w: Read this many bytes'],
-             returns=['s: Received data'])
+    @setting(
+        50,
+        "Read",
+        count=[": Read all bytes in buffer", "w: Read this many bytes"],
+        returns=["s: Received data"],
+    )
     def read(self, c, count=0):
         """Read data from the port.
 
@@ -393,44 +407,50 @@ class SerialServer(LabradServer):
         """
         return self.readSome(c, count)
 
-    @setting(51, 'Read as Words',
-             data=[': Read all bytes in buffer',
-                   'w: Read this many bytes'],
-             returns=['*w: Received data'])
+    @setting(
+        51,
+        "Read as Words",
+        data=[": Read all bytes in buffer", "w: Read this many bytes"],
+        returns=["*w: Received data"],
+    )
     def read_as_words(self, c, data=0):
         """Read data from the port."""
         ans = yield self.readSome(c, data)
         returnValue([int(ord(x)) for x in ans])
 
-    @setting(52, 'Read Line',
-             data=[': Read until LF, ignoring CRs',
-                   's: Other delimiter to use'],
-             returns=['s: Received data'])
-    def read_line(self, c, data=''):
+    @setting(
+        52,
+        "Read Line",
+        data=[": Read until LF, ignoring CRs", "s: Other delimiter to use"],
+        returns=["s: Received data"],
+    )
+    def read_line(self, c, data=""):
         """Read data from the port, up to but not including the specified
         delimiter."""
         ser = self.getPort(c)
-        timeout = c['Timeout']
+        timeout = c["Timeout"]
 
         if data:
-            delim, skip = data, ''
+            delim, skip = data, ""
         else:
-            delim, skip = '\n', '\r'
+            delim, skip = "\n", "\r"
 
-        recd = ''
+        recd = ""
         while True:
             r = ser.read(1)
-            if r == '' and timeout > 0:
+            if r == "" and timeout > 0:
                 # only try a deferred read if there is a timeout
                 r = yield self.deferredRead(ser, timeout)
-            if r in ('', delim):
+            if r in ("", delim):
                 break
             if r != skip:
-                recd += r
+                recd += r.decode("utf8")
         returnValue(recd)
+
 
 __server__ = SerialServer()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from labrad import util
+
     util.runServer(__server__)

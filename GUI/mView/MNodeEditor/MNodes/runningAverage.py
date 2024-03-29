@@ -14,9 +14,8 @@ class runningAverage(MNode):
 
     def begin(self, *args, **kwargs):
         super(runningAverage, self).begin()
-        self.input = self.addAnchor(name='data', type='input', data='float')
-        self.output = self.addAnchor(
-            name='running avg', type='output', data='float')
+        self.input = self.addAnchor(name="data", type="input", data="float")
+        self.output = self.addAnchor(name="running avg", type="output", data="float")
         # print "added anchor:", self.input
         # print "added anchor:", self.output
         self.setTitle("Running Avg")
@@ -30,14 +29,14 @@ class runningAverage(MNode):
         t1 = time.time()
         # print "here a"
         self.data.append(self.input.getData())
-        self.data = self.data[-self.window::]
+        self.data = self.data[-self.window : :]
         # print "self.data in running average:", self.data
         # print "here b"
 
         # data1 = [del elem if elem == np.nan else elem for elem in data1 ]
         window = self.window
         # print "here c"
-        #data2 = list(filter(lambda a: a is not np.nan, data1[-window*2::]))
+        # data2 = list(filter(lambda a: a is not np.nan, data1[-window*2::]))
         # print "here d"
 
         try:
@@ -56,9 +55,8 @@ class runningAverage(MNode):
         # print "time to refreshData in runningAverage:", t2-t1
 
     def movingaverage(self, interval, window_size):
-
         # print "here d a"
         window = np.ones(int(window_size)) / float(window_size)
         # print "here d b"
-        return np.convolve(interval, window, mode='valid')
+        return np.convolve(interval, window, mode="valid")
         # print "here d c"

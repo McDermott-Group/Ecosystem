@@ -48,25 +48,25 @@ class SIM900Wrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, address):
         """Connect the the guage controller."""
-        print(('Connecting to "%s" on port "%s"...' %(server.name, address)))
+        print(('Connecting to "%s" on port "%s"...' % (server.name, address)))
         self.server = server
         self.ctx = server.context()
         self.address = address
-        # The following parameters match the default configuration of 
+        # The following parameters match the default configuration of
         # the Varian unit.
         p = self.packet()
         p.open(address)
         p.baudrate(9600)
         p.stopbits(1)
         p.bytesize(8)
-        p.parity('N')
+        p.parity("N")
         p.rts(False)
         p.timeout(2 * units.s)
         # Clear out the read buffer. This is necessary for some devices.
         p.read_line()
         p.close()
         yield p.send()
-        
+
     def packet(self):
         """Create a packet in our private context."""
         return self.server.packet(context=self.ctx)
@@ -74,27 +74,28 @@ class SIM900Wrapper(DeviceWrapper):
     def shutdown(self):
         """Disconnect from the serial port when we shut down."""
         return self.packet().close().send()
-     
+
     @inlineCallbacks
     def write_line(self, code):
-        code = code + '\n'
+        code = code + "\n"
         yield self.server.write_line(code, context=self.ctx)
         # yield self.server.write_line(code, context=self.ctx)
-        
-    @inlineCallbacks    
+
+    @inlineCallbacks
     def read_line(self):
         ans = yield self.server.read_line(context=self.ctx)
         returnValue(ans)
-        
-        
+
+
 class SIM900(DeviceServer):
     """Provides direct access to GPIB-enabled devices."""
-    name = 'SIM900 Serial'
-    deviceName = 'STANFORD RESEARCH SYSTEMS SIM900'
+
+    name = "SIM900 Serial"
+    deviceName = "STANFORD RESEARCH SYSTEMS SIM900"
     deviceWrapper = SIM900Wrapper
     defaultTimeout = 1.0 * units.s
-    
-    @inlineCallbacks  
+
+    @inlineCallbacks
     def initServer(self):
         self.mydevices = {}
         yield self.loadConfigInfo()
@@ -108,7 +109,7 @@ class SIM900(DeviceServer):
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.client.registry()
-        yield reg.cd(['', 'Servers', 'SIM900 Serial', 'Links'], True)
+        yield reg.cd(["", "Servers", "SIM900 Serial", "Links"], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -117,7 +118,7 @@ class SIM900(DeviceServer):
         self.serialLinks = {k: ans[k] for k in keys}
         print(self.serialLinks)
 
-    @inlineCallbacks    
+    @inlineCallbacks
     def findDevices(self):
         """Find available devices from a list stored in the registry."""
         devs = []
@@ -128,19 +129,19 @@ class SIM900(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '{} - {}'.format(server, port)
+            devName = "{} - {}".format(server, port)
             devs += [(name, (server, port))]
         returnValue(devs)
-        
+
     # @inlineCallbacks
     # def handleDeviceMessage(self, *args):
-        # """We override this function so that whenever a new SIM900 is
-        # added, and a message is sent out, we refresh the devices. This
-        # has the benefit of being able to start this server, the
-        # GPIB Device Manager, and the GPIB Bus Server, in any order."""
-        # yield GPIBManagedServer.handleDeviceMessage(self, *args)
-        # if args[0] == self.deviceName:
-            # self.refreshDevices()
+    # """We override this function so that whenever a new SIM900 is
+    # added, and a message is sent out, we refresh the devices. This
+    # has the benefit of being able to start this server, the
+    # GPIB Device Manager, and the GPIB Bus Server, in any order."""
+    # yield GPIBManagedServer.handleDeviceMessage(self, *args)
+    # if args[0] == self.deviceName:
+    # self.refreshDevices()
 
     @inlineCallbacks
     def refreshDevices(self):
@@ -148,7 +149,7 @@ class SIM900(DeviceServer):
         Refresh the list of known devices (modules) in the SIM900
         mainframe.
         """
-        print('Refreshing devices...')
+        print("Refreshing devices...")
         addresses = []
         IDs, names = self.deviceLists()
         # return
@@ -162,35 +163,35 @@ class SIM900(DeviceServer):
                 return
             p.open(dev.address)
             # p.write_line('*RST')
-            p.write_line('*CLS')
-            p.write_line('FLSH')#.write_line('SRST')
-            p.write_line('CTCR?').pause(0.1*units.s).read_line()
+            p.write_line("*CLS")
+            p.write_line("FLSH")  # .write_line('SRST')
+            p.write_line("CTCR?").pause(0.1 * units.s).read_line()
             p.close()
-            statusStr = (yield p.send())['read_line']
+            statusStr = (yield p.send())["read_line"]
             # Ask the SIM900 which slots have an active module, and only
             # deal with those.
-            statusCodes = [bool(int(x))
-                           for x in "{0:016b}".format(int(statusStr))]
+            statusCodes = [bool(int(x)) for x in "{0:016b}".format(int(statusStr))]
             statusCodes.reverse()
             for i in range(1, 9):  # slots 1-8 in rack
                 if statusCodes[i]:  # added or changed
                     # Ex: mcdermott5125 GPIB Bus - GPIB0::2[::INSTR]::SIM900::4
-                    devName = ('::'.join(SIM900addr.split(' - ')
-                                         [-1].split('::')[:-1] +
-                                         ['SIM900', str(i)]))
-                    devName = '%s::SIM900::%s' % (SIM900addr, str(i))
+                    devName = "::".join(
+                        SIM900addr.split(" - ")[-1].split("::")[:-1]
+                        + ["SIM900", str(i)]
+                    )
+                    devName = "%s::SIM900::%s" % (SIM900addr, str(i))
                     addresses.append(devName)
         additions = set(addresses) - set(self.mydevices.keys())
         deletions = set(self.mydevices.keys()) - set(addresses)
         # Get the visa instruments, changing the read/write/query
         # commands to work for only the correct slot in the SIM900.
         for addr in additions:
-            instName = addr.split(' - ')[-1].rsplit('::', 2)[0]
+            instName = addr.split(" - ")[-1].rsplit("::", 2)[0]
             self.mydevices[addr] = instName
-            self.sendDeviceMessage('GPIB Device Connect', addr)
+            self.sendDeviceMessage("GPIB Device Connect", addr)
         for addr in deletions:
             del self.mydevices[addr]
-            self.sendDeviceMessage('GPIB Device Disconnect', addr)
+            self.sendDeviceMessage("GPIB Device Disconnect", addr)
 
     def getSocketsList(self):
         """Get a list of all connected devices.
@@ -202,27 +203,27 @@ class SIM900(DeviceServer):
         return self.rm.list_resources()
 
     def sendDeviceMessage(self, msg, addr):
-        print(('%s: %s' % (msg, addr)))
+        print(("%s: %s" % (msg, addr)))
         self.client.manager.send_named_message(msg, (self.name, addr))
 
     def initContext(self, c):
-        c['timeout'] = self.defaultTimeout
+        c["timeout"] = self.defaultTimeout
 
     def escapeString(self):
         chars = string.ascii_uppercase + string.ascii_lowercase
-        return 'xZy' + ''.join(random.choice(chars) for _ in range(3))
+        return "xZy" + "".join(random.choice(chars) for _ in range(3))
 
-    @setting(19, returns='*s')
+    @setting(19, returns="*s")
     def list_addresses(self, c):
         """Get a list of GPIB addresses on this bus."""
         return sorted(self.mydevices.keys())
 
-    @setting(21, returns='*?')
+    @setting(21, returns="*?")
     def refresh_devices(self, c):
-        '''Manually refresh devices.'''
+        """Manually refresh devices."""
         yield self.refreshDevices()
 
-    @setting(20, addr='s', returns='s')
+    @setting(20, addr="s", returns="s")
     def address(self, c, addr=None):
         """Get or set the GPIB address for this context.
 
@@ -230,31 +231,31 @@ class SIM900(DeviceServer):
         use the list_devices function.
         """
         if addr is not None:
-            c['addr'] = addr
-        return c['addr']
+            c["addr"] = addr
+        return c["addr"]
 
-    @setting(22, time='v[s]', returns='v[s]')
+    @setting(22, time="v[s]", returns="v[s]")
     def timeout(self, c, time=None):
         """Get or set the GPIB timeout."""
         if time is not None:
-            c['timeout'] = time
-        return c['timeout']
+            c["timeout"] = time
+        return c["timeout"]
 
-    @setting(23, data='s', returns='')
+    @setting(23, data="s", returns="")
     def write(self, c, data):
         """Write a string to the GPIB bus."""
         # print c['addr'], data
-        if 'addr' not in c:
+        if "addr" not in c:
             raise DeviceNotSelectedError("No GPIB address selected")
-        if c['addr'] not in self.mydevices:
-            raise Exception('Could not find device %s' % c['addr'])
+        if c["addr"] not in self.mydevices:
+            raise Exception("Could not find device %s" % c["addr"])
         # Ex: mcdermott5125 GPIB Bus - GPIB0::2::SIM900::4
-        dev = self.devices[c['addr'].split('::')[0]]
+        dev = self.devices[c["addr"].split("::")[0]]
         # gpibBusServName = c['addr'].split(' - ')[0]
-        slot = c['addr'][-1]
+        slot = c["addr"][-1]
         p = dev.packet()
         p.open(dev.address)
-        p.timeout(c['timeout'])
+        p.timeout(c["timeout"])
         escape = self.escapeString()
         p.write_line("CONN %s,'%s'" % (slot, escape))
         p.write_line(data)
@@ -262,85 +263,85 @@ class SIM900(DeviceServer):
         p.close()
         p.send()
 
-    @setting(24, bytes='w', returns='s')
+    @setting(24, bytes="w", returns="s")
     def read_raw(self, c, bytes=None):
         """Read a raw string from the GPIB bus.
 
         If specified, reads only the given number of bytes.
         Otherwise, reads until the device stops sending.
         """
-        if 'addr' not in c:
+        if "addr" not in c:
             raise DeviceNotSelectedError("No GPIB address selected")
-        if c['addr'] not in self.mydevices:
-            raise Exception('Could not find device %s' % c['addr'])
+        if c["addr"] not in self.mydevices:
+            raise Exception("Could not find device %s" % c["addr"])
         # Ex: mcdermott5125 GPIB Bus - GPIB0::2::SIM900::4
-        dev = self.devices[c['addr'].split('::')[0]]
+        dev = self.devices[c["addr"].split("::")[0]]
         # gpibBusServName = c['addr'].split(' - ')[0]
-        slot = c['addr'][-1]
+        slot = c["addr"][-1]
         p = self.client[gpibBusServName].packet()
-        p.address(self.mydevices[c['addr']])
-        p.timeout(c['timeout'])
+        p.address(self.mydevices[c["addr"]])
+        p.timeout(c["timeout"])
         escape = self.escapeString()
         p.write("CONN %s,'%s'" % (str(slot), escape))
         p.read_raw(bytes)
         p.write(escape)
         p.close()
         resp = yield p.send()
-        returnValue(resp['read_raw'])
+        returnValue(resp["read_raw"])
 
-    @setting(25, returns='s')
+    @setting(25, returns="s")
     def read(self, c):
         """Read from the GPIB bus."""
-        if 'addr' not in c:
+        if "addr" not in c:
             raise DeviceNotSelectedError("No GPIB address selected")
-        if c['addr'] not in self.mydevices:
-            raise Exception('Could not find device %s' % c['addr'])
+        if c["addr"] not in self.mydevices:
+            raise Exception("Could not find device %s" % c["addr"])
         # Ex: mcdermott5125 GPIB Bus - GPIB0::2::SIM900::4
-        dev = self.devices[c['addr'].split('::')[0]]
+        dev = self.devices[c["addr"].split("::")[0]]
         # gpibBusServName = c['addr'].split(' - ')[0]
-        slot = c['addr'][-1]
+        slot = c["addr"][-1]
         p = dev.packet()
         p.open(dev.address)
-        p.timeout(c['timeout'])
+        p.timeout(c["timeout"])
         escape = self.escapeString()
         p.write_line("CONN %s,'%s'" % (slot, escape))
         p.read_line()
         p.write_line(escape)
         p.close()
         resp = yield p.send()
-        returnValue(resp['read_line'])
+        returnValue(resp["read_line"])
 
-    @setting(26, data='s', returns='s')
+    @setting(26, data="s", returns="s")
     def query(self, c, data):
         """Make a GPIB query.
 
         This query is atomic. No other communication to the
         device will occur while the query is in progress.
         """
-        if 'addr' not in c:
+        if "addr" not in c:
             raise DeviceNotSelectedError("No GPIB address selected")
-        if c['addr'] not in self.mydevices:
-            raise Exception('Could not find device %s' % c['addr'])
+        if c["addr"] not in self.mydevices:
+            raise Exception("Could not find device %s" % c["addr"])
         # Ex: mcdermott5125 GPIB Bus - GPIB0::2::SIM900::4
-        dev = self.devices[c['addr'].split('::')[0]]
+        dev = self.devices[c["addr"].split("::")[0]]
         # gpibBusServName = c['addr'].split(' - ')[0]
-        slot = c['addr'][-1]
+        slot = c["addr"][-1]
         p = dev.packet()
         p.open(dev.address)
-        p.timeout(c['timeout'])
+        p.timeout(c["timeout"])
         escape = self.escapeString()
         p.write_line("CONN %s,'%s'" % (slot, escape))
         p.write_line(data)
-        p.pause(0.1*units.s)
+        p.pause(0.1 * units.s)
         p.read_line()
         p.write_line(escape)
         p.close()
         resp = yield p.send()
-        returnValue(resp['read_line'])
+        returnValue(resp["read_line"])
 
 
 __server__ = SIM900()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     util.runServer(__server__)

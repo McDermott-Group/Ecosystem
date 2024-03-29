@@ -31,15 +31,15 @@ from MReadout import MReadout
 
 
 class MAnchor(object):
-    def __init__(self, name, node, index,  parent=None, **kwargs):
+    def __init__(self, name, node, index, parent=None, **kwargs):
         # Get the keyword arguments
-        self.type = kwargs.get('type', 'output')
-        self.suggestedDataType = kwargs.get('data', None)
+        self.type = kwargs.get("type", "output")
+        self.suggestedDataType = kwargs.get("data", None)
         self.node = node
         # get the tree.
         self.tree = node.tree
-       # self.nodeLayout = node.getNodeLayout()
-        #self.nodeFrame= node.getNodeWidget()
+        # self.nodeLayout = node.getNodeLayout()
+        # self.nodeFrame= node.getNodeWidget()
         # Initialize the base class.
         super(MAnchor, self).__init__()
         # No pipe connected on instatiation.
@@ -58,19 +58,19 @@ class MAnchor(object):
         self.propagate = True
 
     def parentNode(self):
-        '''Return the node that the anchor belongs to.'''
+        """Return the node that the anchor belongs to."""
         return self.parent
 
     def setParentNode(self, node):
-        '''Set the parent node.'''
+        """Set the parent node."""
         self.parent = node
 
     def getType(self):
-        '''Get the anchor type'''
+        """Get the anchor type"""
         return self.type
 
     def getPipes(self):
-        '''Get the pipe connected to the anchor'''
+        """Get the pipe connected to the anchor"""
         return self.pipes
 
     def setPipes(self, pipes):
@@ -82,18 +82,17 @@ class MAnchor(object):
     def pipeConnected(self, pipe):
         # print "anchor->pipeConnected:", pipe
         # self.addPipe(pipe)
-        if self.getType() == 'output':
+        if self.getType() == "output":
             self.setData(self.data)
         else:
             self.data = pipe.getData()
 
     # def update(self):
-        # if self.parentNode().isDevice:
-            # self.parentNode().getDevice().updateContainer()
-        # self.graphicsItem.refresh()
+    # if self.parentNode().isDevice:
+    # self.parentNode().getDevice().updateContainer()
+    # self.graphicsItem.refresh()
 
     def getData(self):
-
         if len(self.pipes) != 0:
             return self.getPipes()[0].getData()
         else:
@@ -106,7 +105,7 @@ class MAnchor(object):
 
     def setMetaData(self, metadata):
         for pipe in self.pipes:
-            if pipe != None and self.type == 'output':
+            if pipe != None and self.type == "output":
                 pipe.setMetaData(metadata)
 
             self.metadata = metadata
@@ -116,15 +115,15 @@ class MAnchor(object):
 
     def setData(self, data, **kwargs):
         # print "anchor", self, "set data called"
-        holdRefresh = kwargs.get('hold_refresh', False)
+        holdRefresh = kwargs.get("hold_refresh", False)
         self.data = data
         if not holdRefresh:
             for pipe in self.pipes:
-                if pipe != None and self.type == 'output':
+                if pipe != None and self.type == "output":
                     # print "Anchor", self, "of", self.parent, "setting pipe
                     # data"
                     pipe.setData(data)
-                if self.type == 'input':
+                if self.type == "input":
                     # print "Input anchor", self.parentNode()
                     # print "propagateData:", self.propagate
                     if self.propagate:
@@ -137,11 +136,12 @@ class MAnchor(object):
                         pass
 
         # self.lcd.display(data)
+
     def propogateRefresh():
         self.setData(self.data)
 
     def disconnect(self):
-        '''Disconnect and delete the pipe'''
+        """Disconnect and delete the pipe"""
         self.tree.deletePipe(self.pipe)
 
     def connect(self, pipe):

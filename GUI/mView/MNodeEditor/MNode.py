@@ -30,16 +30,16 @@ class MNode(object):
     # Attribute that lets MView find this MNode
 
     def __init__(self, *args, **kwargs):
-        '''Initialize the new node.'''
+        """Initialize the new node."""
         web.nodes.append(self)
         self.tree = None
         self.anchors = []
         self.callAnchorAdded = False
 
-    def begin(self,  *args,  **kwargs):
-        ''' Create a new node. Calls onBegin of 
-       child if child has overridden onBegin().
-   '''
+    def begin(self, *args, **kwargs):
+        """Create a new node. Calls onBegin of
+        child if child has overridden onBegin().
+        """
         self.onBegin()
         pass
 
@@ -76,18 +76,20 @@ class MNode(object):
         return self.anchors
 
     def addAnchor(self, anchor=None, **kwargs):
-        propagate = not kwargs.get('terminate', False)
+        propagate = not kwargs.get("terminate", False)
         if anchor == None:
-            name = kwargs.get('name', None)
-            type = kwargs.get('type', None)
-            suggestedData = kwargs.get('data', None)
+            name = kwargs.get("name", None)
+            type = kwargs.get("type", None)
+            suggestedData = kwargs.get("data", None)
 
             if name == None or type == None:
                 raise RuntimeError(
-                    "If no anchor is passed to MNode.addAnchor(), then \'name\', \'type\' keyword arguments must be given.")
+                    "If no anchor is passed to MNode.addAnchor(), then 'name', 'type' keyword arguments must be given."
+                )
 
-            anchor = MAnchor(name, self, len(self.anchors),
-                             type=type, data=suggestedData)  # adds itself
+            anchor = MAnchor(
+                name, self, len(self.anchors), type=type, data=suggestedData
+            )  # adds itself
         anchor.propagateData(propagate)
         self.anchors.append(anchor)
         self.anchorAdded(anchor, **kwargs)

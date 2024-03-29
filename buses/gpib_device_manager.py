@@ -38,44 +38,51 @@ from twisted.internet.defer import DeferredList, DeferredLock
 from twisted.internet.reactor import callLater
 
 from labrad.server import LabradServer, setting, inlineCallbacks, returnValue, Signal
-from labrad.units import Unit,Value
+from labrad.units import Unit, Value
 from labrad.types import Error as LRError
 
-UNKNOWN = '<unknown>'
+UNKNOWN = "<unknown>"
 
-def parseIDNResponse(s, idn_cmd='*IDN?'):
+
+def parseIDNResponse(s, idn_cmd="*IDN?"):
     """
     Parse the response from *IDN? or 'ID?' to get mfr and model info
     in the "MANUFACTURER MODEL" format.
     """
-    if s is not None and s != '':
-        if idn_cmd == '*IDN?':
-            mfr, model, ver, rev = s.upper().split(',')
-            print(("mfr.replace('_', ' ') + ' ' + model=", mfr.replace('_', ' ') + ' ' + model))
-            return mfr.replace('_', ' ') + ' ' + model
-        elif idn_cmd == 'ID?':
-            return s.upper().split(',')[0]
-        elif idn_cmd == 'OI':
-            model = s.strip(string.whitespace).split('REV')[0]
+    if s is not None and s != "":
+        if idn_cmd == "*IDN?":
+            mfr, model, ver, rev = s.upper().split(",")
+            print(
+                (
+                    "mfr.replace('_', ' ') + ' ' + model=",
+                    mfr.replace("_", " ") + " " + model,
+                )
+            )
+            return mfr.replace("_", " ") + " " + model
+        elif idn_cmd == "ID?":
+            return s.upper().split(",")[0]
+        elif idn_cmd == "OI":
+            model = s.strip(string.whitespace).split("REV")[0]
             # HP8341B response string is expected to be similar to
             # "08341BREV 01 AUG 86".
-            if model == '08341B':
-                return 'HEWLETT-PACKARD 8341B'
+            if model == "08341B":
+                return "HEWLETT-PACKARD 8341B"
             # HP8340B response string is expected to be similar to
             # "08340BREV07 APR 92".
-            elif model == '08340B':
-                return 'HEWLETT-PACKARD 8340B'
+            elif model == "08340B":
+                return "HEWLETT-PACKARD 8340B"
             # HP8673E response string is expected to be similar to
             # "8673".
-            elif model == '8673':
-                return 'HEWLETT-PACKARD 8673E'
+            elif model == "8673":
+                return "HEWLETT-PACKARD 8673E"
             else:
-                return s.strip(string.whitespace).split('REV')[0]
-        elif idn_cmd == 'ID;':
-            return 'HP8593A'
-                
+                return s.strip(string.whitespace).split("REV")[0]
+        elif idn_cmd == "ID;":
+            return "HP8593A"
+
     else:
         return UNKNOWN
+
 
 class GPIBDeviceManager(LabradServer):
     """Manages autodetection and identification of GPIB devices.
@@ -88,19 +95,20 @@ class GPIBDeviceManager(LabradServer):
     servers can register an identification setting to be called
     by the device manager to properly identify the device.
     """
-    name = 'GPIB Device Manager'
+
+    name = "GPIB Device Manager"
 
     # signal for when devices are hanged
-    connectionChangedEvent = Signal(123456, 'device connection changed', '?')
+    connectionChangedEvent = Signal(123456, "device connection changed", "?")
     # signals have to be called in init, not initServer
 
     @inlineCallbacks
     def initServer(self):
         """Initialize the server after connecting to LabRAD."""
-        self.knownDevices = {} # maps (server, channel) to (name, idn)
-        self.deviceServers = {} # maps device name to list of interested servers.
-                        # each interested server is {'target':<>,'context':<>,'messageID':<>}
-        self.identFunctions = {} # maps server to (setting, ctx) for ident
+        self.knownDevices = {}  # maps (server, channel) to (name, idn)
+        self.deviceServers = {}  # maps device name to list of interested servers.
+        # each interested server is {'target':<>,'context':<>,'messageID':<>}
+        self.identFunctions = {}  # maps server to (setting, ctx) for ident
         self.identLock = DeferredLock()
 
         # named messages are sent with source ID first, which we ignore
@@ -110,8 +118,8 @@ class GPIBDeviceManager(LabradServer):
         mgr = self.client.manager
         self._cxn.addListener(connect_func, source=mgr.ID, ID=10)
         self._cxn.addListener(disconnect_func, source=mgr.ID, ID=11)
-        yield mgr.subscribe_to_named_message('GPIB Device Connect', 10, True)
-        yield mgr.subscribe_to_named_message('GPIB Device Disconnect', 11, True)
+        yield mgr.subscribe_to_named_message("GPIB Device Connect", 10, True)
+        yield mgr.subscribe_to_named_message("GPIB Device Disconnect", 11, True)
 
         # do an initial scan of the available GPIB devices
         yield self.refreshDeviceLists()
@@ -119,25 +127,32 @@ class GPIBDeviceManager(LabradServer):
     @inlineCallbacks
     def refreshDeviceLists(self):
         """Ask all GPIB bus servers for their available GPIB devices."""
-        servers = [s for n, s in list(self.client.servers.items())
-                     if (('GPIB Bus' in n) or ('gpib_bus' in n) or ('sim900' in n) or ('SIM900' in n)) and \
-                        (('List Addresses' in s.settings) or \
-                         ('list_addresses' in s.settings))]
+        servers = [
+            s
+            for n, s in list(self.client.servers.items())
+            if (
+                ("GPIB Bus" in n)
+                or ("gpib_bus" in n)
+                or ("sim900" in n)
+                or ("SIM900" in n)
+            )
+            and (("List Addresses" in s.settings) or ("list_addresses" in s.settings))
+        ]
         names = [s.name for s in servers]
-        print('Pinging servers:', names)
+        print("Pinging servers:", names)
         resp = yield DeferredList([s.list_addresses() for s in servers])
         for name, (success, addrs) in zip(names, resp):
             if not success:
-                print('Failed to get device list for:', name)
+                print("Failed to get device list for:", name)
             else:
-                print('Server %s has devices: %s' % (name, addrs))
+                print("Server %s has devices: %s" % (name, addrs))
                 for addr in addrs:
                     self.gpib_device_connect(name, addr)
 
     @inlineCallbacks
     def gpib_device_connect(self, server, channel):
         """Handle messages when devices connect."""
-        print('Device Connect:', server, channel)
+        print("Device Connect:", server, channel)
         if (server, channel) in self.knownDevices:
             return
         device, idnResult = yield self.lookupDeviceName(server, channel)
@@ -150,7 +165,7 @@ class GPIBDeviceManager(LabradServer):
 
     def gpib_device_disconnect(self, server, channel):
         """Handle messages when devices connect."""
-        print('Device Disconnect:', server, channel)
+        print("Device Disconnect:", server, channel)
         if (server, channel) not in self.knownDevices:
             return
         device, idnResult = self.knownDevices[server, channel]
@@ -168,35 +183,39 @@ class GPIBDeviceManager(LabradServer):
         to the identification query.  If the response cannot be parsed
         or the query fails, the name will be listed as '<unknown>'.
         """
-        for cls_cmd, idn_cmd in [('*CLS', '*IDN?'), ('', 'ID?'),
-                                 ('CS', 'OI'), ('', 'ID;')]:
-            if idn_cmd == 'ID;':
+        for cls_cmd, idn_cmd in [
+            ("*CLS", "*IDN?"),
+            ("", "ID?"),
+            ("CS", "OI"),
+            ("", "ID;"),
+        ]:
+            if idn_cmd == "ID;":
                 time.sleep(5)
             resp = None
             name = UNKNOWN
             p = self.client.servers[server].packet()
-            p.address(channel).timeout(Value(1,'s'))
+            p.address(channel).timeout(Value(1, "s"))
             p.write(cls_cmd).query(idn_cmd)
-            srv_ch = ''.join([str(server), " ", str(channel)])
-            print(("Sending '%s' to %s" %(idn_cmd, srv_ch)))
+            srv_ch = "".join([str(server), " ", str(channel)])
+            print(("Sending '%s' to %s" % (idn_cmd, srv_ch)))
             try:
                 resp = (yield p.send()).query
-                print(("received '%s' from %s" %(resp, idn_cmd)))
+                print(("received '%s' from %s" % (resp, idn_cmd)))
             except LRError as e:
-                if 'VisaIOError' in e.msg:
-                    resp = ''
-                    print(("No response to '%s' from %s" %(idn_cmd, srv_ch)))
+                if "VisaIOError" in e.msg:
+                    resp = ""
+                    print(("No response to '%s' from %s" % (idn_cmd, srv_ch)))
                     continue
             except Exception:
-                print(("No response to '%s' with command '%s'" %(idn_cmd, srv_ch)))
+                print(("No response to '%s' with command '%s'" % (idn_cmd, srv_ch)))
                 continue
             # Workaround for old-style devices.
-            if idn_cmd in ('*IDN?', 'ID?') and resp.find(',') == -1:
+            if idn_cmd in ("*IDN?", "ID?") and resp.find(",") == -1:
                 continue
             name = parseIDNResponse(resp, idn_cmd)
             if name != UNKNOWN:
-                print(("%s '%s' response: '%s'" %(srv_ch, idn_cmd, resp)))
-                print(("%s device name: '%s'" %(srv_ch, name)))
+                print(("%s '%s' response: '%s'" % (srv_ch, idn_cmd, resp)))
+                print(("%s device name: '%s'" % (srv_ch, name)))
                 break
         returnValue((name, resp))
 
@@ -205,6 +224,7 @@ class GPIBDeviceManager(LabradServer):
 
         Returns the first name returned by a successful identification.
         """
+
         @inlineCallbacks
         def _doIdentifyDevice():
             for identifier in list(self.identFunctions.keys()):
@@ -212,13 +232,15 @@ class GPIBDeviceManager(LabradServer):
                 if name is not None:
                     returnValue(name)
             returnValue(UNKNOWN)
+
         return self.identLock.run(_doIdentifyDevice)
 
     def identifyDevicesWithServer(self, identifier):
         """Try to identify all unknown devices with a new server."""
+
         @inlineCallbacks
         def _doServerIdentify():
-            #yield self.client.refresh()
+            # yield self.client.refresh()
             for (server, channel), (device, idn) in list(self.knownDevices.items()):
                 if device != UNKNOWN:
                     continue
@@ -228,6 +250,7 @@ class GPIBDeviceManager(LabradServer):
                 self.knownDevices[server, channel] = (name, idn)
                 if name in self.deviceServers:
                     self.notifyServers(name, server, channel, True)
+
         return self.identLock.run(_doServerIdentify)
 
     @inlineCallbacks
@@ -240,26 +263,58 @@ class GPIBDeviceManager(LabradServer):
         if identifier in self.identFunctions:
             s = self.client[identifier]
             setting, context = self.identFunctions[identifier]
-            print(("Trying to identify device " +  str(server) + " " + str(channel) + " on server " + str(identifier)))
+            print(
+                (
+                    "Trying to identify device "
+                    + str(server)
+                    + " "
+                    + str(channel)
+                    + " on server "
+                    + str(identifier)
+                )
+            )
             try:
                 if idn is None:
                     resp = yield s[setting](server, channel, context=context)
                 else:
                     resp = yield s[setting](server, channel, idn, context=context)
             except Exception:
-                print('Error while attempting to identify a device')
+                print("Error while attempting to identify a device")
                 returnValue(UNKNOWN)
 
             if resp is not None and resp != UNKNOWN:
-                print(("Server " + str(identifier) + ' identified device ' + str(server) +
-                      ' ' + str(channel) + ' as ' + str(resp)))
+                print(
+                    (
+                        "Server "
+                        + str(identifier)
+                        + " identified device "
+                        + str(server)
+                        + " "
+                        + str(channel)
+                        + " as "
+                        + str(resp)
+                    )
+                )
                 returnValue(resp)
             else:
-                print(("Server " + str(identifier) + ' could not identify device ' + str(server) + ' ' + str(channel)))
+                print(
+                    (
+                        "Server "
+                        + str(identifier)
+                        + " could not identify device "
+                        + str(server)
+                        + " "
+                        + str(channel)
+                    )
+                )
 
-    @setting(1, 'Register Server',
-             devices=['s', '*s'], messageID='w',
-             returns='*(s{device} s{server} s{address}, b{isConnected})')
+    @setting(
+        1,
+        "Register Server",
+        devices=["s", "*s"],
+        messageID="w",
+        returns="*(s{device} s{server} s{address}, b{isConnected})",
+    )
     def register_server(self, c, devices, messageID):
         """Register as a server that handles a particular GPIB device(s).
 
@@ -282,17 +337,19 @@ class GPIBDeviceManager(LabradServer):
         found = []
         for device in devices:
             servers = self.deviceServers.setdefault(device, [])
-            servers.append({'target': c.source,
-                            'context': c.ID,
-                            'messageID': messageID})
+            servers.append(
+                {"target": c.source, "context": c.ID, "messageID": messageID}
+            )
             # gather info about matching servers already connected
-            for (server, channel), (known_device, idnResult) in list(self.knownDevices.items()):
+            for (server, channel), (known_device, idnResult) in list(
+                self.knownDevices.items()
+            ):
                 if device != known_device:
                     continue
                 found.append((device, server, channel, True))
         return found
 
-    @setting(2, 'Register Ident Function', setting=['s', 'w'])
+    @setting(2, "Register Ident Function", setting=["s", "w"])
     def register_ident_function(self, c, setting):
         """Specify a setting to be called to identify devices.
 
@@ -318,18 +375,20 @@ class GPIBDeviceManager(LabradServer):
         This info includes currently known devices, registered device
         servers, and registered identification functions.
         """
-        return (str(self.knownDevices),
-                str(self.deviceServers),
-                str(self.identFunctions))
-                
+        return (
+            str(self.knownDevices),
+            str(self.deviceServers),
+            str(self.identFunctions),
+        )
+
     def notifyServers(self, device, server, channel, isConnected):
         """Notify all registered servers about a device status change and emit a
         signal saying a device connection has been changed in general."""
         message = (device, server, channel, isConnected)
         for s in self.deviceServers[device]:
-            rec = s['messageID'], message
-            print('Sending message:', s['target'], s['context'], [rec])
-            self.client._sendMessage(s['target'], [rec], context=s['context'])
+            rec = s["messageID"], message
+            print("Sending message:", s["target"], s["context"], [rec])
+            self.client._sendMessage(s["target"], [rec], context=s["context"])
         self.connectionChangedEvent(message)
 
     def serverConnected(self, ID, name):
@@ -345,25 +404,25 @@ class GPIBDeviceManager(LabradServer):
         # LabRAD manager at the time of execution.
         recognizeServer = False
         for device, serverInfo in list(self.deviceServers.items()):
-            if serverInfo[0]['target'] == ID:
+            if serverInfo[0]["target"] == ID:
                 recognizeServer = True
         if recognizeServer:
             callLater(0, self.identifyDevicesWithServer, ID)
 
     def serverDisconnected(self, ID, name):
         """Disconnect devices when a bus server disconnects."""
-        for (server, channel) in list(self.knownDevices.keys()):
+        for server, channel in list(self.knownDevices.keys()):
             if server == name:
                 self.gpib_device_disconnect(server, channel)
 
     def expireContext(self, c):
         """Stop sending notifications when a context expires."""
-        print('Expiring context:', c.ID)
+        print("Expiring context:", c.ID)
         # device servers
         deletions = []
         for device, servers in list(self.deviceServers.items()):
             # remove all registrations with this context
-            servers = [s for s in servers if s['context'] != c.ID]
+            servers = [s for s in servers if s["context"] != c.ID]
             self.deviceServers[device] = servers
             # if no one is left listening to this device, delete the list
             if not len(servers):
@@ -383,8 +442,10 @@ class GPIBDeviceManager(LabradServer):
         for src in deletions:
             del self.identFunctions[src]
 
+
 __server__ = GPIBDeviceManager()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from labrad import util
+
     util.runServer(__server__)

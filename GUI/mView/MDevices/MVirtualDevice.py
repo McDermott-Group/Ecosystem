@@ -28,9 +28,9 @@ from MWeb import web
 class MVirtualDevice(MDevice.MDevice):
     def __init__(self, *args, **kwargs):
         super(MVirtualDevice, self).__init__(*args)
-        yLabel = kwargs.get("yLabel", '')
-        custUnits = kwargs.get("units", '')
-       # print "SETTING Y LABEL", yLabel, kwargs
+        yLabel = kwargs.get("yLabel", "")
+        custUnits = kwargs.get("units", "")
+        # print "SETTING Y LABEL", yLabel, kwargs
         self.frame.setYLabel(yLabel, custUnits)
 
         # print "args:", args
@@ -39,16 +39,16 @@ class MVirtualDevice(MDevice.MDevice):
         self.begin(auto_refresh_node=False)
 
     def onBegin(self):
-       # print "--------beginning virt device---------"
+        # print "--------beginning virt device---------"
         self.log(True)
 
     # def addParameter(self, *args, **kwargs):
-        # name = args[0]
-        # units = kwargs.get("units", None)
-        # precision = kwargs.get("precision", 2)
-        # self.frame.nicknames.append(name)
-        # self.frame.units.append(units)
-        # self.frame.precisions.append(precision)
+    # name = args[0]
+    # units = kwargs.get("units", None)
+    # precision = kwargs.get("precision", 2)
+    # self.frame.nicknames.append(name)
+    # self.frame.units.append(units)
+    # self.frame.precisions.append(precision)
     def addButton(self, *args, **kwargs):
         pass
 
@@ -58,11 +58,10 @@ class MVirtualDevice(MDevice.MDevice):
         self.configureDataLogging()
 
     def setYLabel(self, yLbl, **kwargs):
-        units = kwargs.get(units, '')
+        units = kwargs.get(units, "")
         self.frame.setYLabel(yLbl, units)
 
     def query(self, *args):
-
         pass
 
     def setRefreshRate(self, *args):

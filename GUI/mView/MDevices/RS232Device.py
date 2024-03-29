@@ -22,18 +22,21 @@ __status__ = "Beta"
 
 # Import the parent class
 from MDevice import MDevice
+
 # We will use the pyserial class to interface with COM ports.
 import serial
 import time
+
 # Traceback is good for printing errors and debugging.
 import traceback
+
 # Import necessary Qt libraries
 from PyQt4 import QtGui
 
 
 class RS232Device(MDevice):
     def __init__(self, *args, **kwargs):
-        '''Initialize variables. Most of the device parameters cannot yet be initialized.'''
+        """Initialize variables. Most of the device parameters cannot yet be initialized."""
         super(RS232Device, self).__init__(*args, **kwargs)
         # The name of the device is passed as the first argument.
         self.name = args[0]
@@ -94,8 +97,7 @@ class RS232Device(MDevice):
             # Our warning message text is in the 3rd element of our array.
             msg.setText(button[2])
             # Add ok and cancel buttons.
-            msg.setStandardButtons(QtGui.QMessageBox.Ok |
-                                   QtGui.QMessageBox.Cancel)
+            msg.setStandardButtons(QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
             # The window title.
             msg.setWindowTitle("Warning")
             # Execute the class and retrieve the value clicked.
@@ -111,23 +113,24 @@ class RS232Device(MDevice):
             self.port.write(button[1])
 
     def setPort(self, portname, timeout=10):
-        '''Set the name of the port. i.e. COMx. Keyword args: timeout = 10.'''
+        """Set the name of the port. i.e. COMx. Keyword args: timeout = 10."""
         self.portname = portname
         self.timeout = timeout
 
-    def setYLabel(self, yLbl, units=''):
-        '''Set the label to be displayed on the independent variable axis.'''
+    def setYLabel(self, yLbl, units=""):
+        """Set the label to be displayed on the independent variable axis."""
         self.frame.setYLabel(yLbl, units)
 
     def onBegin(self):
-        '''Begin the device.'''
+        """Begin the device."""
         self.connect()
 
     def connect(self):
-        '''Open the serial port and try to connect to it.'''
+        """Open the serial port and try to connect to it."""
         try:
-            self.port = serial.Serial(self.portname, int(
-                self.baud), timeout=self.timeout, write_timeout=10)
+            self.port = serial.Serial(
+                self.portname, int(self.baud), timeout=self.timeout, write_timeout=10
+            )
             self.connected = True
             return self.port
         except:
@@ -137,11 +140,11 @@ class RS232Device(MDevice):
             return None
 
     def query(self):
-        '''The query function is called with a period defined 
-        by MDevice.frame.getRefreshRate().  At the end it 
-        should set the readings by calling self.frame.setReadings([readings]). 
+        """The query function is called with a period defined
+        by MDevice.frame.getRefreshRate().  At the end it
+        should set the readings by calling self.frame.setReadings([readings]).
         Where [readings] is an array of readings.
-    '''
+        """
         try:
             readings = []
             if not self.connected:
@@ -155,18 +158,18 @@ class RS232Device(MDevice):
                     # Flush anything that might on the port.
                     self.port.flush()
                     # Write the command to the port.
-                    command = self.paramInfo[param]['command']
+                    command = self.paramInfo[param]["command"]
                     if command != None:
-                        self.port.write(self.paramInfo[param]['command'])
+                        self.port.write(self.paramInfo[param]["command"])
                         # Wait while there is nothing on the port.
-                        while(not self.port.in_waiting > 0):
+                        while not self.port.in_waiting > 0:
                             time.sleep(0.01)
                         # While there is stuff on the port, read it.
                         reading = self.port.readline()
                         # Strip whitespace and newline characters off the
                         # received value.
                         reading = int(reading.strip())
-                    # Tell the device what the readings were.
+                        # Tell the device what the readings were.
                         self.setReading(param, reading)
         except:
             try:
@@ -178,7 +181,7 @@ class RS232Device(MDevice):
             pass
 
     def close(self):
-        '''Stop the device. This includes closing the port.'''
+        """Stop the device. This includes closing the port."""
         try:
             self.port.close()
         except:

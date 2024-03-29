@@ -6,28 +6,32 @@ from labrad.units import GS, MS, s, mV, V, ns
 import time
 
 # some useful lists and mappings to AlazarTech defined constants
-INPUT_VOLTAGE_RANGES = [ats.INPUT_RANGE_PM_4_V,
-                        ats.INPUT_RANGE_PM_2_V,
-                        ats.INPUT_RANGE_PM_1_V,
-                        ats.INPUT_RANGE_PM_400_MV,
-                        ats.INPUT_RANGE_PM_200_MV,
-                        ats.INPUT_RANGE_PM_100_MV,
-                        ats.INPUT_RANGE_PM_40_MV]
-INPUT_COUPLINGS = {'DC Coupled': ats.DC_COUPLING,
-                   'AC Coupled': ats.AC_COUPLING}
+INPUT_VOLTAGE_RANGES = [
+    ats.INPUT_RANGE_PM_4_V,
+    ats.INPUT_RANGE_PM_2_V,
+    ats.INPUT_RANGE_PM_1_V,
+    ats.INPUT_RANGE_PM_400_MV,
+    ats.INPUT_RANGE_PM_200_MV,
+    ats.INPUT_RANGE_PM_100_MV,
+    ats.INPUT_RANGE_PM_40_MV,
+]
+INPUT_COUPLINGS = {"DC Coupled": ats.DC_COUPLING, "AC Coupled": ats.AC_COUPLING}
 CHANNEL_IDS = [ats.CHANNEL_A, ats.CHANNEL_B]
 DISABLE_BW_LIMIT = 0
-BANDWIDTH_FLAGS = {'Enable BW Limit': 1,
-                   'Disable BW Limit': 0}
-CLOCK_SOURCE_IDS = [ats.INTERNAL_CLOCK, ats.SLOW_EXTERNAL_CLOCK,
-                    ats.EXTERNAL_CLOCK_AC, ats.EXTERNAL_CLOCK_10MHz_REF]
+BANDWIDTH_FLAGS = {"Enable BW Limit": 1, "Disable BW Limit": 0}
+CLOCK_SOURCE_IDS = [
+    ats.INTERNAL_CLOCK,
+    ats.SLOW_EXTERNAL_CLOCK,
+    ats.EXTERNAL_CLOCK_AC,
+    ats.EXTERNAL_CLOCK_10MHz_REF,
+]
 MINIMUM_NUMBER_OF_SAMPLES = 256
 BITS_PER_SAMPLE = 8  # 8-bit digitizer
 BYTES_PER_SAMPLE = 1
 MAXIMUM_BUFFER_SIZE = 64 * 2**20  # 64 MB
 NUMBER_OF_CHANNELS = 2
 ADC_INPUT_IMPEDANCE = ats.IMPEDANCE_50_OHM
-MAX_SAMPLING_RATE = 1 * GS/s
+MAX_SAMPLING_RATE = 1 * GS / s
 NUMBER_OF_PRE_TRIGGER_SAMPLES = 0  # ==> NPT asynch AutoDMA mode
 CHANNEL_LOGIC_FOR_A_AND_B = 3  # acquire data on both channels (A & B)
 
@@ -67,9 +71,16 @@ class ADC(object):
         trigger_delay (labrad.units.Value): The time delay between when the
             trigger is received and when data acquisition begins.
     """
-    def __init__(self, number_of_triggers, demodulation_time,
-                 input_voltage_range, sampling_rate, trigger_level,
-                 trigger_delay):
+
+    def __init__(
+        self,
+        number_of_triggers,
+        demodulation_time,
+        input_voltage_range,
+        sampling_rate,
+        trigger_level,
+        trigger_delay,
+    ):
         """Configure an adc_board_handle with user specified settings.
 
         Note that this object can be re-used to avoid the timing overhead
@@ -107,18 +118,24 @@ class ADC(object):
                 the trigger is received and when data acquisition begins.
         """
         self.adc_board_handle = self.create_adc_board_handle()
-        self.sampling_rate = \
-            self.configure_adc_sampling_rate(sampling_rate)
-        self.input_voltage_range = \
-            self.configure_adc_input_settings(input_voltage_range)
-        self.trigger_delay = \
-            self.configure_adc_trigger_settings(trigger_level, trigger_delay)
-        (self.number_of_triggers, self.number_of_samples_per_trigger,
-         self.number_of_triggers_per_buffer, self.number_of_recycled_buffers) \
-            = self.compute_adc_memory_requirements(number_of_triggers,
-                                                   demodulation_time)
-        self.records_buffer, self.dma_buffers, self.iq_buffers = \
-            self.configure_adc_buffers()
+        self.sampling_rate = self.configure_adc_sampling_rate(sampling_rate)
+        self.input_voltage_range = self.configure_adc_input_settings(
+            input_voltage_range
+        )
+        self.trigger_delay = self.configure_adc_trigger_settings(
+            trigger_level, trigger_delay
+        )
+        (
+            self.number_of_triggers,
+            self.number_of_samples_per_trigger,
+            self.number_of_triggers_per_buffer,
+            self.number_of_recycled_buffers,
+        ) = self.compute_adc_memory_requirements(number_of_triggers, demodulation_time)
+        (
+            self.records_buffer,
+            self.dma_buffers,
+            self.iq_buffers,
+        ) = self.configure_adc_buffers()
         self.reshaped_records_buffer = None
 
     def create_adc_board_handle(self):
@@ -131,22 +148,26 @@ class ADC(object):
         """
         number_of_board_systems = ats.numOfSystems()
         if number_of_board_systems > 1:
-            raise Exception('This library was written assuming one'
-                            'ADC per computer. Use with multiple ADCs'
-                            '(with or without SyncBoards) will require '
-                            'changes.')
-        number_of_adcs_in_board_system = \
-            ats.boardsInSystemBySystemID(number_of_board_systems)
+            raise Exception(
+                "This library was written assuming one"
+                "ADC per computer. Use with multiple ADCs"
+                "(with or without SyncBoards) will require "
+                "changes."
+            )
+        number_of_adcs_in_board_system = ats.boardsInSystemBySystemID(
+            number_of_board_systems
+        )
         if number_of_adcs_in_board_system > 1:
-            raise Exception('This library was written assuming one'
-                            'ADC per computer. Use with multiple ADCs'
-                            '(with or without SyncBoards) will require '
-                            'significant changes to this library.')
+            raise Exception(
+                "This library was written assuming one"
+                "ADC per computer. Use with multiple ADCs"
+                "(with or without SyncBoards) will require "
+                "significant changes to this library."
+            )
         adc_board_handle = ats.Board(systemId=1, boardId=1)
         board_type = ats.boardNames[adc_board_handle.type]
-        if board_type != 'ATS9870':
-            raise Exception("Only ATS9870 board types are supported"
-                            "by this library.")
+        if board_type != "ATS9870":
+            raise Exception("Only ATS9870 board types are supported" "by this library.")
         return adc_board_handle
 
     def configure_adc_sampling_rate(self, sampling_rate):
@@ -168,25 +189,34 @@ class ADC(object):
             this topic.
 
         """
-        if sampling_rate['S/s'] in [250e6, 500e6, 1e9] or \
-                not ((MAX_SAMPLING_RATE['GS/s']/sampling_rate['GS/s']) % 10):
-            decimation_factor = \
-                int(np.ceil(MAX_SAMPLING_RATE['MS/s']/sampling_rate['MS/s']))
-            print(("decimation_factor=", decimation_factor))   
+        if sampling_rate["S/s"] in [250e6, 500e6, 1e9] or not (
+            (MAX_SAMPLING_RATE["GS/s"] / sampling_rate["GS/s"]) % 10
+        ):
+            decimation_factor = int(
+                np.ceil(MAX_SAMPLING_RATE["MS/s"] / sampling_rate["MS/s"])
+            )
+            print(("decimation_factor=", decimation_factor))
             decimation_factor = 1
         else:
-            raise Exception("Please use a sampling rate that is 1 GS/s, "
-                            "500 MS/s, 250 MS/s or 1 GS/s divided by any "
-                            "multiple of 10.")
-        self.adc_board_handle.setCaptureClock(ats.EXTERNAL_CLOCK_10MHz_REF,
-                                              sampling_rate['S/s'], #MAX_SAMPLING_RATE['S/s'],
-                                              ats.CLOCK_EDGE_RISING,
-                                              decimation_factor)
+            raise Exception(
+                "Please use a sampling rate that is 1 GS/s, "
+                "500 MS/s, 250 MS/s or 1 GS/s divided by any "
+                "multiple of 10."
+            )
+        self.adc_board_handle.setCaptureClock(
+            ats.EXTERNAL_CLOCK_10MHz_REF,
+            sampling_rate["S/s"],  # MAX_SAMPLING_RATE['S/s'],
+            ats.CLOCK_EDGE_RISING,
+            decimation_factor,
+        )
         return sampling_rate
 
-    def configure_adc_input_settings(self, input_voltage_range,
-                                     input_coupling=ats.DC_COUPLING,
-                                     bandwidth_limit_flag=DISABLE_BW_LIMIT):
+    def configure_adc_input_settings(
+        self,
+        input_voltage_range,
+        input_coupling=ats.DC_COUPLING,
+        bandwidth_limit_flag=DISABLE_BW_LIMIT,
+    ):
         """Configures the input BW, voltage range, and impedance of the ADC.
 
         Note 1: we generally operate the ADC with both channels DC coupled.
@@ -212,48 +242,53 @@ class ADC(object):
             input_voltage_range specified by the user.
 
         """
-        if input_voltage_range['mV'] > 4000:
+        if input_voltage_range["mV"] > 4000:
             raise Exception("Maximum input voltage range is 4 Volts.")
-        elif input_voltage_range['mV'] < 40:
+        elif input_voltage_range["mV"] < 40:
             raise Exception("Minimum input voltage range is 40 milliVolts.")
         else:
-            available_ranges_in_milli_volts = \
-                [4000, 2000, 1000, 400, 200, 100, 40]
+            available_ranges_in_milli_volts = [4000, 2000, 1000, 400, 200, 100, 40]
 
             def find_min_position(array, offset):
-                plus_array = [elem for elem in array if elem-offset >= 0]
+                plus_array = [elem for elem in array if elem - offset >= 0]
                 min_elem = min(plus_array)
                 return min_elem, array.index(min_elem)
 
-            min_positive_value, min_positive_index = \
-                find_min_position(available_ranges_in_milli_volts,
-                                  input_voltage_range['mV'])
-            input_voltage_range_as_ats_constant = \
-                INPUT_VOLTAGE_RANGES[min_positive_index]
-            input_voltage_range = \
+            min_positive_value, min_positive_index = find_min_position(
+                available_ranges_in_milli_volts, input_voltage_range["mV"]
+            )
+            input_voltage_range_as_ats_constant = INPUT_VOLTAGE_RANGES[
+                min_positive_index
+            ]
+            input_voltage_range = (
                 available_ranges_in_milli_volts[min_positive_index] * mV
+            )
         if input_voltage_range_as_ats_constant not in INPUT_VOLTAGE_RANGES:
-            raise Exception("input_range must be in INPUT_VOLTAGE_RANGES." +
-                            str(input_voltage_range))
+            raise Exception(
+                "input_range must be in INPUT_VOLTAGE_RANGES."
+                + str(input_voltage_range)
+            )
         if input_coupling not in [ats.DC_COUPLING, ats.AC_COUPLING]:
             raise Exception("input_coupling must be either AC or DC coupled.")
         if bandwidth_limit_flag not in [0, 1]:
-            raise Exception("Acceptable values for the bandwidth_limit_flag "
-                            "are: (i) 0 ==> Disabled or (ii) 1 ==> enabled.")
+            raise Exception(
+                "Acceptable values for the bandwidth_limit_flag "
+                "are: (i) 0 ==> Disabled or (ii) 1 ==> enabled."
+            )
 
         for channel_id in CHANNEL_IDS:
             self.adc_board_handle.inputControlEx(
                 channel_id,
                 input_coupling,
                 input_voltage_range_as_ats_constant,
-                ADC_INPUT_IMPEDANCE)
+                ADC_INPUT_IMPEDANCE,
+            )
             self.adc_board_handle.setBWLimit(channel_id, bandwidth_limit_flag)
         return input_voltage_range
 
-    def configure_adc_trigger_settings(self,
-                                       trigger_level,
-                                       trigger_delay,
-                                       timeout_ticks=0):
+    def configure_adc_trigger_settings(
+        self, trigger_level, trigger_delay, timeout_ticks=0
+    ):
         """Configures the trigger level, delay, logic, and timeout settings.
 
         Note: we implicitly assume a single-engine rising edge trigger, i.e.
@@ -279,17 +314,17 @@ class ADC(object):
 
         """
         # 0 ==> wait forever for a trigger event see pg. 223
-        if trigger_level['V'] > 5.0:
+        if trigger_level["V"] > 5.0:
             raise Exception("The trigger level must be between 0 and 5 Volts.")
-        trigger_level = 128 + int(127. * trigger_level['V']/5.) # see pg. 220
+        trigger_level = 128 + int(127.0 * trigger_level["V"] / 5.0)  # see pg. 220
         # see AlazarSetTriggerOperation on pg. 218 of SDK
-        trigger_delay_in_samples = \
-            int(trigger_delay['s'] * self.sampling_rate['S/s'])
-        trigger_delay = (trigger_delay_in_samples/self.sampling_rate['S/s']) \
-            * s
+        trigger_delay_in_samples = int(trigger_delay["s"] * self.sampling_rate["S/s"])
+        trigger_delay = (trigger_delay_in_samples / self.sampling_rate["S/s"]) * s
         if trigger_delay_in_samples < 0 or trigger_delay_in_samples > 9999999:
-            raise Exception("The trigger delay in units of ADC samples must "
-                            "be >= 0 and <= 9,999,999.")
+            raise Exception(
+                "The trigger delay in units of ADC samples must "
+                "be >= 0 and <= 9,999,999."
+            )
         e1 = self.adc_board_handle.setTriggerOperation(
             ats.TRIG_ENGINE_OP_J,
             ats.TRIG_ENGINE_J,
@@ -297,16 +332,18 @@ class ADC(object):
             ats.TRIGGER_SLOPE_POSITIVE,
             trigger_level,
             ats.TRIG_ENGINE_K,
-            ats.TRIG_DISABLE, # using single trigger (enginer J) that triggers on on low-to-high logic
+            ats.TRIG_DISABLE,  # using single trigger (enginer J) that triggers on on low-to-high logic
             ats.TRIGGER_SLOPE_POSITIVE,
-            trigger_level)
-        self.adc_board_handle.setExternalTrigger(ats.DC_COUPLING, ats.ETR_5V) # only option is 5V entire range for ATS9870
+            trigger_level,
+        )
+        self.adc_board_handle.setExternalTrigger(
+            ats.DC_COUPLING, ats.ETR_5V
+        )  # only option is 5V entire range for ATS9870
         self.adc_board_handle.setTriggerDelay(trigger_delay_in_samples)
         self.adc_board_handle.setTriggerTimeOut(timeout_ticks)
         return trigger_delay
 
-    def compute_adc_memory_requirements(self, number_of_triggers,
-                                        demodulation_time):
+    def compute_adc_memory_requirements(self, number_of_triggers, demodulation_time):
         """Computes the actual number of triggers based on ADC requirements.
 
         Note 1: the number_of_triggers must be rounded in order to fill an
@@ -337,40 +374,46 @@ class ADC(object):
         if number_of_triggers > 65.5e3:
             raise Exception("The number of cycles must be < 65535 = 2**16-1.")
 
-        number_of_samples_per_trigger = int(demodulation_time['s'] *
-                                            self.sampling_rate['S/s'])
+        number_of_samples_per_trigger = int(
+            demodulation_time["s"] * self.sampling_rate["S/s"]
+        )
         if number_of_samples_per_trigger < MINIMUM_NUMBER_OF_SAMPLES:
             number_of_samples_per_trigger = MINIMUM_NUMBER_OF_SAMPLES
         else:
-            samples_above_required_minimum = \
+            samples_above_required_minimum = (
                 number_of_samples_per_trigger - MINIMUM_NUMBER_OF_SAMPLES
+            )
             if samples_above_required_minimum % 64:
                 div_64 = samples_above_required_minimum // 64 + 1
                 number_of_samples_per_trigger = 256 + 64 * div_64
 
         if not isinstance(number_of_triggers, int):
-            raise Exception('The number_of_records must be an integer.')
+            raise Exception("The number_of_records must be an integer.")
         if number_of_triggers < 1:
-            raise Exception('The number_of_records must be at least one.')
+            raise Exception("The number_of_records must be at least one.")
 
         bytes_per_trigger = number_of_samples_per_trigger * BYTES_PER_SAMPLE
-        memory_size = NUMBER_OF_CHANNELS * bytes_per_trigger * \
-            number_of_triggers
-        if memory_size < MAXIMUM_BUFFER_SIZE/20:
+        memory_size = NUMBER_OF_CHANNELS * bytes_per_trigger * number_of_triggers
+        if memory_size < MAXIMUM_BUFFER_SIZE / 20:
             number_of_triggers_per_buffer = number_of_triggers
             number_of_recycled_buffers = 1
         else:
             optimal_buffer_size = MAXIMUM_BUFFER_SIZE / 10
-            number_of_triggers_per_buffer = optimal_buffer_size / \
-                (NUMBER_OF_CHANNELS * bytes_per_trigger)
-            buffers_per_acquisition = \
-                (number_of_triggers - 1) // number_of_triggers_per_buffer + 1
-            number_of_triggers = buffers_per_acquisition * \
-                number_of_triggers_per_buffer
+            number_of_triggers_per_buffer = optimal_buffer_size / (
+                NUMBER_OF_CHANNELS * bytes_per_trigger
+            )
+            buffers_per_acquisition = (
+                number_of_triggers - 1
+            ) // number_of_triggers_per_buffer + 1
+            number_of_triggers = buffers_per_acquisition * number_of_triggers_per_buffer
             number_of_recycled_buffers = 3
 
-        return (number_of_triggers, number_of_samples_per_trigger,
-                number_of_triggers_per_buffer, number_of_recycled_buffers)
+        return (
+            number_of_triggers,
+            number_of_samples_per_trigger,
+            number_of_triggers_per_buffer,
+            number_of_recycled_buffers,
+        )
 
     def configure_adc_buffers(self):
         """Creates the necessary buffers for NPT AutoDMA acquisition.
@@ -387,26 +430,27 @@ class ADC(object):
             acquire_data method.
 
         """
-        total_number_of_samples = NUMBER_OF_CHANNELS * \
-                                  self.number_of_triggers * \
-                                  self.number_of_samples_per_trigger
+        total_number_of_samples = (
+            NUMBER_OF_CHANNELS
+            * self.number_of_triggers
+            * self.number_of_samples_per_trigger
+        )
         records_buffer = np.empty(total_number_of_samples, dtype=np.uint8)
 
-        bytes_per_trigger = self.number_of_samples_per_trigger * \
-                            BYTES_PER_SAMPLE
-        bytes_per_buffer = bytes_per_trigger * \
-                           self.number_of_triggers_per_buffer * \
-                           NUMBER_OF_CHANNELS
+        bytes_per_trigger = self.number_of_samples_per_trigger * BYTES_PER_SAMPLE
+        bytes_per_buffer = (
+            bytes_per_trigger * self.number_of_triggers_per_buffer * NUMBER_OF_CHANNELS
+        )
 
         sample_data_type = ctypes.c_uint8
         dma_buffers = []
         for ii in range(0, self.number_of_recycled_buffers):
-            dma_buffers.append(
-                ats.DMABuffer(sample_data_type, bytes_per_buffer))
+            dma_buffers.append(ats.DMABuffer(sample_data_type, bytes_per_buffer))
 
-        self.adc_board_handle.setRecordSize(NUMBER_OF_PRE_TRIGGER_SAMPLES,
-                                            self.number_of_samples_per_trigger)
-                                            
+        self.adc_board_handle.setRecordSize(
+            NUMBER_OF_PRE_TRIGGER_SAMPLES, self.number_of_samples_per_trigger
+        )
+
         iq_buffers = np.empty((self.number_of_triggers, 2), dtype=np.float32)
         print((type(dma_buffers[0])))
         return records_buffer, dma_buffers, iq_buffers
@@ -423,33 +467,39 @@ class ADC(object):
             self.number_of_samples_per_trigger,
             self.number_of_triggers_per_buffer,
             self.number_of_triggers,
-            ats.ADMA_EXTERNAL_STARTCAPTURE |
-            ats.ADMA_NPT)
+            ats.ADMA_EXTERNAL_STARTCAPTURE | ats.ADMA_NPT,
+        )
         # post dma buffers to ADC
         for dma_buffer in self.dma_buffers:
-            self.adc_board_handle.postAsyncBuffer(dma_buffer.addr,
-                                                  dma_buffer.size_bytes)
+            self.adc_board_handle.postAsyncBuffer(
+                dma_buffer.addr, dma_buffer.size_bytes
+            )
         number_of_buffers_acquired = 0
-        buffer_size = NUMBER_OF_CHANNELS * \
-            self.number_of_triggers_per_buffer * \
-            self.number_of_samples_per_trigger
+        buffer_size = (
+            NUMBER_OF_CHANNELS
+            * self.number_of_triggers_per_buffer
+            * self.number_of_samples_per_trigger
+        )
         self.adc_board_handle.startCapture()
-        total_number_of_buffers_to_fill = self.number_of_triggers \
-            / self.number_of_triggers_per_buffer
+        total_number_of_buffers_to_fill = (
+            self.number_of_triggers / self.number_of_triggers_per_buffer
+        )
         try:
-            while number_of_buffers_acquired < \
-                    total_number_of_buffers_to_fill:
-                dma_buffer = self.dma_buffers[number_of_buffers_acquired %
-                                              self.number_of_recycled_buffers]
-                self.adc_board_handle.waitAsyncBufferComplete(dma_buffer.addr,
-                                                              timeout_ms=10000)
+            while number_of_buffers_acquired < total_number_of_buffers_to_fill:
+                dma_buffer = self.dma_buffers[
+                    number_of_buffers_acquired % self.number_of_recycled_buffers
+                ]
+                self.adc_board_handle.waitAsyncBufferComplete(
+                    dma_buffer.addr, timeout_ms=10000
+                )
 
                 buffer_position = buffer_size * number_of_buffers_acquired
                 self.records_buffer[
-                    buffer_position:buffer_position + buffer_size] \
-                    = dma_buffer.buffer
-                self.adc_board_handle.postAsyncBuffer(dma_buffer.addr,
-                                                      dma_buffer.size_bytes)
+                    buffer_position : buffer_position + buffer_size
+                ] = dma_buffer.buffer
+                self.adc_board_handle.postAsyncBuffer(
+                    dma_buffer.addr, dma_buffer.size_bytes
+                )
                 number_of_buffers_acquired += 1
         except BaseException:
             raise
@@ -457,40 +507,49 @@ class ADC(object):
             self.adc_board_handle.abortAsyncRead()
         t1 = time.time()
         records_buffer_view = self.records_buffer.view()
-        records_buffer_view.shape = (total_number_of_buffers_to_fill,
-                                     NUMBER_OF_CHANNELS,
-                                     self.number_of_triggers_per_buffer,
-                                     self.number_of_samples_per_trigger)
-        records_buffer_view = np.rollaxis(records_buffer_view, 2, 1).\
-            reshape(self.number_of_triggers,
-                    NUMBER_OF_CHANNELS,
-                    self.number_of_samples_per_trigger)
+        records_buffer_view.shape = (
+            total_number_of_buffers_to_fill,
+            NUMBER_OF_CHANNELS,
+            self.number_of_triggers_per_buffer,
+            self.number_of_samples_per_trigger,
+        )
+        records_buffer_view = np.rollaxis(records_buffer_view, 2, 1).reshape(
+            self.number_of_triggers,
+            NUMBER_OF_CHANNELS,
+            self.number_of_samples_per_trigger,
+        )
 
-        self.reshaped_records_buffer = \
-            records_buffer_view.astype(np.float32, copy=False)
+        self.reshaped_records_buffer = records_buffer_view.astype(
+            np.float32, copy=False
+        )
         code_zero = float(1 << (BITS_PER_SAMPLE - 1)) - 0.5
         code_range = float(1 << (BITS_PER_SAMPLE - 1)) - 0.5
         self.reshaped_records_buffer -= code_zero
-        self.reshaped_records_buffer *= (self.input_voltage_range['V'] / code_range)
-        
+        self.reshaped_records_buffer *= self.input_voltage_range["V"] / code_range
+
     def get_records(self, trigger_number=0, number_of_triggers=1):
         return self.reshaped_records_buffer[trigger_number::number_of_triggers] * V
-        
+
     def get_average(self, trigger_number=0, number_of_triggers=1):
-        return np.mean(self.reshaped_records_buffer[trigger_number::number_of_triggers], axis=0) * V
-        
+        return (
+            np.mean(
+                self.reshaped_records_buffer[trigger_number::number_of_triggers], axis=0
+            )
+            * V
+        )
+
     def get_times(self):
         n = self.number_of_samples_per_trigger
-        f_s = self.sampling_rate['GS/s']
+        f_s = self.sampling_rate["GS/s"]
         t = np.linspace(0, n - 1, n)
         return (t / f_s) * ns
-        
+
     def get_iqs(self, ch_a_weight, ch_b_weight):
         n_samples_per_trigger = self.number_of_samples_per_trigger
         n_triggers = self.number_of_triggers
 
-        ch_a = ch_a_weight['']
-        ch_b = ch_b_weight['']
+        ch_a = ch_a_weight[""]
+        ch_b = ch_b_weight[""]
 
         ch_a_len = len(ch_a)
         if ch_a_len > n_samples_per_trigger:
@@ -504,12 +563,14 @@ class ADC(object):
         elif ch_b_len < n_samples_per_trigger:
             ch_b = np.hstack([ch_b, np.zeros(n_samples_per_trigger - ch_b_len)])
 
-        chs = np.stack([np.hstack([ch_a, ch_b]).T,
-                        np.hstack([-ch_b, ch_a]).T], axis=1)
+        chs = np.stack([np.hstack([ch_a, ch_b]).T, np.hstack([-ch_b, ch_a]).T], axis=1)
 
         try:
-            np.dot(self.reshaped_records_buffer.reshape(n_triggers, -1), np.float32(chs),
-                   self.iq_buffers)
+            np.dot(
+                self.reshaped_records_buffer.reshape(n_triggers, -1),
+                np.float32(chs),
+                self.iq_buffers,
+            )
         except Exception as e:
             # print(type(self.reshaped_records_buffer))
             # print 'n_triggers %d' % n_triggers

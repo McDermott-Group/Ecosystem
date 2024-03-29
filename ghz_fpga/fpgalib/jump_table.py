@@ -7,7 +7,7 @@ from fpgalib import fpga
 
 IDLE_NUM_BITS = 15
 IDLE_MIN_CYCLES = 0
-IDLE_MAX_CYCLES = (2 ** IDLE_NUM_BITS) - 1
+IDLE_MAX_CYCLES = (2**IDLE_NUM_BITS) - 1
 
 
 class JumpEntry(object):
@@ -21,7 +21,7 @@ class JumpEntry(object):
     """
 
     def __init__(self, from_addr, to_addr, operation):
-        """ Create a single jump table entry.
+        """Create a single jump table entry.
 
         :param int from_addr: the from address
         :param int to_addr: the to address (should be 0 if not used)
@@ -29,8 +29,7 @@ class JumpEntry(object):
         """
         if abs(from_addr - to_addr) - 1 == 0:
             raise ValueError(
-                "from_addr: {} and to_addr: {} are too close".format(
-                    from_addr, to_addr)
+                "from_addr: {} and to_addr: {} are too close".format(from_addr, to_addr)
             )
 
         self.from_addr = from_addr
@@ -41,7 +40,7 @@ class JumpEntry(object):
         f_str = "from_addr: %d" % self.from_addr
         t_str = "to_addr: %d" % self.to_addr
         op_str = str(self.operation)
-        return '\n'.join([f_str, t_str, op_str])
+        return "\n".join([f_str, t_str, op_str])
 
     def as_bytes(self):
         """Get a byte array representing this entry.
@@ -49,7 +48,7 @@ class JumpEntry(object):
         :return: ndarray(dtype='u1') of bytes for this entry.
         :rtype: np.ndarray
         """
-        data = np.zeros(8, dtype='u1')
+        data = np.zeros(8, dtype="u1")
         data[0:3] = littleEndian(self.from_addr, 3)
         data[3:6] = littleEndian(self.to_addr, 3)
         data[6:8] = self.operation.as_bytes()
@@ -58,9 +57,11 @@ class JumpEntry(object):
 
 # Operations (ie op codes)
 
+
 class Operation(object):
     """A Super class for all possible jump table operations"""
-    NAME = 'INVALID'  # subclasses must override
+
+    NAME = "INVALID"  # subclasses must override
 
     def __str__(self):
         raise NotImplementedError()
@@ -83,6 +84,7 @@ class IDLE(Operation):
     Attributes:
         cycles (int): Number of FPGA cycles to idle.
     """
+
     NAME = "IDLE"
 
     def __init__(self, cycles):
@@ -100,9 +102,7 @@ class IDLE(Operation):
         """
         if not (IDLE_MIN_CYCLES <= self.cycles <= IDLE_MAX_CYCLES):
             raise ValueError(
-                "IDLE num cycles must fit in {} bits".format(
-                    IDLE_NUM_BITS
-                )
+                "IDLE num cycles must fit in {} bits".format(IDLE_NUM_BITS)
             )
         return littleEndian(self.cycles << 1, 2)
 
@@ -119,13 +119,14 @@ class CHECK(Operation):
 
     This operation has not been implemented/tested.
     """
+
     NAME = "CHECK"
 
     def __init__(self, which_daisy_bit, bit_state, next_jump_index):
         self.which_daisy_bit = which_daisy_bit
         self.jump_index = next_jump_index
         self.bit_state = bool(bit_state)
-        raise NotImplementedError('CHECK is not yet implemented')
+        raise NotImplementedError("CHECK is not yet implemented")
 
     def __str__(self):
         raise NotImplementedError()
@@ -155,13 +156,14 @@ class JUMP(Operation):
         jump_index (int): Index of jump table entry to activate after
         this one.
     """
+
     NAME = "JUMP"
 
     def __init__(self, next_jump_index):
         self.jump_index = next_jump_index
 
     def __str__(self):
-        return '\n'.join([self.NAME, "Next jump index: %d" % self.jump_index])
+        return "\n".join([self.NAME, "Next jump index: %d" % self.jump_index])
 
     def as_bytes(self):
         """Get bytes for a JUMP
@@ -178,6 +180,7 @@ class JUMP(Operation):
 
 class NOP(Operation):
     """Do nothing."""
+
     NAME = "NOP"
 
     def __str__(self):
@@ -199,6 +202,7 @@ class CYCLE(Operation):
         this one.
     counter (int): Which counter to increment at each cycle.
     """
+
     NAME = "CYCLE"
 
     def __init__(self, counter, next_jump_index):
@@ -262,6 +266,7 @@ class JumpTable(object):
     TODO: make self.jumps a property with some checking on type and
         number.
     """
+
     PACKET_LEN = 528
     COUNTER_BITS = 32  # 32 bit register for counters
     COUNT_MAX = 2**COUNTER_BITS - 1
@@ -288,9 +293,7 @@ class JumpTable(object):
         else:
             if any([x > cls.COUNT_MAX for x in counters]):
                 raise ValueError(
-                    "Counter values must fit in {} bits.".format(
-                        cls.COUNTER_BITS
-                    )
+                    "Counter values must fit in {} bits.".format(cls.COUNTER_BITS)
                 )
             c = list(counters)
             while len(c) < cls.NUM_COUNTERS:
@@ -298,25 +301,22 @@ class JumpTable(object):
         return c
 
     def __str__(self):
-        counter = '\n'.join(
-            "Counter {}: {}".format(
-                i, c
-            ) for i, c in enumerate(self.counters)
+        counter = "\n".join(
+            "Counter {}: {}".format(i, c) for i, c in enumerate(self.counters)
         )
-        start_addr = 'Start address: %d' % self.start_addr
-        jump = '\n'.join(
-            "-JUMP ENTRY {}-\n{}".format(
-                i, str(jump)
-            ) for i, jump in enumerate(self.jumps)
+        start_addr = "Start address: %d" % self.start_addr
+        jump = "\n".join(
+            "-JUMP ENTRY {}-\n{}".format(i, str(jump))
+            for i, jump in enumerate(self.jumps)
         )
-        return '\n'.join([counter, start_addr, jump])
+        return "\n".join([counter, start_addr, jump])
 
     def toString(self):
         """Serialize jump table to a byte string for the FPGA"""
-        data = np.zeros(self.PACKET_LEN, dtype='<u1')
+        data = np.zeros(self.PACKET_LEN, dtype="<u1")
         # Set counter values. Each one is 4 bytes
         for i, c in enumerate(self.counters):
-            data[i * 4:(i + 1) * 4] = littleEndian(c, 4)
+            data[i * 4 : (i + 1) * 4] = littleEndian(c, 4)
         # Set start address
         data[16:19] = littleEndian(self.start_addr, 3)
         data[19:22] = littleEndian(self.start_addr, 3)
@@ -325,34 +325,37 @@ class JumpTable(object):
         data[23] = 0
         for i, jump in enumerate(self.jumps):
             ofs = 24 + i * 8
-            data[ofs:ofs+8] = jump.as_bytes()
+            data[ofs : ofs + 8] = jump.as_bytes()
         return data.tostring()
 
     def pretty_string(self):
-        s = ''
+        s = ""
         data = self.toString()
         i = 0
         # counters
         for j in range(4):
-            s += '{0:02x} {1:02x} {2:02x} {3:02x}'.format(*[ord(x) for x in data[i:i+4]])
+            s += "{0:02x} {1:02x} {2:02x} {3:02x}".format(
+                *[ord(x) for x in data[i : i + 4]]
+            )
             i += 4
-            s += '\n'
+            s += "\n"
         # table commands
-        for j in range((528-16)//8):
-            s += '{0:02x} {1:02x} {2:02x}  '.format(*[ord(x) for x in data[i:i+3]])
+        for j in range((528 - 16) // 8):
+            s += "{0:02x} {1:02x} {2:02x}  ".format(*[ord(x) for x in data[i : i + 3]])
             i += 3
-            s += '{0:02x} {1:02x} {2:02x}  '.format(*[ord(x) for x in data[i:i+3]])
+            s += "{0:02x} {1:02x} {2:02x}  ".format(*[ord(x) for x in data[i : i + 3]])
             i += 3
-            s += '{0:02x} {1:02x}  '.format(*[ord(x) for x in data[i:i+2]])
+            s += "{0:02x} {1:02x}  ".format(*[ord(x) for x in data[i : i + 2]])
             i += 2
-            s += '\n'
+            s += "\n"
         # print i
         # print len(data)
-        assert(i == len(data))
+        assert i == len(data)
         return s
 
 
 # TEST FUNCTIONS
+
 
 def testNormal(stopAddr):
     """Test END function
@@ -377,7 +380,7 @@ def testNormal(stopAddr):
     are high, not zero. The second pulse will not appear to have an end because
     of this.
     """
-    build_cls = fpga.REGISTRY[('DAC', build_number)]
+    build_cls = fpga.REGISTRY[("DAC", build_number)]
 
     waveform = np.zeros(256)
     waveform[4:12] = 0.2
@@ -399,7 +402,7 @@ def testNormal(stopAddr):
 
 
 def test_sine(length, build_number=15):
-    """ Return SRAM and a JT for a sine wave of length ns.
+    """Return SRAM and a JT for a sine wave of length ns.
 
     Note that the sequence will be four ns longer than specified,
     with the last four being zeros to be idled over. Also, it will be rounded
@@ -408,10 +411,10 @@ def test_sine(length, build_number=15):
     :param int length: length of sine wave, in ns.
     :param int build_number: build number for which to use offsets
     """
-    build_cls = fpga.REGISTRY[('DAC', build_number)]
+    build_cls = fpga.REGISTRY[("DAC", build_number)]
 
     length = (length // 4) * 4
-    waveform = 0.4*np.sin(2*np.pi/256*8*np.arange(length + 4))
+    waveform = 0.4 * np.sin(2 * np.pi / 256 * 8 * np.arange(length + 4))
     waveform[-4:] *= 0
     jump_entries = []
 
@@ -429,18 +432,18 @@ def test_sine(length, build_number=15):
 
 def testIdle(cycles, build_number=15):
     """Single high sample, followed by idle, followed by single high sample
-    
+
     RETURNS - (sramBlock, table)
      sramBlock - ndarray: numerical SRAM data, not packed as bytes
      table - JumpTable: jump table object
-    
+
     The SRAM block we use to store data
     ns   || 0         10        20        30        40        50        60
          || 0123456789012345678901234567890123456789012345678901234567890123
     cell || 0  |1  |2  |3  |4  |5  |6  |7  |8  |9  |10 |11 |12 |13 |14 |15 |
     data || ________________________----________________----________________
     table||                         IDLE                        END
-    
+
     The fromAddr for the IDLE command is set to cell number 6. Therefore, you
     should see a pulse of length (1+cycles)*4ns, followed by 16ns of zeros,
     followed by a 4ns pulse. The system should then idle with zeros.
@@ -448,7 +451,7 @@ def testIdle(cycles, build_number=15):
     :param int cycles: idle for this many clock cycles.
     :param int build_number: build number for which to use offsets
     """
-    build_cls = fpga.REGISTRY[('DAC', build_number)]
+    build_cls = fpga.REGISTRY[("DAC", build_number)]
 
     waveform = np.zeros(256)
     waveform[24:28] = 0.7
@@ -458,13 +461,13 @@ def testIdle(cycles, build_number=15):
 
     # idle on sram pulse
     op = IDLE(cycles + build_cls.JT_IDLE_OFFSET)
-    fromAddr = 28//4 + build_cls.JT_FROM_ADDR_OFFSET
+    fromAddr = 28 // 4 + build_cls.JT_FROM_ADDR_OFFSET
     toAddr = 0
     jumpEntries.append(JumpEntry(fromAddr, toAddr, op))
 
     # End execution
     op = END()
-    fromAddr = 52//4 + build_cls.JT_END_ADDR_OFFSET
+    fromAddr = 52 // 4 + build_cls.JT_END_ADDR_OFFSET
     toAddr = 0
     jumpEntries.append(JumpEntry(fromAddr, toAddr, op))
 
@@ -476,7 +479,7 @@ def testIdle(cycles, build_number=15):
 
 def testJump(build_number):
     """Test jump function
-    
+
     The SRAM block we use to store data
     ns   || 0         10        20        30        40        50        60
          || 0123456789012345678901234567890123456789012345678901234567890123
@@ -487,7 +490,7 @@ def testJump(build_number):
 
     :param int build_number: build number for which to use offsets
     """
-    build_cls = fpga.REGISTRY[('DAC', build_number)]
+    build_cls = fpga.REGISTRY[("DAC", build_number)]
 
     waveform = np.zeros(256)
     waveform[24:28] = 0.8
@@ -497,12 +500,12 @@ def testJump(build_number):
 
     # Jump at 6th SRAM cell
     op = JUMP(2)
-    fromAddr = 28//4 + build_cls.JT_FROM_ADDR_OFFSET
-    toAddr = 44//4
+    fromAddr = 28 // 4 + build_cls.JT_FROM_ADDR_OFFSET
+    toAddr = 44 // 4
     jumpEntries.append(JumpEntry(fromAddr, toAddr, op))
 
     op = END()
-    fromAddr = 256//4 + build_cls.JT_END_ADDR_OFFSET
+    fromAddr = 256 // 4 + build_cls.JT_END_ADDR_OFFSET
     toAddr = 0
     jumpEntries.append(JumpEntry(fromAddr, toAddr, op))
 
@@ -525,7 +528,7 @@ def testJumpBack(build_number=15):
 
     :param int build_number: build number for which to use offsets
     """
-    build_cls = fpga.REGISTRY[('DAC', build_number)]
+    build_cls = fpga.REGISTRY[("DAC", build_number)]
 
     waveform = np.zeros(256)
     waveform[24:28] = 0.4
@@ -536,12 +539,12 @@ def testJumpBack(build_number=15):
 
     # Jump at 6th SRAM cell
     op = JUMP(2)
-    fromAddr = 32//4 + build_cls.JT_FROM_ADDR_OFFSET
-    toAddr = 12//4
+    fromAddr = 32 // 4 + build_cls.JT_FROM_ADDR_OFFSET
+    toAddr = 12 // 4
     jumpEntries.append(JumpEntry(fromAddr, toAddr, op))
 
     op = END()
-    fromAddr = 256//4 + build_cls.JT_END_ADDR_OFFSET
+    fromAddr = 256 // 4 + build_cls.JT_END_ADDR_OFFSET
     toAddr = 0
     jumpEntries.append(JumpEntry(fromAddr, toAddr, op))
 
@@ -564,7 +567,7 @@ def testJumpBackLoop(build_number=15):
 
     :param int build_number: build number for which to use offsets
     """
-    build_cls = fpga.REGISTRY[('DAC', build_number)]
+    build_cls = fpga.REGISTRY[("DAC", build_number)]
 
     waveform = np.zeros(256)
     waveform[24:28] = 0.4
@@ -575,12 +578,12 @@ def testJumpBackLoop(build_number=15):
 
     # Jump at 6th SRAM cell
     op = JUMP(1)
-    fromAddr = 32//4 + build_cls.JT_FROM_ADDR_OFFSET
-    toAddr = 12//4
+    fromAddr = 32 // 4 + build_cls.JT_FROM_ADDR_OFFSET
+    toAddr = 12 // 4
     jumpEntries.append(JumpEntry(fromAddr, toAddr, op))
 
     op = END()
-    fromAddr = 256//4 + build_cls.JT_END_ADDR_OFFSET
+    fromAddr = 256 // 4 + build_cls.JT_END_ADDR_OFFSET
     toAddr = 0
     jumpEntries.append(JumpEntry(fromAddr, toAddr, op))
 
@@ -625,7 +628,7 @@ def testCycle(num_cycles, build_number=15):
     from output=0 to output=0.7 and back over 20 ns, and then we finish on
     output=0.
     """
-    build_cls = fpga.REGISTRY[('DAC', build_number)]
+    build_cls = fpga.REGISTRY[("DAC", build_number)]
 
     waveform = np.zeros(256)
     waveform[10:24] = 0.8
@@ -638,27 +641,16 @@ def testCycle(num_cycles, build_number=15):
     jumpEntries = [
         # cycle: go back to 40, JT index 1, until count passed
         # (i.e. repeat 40-60)
-        JumpEntry(60//4 + build_cls.JT_FROM_ADDR_OFFSET,
-                  40//4,
-                  CYCLE(0, 1)),
+        JumpEntry(60 // 4 + build_cls.JT_FROM_ADDR_OFFSET, 40 // 4, CYCLE(0, 1)),
         # jump, just for fun
-        JumpEntry(80//4 + build_cls.JT_FROM_ADDR_OFFSET,
-                  100//4,
-                  JUMP(3)),
+        JumpEntry(80 // 4 + build_cls.JT_FROM_ADDR_OFFSET, 100 // 4, JUMP(3)),
         # back to beginning to finish
-        JumpEntry(120//4 + build_cls.JT_FROM_ADDR_OFFSET,
-                  0,
-                  JUMP(4)),
-        JumpEntry(24//4 + build_cls.JT_END_ADDR_OFFSET,
-                  0,
-                  END())
+        JumpEntry(120 // 4 + build_cls.JT_FROM_ADDR_OFFSET, 0, JUMP(4)),
+        JumpEntry(24 // 4 + build_cls.JT_END_ADDR_OFFSET, 0, END()),
     ]
     # Note that we can't move the first jump any earlier than 72//4 = 18,
     # because 56//4 = 14 and fromAddrs must be separated by at least 4.
 
-    table = JumpTable(
-        0,
-        counters=[num_cycles, num_cycles, num_cycles, num_cycles]
-    )
+    table = JumpTable(0, counters=[num_cycles, num_cycles, num_cycles, num_cycles])
     table.jumps = jumpEntries
     return waveform, table

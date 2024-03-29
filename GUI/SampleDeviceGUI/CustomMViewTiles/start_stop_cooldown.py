@@ -22,6 +22,8 @@ Created on Fri Apr 07 12:33:18 2017
 from PyQt4 import QtGui, QtCore
 from MWeb import web
 from MWidget import MWidget
+
+
 class MStartStopCooldownWidget(MWidget):
     def __init__(self):
         super(Device, self).__init__()

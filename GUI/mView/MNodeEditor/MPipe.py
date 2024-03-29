@@ -23,8 +23,7 @@ __status__ = "Beta"
 
 class MPipe:
     def __init__(self, startAnchor, scene, parent=None):
-
-        #startAnchor.parentNode().pipeConnected(startAnchor, self)
+        # startAnchor.parentNode().pipeConnected(startAnchor, self)
         # Create a new painter path starting at the location of the first
         # anchor
 
@@ -32,19 +31,19 @@ class MPipe:
         self.endAnchor = None
         self.inputAnchor = None
         self.outputAnchor = None
-        if startAnchor.getType() == 'output':
+        if startAnchor.getType() == "output":
             self.label = str(startAnchor)
         self.data = None
         self.metadata = None
 
     def connect(self, endAnchor):
-        '''Connect the other end of the pipe.'''
+        """Connect the other end of the pipe."""
         if endAnchor.getType() == self.startAnchor.getType():
             print("Cannot connect two", endAnchor.getType(), "anchors together.")
             raise ValueError("Invalid pipe connection.")
         self.inputAnchor = endAnchor
         self.outputAnchor = self.startAnchor
-        if endAnchor.getType() == 'output':
+        if endAnchor.getType() == "output":
             self.label = str(endAnchor)
             self.inputAnchor = self.startAnchor
             self.outputAnchor = self.endAnchor
@@ -63,7 +62,6 @@ class MPipe:
         return self.data
 
     def setData(self, data):
-
         self.data = data
         if self.inputAnchor != None:
             # print "pipe set data of ", self.inputAnchor

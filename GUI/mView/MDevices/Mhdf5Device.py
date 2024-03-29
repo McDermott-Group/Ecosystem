@@ -20,7 +20,7 @@ class Mhdf5Device(MDevice.MDevice):
         self.setupMenus()
 
     def setupMenus(self):
-        root = os.environ['DATA_ROOT']
+        root = os.environ["DATA_ROOT"]
         container = self.getFrame().getContainer()
         self.HBox = container.getTopHBox()
         self.BHBox = container.getBottomHBox()
@@ -31,23 +31,23 @@ class Mhdf5Device(MDevice.MDevice):
         self.HBox.addWidget(self.filetree)
 
     def prompt(self, dir):
-        '''Called when button is pushed'''
-        root = os.environ['DATA_ROOT']
-#        dir = QtGui.QFileDialog.getOpenFileName(None, "Open Data Set...",
-#                root, "Data Chest Files (*.hdf5)")
+        """Called when button is pushed"""
+        root = os.environ["DATA_ROOT"]
+        #        dir = QtGui.QFileDialog.getOpenFileName(None, "Open Data Set...",
+        #                root, "Data Chest Files (*.hdf5)")
         dir = str(dir)
         # Get rid of the file namse, use just the path
         # print "before dir:", dir
         path = dir.split("/")[0:-1]
         filename = dir.split("/")[-1]
-        dir = '/'.join(path)
+        dir = "/".join(path)
         # print "selected dir:", dir
-        root = root.replace('\\', '/')
+        root = root.replace("\\", "/")
         # print "datachest root:", root
 
-        dir = dir.replace(root, '')
-        dir = dir.replace('/', '\\')
-        relpath = dir.split('\\')
+        dir = dir.replace(root, "")
+        dir = dir.replace("/", "\\")
+        relpath = dir.split("\\")
         # print "relative path:", dir
         # print "current chest directory:", chest.pwd()
         chest = dataChest(relpath[1])
@@ -63,10 +63,10 @@ class Mhdf5Device(MDevice.MDevice):
 
         self.BHBox.addWidget(self.grapher)
         self.grapher.show()
-        #self.getFrame().getPlot().plot(time = None)
+        # self.getFrame().getPlot().plot(time = None)
 
     def addButton(self, name):
-        '''Add a simple button.'''
+        """Add a simple button."""
         button = []
         button.append(name)
         self.frame.setButtons([button])

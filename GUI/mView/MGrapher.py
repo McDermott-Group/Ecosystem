@@ -48,63 +48,74 @@ class mGraph(QtGui.QWidget):
         self.viewboxes = []
         self.lastValidTime = 60
 
-        pg.setConfigOption('background', (189, 195, 199))
-        pg.setConfigOption('foreground', (0, 0, 0))
+        pg.setConfigOption("background", (189, 195, 199))
+        pg.setConfigOption("foreground", (0, 0, 0))
 
         self.frame = QtGui.QFrame(self)
         frameLayout = QtGui.QVBoxLayout(self.frame)
         self.frame.setFrameShape(QtGui.QFrame.Panel)
         self.frame.setFrameShadow(QtGui.QFrame.Plain)
-        self.frame.setStyleSheet(".QFrame{background-color: rgb(70,80,88); "
-                                 "margin:0px; border:2px solid rgb(0, 0, 0);}")
+        self.frame.setStyleSheet(
+            ".QFrame{background-color: rgb(70,80,88); "
+            "margin:0px; border:2px solid rgb(0, 0, 0);}"
+        )
         self.win = pg.GraphicsWindow()
 
         frameLayout.addWidget(self.win)
 
-        self.p = self.win.addPlot(title=self.title, axisItems={
-                                  'bottom': TimeAxisItem(orientation='bottom')})
+        self.p = self.win.addPlot(
+            title=self.title, axisItems={"bottom": TimeAxisItem(orientation="bottom")}
+        )
 
         self.p.addLegend()
         self.p.showGrid(x=True, y=True, alpha=0.5)
 
         self.p.sigRangeChanged.connect(self.rangeChanged)
         self.processRangeChangeSig = False
-        pen = pg.mkPen(cosmetic=True, width=2, color=(
-            np.random.random() * 255, np.random.random() * 255, np.random.random() * 255))
+        pen = pg.mkPen(
+            cosmetic=True,
+            width=2,
+            color=(
+                np.random.random() * 255,
+                np.random.random() * 255,
+                np.random.random() * 255,
+            ),
+        )
         self.textPen = QtGui.QPen()
 
-        #self.curve1 = self.p1.plot([0], pen = pen)
+        # self.curve1 = self.p1.plot([0], pen = pen)
         self.curves = []
 
-        self.setStyleSheet("QPushButton{\
+        self.setStyleSheet(
+            "QPushButton{\
                     color:rgb(189,195, 199); \
                     background:rgb(70, 80, 88)};\
-                    ")
-        #frame.setStyleSheet(".QPushButton{color:rgb(52, 73, 94)}")
+                    "
+        )
+        # frame.setStyleSheet(".QPushButton{color:rgb(52, 73, 94)}")
 
         self.hideButton = QtGui.QPushButton("Hide Plot")
         self.hideButton.clicked.connect(self.togglePlot)
         self.oneMinButton = QtGui.QPushButton("1 min")
-        self.oneMinButton.clicked.connect(
-            partial(self.plot, time=60, autoRange=True))
+        self.oneMinButton.clicked.connect(partial(self.plot, time=60, autoRange=True))
         self.tenMinButton = QtGui.QPushButton("10 min")
-        self.tenMinButton.clicked.connect(
-            partial(self.plot,  time=600, autoRange=True))
+        self.tenMinButton.clicked.connect(partial(self.plot, time=600, autoRange=True))
         self.twoHrButton = QtGui.QPushButton("2 hr")
-        self.twoHrButton.clicked.connect(
-            partial(self.plot, time=7200, autoRange=True))
+        self.twoHrButton.clicked.connect(partial(self.plot, time=7200, autoRange=True))
         self.twelveHrButton = QtGui.QPushButton("12 hr")
         self.twelveHrButton.clicked.connect(
-            partial(self.plot,  time=43200, autoRange=True))
+            partial(self.plot, time=43200, autoRange=True)
+        )
         self.threeDayButton = QtGui.QPushButton("3 day")
         self.threeDayButton.clicked.connect(
-            partial(self.plot, time=259200, autoRange=True))
+            partial(self.plot, time=259200, autoRange=True)
+        )
         self.oneWkButton = QtGui.QPushButton("1 week")
         self.oneWkButton.clicked.connect(
-            partial(self.plot,  time=604800, autoRange=True))
+            partial(self.plot, time=604800, autoRange=True)
+        )
         self.allButton = QtGui.QPushButton("All Time")
-        self.allButton.clicked.connect(
-            partial(self.plot, time=None, autoRange=True))
+        self.allButton.clicked.connect(partial(self.plot, time=None, autoRange=True))
         self.lineSelect = MCheckableComboBox()
         self.lineSelect.setSizeAdjustPolicy(0)
 
@@ -150,10 +161,12 @@ class mGraph(QtGui.QWidget):
 
         self.buttonFrame = QtGui.QFrame()
         self.buttonFrame.setLayout(buttonLayout3)
-        self.buttonFrame.setStyleSheet(".QPushButton{background:rgb(70,80,88)}"
-                                       "QCheckBox{color:rgb(189,195, 199)}"
-                                       ".QFrame{background-color: rgb(52, 73, 94); "
-                                       "margin:0px; border:2px solid rgb(0, 0, 0);}")
+        self.buttonFrame.setStyleSheet(
+            ".QPushButton{background:rgb(70,80,88)}"
+            "QCheckBox{color:rgb(189,195, 199)}"
+            ".QFrame{background-color: rgb(52, 73, 94); "
+            "margin:0px; border:2px solid rgb(0, 0, 0);}"
+        )
 
         self.dropdownFont = QtGui.QFont()
         self.dropdownFont.setPointSize(12)
@@ -177,8 +190,8 @@ class mGraph(QtGui.QWidget):
         self.togglePlot()
 
     def eventFilter(self, receiver, event):
-        '''Filter out scroll events so that only pyqtgraph catches them'''
-        if(event.type() == QtCore.QEvent.Wheel):
+        """Filter out scroll events so that only pyqtgraph catches them"""
+        if event.type() == QtCore.QEvent.Wheel:
             # print "scroll detected"
             return True
         else:
@@ -188,22 +201,19 @@ class mGraph(QtGui.QWidget):
     def generateColors(self):
         # print "RAINBOW COLORS!!"
         for curve in self.curves:
-
             self.r = np.random.random() * 200
             self.g = np.random.random() * 200
             self.b = np.random.random() * 200
 
-            pen = pg.mkPen(cosmetic=True, width=2,
-                           color=(self.r, self.g, self.b))
+            pen = pg.mkPen(cosmetic=True, width=2, color=(self.r, self.g, self.b))
             curve.setPen(pen)
 
     def initialize(self):
-
         varNames = self.device.getFrame().getDataSet().getVariables()
         varNames = [varNames[1][i][0] for i in range(len(varNames[1]))]
         for i, var in enumerate(varNames):
-            #Qvar = QtCore.QString(var.replace('_',' '))
-            self.lineSelect.addItem(var.replace('_', ' '))
+            # Qvar = QtCore.QString(var.replace('_',' '))
+            self.lineSelect.addItem(var.replace("_", " "))
             self.lineSelect.setFont(self.dropdownFont)
             self.lineSelect.setChecked(i, True)
 
@@ -217,7 +227,7 @@ class mGraph(QtGui.QWidget):
         # self.p.showAxis('right')
 
         # axes.append(self.p.getAxis('right'))
-        #axes[-1].setLabel(text= "Test", units = "test units")
+        # axes[-1].setLabel(text= "Test", units = "test units")
 
         # for unit in frame.getUnits():
         # if unit not in units:
@@ -238,36 +248,40 @@ class mGraph(QtGui.QWidget):
         # pa.show()
         # ax.show()
         # self.p.vb.sigResized.connect(self.plot)
-    def setupUnits(self):
 
+    def setupUnits(self):
         frame = self.device.getFrame()
         try:
             yLabel = frame.getDataSet().getParameter("y_label")
         except:
             warnings.warn(
-                "\'y_label\' is not a parameter of the data set for" + str(self.device) + ".")
-            yLabel = ''
+                "'y_label' is not a parameter of the data set for"
+                + str(self.device)
+                + "."
+            )
+            yLabel = ""
         vars = self.device.getFrame().getDataSet().getVariables()
         try:
             customUnits = frame.getDataSet().getParameter("custom_units")
         except:
             warnings.warn(
-                "\'custom_units\' is not a parameter of the data set for" + str(self.device) + ".")
+                "'custom_units' is not a parameter of the data set for"
+                + str(self.device)
+                + "."
+            )
             customUnits = None
         # print "vars:", vars
-        #nickname = vars[1][0][0].replace('_',' ')
+        # nickname = vars[1][0][0].replace('_',' ')
         if customUnits != None:
-            self.p.setLabel('left', text=str(yLabel) +
-                            "(" + str(customUnits) + ")")
+            self.p.setLabel("left", text=str(yLabel) + "(" + str(customUnits) + ")")
 
         elif vars[1][0][3] != None:
-
             self.viewboxes = []
             axes = []
             units = []
             units.append(vars[1][0][3])
 
-            axes.append(self.p.getAxis('left'))
+            axes.append(self.p.getAxis("left"))
 
             if units[0] != None:
                 axes[-1].setLabel(text=str(yLabel + "(" + units[0] + ")"))
@@ -275,7 +289,7 @@ class mGraph(QtGui.QWidget):
                 axes[-1].setLabel(text=str(yLabel))
 
     def plot(self, **kwargs):
-            # print "plotting"
+        # print "plotting"
 
         if not self.initialized:
             self.initialize()
@@ -283,12 +297,12 @@ class mGraph(QtGui.QWidget):
         for pa in self.viewboxes:
             pa.setGeometry(self.p.vb.sceneBoundingRect())
             pa.linkedViewChanged(self.p.vb, pa.XAxis)
-        maxtime = kwargs.get('time', 'last_valid')
-        autoRange = kwargs.get('autoRange', False)
+        maxtime = kwargs.get("time", "last_valid")
+        autoRange = kwargs.get("autoRange", False)
 
         # If time was specified, then autorange
         self.setupUnits()
-        if maxtime == 'last_valid':
+        if maxtime == "last_valid":
             maxtime = self.lastValidTime
         data = self.device.getFrame().getDataSet().getData()
 
@@ -309,8 +323,9 @@ class mGraph(QtGui.QWidget):
             self.pen = pg.mkPen(cosmetic=True, width=2, color=(0, 0, 0))
             varNames = self.device.getFrame().getDataSet().getVariables()
             varNames = [varNames[1][y][0] for y in range(len(varNames[1]))]
-            self.curves.append(self.p.plot(
-                [0], pen=self.pen, name=varNames[i].replace('_', ' ')))
+            self.curves.append(
+                self.p.plot([0], pen=self.pen, name=varNames[i].replace("_", " "))
+            )
             i = i + 1
             self.generateColors()
         currMax = None
@@ -330,18 +345,18 @@ class mGraph(QtGui.QWidget):
         self.currMin = currMin
         self.currMax = currMax
         if self.autoscaleCheckBox.isChecked():
-            #self.p.setXRange(times[0],times[-1], padding=0)
+            # self.p.setXRange(times[0],times[-1], padding=0)
             # for pa in self.viewboxes:
             self.p.autoRange()
             # pa.enableAutoRange(True)
             self.autoscaleCheckBox.setChecked(True)
             self.processRangeChangeSig = False
-#                try:
-#                    #print "currmin", currMin
-#                    #print "currmax", currMax
-#                    #self.p.setRange(xRange=[times[0],times[-1]], yRange = [currMin, currMax])
-#                except:
-#                    pass
+            #                try:
+            #                    #print "currmin", currMin
+            #                    #print "currmax", currMax
+            #                    #self.p.setRange(xRange=[times[0],times[-1]], yRange = [currMin, currMax])
+            #                except:
+            #                    pass
             self.processRangeChangeSig = True
 
     def rangeChanged(self):
@@ -354,13 +369,12 @@ class mGraph(QtGui.QWidget):
             self.xAxTo100()
 
     def yAxTo100(self):
-        self.p.enableAutoRange(axis='y')
+        self.p.enableAutoRange(axis="y")
 
     def xAxTo100(self):
-        self.p.enableAutoRange(axis='x')
+        self.p.enableAutoRange(axis="x")
 
     def lockXAxisClicked(self):
-
         self.lockYAx.setChecked(False)
         self.lockXAx.setChecked(True)
 
@@ -404,7 +418,7 @@ class mGraph(QtGui.QWidget):
             self.threeDayButton.show()
             self.oneWkButton.show()
             self.allButton.show()
-            self.plot(time='last_valid')
+            self.plot(time="last_valid")
             self.lineSelect.show()
             self.hideButton.setText("Hide Plot")
             self.hidden = False
@@ -419,7 +433,10 @@ class TimeAxisItem(pg.AxisItem):
 
         super(TimeAxisItem, self).__init__(*args, **kwargs)
         # Timezone correction, take daylight savings into account.
-        self.timeOffset = -(time.mktime(time.gmtime()) - time.mktime(time.localtime()))+3600*time.localtime().tm_isdst
+        self.timeOffset = (
+            -(time.mktime(time.gmtime()) - time.mktime(time.localtime()))
+            + 3600 * time.localtime().tm_isdst
+        )
 
     def tickStrings(self, values, scale, spacing):
         # PySide's QTime() initialiser fails miserably and dismisses args/kwargs
@@ -433,4 +450,4 @@ TS_MULT_us = 1e6
 
 
 def int2dt(ts, ts_mult=TS_MULT_us):
-    return(datetime.datetime.utcfromtimestamp(float(ts)))
+    return datetime.datetime.utcfromtimestamp(float(ts))

@@ -10,11 +10,12 @@ from labrad.server import setting
 import labrad.units as units
 from labrad import util
 
+
 class LK211Wrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
-        """Connect to an lk211 """
-        print(('Connecting to "%s" on port "%s"...' %(server.name, port)))
+        """Connect to an lk211"""
+        print(('Connecting to "%s" on port "%s"...' % (server.name, port)))
         self.server = server
         self.ctx = server.context()
         print((self.ctx))
@@ -26,7 +27,7 @@ class LK211Wrapper(DeviceWrapper):
         p.baudrate(9600)
         p.stopbits(1)
         p.bytesize(7)
-        p.parity('O')
+        p.parity("O")
         p.rts(False)
         p.timeout(1 * units.s)
 
@@ -55,8 +56,8 @@ class LK211Wrapper(DeviceWrapper):
 
 
 class LK211Server(DeviceServer):
-    deviceName = 'Lakeshore 211'
-    name = 'Lakeshore 211'
+    deviceName = "Lakeshore 211"
+    name = "Lakeshore 211"
     deviceWrapper = LK211Wrapper
 
     @inlineCallbacks
@@ -68,7 +69,7 @@ class LK211Server(DeviceServer):
         yield DeviceServer.initServer(self)
         time.sleep(1)
         print((self.devices))
-        self.alertInterval = 10 # seconds
+        self.alertInterval = 10  # seconds
         self.t1 = 0
         self.t2 = 0
 
@@ -85,31 +86,31 @@ class LK211Server(DeviceServer):
     @inlineCallbacks
     def stopServer(self):
         """Kill the device refresh loop and wait for it to terminate."""
-        if hasattr(self, 'refresher'):
+        if hasattr(self, "refresher"):
             self.refresher.stop()
             yield self.refresherDone
 
-    @setting(9, 'Start Server', returns='b')
+    @setting(9, "Start Server", returns="b")
     def startServer(self, c):
         """Initialize the temperature measurement."""
         self.dev = self.selectedDevice(c)
         callLater(0.1, self.startRefreshing)
         return True
 
-    @setting(10, 'Load Context', returns='?')
-    def loadContext(self,c):
+    @setting(10, "Load Context", returns="?")
+    def loadContext(self, c):
         print("Load context")
         for key, value in c:
             line = 10
             print([key, value])
             returnValue(line)
 
-    @setting(11, 'Set Alert Interval', interval='v[s]')
+    @setting(11, "Set Alert Interval", interval="v[s]")
     def setAlertInterval(self, ctx, interval):
         """Configure the alert interval."""
-        self.alertInterval = interval['s']
+        self.alertInterval = interval["s"]
 
-    @setting(12, 'Get Temperature', returns='v[]')
+    @setting(12, "Get Temperature", returns="v[]")
     def tempSetting(self, ctx):
         """Setting that returns rate"""
         self.dev = self.selectedDevice(ctx)
@@ -138,7 +139,7 @@ class LK211Server(DeviceServer):
 
         print(" Load config info ")
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'LK211', 'Links'], True)
+        yield reg.cd(["", "Servers", "LK211", "Links"], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -158,7 +159,7 @@ class LK211Server(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '{} - {}'.format(server, port)
+            devName = "{} - {}".format(server, port)
             devs += [(name, (server, port))]
         returnValue(devs)
 
@@ -166,5 +167,5 @@ class LK211Server(DeviceServer):
 __server__ = LK211Server()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     util.runServer(__server__)
