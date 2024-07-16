@@ -639,6 +639,7 @@ class Grapher(QtWidgets.QWidget):  # python 2to3: QtGui.QWidget >> QtWidgets.QWi
             axis = None
         self.p = self.graphicsLayout.addPlot(axisItems=axis)
         self.p.addLegend()
+<<<<<<< Updated upstream
         self.p.setTitle(pOptions["Title"], size="22pt")
         self.p.setLabel(
             "bottom", pOptions["X Label"], units=pOptions["X Units"], **STYLE_DEFAULTS
@@ -652,6 +653,15 @@ class Grapher(QtWidgets.QWidget):  # python 2to3: QtGui.QWidget >> QtWidgets.QWi
         self.p.getAxis("left").setStyle(
             tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(22)
         )
+=======
+        self.p.setTitle(pOptions['Title'], size='22pt')
+        self.p.setLabel('bottom', pOptions["X Label"], units=pOptions["X Units"],
+                    **STYLE_DEFAULTS)
+        self.p.setLabel('left', pOptions["Y Label"], units=pOptions["Y Units"],
+                    **STYLE_DEFAULTS)
+        self.p.getAxis('bottom').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(32))
+        self.p.getAxis('left').setStyle(tickTextOffset=22, tickFont=QtGui.QFont().setPointSize(32)) # changed from 22 to 32
+>>>>>>> Stashed changes
         for i in range(len(self.selectedDepVars)):
             self.p.plot(
                 x=self.selectedData[0],
@@ -912,6 +922,7 @@ class Grapher(QtWidgets.QWidget):  # python 2to3: QtGui.QWidget >> QtWidgets.QWi
 
             yMouseIndex = int(floor((self.yMouseVal - yMin) / ((yMax - yMin) / yLen)))
             self.zMouseVal = self.zValPass[xMouseIndex, yMouseIndex]
+<<<<<<< Updated upstream
             self.coBox.setText(
                 str(round(self.zMouseVal, 3))
                 + ", "
@@ -921,6 +932,11 @@ class Grapher(QtWidgets.QWidget):  # python 2to3: QtGui.QWidget >> QtWidgets.QWi
             )
         # self.co_label.setText("<span style='font-size: 14pt; color: white'> x = %0.2f, <span style='color: white'> y = %0.2f</span>" % (mousePoint.x(), mousePoint.y()))
 
+=======
+            self.coBox.setText(str(round(self.xMouseVal, 3)) + ', ' + str(round(self.yMouseVal, 3)) + ', ' + str(round(self.zMouseVal, 3)))
+
+        #self.co_label.setText("<span style='font-size: 14pt; color: white'> x = %0.2f, <span style='color: white'> y = %0.2f</span>" % (mousePoint.x(), mousePoint.y()))
+>>>>>>> Stashed changes
 
 class ColorBar(pg.GraphicsObject):
     def __init__(
